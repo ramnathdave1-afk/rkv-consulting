@@ -1,2 +1,9 @@
-export const dynamic = 'force-dynamic';
-export { default } from './(marketing)/page';
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const MarketingPage = dynamic(() => import('./(marketing)/page'), { ssr: false });
+
+export default function RootPage() {
+  return <MarketingPage />;
+}

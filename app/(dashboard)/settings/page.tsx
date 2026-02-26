@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   User,
@@ -194,7 +194,7 @@ function IntegrationCard({
 /*  Main Settings Page                                                 */
 /* ------------------------------------------------------------------ */
 
-export default function SettingsPage() {
+function SettingsInner() {
   const supabase = createClient();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'billing' ? 'subscription' : 'profile';
@@ -1256,5 +1256,13 @@ export default function SettingsPage() {
         </ModalContent>
       </Modal>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-gray-400">Loading settings...</div>}>
+      <SettingsInner />
+    </Suspense>
   );
 }
