@@ -215,7 +215,7 @@ export default function TenantDetailPage() {
       .order('created_at', { ascending: false });
 
     // Filter agent logs related to this tenant
-    const tenantLogs = (logData || []).filter((log) => {
+    const tenantLogs = (logData || []).filter((log: Record<string, any>) => {
       const input = log.input as Record<string, unknown> | null;
       const output = log.output as Record<string, unknown> | null;
       return (

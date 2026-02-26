@@ -209,9 +209,9 @@ export default function AIAssistantPage() {
     const tenants = tenantsRes.data || [];
     const maintenance = maintenanceRes.data || [];
 
-    const totalValue = properties.reduce((s, p) => s + (p.current_value || 0), 0);
-    const totalRent = properties.reduce((s, p) => s + (p.monthly_rent || 0), 0);
-    const totalExpenses = properties.reduce((s, p) => s + (p.monthly_expenses || 0), 0);
+    const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
+    const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
+    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_expenses || 0), 0);
 
     return `You are RKV AI Assistant, a professional real estate investment advisor for RKV Consulting.
 
@@ -222,20 +222,20 @@ CONTEXT ABOUT THE USER'S PORTFOLIO:
 - Monthly expenses: $${totalExpenses.toLocaleString()}
 - Monthly cash flow: $${(totalRent - totalExpenses).toLocaleString()}
 - Active tenants: ${tenants.length}
-- Active deals: ${deals.filter((d) => d.stage !== 'closed').length}
+- Active deals: ${deals.filter((d: Record<string, any>) => d.stage !== 'closed').length}
 - Open maintenance requests: ${maintenance.length}
 
 PROPERTIES:
-${properties.map((p) => `- ${p.address}, ${p.city}, ${p.state} (${p.property_type}, ${p.status}) - Value: $${(p.current_value || 0).toLocaleString()}, Rent: $${(p.monthly_rent || 0).toLocaleString()}/mo`).join('\n')}
+${properties.map((p: Record<string, any>) => `- ${p.address}, ${p.city}, ${p.state} (${p.property_type}, ${p.status}) - Value: $${(p.current_value || 0).toLocaleString()}, Rent: $${(p.monthly_rent || 0).toLocaleString()}/mo`).join('\n')}
 
 ACTIVE DEALS:
-${deals.map((d) => `- ${d.address} - Asking: $${d.asking_price.toLocaleString()} - Stage: ${d.stage}`).join('\n') || 'None'}
+${deals.map((d: Record<string, any>) => `- ${d.address} - Asking: $${d.asking_price.toLocaleString()} - Stage: ${d.stage}`).join('\n') || 'None'}
 
 ACTIVE TENANTS:
-${tenants.map((t) => `- ${t.first_name} ${t.last_name} - Rent: $${t.monthly_rent.toLocaleString()}/mo - Lease ends: ${t.lease_end || 'N/A'}`).join('\n') || 'None'}
+${tenants.map((t: Record<string, any>) => `- ${t.first_name} ${t.last_name} - Rent: $${t.monthly_rent.toLocaleString()}/mo - Lease ends: ${t.lease_end || 'N/A'}`).join('\n') || 'None'}
 
 OPEN MAINTENANCE:
-${maintenance.map((m) => `- ${m.title} (${m.priority} priority, ${m.category}) - Status: ${m.status}`).join('\n') || 'None'}
+${maintenance.map((m: Record<string, any>) => `- ${m.title} (${m.priority} priority, ${m.category}) - Status: ${m.status}`).join('\n') || 'None'}
 
 GUIDELINES:
 - Provide specific, actionable advice based on the user's actual portfolio data.

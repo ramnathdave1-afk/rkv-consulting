@@ -52,13 +52,13 @@ export async function POST(_req: NextRequest) {
       .eq('user_id', user.id)
 
     const marketsSummary = watchedMarkets
-      .map((m) => `${m.city}, ${m.state}${m.zip ? ` (${m.zip})` : ''}${m.metro ? ` - ${m.metro} metro` : ''}`)
+      .map((m: Record<string, any>) => `${m.city}, ${m.state}${m.zip ? ` (${m.zip})` : ''}${m.metro ? ` - ${m.metro} metro` : ''}`)
       .join('\n')
 
     const portfolioSummary = properties && properties.length > 0
       ? properties
           .map(
-            (p) =>
+            (p: Record<string, any>) =>
               `- ${p.address}, ${p.city}, ${p.state} | Type: ${p.property_type} | Value: $${p.current_value?.toLocaleString() || 'N/A'} | Rent: $${p.monthly_rent?.toLocaleString() || 'N/A'}/mo | Status: ${p.status}`
           )
           .join('\n')
@@ -122,7 +122,7 @@ Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 
 
     return NextResponse.json({
       brief: briefContent,
-      markets: watchedMarkets.map((m) => ({
+      markets: watchedMarkets.map((m: Record<string, any>) => ({
         city: m.city,
         state: m.state,
         zip: m.zip,

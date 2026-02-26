@@ -159,10 +159,10 @@ export default function TenantsPage() {
       .gte('due_date', monthStart)
       .lte('due_date', monthEnd);
 
-    const propMap = new Map((propertyRows || []).map((p) => [p.id, p]));
-    const paymentMap = new Map((payments || []).map((p) => [p.tenant_id, p]));
+    const propMap = new Map((propertyRows || []).map((p: Record<string, any>) => [p.id, p]));
+    const paymentMap = new Map((payments || []).map((p: Record<string, any>) => [p.tenant_id, p]));
 
-    const enriched: TenantWithProperty[] = (tenantRows || []).map((t) => ({
+    const enriched: TenantWithProperty[] = (tenantRows || []).map((t: Record<string, any>) => ({
       ...t,
       property: propMap.get(t.property_id) || null,
       currentPayment: paymentMap.get(t.id) || null,
