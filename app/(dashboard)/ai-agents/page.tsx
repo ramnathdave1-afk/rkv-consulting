@@ -271,12 +271,12 @@ export default function AIAgentsPage() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const monthLogs = logs.filter(
-        (l) => new Date(l.created_at) >= monthStart
+        (l: AgentLogEntry) => new Date(l.created_at) >= monthStart
       );
 
       // Email stats
       const emailLogs = monthLogs.filter(
-        (l) => l.agent_type === 'email_agent' || l.agent_type === 'email'
+        (l: AgentLogEntry) => l.agent_type === 'email_agent' || l.agent_type === 'email'
       );
       const emailSent = emailLogs.length;
       const emailSuccessful = emailLogs.filter((l) => l.status === 'success').length;
