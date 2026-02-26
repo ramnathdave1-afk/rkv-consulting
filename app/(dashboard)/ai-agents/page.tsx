@@ -279,18 +279,18 @@ export default function AIAgentsPage() {
         (l: AgentLogEntry) => l.agent_type === 'email_agent' || l.agent_type === 'email'
       );
       const emailSent = emailLogs.length;
-      const emailSuccessful = emailLogs.filter((l) => l.status === 'success').length;
+      const emailSuccessful = emailLogs.filter((l: AgentLogEntry) => l.status === 'success').length;
       const emailRate = emailSent > 0 ? Math.round((emailSuccessful / emailSent) * 100) : 0;
 
       // Voice stats
       const voiceLogs = monthLogs.filter(
-        (l) => l.agent_type === 'voice_agent' || l.agent_type === 'voice'
+        (l: AgentLogEntry) => l.agent_type === 'voice_agent' || l.agent_type === 'voice'
       );
       const callsMade = voiceLogs.length;
 
       // SMS stats
       const smsLogs = monthLogs.filter(
-        (l) => l.agent_type === 'sms_agent' || l.agent_type === 'sms'
+        (l: AgentLogEntry) => l.agent_type === 'sms_agent' || l.agent_type === 'sms'
       );
       const smsSent = smsLogs.length;
 
