@@ -46,6 +46,11 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  // Skip auth check if Supabase is not configured
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return res;
+  }
+
   // Create Supabase client for middleware
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
