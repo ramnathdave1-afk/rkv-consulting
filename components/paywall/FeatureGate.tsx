@@ -52,6 +52,7 @@ const FEATURE_META: Record<FeatureKey, { label: string; description: string }> =
   aiDealRecommendation: { label: 'AI Deal Recommendations',  description: 'Personalized deal recommendations based on your investment profile.' },
   liveRentAutofill:     { label: 'Live Rent Autofill',       description: 'Auto-populate rent estimates using live comparable data.' },
   portfolioBenchmarking:{ label: 'Portfolio Benchmarking',    description: 'Benchmark your portfolio against market averages and top performers.' },
+  dealFeed:             { label: 'Deal Feed',                 description: 'Access the live deal feed with off-market and wholesale deals.' },
 }
 
 /* ------------------------------------------------------------------ */

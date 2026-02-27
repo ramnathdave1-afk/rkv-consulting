@@ -28,6 +28,7 @@ import {
   Contact,
   DoorOpen,
   Workflow,
+  Flame,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -44,6 +45,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   featureKey?: FeatureKey;
+  badge?: string;
 }
 
 interface NavGroup {
@@ -67,6 +69,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Investments',
     items: [
+      { label: 'Deal Feed', href: '/deal-feed', icon: Flame, featureKey: 'dealFeed', badge: 'New' },
       { label: 'Deal Analyzer', href: '/deals', icon: Calculator },
       { label: 'Deal Pipeline', href: '/pipeline', icon: GitBranch },
       { label: 'My Portfolio', href: '/properties', icon: Building2 },
@@ -302,7 +305,12 @@ export default function DashboardLayout({
                       )}
                     >
                       <Icon className={cn('h-4 w-4 flex-shrink-0', isActive && 'text-gold')} strokeWidth={1.5} />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge && (
+                        <span className="font-body text-[9px] font-semibold text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

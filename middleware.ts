@@ -14,6 +14,8 @@ const publicPaths = new Set([
   '/forgot-password',
   '/api/stripe/webhook',
   '/api/health',
+  '/submit-deal',
+  '/wholesalers',
 ]);
 
 function isPublicPath(pathname: string): boolean {
@@ -22,6 +24,8 @@ function isPublicPath(pathname: string): boolean {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/deals/submit') ||
+    pathname.startsWith('/api/deals/automatch') ||
     pathname.startsWith('/apply/') ||
     pathname.includes('.')
   ) {
@@ -93,6 +97,23 @@ export async function middleware(req: NextRequest) {
   // ---- Auth pages when already logged in ----
   if (user && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+
+  // ---- Onboarding redirect for first-time users ----
+  if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api/')) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single();
+
+      if (profile && profile.onboarding_completed === false) {
+        return NextResponse.redirect(new URL('/onboarding', req.url));
+      }
+    } catch {
+      // If profile check fails, don't block the user
+    }
   }
 
   return res;

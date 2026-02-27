@@ -3,6 +3,10 @@
     {
       "path": "/api/agents/autopilot",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/deals/automatch",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

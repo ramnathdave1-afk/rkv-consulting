@@ -1210,6 +1210,83 @@ export interface AIConciergerSuggestion {
   priority: 'high' | 'medium' | 'low';
 }
 
+// ============================================================================
+// Deal Feed Types
+// ============================================================================
+
+export type DealFeedSource = 'wholesale' | 'mls' | 'foreclosure' | 'fsbo' | 'auction';
+
+export interface FeedDeal {
+  id: string;
+  user_id: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  property_type: string;
+  asking_price: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sqft: number | null;
+  year_built: number | null;
+  lot_size: number | null;
+  source: DealFeedSource;
+  source_id: string | null;
+  image_url: string | null;
+  days_on_market: number | null;
+  arv_estimate: number | null;
+  rent_estimate: number | null;
+  cap_rate_estimate: number | null;
+  ai_score: number | null;
+  description: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  raw_data: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BuyBox {
+  id: string;
+  user_id: string;
+  markets: string[];
+  property_types: string[];
+  price_min: number;
+  price_max: number;
+  min_bedrooms: number;
+  min_cap_rate: number;
+  sources: DealFeedSource[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WholesaleSubmission {
+  id: string;
+  submitter_name: string;
+  submitter_email: string;
+  submitter_phone: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  asking_price: number;
+  arv: number | null;
+  repair_estimate: number | null;
+  property_type: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sqft: number | null;
+  description: string | null;
+  photos: string[];
+  ai_score: number | null;
+  status: 'pending' | 'approved' | 'rejected';
+  views: number;
+  saves: number;
+  analysis_runs: number;
+  created_at: string;
+}
+
 /** Rent status entry for a tenant in the current month */
 export interface RentStatus {
   tenant_id: string;

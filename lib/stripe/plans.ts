@@ -40,6 +40,7 @@ export type FeatureKey =
   | 'aiDealRecommendation'
   | 'liveRentAutofill'
   | 'portfolioBenchmarking'
+  | 'dealFeed'
 
 interface Plan {
   name: string
@@ -92,6 +93,7 @@ export const PLANS: Record<PlanName, Plan> = {
       aiDealRecommendation: false,
       liveRentAutofill: false,
       portfolioBenchmarking: false,
+      dealFeed: false,
     },
   },
   pro: {
@@ -138,6 +140,7 @@ export const PLANS: Record<PlanName, Plan> = {
       aiDealRecommendation: true,
       liveRentAutofill: true,
       portfolioBenchmarking: true,
+      dealFeed: true,
     },
   },
   elite: {
@@ -183,6 +186,7 @@ export const PLANS: Record<PlanName, Plan> = {
       aiDealRecommendation: true,
       liveRentAutofill: true,
       portfolioBenchmarking: true,
+      dealFeed: true,
     },
   },
 }

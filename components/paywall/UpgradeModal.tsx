@@ -51,6 +51,7 @@ const FEATURE_META: Record<FeatureKey, string> = {
   aiDealRecommendation: 'AI Deal Recommendations',
   liveRentAutofill:     'Live Rent Autofill',
   portfolioBenchmarking:'Portfolio Benchmarking',
+  dealFeed:             'Deal Feed',
 }
 
 /* ------------------------------------------------------------------ */

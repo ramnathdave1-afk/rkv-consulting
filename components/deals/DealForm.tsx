@@ -129,6 +129,8 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
   const addressInputRef = useRef<HTMLInputElement>(null);
 
   /* -- Google Maps Places Autocomplete -------------------------------- */
+  const pendingAutoFill = useRef(false);
+
   useEffect(() => {
     let autocomplete: google.maps.places.Autocomplete | null = null;
 
@@ -143,12 +145,15 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
         autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
           types: ['address'],
           componentRestrictions: { country: 'us' },
+          fields: ['formatted_address', 'address_components', 'geometry'],
         });
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete?.getPlace();
           if (place?.formatted_address) {
             setPropertyAddress(place.formatted_address);
+            // Flag auto-fill to run after address state updates
+            pendingAutoFill.current = true;
           }
         });
       } catch (err) {
@@ -215,6 +220,14 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       setFetchingData(false);
     }
   }, [propertyAddress, fetchingData]);
+
+  /* -- Auto-trigger Rentcast fill after Places selection --------------- */
+  useEffect(() => {
+    if (pendingAutoFill.current && propertyAddress.trim()) {
+      pendingAutoFill.current = false;
+      handleAutoFill();
+    }
+  }, [propertyAddress, handleAutoFill]);
 
   const atLimit = usageCount >= usageLimit;
   const usagePct = usageLimit > 0 ? Math.min((usageCount / usageLimit) * 100, 100) : 0;

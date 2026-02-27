@@ -1,13 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactConfetti from 'react-confetti';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Input';
+import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { getGoogleMapsLoader } from '@/lib/apis/googlemaps';
+import {
+  MapPin,
+  User,
+  Zap,
+  Check,
+  ArrowRight,
+  ArrowLeft,
+  Mail,
+  Phone,
+  Sparkles,
+  Building2,
+  CalendarDays,
+  Shield,
+  TrendingUp,
+  FileText,
+  Bot,
+} from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -15,83 +32,65 @@ import { Button } from '@/components/ui/Button';
 
 const TOTAL_STEPS = 5;
 
-const investorTypes = [
-  {
-    value: 'beginner',
-    label: 'Beginner',
-    description: 'Just getting started',
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-      </svg>
-    ),
-  },
-  {
-    value: 'intermediate',
-    label: 'Intermediate',
-    description: '1-5 years experience',
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
-      </svg>
-    ),
-  },
-  {
-    value: 'experienced',
-    label: 'Experienced',
-    description: '5+ years, scaling up',
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-      </svg>
-    ),
-  },
-];
-
-const portfolioSizes = [
-  { value: '0', label: '0 properties' },
-  { value: '1-5', label: '1-5 properties' },
-  { value: '6-20', label: '6-20 properties' },
-  { value: '20+', label: '20+ properties' },
-];
-
-const strategies = [
-  { value: 'buy_hold', label: 'Buy & Hold' },
-  { value: 'fix_flip', label: 'Fix & Flip' },
-  { value: 'brrrr', label: 'BRRRR' },
-  { value: 'short_term_rental', label: 'Short Term Rental' },
-  { value: 'wholesale', label: 'Wholesale' },
-  { value: 'mixed', label: 'Mixed' },
-];
-
-const planFeatures: Record<string, string[]> = {
+const planFeatures: Record<string, { label: string; icon: React.ReactNode }[]> = {
   basic: [
-    'Deal Analyzer (5/month)',
-    'Property Management (up to 5)',
-    'Tenant Screening (basic)',
-    'Market Intelligence',
-    'AI Assistant (50 queries/month)',
+    { label: 'Deal Analyzer (5/month)', icon: <TrendingUp className="w-4 h-4" /> },
+    { label: 'Up to 3 Properties', icon: <Building2 className="w-4 h-4" /> },
+    { label: 'Tenant Management', icon: <User className="w-4 h-4" /> },
+    { label: 'Document Storage', icon: <FileText className="w-4 h-4" /> },
+    { label: 'Investment Calendar', icon: <CalendarDays className="w-4 h-4" /> },
   ],
   pro: [
-    'Deal Analyzer (unlimited)',
-    'Property Management (up to 50)',
-    'Tenant Screening (advanced)',
-    'Market Intelligence + Alerts',
-    'AI Assistant (500 queries/month)',
-    'Portfolio Analytics',
-    'Email Campaigns',
-    'SMS Messaging',
+    { label: 'Unlimited Deal Analysis', icon: <TrendingUp className="w-4 h-4" /> },
+    { label: 'Up to 20 Properties', icon: <Building2 className="w-4 h-4" /> },
+    { label: 'AI Assistant (200 msg/mo)', icon: <Bot className="w-4 h-4" /> },
+    { label: 'Market Intelligence + Alerts', icon: <Sparkles className="w-4 h-4" /> },
+    { label: 'Tenant Screening', icon: <Shield className="w-4 h-4" /> },
+    { label: 'Portfolio Analytics', icon: <TrendingUp className="w-4 h-4" /> },
+    { label: 'Full Document Vault', icon: <FileText className="w-4 h-4" /> },
+    { label: 'Accounting + Tax Tools', icon: <FileText className="w-4 h-4" /> },
   ],
   elite: [
-    'Everything in Pro',
-    'Unlimited Properties',
-    'Unlimited AI Queries',
-    'Priority Support',
-    'API Access',
-    'Custom Branding',
-    'White Label Reports',
+    { label: 'Everything in Pro', icon: <Check className="w-4 h-4" /> },
+    { label: 'Unlimited Properties', icon: <Building2 className="w-4 h-4" /> },
+    { label: 'Unlimited AI Queries', icon: <Bot className="w-4 h-4" /> },
+    { label: 'Email, Voice & SMS Agents', icon: <Mail className="w-4 h-4" /> },
+    { label: 'Autopilot Mode', icon: <Zap className="w-4 h-4" /> },
+    { label: 'Priority Support', icon: <Shield className="w-4 h-4" /> },
+    { label: 'White Label Reports', icon: <FileText className="w-4 h-4" /> },
   ],
 };
+
+const PROPERTY_TYPE_OPTIONS = [
+  { value: 'single_family', label: 'Single Family' },
+  { value: 'multi_family', label: 'Multi Family' },
+  { value: 'condo', label: 'Condo' },
+  { value: 'townhouse', label: 'Townhouse' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'land', label: 'Land' },
+  { value: 'mixed_use', label: 'Mixed Use' },
+];
+
+const AUTOMATION_CARDS = [
+  {
+    id: 'rent_collection',
+    label: 'Rent Collection',
+    description: 'Auto-send reminders on due dates, follow up on late payments via email + SMS.',
+    icon: <Mail className="w-5 h-5" />,
+  },
+  {
+    id: 'lease_renewal',
+    label: 'Lease Renewal',
+    description: 'Send renewal notices 90/60/30 days before expiry. Never miss a renewal.',
+    icon: <CalendarDays className="w-5 h-5" />,
+  },
+  {
+    id: 'maintenance_response',
+    label: 'Maintenance Response',
+    description: 'Auto-acknowledge tenant maintenance requests and assign contractors.',
+    icon: <Building2 className="w-5 h-5" />,
+  },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Animated Checkmark SVG                                             */
@@ -101,62 +100,21 @@ function AnimatedCheckmark() {
   return (
     <svg className="w-16 h-16" viewBox="0 0 52 52">
       <motion.circle
-        cx="26"
-        cy="26"
-        r="24"
-        fill="none"
-        stroke="#059669"
-        strokeWidth="2"
+        cx="26" cy="26" r="24"
+        fill="none" stroke="#059669" strokeWidth="2"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       />
       <motion.path
-        fill="none"
-        stroke="#059669"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="none" stroke="#059669" strokeWidth="3"
+        strokeLinecap="round" strokeLinejoin="round"
         d="M14 27l7.8 7.8L38 17"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.4, delay: 0.5, ease: 'easeOut' }}
       />
     </svg>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Selection Card Component                                           */
-/* ------------------------------------------------------------------ */
-
-function SelectionCard({
-  selected,
-  onClick,
-  children,
-  className,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`
-        w-full text-left rounded-xl border-2 p-4 transition-all duration-200
-        ${
-          selected
-            ? 'border-gold bg-gold/5 shadow-glow-sm'
-            : 'border-border bg-card hover:border-gold/30 hover:bg-card/80'
-        }
-        ${className || ''}
-      `}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -168,36 +126,40 @@ export default function OnboardingPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // ---- Step state ----
   const [currentStep, setCurrentStep] = useState(1);
 
-  // ---- Step 1 ----
-  const [plan, setPlan] = useState('pro'); // default from signup flow
+  // Step 1 — Welcome
+  const [plan, setPlan] = useState('pro');
 
-  // ---- Step 2 ----
-  const [investorType, setInvestorType] = useState('');
-  const [portfolioSize, setPortfolioSize] = useState('');
-  const [primaryStrategy, setPrimaryStrategy] = useState('');
-
-  // ---- Step 3 ----
+  // Step 2 — Add Property
   const [propertyAddress, setPropertyAddress] = useState('');
-  const [propertyType, setPropertyType] = useState('');
+  const [propertyType, setPropertyType] = useState('single_family');
   const [purchasePrice, setPurchasePrice] = useState('');
-  const [currentValue, setCurrentValue] = useState('');
   const [monthlyRent, setMonthlyRent] = useState('');
+  const addressRef = useRef<HTMLInputElement>(null);
 
-  // ---- Step 4 ----
-  const [selectedConnection, setSelectedConnection] = useState('');
+  // Step 3 — Add Tenant
+  const [tenantFirst, setTenantFirst] = useState('');
+  const [tenantLast, setTenantLast] = useState('');
+  const [tenantEmail, setTenantEmail] = useState('');
+  const [tenantPhone, setTenantPhone] = useState('');
+  const [tenantRent, setTenantRent] = useState('');
 
-  // ---- Confetti ----
+  // Step 4 — Automations
+  const [enabledAutomations, setEnabledAutomations] = useState<Set<string>>(new Set());
+
+  // Confetti
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Saving states
+  const [savingProperty, setSavingProperty] = useState(false);
+  const [savingTenant, setSavingTenant] = useState(false);
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
+
   useEffect(() => {
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
+    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -210,50 +172,164 @@ export default function OnboardingPage() {
     }
   }, [currentStep]);
 
-  // ---- Fetch user plan on mount ----
+  // Fetch user plan
   useEffect(() => {
     async function fetchPlan() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+      if (!user) { router.push('/login'); return; }
       const { data: sub } = await supabase
         .from('subscriptions')
         .select('plan')
         .eq('user_id', user.id)
         .in('status', ['active', 'trialing'])
         .single();
-
-      if (sub?.plan) {
-        setPlan(sub.plan);
-      }
+      if (sub?.plan) setPlan(sub.plan);
     }
     fetchPlan();
   }, [supabase, router]);
 
-  // ---- Save onboarding data ----
-  const saveOnboardingData = useCallback(async () => {
+  // Google Maps Autocomplete for property address
+  useEffect(() => {
+    if (currentStep !== 2) return;
+    let autocomplete: google.maps.places.Autocomplete | null = null;
+
+    async function init() {
+      if (!addressRef.current) return;
+      try {
+        const loader = getGoogleMapsLoader();
+        // @ts-expect-error - Loader class fallback
+        await (loader.load ? loader.load() : loader.importLibrary('places'));
+        autocomplete = new google.maps.places.Autocomplete(addressRef.current, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' },
+          fields: ['formatted_address', 'address_components'],
+        });
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete?.getPlace();
+          if (place?.formatted_address) setPropertyAddress(place.formatted_address);
+        });
+      } catch (err) {
+        console.error('[Onboarding] Google Maps autocomplete error:', err);
+      }
+    }
+
+    const timer = setTimeout(init, 300);
+    return () => {
+      clearTimeout(timer);
+      if (autocomplete) google.maps.event.clearInstanceListeners(autocomplete);
+    };
+  }, [currentStep]);
+
+  // Save property
+  const saveProperty = useCallback(async () => {
+    if (!propertyAddress.trim()) return;
+    setSavingProperty(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Parse address parts
+      const parts = propertyAddress.split(',').map((s) => s.trim());
+      const street = parts[0] || propertyAddress;
+      const city = parts[1] || '';
+      const stateZip = parts[2] || '';
+      const state = stateZip.split(' ')[0] || '';
+      const zip = stateZip.split(' ')[1] || '';
+
+      const { data } = await supabase.from('properties').insert({
+        user_id: user.id,
+        address: street,
+        city,
+        state,
+        zip,
+        property_type: propertyType,
+        purchase_price: purchasePrice ? parseFloat(purchasePrice.replace(/,/g, '')) : null,
+        monthly_rent: monthlyRent ? parseFloat(monthlyRent.replace(/,/g, '')) : null,
+        status: 'active',
+      }).select('id').single();
+
+      if (data?.id) setCreatedPropertyId(data.id);
+    } catch (err) {
+      console.error('[Onboarding] Save property error:', err);
+    }
+    setSavingProperty(false);
+  }, [supabase, propertyAddress, propertyType, purchasePrice, monthlyRent]);
+
+  // Save tenant
+  const saveTenant = useCallback(async () => {
+    if (!tenantFirst.trim() || !tenantLast.trim()) return;
+    setSavingTenant(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Use the property we just created, or the first property
+      let propId = createdPropertyId;
+      if (!propId) {
+        const { data: props } = await supabase
+          .from('properties')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single();
+        propId = props?.id || null;
+      }
+
+      if (!propId) {
+        console.warn('[Onboarding] No property to assign tenant to');
+        setSavingTenant(false);
+        return;
+      }
+
+      await supabase.from('tenants').insert({
+        user_id: user.id,
+        property_id: propId,
+        first_name: tenantFirst,
+        last_name: tenantLast,
+        email: tenantEmail || null,
+        phone: tenantPhone || null,
+        monthly_rent: tenantRent ? parseFloat(tenantRent.replace(/,/g, '')) : 0,
+        status: 'active',
+        screening_status: 'not_started',
+      });
+    } catch (err) {
+      console.error('[Onboarding] Save tenant error:', err);
+    }
+    setSavingTenant(false);
+  }, [supabase, tenantFirst, tenantLast, tenantEmail, tenantPhone, tenantRent, createdPropertyId]);
+
+  // Save automations + mark onboarding complete
+  const completeOnboarding = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Save automation configs
+    for (const autoId of Array.from(enabledAutomations)) {
+      await supabase.from('automation_configs').upsert({
+        user_id: user.id,
+        type: autoId,
+        enabled: true,
+        settings: {},
+      }, { onConflict: 'user_id,type' });
+    }
+
+    // Mark onboarding complete
     await supabase
       .from('profiles')
-      .update({
-        investor_type: investorType || null,
-        primary_strategy: primaryStrategy || null,
-        portfolio_size_range: portfolioSize || null,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
       .eq('id', user.id);
-  }, [supabase, investorType, primaryStrategy, portfolioSize]);
+  }, [supabase, enabledAutomations]);
 
-  // ---- Navigation ----
+  // Navigation
   const handleNext = async () => {
+    if (currentStep === 2 && propertyAddress.trim()) {
+      await saveProperty();
+    }
+    if (currentStep === 3 && tenantFirst.trim() && tenantLast.trim()) {
+      await saveTenant();
+    }
     if (currentStep === 4) {
-      // Save profile before going to final step
-      await saveOnboardingData();
+      await completeOnboarding();
     }
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep((prev) => prev + 1);
@@ -261,42 +337,45 @@ export default function OnboardingPage() {
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
 
-  const handleFinish = () => {
-    router.push('/dashboard');
-  };
+  const handleFinish = () => router.push('/dashboard');
 
-  // ---- Progress bar ----
+  function toggleAutomation(id: string) {
+    setEnabledAutomations((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  /* ---- Progress bar ------------------------------------------------ */
+
   const ProgressBar = () => (
     <div className="flex gap-2 mb-10">
       {Array.from({ length: TOTAL_STEPS }, (_, i) => {
         const stepNum = i + 1;
-        const isFilled = stepNum <= currentStep;
-        const isCurrent = stepNum === currentStep;
         return (
           <div
             key={i}
-            className={`
-              h-1.5 flex-1 rounded-full transition-all duration-500
-              ${isFilled ? 'bg-gold' : 'bg-border'}
-              ${isCurrent ? 'animate-pulse' : ''}
-            `}
+            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+              stepNum <= currentStep ? 'bg-gold' : 'bg-border'
+            } ${stepNum === currentStep ? 'animate-pulse' : ''}`}
           />
         );
       })}
     </div>
   );
 
-  // ---- Render steps ----
+  const stepLabels = ['Welcome', 'Add Property', 'Add Tenant', 'Automations', 'Ready'];
+
+  /* ---- Render steps ------------------------------------------------ */
+
   const renderStep = () => {
     switch (currentStep) {
-      /* ------------------------------------------------------------ */
-      /*  Step 1 - Welcome                                             */
-      /* ------------------------------------------------------------ */
+      /* ---- Step 1: Welcome ----------------------------------------- */
       case 1:
         return (
           <motion.div
@@ -319,22 +398,17 @@ export default function OnboardingPage() {
               <ul className="space-y-3">
                 {(planFeatures[plan] || planFeatures.pro).map((feature, i) => (
                   <motion.li
-                    key={feature}
+                    key={feature.label}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + i * 0.08 }}
                     className="flex items-center gap-3 text-sm font-body"
                   >
-                    <svg
-                      className="w-4 h-4 text-gold shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-white/80">{feature}</span>
+                    <div className="w-7 h-7 rounded-lg bg-gold/10 flex items-center justify-center text-gold shrink-0">
+                      {feature.icon}
+                    </div>
+                    <span className="text-white/80">{feature.label}</span>
+                    <Check className="w-4 h-4 text-gold ml-auto shrink-0" />
                   </motion.li>
                 ))}
               </ul>
@@ -342,9 +416,7 @@ export default function OnboardingPage() {
           </motion.div>
         );
 
-      /* ------------------------------------------------------------ */
-      /*  Step 2 - Tell us about you                                   */
-      /* ------------------------------------------------------------ */
+      /* ---- Step 2: Add First Property ------------------------------ */
       case 2:
         return (
           <motion.div
@@ -354,74 +426,56 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="font-display font-bold text-3xl text-white">
-              Tell us about you
-            </h2>
-            <p className="text-muted mt-2 font-body">
-              This helps us personalize your experience.
-            </p>
-
-            {/* Investor Type */}
-            <div className="mt-8">
-              <p className="text-sm text-muted font-body mb-3">Investor Type</p>
-              <div className="grid grid-cols-3 gap-3">
-                {investorTypes.map((type) => (
-                  <SelectionCard
-                    key={type.value}
-                    selected={investorType === type.value}
-                    onClick={() => setInvestorType(type.value)}
-                  >
-                    <div className={`mb-2 ${investorType === type.value ? 'text-gold' : 'text-muted'}`}>
-                      {type.icon}
-                    </div>
-                    <p className="text-sm font-medium text-white font-body">{type.label}</p>
-                    <p className="text-xs text-muted font-body mt-0.5">{type.description}</p>
-                  </SelectionCard>
-                ))}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-gold" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-2xl text-white">
+                  Add your first property
+                </h2>
+                <p className="text-muted text-sm font-body">
+                  Start typing an address — we&apos;ll find it.
+                </p>
               </div>
             </div>
 
-            {/* Portfolio Size */}
-            <div className="mt-6">
-              <p className="text-sm text-muted font-body mb-3">Portfolio Size</p>
-              <div className="grid grid-cols-4 gap-3">
-                {portfolioSizes.map((size) => (
-                  <SelectionCard
-                    key={size.value}
-                    selected={portfolioSize === size.value}
-                    onClick={() => setPortfolioSize(size.value)}
-                  >
-                    <p className="text-sm font-medium text-white font-body text-center">
-                      {size.label}
-                    </p>
-                  </SelectionCard>
-                ))}
-              </div>
-            </div>
+            <div className="mt-6 space-y-4">
+              <Input
+                ref={addressRef}
+                label="Property Address"
+                placeholder="Start typing an address..."
+                value={propertyAddress}
+                onChange={(e) => setPropertyAddress(e.target.value)}
+                icon={<MapPin className="w-4 h-4" />}
+              />
 
-            {/* Primary Strategy */}
-            <div className="mt-6">
-              <p className="text-sm text-muted font-body mb-3">Primary Strategy</p>
-              <div className="grid grid-cols-3 gap-3">
-                {strategies.map((s) => (
-                  <SelectionCard
-                    key={s.value}
-                    selected={primaryStrategy === s.value}
-                    onClick={() => setPrimaryStrategy(s.value)}
-                  >
-                    <p className="text-sm font-medium text-white font-body text-center">
-                      {s.label}
-                    </p>
-                  </SelectionCard>
-                ))}
+              <Select
+                label="Property Type"
+                value={propertyType}
+                onChange={(e) => setPropertyType(e.target.value)}
+                options={PROPERTY_TYPE_OPTIONS}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Purchase Price"
+                  placeholder="$250,000"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                />
+                <Input
+                  label="Monthly Rent"
+                  placeholder="$2,000"
+                  value={monthlyRent}
+                  onChange={(e) => setMonthlyRent(e.target.value)}
+                />
               </div>
             </div>
           </motion.div>
         );
 
-      /* ------------------------------------------------------------ */
-      /*  Step 3 - Add your first property                             */
-      /* ------------------------------------------------------------ */
+      /* ---- Step 3: Add First Tenant -------------------------------- */
       case 3:
         return (
           <motion.div
@@ -431,68 +485,68 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="font-display font-bold text-3xl text-white">
-              Add your first property
-            </h2>
-            <p className="text-muted mt-2 font-body">
-              Optional &mdash; you can always add properties later.
-            </p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-gold" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-2xl text-white">
+                  Add your first tenant
+                </h2>
+                <p className="text-muted text-sm font-body">
+                  {createdPropertyId
+                    ? 'Link a tenant to the property you just added.'
+                    : 'Optional — you can add tenants later from the dashboard.'}
+                </p>
+              </div>
+            </div>
 
-            <div className="mt-8 space-y-4">
-              <Input
-                label="Property Address"
-                placeholder="123 Main St, City, State ZIP"
-                value={propertyAddress}
-                onChange={(e) => setPropertyAddress(e.target.value)}
-              />
-
-              <Select
-                label="Property Type"
-                placeholder="Select type"
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value)}
-                options={[
-                  { value: 'single_family', label: 'Single Family' },
-                  { value: 'multi_family', label: 'Multi Family' },
-                  { value: 'condo', label: 'Condo' },
-                  { value: 'townhouse', label: 'Townhouse' },
-                  { value: 'commercial', label: 'Commercial' },
-                  { value: 'land', label: 'Land' },
-                  { value: 'mixed_use', label: 'Mixed Use' },
-                ]}
-              />
-
+            <div className="mt-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Purchase Price"
-                  type="number"
-                  placeholder="$250,000"
-                  value={purchasePrice}
-                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  label="First Name"
+                  placeholder="John"
+                  value={tenantFirst}
+                  onChange={(e) => setTenantFirst(e.target.value)}
+                  icon={<User className="w-4 h-4" />}
                 />
                 <Input
-                  label="Current Value"
-                  type="number"
-                  placeholder="$300,000"
-                  value={currentValue}
-                  onChange={(e) => setCurrentValue(e.target.value)}
+                  label="Last Name"
+                  placeholder="Doe"
+                  value={tenantLast}
+                  onChange={(e) => setTenantLast(e.target.value)}
                 />
               </div>
 
               <Input
-                label="Monthly Rent"
-                type="number"
-                placeholder="$2,000"
-                value={monthlyRent}
-                onChange={(e) => setMonthlyRent(e.target.value)}
+                label="Email"
+                type="email"
+                placeholder="john@example.com"
+                value={tenantEmail}
+                onChange={(e) => setTenantEmail(e.target.value)}
+                icon={<Mail className="w-4 h-4" />}
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Phone"
+                  placeholder="(555) 123-4567"
+                  value={tenantPhone}
+                  onChange={(e) => setTenantPhone(e.target.value)}
+                  icon={<Phone className="w-4 h-4" />}
+                />
+                <Input
+                  label="Monthly Rent"
+                  placeholder="$2,000"
+                  value={tenantRent}
+                  onChange={(e) => setTenantRent(e.target.value)}
+                />
+              </div>
             </div>
           </motion.div>
         );
 
-      /* ------------------------------------------------------------ */
-      /*  Step 4 - Connect your data                                   */
-      /* ------------------------------------------------------------ */
+      /* ---- Step 4: Enable Automations ------------------------------ */
       case 4:
         return (
           <motion.div
@@ -502,83 +556,61 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="font-display font-bold text-3xl text-white">
-              Connect your data
-            </h2>
-            <p className="text-muted mt-2 font-body">
-              Sync your financial data for automated tracking.
-            </p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-gold" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-2xl text-white">
+                  Enable automations
+                </h2>
+                <p className="text-muted text-sm font-body">
+                  Let AI handle the busywork. Toggle on what you need.
+                </p>
+              </div>
+            </div>
 
-            <div className="mt-8 space-y-4">
-              {/* Connect Bank */}
-              <SelectionCard
-                selected={selectedConnection === 'plaid'}
-                onClick={() => setSelectedConnection('plaid')}
-                className="flex items-start gap-4"
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${selectedConnection === 'plaid' ? 'bg-gold/10' : 'bg-deep'}`}>
-                    <svg className={`w-6 h-6 ${selectedConnection === 'plaid' ? 'text-gold' : 'text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-white font-medium font-body">Connect Bank (Plaid)</p>
-                    <p className="text-muted text-sm font-body mt-1">
-                      Automatically import transactions from your bank accounts for real-time expense tracking.
-                    </p>
-                  </div>
-                </div>
-              </SelectionCard>
-
-              {/* Import CSV */}
-              <SelectionCard
-                selected={selectedConnection === 'csv'}
-                onClick={() => setSelectedConnection('csv')}
-                className="flex items-start gap-4"
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${selectedConnection === 'csv' ? 'bg-gold/10' : 'bg-deep'}`}>
-                    <svg className={`w-6 h-6 ${selectedConnection === 'csv' ? 'text-gold' : 'text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-white font-medium font-body">Import CSV</p>
-                    <p className="text-muted text-sm font-body mt-1">
-                      Upload a spreadsheet of your properties, tenants, or financial records.
-                    </p>
-                  </div>
-                </div>
-              </SelectionCard>
-
-              {/* Skip */}
-              <SelectionCard
-                selected={selectedConnection === 'skip'}
-                onClick={() => setSelectedConnection('skip')}
-                className="flex items-start gap-4"
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${selectedConnection === 'skip' ? 'bg-gold/10' : 'bg-deep'}`}>
-                    <svg className={`w-6 h-6 ${selectedConnection === 'skip' ? 'text-gold' : 'text-muted'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.689c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.811V8.69zM12.75 8.689c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.69z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-white font-medium font-body">Skip for now</p>
-                    <p className="text-muted text-sm font-body mt-1">
-                      You can connect your data anytime from the settings page.
-                    </p>
-                  </div>
-                </div>
-              </SelectionCard>
+            <div className="mt-6 space-y-3">
+              {AUTOMATION_CARDS.map((auto) => {
+                const enabled = enabledAutomations.has(auto.id);
+                return (
+                  <button
+                    key={auto.id}
+                    type="button"
+                    onClick={() => toggleAutomation(auto.id)}
+                    className={`w-full text-left rounded-xl border-2 p-4 transition-all duration-200 ${
+                      enabled
+                        ? 'border-gold bg-gold/5'
+                        : 'border-border bg-card hover:border-gold/30'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        enabled ? 'bg-gold/10 text-gold' : 'bg-deep text-muted'
+                      }`}>
+                        {auto.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white font-body">{auto.label}</p>
+                        <p className="text-xs text-muted font-body mt-0.5">{auto.description}</p>
+                      </div>
+                      {/* Toggle indicator */}
+                      <div className={`w-10 h-6 rounded-full relative transition-colors ${
+                        enabled ? 'bg-gold' : 'bg-border'
+                      }`}>
+                        <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                          enabled ? 'translate-x-4' : 'translate-x-0.5'
+                        }`} />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         );
 
-      /* ------------------------------------------------------------ */
-      /*  Step 5 - You're ready!                                       */
-      /* ------------------------------------------------------------ */
+      /* ---- Step 5: You're Ready ------------------------------------ */
       case 5:
         return (
           <motion.div
@@ -590,16 +622,14 @@ export default function OnboardingPage() {
             className="flex flex-col items-center text-center"
           >
             <div className="w-20 h-20 rounded-full bg-gold/10 flex items-center justify-center mb-6">
-              <svg className="w-10 h-10 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-              </svg>
+              <Sparkles className="w-10 h-10 text-gold" />
             </div>
 
             <h2 className="font-display font-bold text-3xl text-white">
-              You&apos;re ready!
+              You&apos;re all set!
             </h2>
             <p className="text-muted mt-3 font-body max-w-sm">
-              Your account is fully set up. Jump into your dashboard to start analyzing deals, managing properties, and growing your portfolio.
+              Your account is ready. Jump into your dashboard to start analyzing deals, managing properties, and growing your portfolio.
             </p>
 
             {/* Setup summary */}
@@ -612,24 +642,22 @@ export default function OnboardingPage() {
                   <span className="text-muted">Plan</span>
                   <span className="text-gold capitalize font-medium">{plan}</span>
                 </div>
-                {investorType && (
+                {propertyAddress && (
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-muted">Experience</span>
-                    <span className="text-white capitalize">{investorType}</span>
+                    <span className="text-muted">Property</span>
+                    <span className="text-white truncate ml-4 text-right">{propertyAddress.split(',')[0]}</span>
                   </div>
                 )}
-                {portfolioSize && (
+                {tenantFirst && tenantLast && (
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-muted">Portfolio</span>
-                    <span className="text-white">{portfolioSize} properties</span>
+                    <span className="text-muted">Tenant</span>
+                    <span className="text-white">{tenantFirst} {tenantLast}</span>
                   </div>
                 )}
-                {primaryStrategy && (
+                {enabledAutomations.size > 0 && (
                   <div className="flex justify-between text-sm font-body">
-                    <span className="text-muted">Strategy</span>
-                    <span className="text-white capitalize">
-                      {strategies.find((s) => s.value === primaryStrategy)?.label || primaryStrategy}
-                    </span>
+                    <span className="text-muted">Automations</span>
+                    <span className="text-gold">{enabledAutomations.size} enabled</span>
                   </div>
                 )}
               </div>
@@ -640,6 +668,7 @@ export default function OnboardingPage() {
               fullWidth
               className="mt-8 max-w-sm"
               onClick={handleFinish}
+              icon={<ArrowRight className="w-4 h-4" />}
             >
               Enter Dashboard
             </Button>
@@ -653,7 +682,6 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      {/* Confetti */}
       {showConfetti && (
         <ReactConfetti
           width={windowSize.width}
@@ -665,7 +693,6 @@ export default function OnboardingPage() {
         />
       )}
 
-      {/* Container */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-2xl mx-auto w-full">
         {/* Progress bar */}
         <div className="w-full">
@@ -673,9 +700,15 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step indicator */}
-        <p className="text-xs text-muted font-body mb-6 self-start">
-          Step {currentStep} of {TOTAL_STEPS}
-        </p>
+        <div className="flex items-center gap-2 mb-6 self-start">
+          <p className="text-xs text-muted font-body">
+            Step {currentStep} of {TOTAL_STEPS}
+          </p>
+          <span className="text-xs text-border">—</span>
+          <p className="text-xs text-gold font-body font-medium">
+            {stepLabels[currentStep - 1]}
+          </p>
+        </div>
 
         {/* Step content */}
         <div className="w-full flex-1">
@@ -684,27 +717,32 @@ export default function OnboardingPage() {
           </AnimatePresence>
         </div>
 
-        {/* Navigation buttons */}
+        {/* Navigation */}
         {currentStep < 5 && (
           <div className="w-full flex items-center justify-between mt-10 pt-6 border-t border-border">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={currentStep === 1}
+              icon={<ArrowLeft className="w-4 h-4" />}
             >
               Back
             </Button>
 
             <div className="flex gap-3">
-              {currentStep === 3 && (
+              {(currentStep === 2 || currentStep === 3) && (
                 <Button
                   variant="ghost"
-                  onClick={handleNext}
+                  onClick={() => setCurrentStep((prev) => prev + 1)}
                 >
                   Skip
                 </Button>
               )}
-              <Button onClick={handleNext}>
+              <Button
+                onClick={handleNext}
+                loading={savingProperty || savingTenant}
+                icon={!(savingProperty || savingTenant) ? <ArrowRight className="w-4 h-4" /> : undefined}
+              >
                 {currentStep === 4 ? 'Finish Setup' : 'Continue'}
               </Button>
             </div>
