@@ -10,6 +10,7 @@ import { Input, Textarea, Select } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { toast } from '@/components/ui/Toast';
+import AddressAutocomplete, { type AddressData } from '@/components/ui/AddressAutocomplete';
 import type { Deal, DealAnalysisResult } from '@/types';
 import {
   Plus,
@@ -969,16 +970,24 @@ function AddDealModal({
           />
 
           <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
-            {/* Address */}
-            <Input
-              label="Property Address"
-              value={form.address}
-              onChange={(e) => update('address', e.target.value)}
-              placeholder="123 Main St"
-              required
-            />
+            {/* Address with Google Places Autocomplete */}
+            <div>
+              <label className="block font-body font-medium text-[12px] text-muted mb-1.5">Property Address *</label>
+              <AddressAutocomplete
+                placeholder="Start typing an address..."
+                onAddressSelect={(addr: AddressData) => {
+                  setForm((f) => ({
+                    ...f,
+                    address: addr.street || addr.fullAddress,
+                    city: addr.city,
+                    state: addr.state,
+                    zip: addr.zip,
+                  }));
+                }}
+              />
+            </div>
 
-            {/* City / State / Zip */}
+            {/* City / State / Zip (auto-filled, still editable) */}
             <div className="grid grid-cols-3 gap-3">
               <Input
                 label="City"

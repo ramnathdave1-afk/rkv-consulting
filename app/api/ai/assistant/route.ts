@@ -60,14 +60,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Call Claude with streaming
-    const systemPrompt = `You are an expert real estate investment AI assistant for RKV Consulting. You help investors analyze deals, manage properties, understand market trends, and make data-driven investment decisions. Be concise, actionable, and provide specific numbers when possible. Always frame advice in terms of ROI, cash flow, and risk management.`
+    // Separate system messages from user/assistant messages
+    // Claude API requires system prompt as a separate parameter, not in the messages array
+    let clientSystemPrompt = ''
+    const chatMessages = messages.filter((m: { role: string; content: string }) => {
+      if (m.role === 'system') {
+        clientSystemPrompt = m.content
+        return false
+      }
+      return true
+    })
 
-    const claudeResponse = await streamClaude(messages, systemPrompt)
+    const systemPrompt = clientSystemPrompt ||
+      `You are an expert real estate investment AI assistant for RKV Consulting. You help investors analyze deals, manage properties, understand market trends, and make data-driven investment decisions. Be concise, actionable, and provide specific numbers when possible. Always frame advice in terms of ROI, cash flow, and risk management.`
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('[AI Assistant] ANTHROPIC_API_KEY is not set')
+      return NextResponse.json(
+        { error: 'AI service is not configured. Please set the ANTHROPIC_API_KEY environment variable.' },
+        { status: 503 }
+      )
+    }
+
+    const claudeResponse = await streamClaude(chatMessages, systemPrompt)
 
     if (!claudeResponse.ok) {
-      const errorData = await claudeResponse.json()
-      console.error('[AI Assistant] Claude API error:', errorData)
+      const errorText = await claudeResponse.text()
+      console.error('[AI Assistant] Claude API error:', claudeResponse.status, errorText)
       return NextResponse.json(
         { error: 'AI service temporarily unavailable' },
         { status: 502 }
@@ -120,11 +139,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Return streaming response with SSE headers
-    return new NextResponse(claudeResponse.body, {
+    // Transform Claude's SSE stream into plain text for the client
+    const transformStream = new TransformStream({
+      transform(chunk, controller) {
+        const text = new TextDecoder().decode(chunk)
+        const lines = text.split('\n')
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6)
+            if (jsonStr === '[DONE]') continue
+            try {
+              const parsed = JSON.parse(jsonStr)
+              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                controller.enqueue(new TextEncoder().encode(parsed.delta.text))
+              }
+            } catch {
+              // Skip non-JSON lines
+            }
+          }
+        }
+      },
+    })
+
+    const readableStream = claudeResponse.body!.pipeThrough(transformStream)
+
+    return new NextResponse(readableStream, {
       status: 200,
       headers: {
-        'Content-Type': 'text/event-stream',
+        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
       },
