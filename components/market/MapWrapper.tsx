@@ -22,20 +22,23 @@ const LeafletMap = dynamic(() => import('./LeafletMap'), {
 
 function MapSkeleton() {
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden bg-[#080A0E] border border-[#1E2530]">
+    <div className="relative w-full h-full rounded-xl overflow-hidden" style={{ background: '#080B0F', border: '1px solid #161E2A' }}>
       {/* Fake map background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0d14] via-[#080A0E] to-[#0d1118]" />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0C1018, #080B0F, #0C1018)' }} />
 
-      {/* Animated shimmer */}
+      {/* Animated cyan shimmer */}
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(201,168,76,0.03), transparent)',
+              'linear-gradient(90deg, transparent, rgba(5,150,105,0.04), transparent)',
           }}
         />
       </div>
+
+      {/* Subtle grid overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(15,22,32,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(15,22,32,0.4) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
       {/* Fake dots to hint at map markers */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -57,7 +60,8 @@ function MapSkeleton() {
                 left: dot.left,
                 width: dot.size,
                 height: dot.size,
-                background: 'rgba(201,168,76,0.15)',
+                background: 'rgba(5,150,105,0.15)',
+                boxShadow: '0 0 8px rgba(5,150,105,0.1)',
                 animationDelay: `${i * 200}ms`,
               }}
             />
@@ -67,11 +71,8 @@ function MapSkeleton() {
 
       {/* Loading label */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        <div className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C9A84C] opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C9A84C]" />
-        </div>
-        <span className="text-xs text-[#8891a0] font-sans">Loading market map...</span>
+        <span className="pulse-dot" />
+        <span className="text-xs text-muted font-body uppercase tracking-wider">Loading market map...</span>
       </div>
     </div>
   );

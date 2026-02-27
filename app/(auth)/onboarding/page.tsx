@@ -105,7 +105,7 @@ function AnimatedCheckmark() {
         cy="26"
         r="24"
         fill="none"
-        stroke="#C9A84C"
+        stroke="#059669"
         strokeWidth="2"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
@@ -113,7 +113,7 @@ function AnimatedCheckmark() {
       />
       <motion.path
         fill="none"
-        stroke="#C9A84C"
+        stroke="#059669"
         strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -283,7 +283,7 @@ export default function OnboardingPage() {
             className={`
               h-1.5 flex-1 rounded-full transition-all duration-500
               ${isFilled ? 'bg-gold' : 'bg-border'}
-              ${isCurrent ? 'animate-pulse-gold' : ''}
+              ${isCurrent ? 'animate-pulse' : ''}
             `}
           />
         );
@@ -661,7 +661,7 @@ export default function OnboardingPage() {
           recycle={false}
           numberOfPieces={300}
           gravity={0.12}
-          colors={['#C9A84C', '#E8C97A', '#22C55E', '#6366F1', '#F0EDE8']}
+          colors={['#059669', '#0EA5E9', '#059669', '#6366F1', '#E2E8F0']}
         />
       )}
 

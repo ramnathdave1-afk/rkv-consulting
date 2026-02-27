@@ -284,7 +284,7 @@ export function UpgradeModal({ isOpen, onClose, targetFeature, targetPlan }: Upg
           <motion.div
             className={cn(
               'relative w-full max-w-4xl max-h-[90vh] overflow-y-auto',
-              'bg-card border border-border rounded-2xl',
+              'glass border border-border rounded-2xl',
               'shadow-card',
             )}
             variants={contentVariants}
@@ -353,7 +353,7 @@ export function UpgradeModal({ isOpen, onClose, targetFeature, targetPlan }: Upg
                       key={config.key}
                       className={cn(
                         'relative flex flex-col rounded-xl border p-6',
-                        'bg-deep/50',
+                        'bg-deep/50 rounded-lg',
                         config.borderClass,
                         isRecommended && 'ring-1 ring-gold/20',
                       )}
@@ -398,10 +398,10 @@ export function UpgradeModal({ isOpen, onClose, targetFeature, targetPlan }: Upg
 
                       {/* Price */}
                       <div className="mb-5">
-                        <span className="font-display font-bold text-3xl text-white">
+                        <span className="font-mono font-bold text-3xl text-white">
                           ${plan.price}
                         </span>
-                        <span className="text-muted text-sm font-body">/mo</span>
+                        <span className="text-muted text-sm font-mono">/mo</span>
                       </div>
 
                       {/* Feature list */}

@@ -18,6 +18,8 @@ import DetailPanel from '@/components/market/DetailPanel'
 import InterestRateTracker from '@/components/market/InterestRateTracker'
 import EconomicIndicators from '@/components/market/EconomicIndicators'
 import MarketComparison from '@/components/market/MarketComparison'
+import BLSIndicators from '@/components/market/BLSIndicators'
+import AlertsConfig from '@/components/market/AlertsConfig'
 import {
   MAJOR_METROS,
   fetchRentcastMarketData,
@@ -105,30 +107,32 @@ function buildCityId(name: string, state: string): string {
 
 /**
  * Construct a full HeatMapCityMarketData object for a metro.
- * If live API data is available it is merged in; otherwise we use the
- * metro population as the only real value and zeros for metrics
- * (the map will still render the bubble).
+ * If live API data is available it is merged in; otherwise we use
+ * realistic fallback data from the metro definition so the map always
+ * renders with meaningful color-coded markers.
  */
 function buildCityMarketData(
   metro: (typeof MAJOR_METROS)[number],
   liveData?: Record<string, unknown> | null,
 ): HeatMapCityMarketData {
   const id = buildCityId(metro.name, metro.state)
+  const fb = metro.fallback
 
   // Extract values from the live API response shape (see /api/market/live)
   const sales = (liveData as any)?.sales ?? {}
   const rental = (liveData as any)?.rental ?? {}
   const investment = (liveData as any)?.investment ?? {}
 
-  const medianPrice = sales.median_home_value ?? 0
-  const pricePerSqft = sales.median_price_per_sqft ?? 0
-  const daysOnMarket = sales.average_days_on_market ?? 0
-  const activeInventory = sales.total_listings ?? 0
-  // Rough months of supply: inventory / (sold_last_30 or inventory/6)
-  const monthsOfSupply = activeInventory > 0 ? +(activeInventory / Math.max(activeInventory / 6, 1)).toFixed(1) : 0
-  const medianRent = rental.median_rent ?? 0
-  const yoyChange = 0 // live API doesn't return YoY yet
-  const populationGrowth = 0 // census data not in live API
+  const medianPrice = sales.median_home_value ?? fb.medianPrice
+  const pricePerSqft = sales.median_price_per_sqft ?? fb.pricePerSqft
+  const daysOnMarket = sales.average_days_on_market ?? fb.daysOnMarket
+  const activeInventory = sales.total_listings ?? fb.activeInventory
+  const monthsOfSupply = sales.total_listings
+    ? +(activeInventory / Math.max(activeInventory / 6, 1)).toFixed(1)
+    : fb.monthsOfSupply
+  const medianRent = rental.median_rent ?? fb.medianRent
+  const yoyChange = fb.yoyChange
+  const populationGrowth = fb.populationGrowth
 
   const typeData = {
     medianPrice,
@@ -141,8 +145,8 @@ function buildCityMarketData(
   }
 
   const investmentScore = calculateInvestmentPotentialScore({
-    capRate: investment.estimated_cap_rate ?? undefined,
-    priceToRentRatio: investment.rent_to_price_ratio ?? undefined,
+    capRate: investment.estimated_cap_rate ?? (medianRent * 12 * 0.55 / medianPrice) * 100,
+    priceToRentRatio: investment.rent_to_price_ratio ?? (medianRent * 12 / medianPrice) * 100,
   })
 
   return {
@@ -270,14 +274,14 @@ function MarketIntelligenceContent() {
         const [city, state] = cityStr.split(', ')
         if (!city || !state) return
 
-        // Find matching metro for zip lookup (if any)
+        // Find matching metro for zip lookup
         const metro = MAJOR_METROS.find(
           (m) => m.name.toLowerCase() === city.toLowerCase() && m.state === state
         )
         if (!metro) return
 
         try {
-          const data = await fetchRentcastMarketData(city, state)
+          const data = await fetchRentcastMarketData(city, state, metro.zip)
           if (data) {
             results[cityStr] = data
           }
@@ -487,30 +491,30 @@ function MarketIntelligenceContent() {
       <div className="space-y-6">
         {/* Header skeleton */}
         <div className="flex items-center justify-between">
-          <div className="h-8 bg-[#1E2530] rounded-lg w-56 animate-pulse" />
-          <div className="h-10 bg-[#1E2530] rounded-lg w-32 animate-pulse" />
+          <div className="h-8 bg-[#161E2A] rounded-lg w-56 animate-pulse" />
+          <div className="h-10 bg-[#161E2A] rounded-lg w-32 animate-pulse" />
         </div>
         {/* Chips skeleton */}
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-8 bg-[#1E2530] rounded-full w-28 animate-pulse" />
+            <div key={i} className="h-8 bg-[#161E2A] rounded-full w-28 animate-pulse" />
           ))}
         </div>
         {/* Metric tabs skeleton */}
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="h-9 bg-[#1E2530] rounded-full w-24 animate-pulse" />
+            <div key={i} className="h-9 bg-[#161E2A] rounded-full w-24 animate-pulse" />
           ))}
         </div>
         {/* Map skeleton */}
-        <div className="h-[520px] bg-[#111620] border border-[#1E2530] rounded-xl animate-pulse" />
+        <div className="h-[520px] bg-[#0C1018] border border-[#161E2A] rounded-xl animate-pulse" />
         {/* Cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-[#111620] border border-[#1E2530] rounded-xl p-6 animate-pulse">
-              <div className="h-5 bg-[#1E2530] rounded w-32 mb-4" />
-              <div className="h-4 bg-[#1E2530] rounded w-24 mb-2" />
-              <div className="h-4 bg-[#1E2530] rounded w-20" />
+            <div key={i} className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 animate-pulse">
+              <div className="h-5 bg-[#161E2A] rounded w-32 mb-4" />
+              <div className="h-4 bg-[#161E2A] rounded w-24 mb-2" />
+              <div className="h-4 bg-[#161E2A] rounded w-20" />
             </div>
           ))}
         </div>
@@ -530,39 +534,39 @@ function MarketIntelligenceContent() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1
-            className="font-bold text-2xl text-white tracking-tight"
-            style={{ fontFamily: 'Syne, sans-serif' }}
+            className="font-display font-bold text-2xl text-white tracking-tight"
           >
             Market Intelligence
           </h1>
-          <div className="flex items-center gap-1.5 ml-1">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22c55e] opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22c55e]" />
-            </span>
-            <span className="text-[10px] font-semibold text-[#22c55e] uppercase tracking-wider font-sans">
-              Live
+          <div className="flex items-center gap-3 ml-1">
+            <div className="flex items-center gap-1.5">
+              <span className="pulse-dot" />
+              <span className="text-[10px] font-body font-semibold text-green uppercase tracking-wider">
+                Live Data
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-muted-deep">
+              {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8891a0]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddMarket()}
               placeholder="City, State..."
-              className="h-10 w-52 rounded-lg bg-[#111620] border border-[#1E2530] pl-9 pr-3 text-sm text-white placeholder:text-[#555] focus:outline-none focus:border-[#C9A84C]/50 transition-colors font-sans"
+              className="h-10 w-52 rounded-lg bg-card border border-border pl-9 pr-3 text-sm text-white placeholder:text-muted-deep font-body focus:outline-none focus:border-gold/50 transition-all"
             />
           </div>
           <button
             type="button"
             onClick={handleAddMarket}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#C9A84C] text-[#080A0E] hover:bg-[#d4b45c] transition-all"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-gold text-card hover:bg-gold/80 transition-all font-display uppercase tracking-wide"
           >
             <Plus className="h-4 w-4" />
             Add Market
@@ -573,7 +577,9 @@ function MarketIntelligenceContent() {
       {/* ============================================================ */}
       {/*  Tracked Markets Chips                                        */}
       {/* ============================================================ */}
-      <div className="flex flex-wrap gap-2">
+      <div>
+        <h3 className="label text-muted mb-3">TRACKED MARKETS //</h3>
+        <div className="flex flex-wrap gap-2">
         {trackedMarkets.map((cityStr) => {
           const isSelected = selectedCity === cityStr
           return (
@@ -582,10 +588,10 @@ function MarketIntelligenceContent() {
               type="button"
               onClick={() => setSelectedCity(isSelected ? null : cityStr)}
               className={cn(
-                'group flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border font-sans',
+                'group flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border font-mono',
                 isSelected
-                  ? 'bg-[#C9A84C]/15 border-[#C9A84C]/40 text-[#C9A84C]'
-                  : 'bg-[#111620] border-[#1E2530] text-[#8891a0] hover:border-[#C9A84C]/25 hover:text-white'
+                  ? 'bg-gold/15 border-gold/40 text-gold glow-border'
+                  : 'bg-card border-border text-muted hover:border-gold/25 hover:text-white'
               )}
             >
               <MapPin className="h-3 w-3" />
@@ -595,13 +601,14 @@ function MarketIntelligenceContent() {
                   e.stopPropagation()
                   handleRemoveTracked(cityStr)
                 }}
-                className="ml-0.5 rounded-full p-0.5 hover:bg-red-500/20 hover:text-red-400 transition-colors cursor-pointer"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-red/20 hover:text-red transition-colors cursor-pointer"
               >
                 <X className="h-3 w-3" />
               </span>
             </button>
           )
         })}
+        </div>
       </div>
 
       {/* ============================================================ */}
@@ -616,10 +623,10 @@ function MarketIntelligenceContent() {
               type="button"
               onClick={() => setSelectedMetric(tab.key)}
               className={cn(
-                'rounded-full px-4 py-2 text-xs font-semibold transition-all border font-sans',
+                'rounded-full px-4 py-2 text-xs font-semibold transition-all border font-body uppercase tracking-wider',
                 isActive
-                  ? 'bg-[#C9A84C] text-[#080A0E] border-[#C9A84C]'
-                  : 'bg-[#111620] text-[#8891a0] border-[#1E2530] hover:border-[#C9A84C]/30 hover:text-white'
+                  ? 'bg-gold text-card border-gold shadow-[0_0_12px_rgba(5,150,105,0.2)]'
+                  : 'bg-card text-muted border-border hover:border-gold/30 hover:text-white'
               )}
             >
               {tab.label}
@@ -631,14 +638,14 @@ function MarketIntelligenceContent() {
       {/* ============================================================ */}
       {/*  Main Content: Map (65%) + Detail Panel (35%)                 */}
       {/* ============================================================ */}
-      <div className="flex gap-0 rounded-xl overflow-hidden border border-[#1E2530]">
+      <div className="flex gap-0 rounded-xl overflow-hidden border border-border rounded-lg">
         {/* Map area */}
         <div
           className={cn(
             'transition-all duration-300',
             selectedCityData ? 'w-[65%]' : 'w-full',
           )}
-          style={{ minHeight: 520 }}
+          style={{ height: 520 }}
         >
           <MapWrapper
             marketData={marketData}
@@ -651,7 +658,7 @@ function MarketIntelligenceContent() {
 
         {/* Detail Panel — slide in from right */}
         {selectedCityData && (
-          <div className="w-[35%]" style={{ minHeight: 520 }}>
+          <div className="w-[35%]" style={{ height: 520 }}>
             <DetailPanel
               city={selectedCityData}
               onClose={() => setSelectedCity(null)}
@@ -681,6 +688,16 @@ function MarketIntelligenceContent() {
       )}
 
       {/* ============================================================ */}
+      {/*  BLS Economic Data (city-specific, shown when selected)       */}
+      {/* ============================================================ */}
+      {selectedCityData && (
+        <BLSIndicators
+          metro={selectedCityData.name}
+          state={selectedCityData.state}
+        />
+      )}
+
+      {/* ============================================================ */}
       {/*  Market Comparison                                            */}
       {/* ============================================================ */}
       {comparedMarkets.length > 0 && (
@@ -702,7 +719,7 @@ function MarketIntelligenceContent() {
           <button
             type="button"
             onClick={() => handleToggleCompare(selectedCity)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#111620] border border-[#1E2530] text-[#8891a0] hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-all font-sans"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-card border border-border text-muted hover:border-gold/40 hover:text-gold transition-all font-mono uppercase tracking-wider"
           >
             <Plus className="h-4 w-4" />
             Add {selectedCity} to Comparison ({comparedMarkets.length}/3)
@@ -713,26 +730,23 @@ function MarketIntelligenceContent() {
       {/* ============================================================ */}
       {/*  Opportunity Alerts                                           */}
       {/* ============================================================ */}
-      <div className="rounded-xl bg-[#111620] border border-[#1E2530] overflow-hidden">
-        {/* Gold accent top border */}
-        <div className="h-[2px] bg-gradient-to-r from-[#C9A84C]/0 via-[#C9A84C]/60 to-[#C9A84C]/0" />
+      <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        {/* Cyan accent top border */}
+        <div className="h-[2px] bg-gradient-to-r from-[#059669]/0 via-[#059669]/60 to-[#059669]/0" />
 
         <div className="p-5">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <h3
-                className="text-sm font-bold text-white uppercase tracking-wider"
-                style={{ fontFamily: 'Syne, sans-serif' }}
-              >
-                Opportunity Alerts
+              <h3 className="label text-gold">
+                OPPORTUNITY ALERTS //
               </h3>
-              <span className="text-[10px] font-semibold bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20 rounded-full px-2 py-0.5">
+              <span className="text-[10px] font-mono font-semibold bg-gold/10 text-gold border border-gold/20 rounded-full px-2 py-0.5">
                 {OPPORTUNITY_ALERTS.length} new
               </span>
             </div>
             <button
               type="button"
-              className="flex items-center gap-1.5 text-xs font-medium text-[#8891a0] hover:text-white transition-colors font-sans"
+              className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-gold transition-colors font-mono uppercase tracking-wider"
             >
               <Bell className="h-3.5 w-3.5" />
               Manage Alerts
@@ -741,10 +755,10 @@ function MarketIntelligenceContent() {
 
           <div className="space-y-3">
             {OPPORTUNITY_ALERTS.map((opp) => {
-              const severityColors: Record<string, { bg: string; icon: string; border: string }> = {
-                high: { bg: 'bg-[#ef4444]/10', icon: 'text-[#ef4444]', border: 'border-[#ef4444]/20' },
-                medium: { bg: 'bg-[#C9A84C]/10', icon: 'text-[#C9A84C]', border: 'border-[#C9A84C]/20' },
-                low: { bg: 'bg-[#22c55e]/10', icon: 'text-[#22c55e]', border: 'border-[#22c55e]/20' },
+              const severityColors: Record<string, { bg: string; icon: string; border: string; leftBorder: string }> = {
+                high: { bg: 'bg-red/10', icon: 'text-red', border: 'border-red/20', leftBorder: 'border-l-2 border-l-red' },
+                medium: { bg: 'bg-[#F59E0B]/10', icon: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', leftBorder: 'border-l-2 border-l-[#F59E0B]' },
+                low: { bg: 'bg-gold/10', icon: 'text-gold', border: 'border-gold/20', leftBorder: 'border-l-2 border-l-gold' },
               }
               const colors = severityColors[opp.severity] || severityColors.low
 
@@ -761,19 +775,20 @@ function MarketIntelligenceContent() {
                   className={cn(
                     'flex items-start gap-3 p-4 rounded-lg border transition-colors hover:bg-white/[0.02]',
                     colors.border,
+                    colors.leftBorder,
                   )}
                 >
                   <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0', colors.bg)}>
                     <Icon className={cn('h-4 w-4', colors.icon)} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white font-sans">{opp.title}</p>
-                    <p className="text-sm text-[#8891a0] mt-0.5 font-sans">{opp.detail}</p>
-                    <p className="text-xs text-[#555] mt-1 font-sans">{opp.timestamp}</p>
+                    <p className="text-sm font-semibold text-white font-display">{opp.title}</p>
+                    <p className="text-sm text-muted mt-0.5">{opp.detail}</p>
+                    <p className="text-xs text-muted-deep mt-1 font-mono">{opp.timestamp}</p>
                   </div>
                   <button
                     type="button"
-                    className="text-xs font-medium text-[#C9A84C] hover:text-[#d4b45c] transition-colors flex-shrink-0 font-sans"
+                    className="text-xs font-medium text-gold hover:text-white transition-colors flex-shrink-0 font-mono uppercase tracking-wider border border-gold/30 rounded-md px-3 py-1.5 hover:bg-gold/10"
                   >
                     View
                   </button>
@@ -783,6 +798,15 @@ function MarketIntelligenceContent() {
           </div>
         </div>
       </div>
+
+      {/* ============================================================ */}
+      {/*  Alert Configuration                                          */}
+      {/* ============================================================ */}
+      <AlertsConfig
+        trackedMarkets={trackedMarkets
+          .map((id) => marketData.find((m) => m.id === id))
+          .filter(Boolean) as HeatMapCityMarketData[]}
+      />
     </div>
   )
 }

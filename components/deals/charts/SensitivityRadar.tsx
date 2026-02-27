@@ -16,13 +16,13 @@ import type { AnalyzerSensitivityResult } from '@/types';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#C9A84C';
-const GOLD_LIGHT = '#E8C97A';
-const CARD_BG = '#111620';
-const BORDER = '#1E2530';
-const GREEN = '#22C55E';
-const MUTED = '#6B7280';
-const GRID = '#1E2530';
+const GOLD = '#059669';
+const VIOLET = '#0EA5E9';
+const CARD_BG = '#0C1018';
+const BORDER = '#161E2A';
+const GREEN = '#059669';
+const MUTED = '#4A6080';
+const GRID = '#161E2A';
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -56,7 +56,7 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#F0EDE8', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif', fontSize: 11 }}>
+      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif', fontSize: 11 }}>
         {label}
       </p>
       {payload.map((entry, i) => (
@@ -70,7 +70,7 @@ function CustomTooltip({
           }}
         >
           <span style={{ color: entry.color, fontSize: 11 }}>{entry.name}</span>
-          <span style={{ color: '#F0EDE8', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
             {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
           </span>
         </div>
@@ -117,13 +117,13 @@ export default function SensitivityRadar({ data }: SensitivityRadarProps) {
             dataKey="scenario"
             stroke={MUTED}
             fontSize={9}
-            fontFamily="DM Sans"
-            tick={{ fill: '#9CA3AF', fontSize: 9 }}
+            fontFamily="'JetBrains Mono', monospace"
+            tick={{ fill: '#4A6080', fontSize: 9 }}
           />
           <PolarRadiusAxis
             stroke={GRID}
             fontSize={9}
-            fontFamily="DM Sans"
+            fontFamily="'JetBrains Mono', monospace"
             domain={[0, 100]}
             tick={false}
             axisLine={false}
@@ -135,7 +135,7 @@ export default function SensitivityRadar({ data }: SensitivityRadarProps) {
             wrapperStyle={{
               fontSize: 11,
               fontFamily: 'DM Sans, sans-serif',
-              color: '#9CA3AF',
+              color: '#4A6080',
               paddingTop: 12,
             }}
           />
@@ -160,10 +160,10 @@ export default function SensitivityRadar({ data }: SensitivityRadarProps) {
           <Radar
             name="DSCR"
             dataKey="dscr"
-            stroke={GOLD_LIGHT}
+            stroke={VIOLET}
             strokeWidth={1}
             strokeDasharray="4 3"
-            fill={GOLD_LIGHT}
+            fill={VIOLET}
             fillOpacity={0.05}
             animationDuration={1000}
           />

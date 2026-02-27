@@ -16,9 +16,9 @@ export async function generateTaxReportPDF(report: TaxReportData) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // ── Header: RKV Consulting Brand ──
-  doc.setFillColor(8, 10, 14); // #080A0E
+  doc.setFillColor(8, 10, 14); // #080B0F
   doc.rect(0, 0, pageWidth, 40, 'F');
-  doc.setTextColor(201, 168, 76); // Gold #C9A84C
+  doc.setTextColor(201, 168, 76); // Gold #059669
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.text('RKV CONSULTING', 20, 18);
@@ -77,7 +77,7 @@ export async function generateTaxReportPDF(report: TaxReportData) {
       theme: 'plain',
       margin: { left: 24, right: 24 },
       headStyles: {
-        fillColor: [17, 22, 32], // #111620
+        fillColor: [17, 22, 32], // #0C1018
         textColor: [201, 168, 76], // Gold
         fontSize: 9,
         fontStyle: 'bold',
@@ -105,7 +105,7 @@ export async function generateTaxReportPDF(report: TaxReportData) {
 
   // ── Net Taxable Income ──
   y += 20;
-  doc.setFillColor(8, 10, 14); // #080A0E
+  doc.setFillColor(8, 10, 14); // #080B0F
   doc.rect(20, y, pageWidth - 40, 14, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(12);

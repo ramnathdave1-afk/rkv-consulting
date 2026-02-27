@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  CalendarDays,
   Calculator,
   Building2,
   Globe,
@@ -20,9 +21,13 @@ import {
   Settings,
   LogOut,
   Lock,
-  ChevronRight,
   Menu,
   X,
+  Search,
+  GitBranch,
+  Contact,
+  DoorOpen,
+  Workflow,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -53,46 +58,51 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'OVERVIEW',
+    label: 'Overview',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Calendar', href: '/calendar', icon: CalendarDays },
     ],
   },
   {
-    label: 'INVESTMENTS',
+    label: 'Investments',
     items: [
       { label: 'Deal Analyzer', href: '/deals', icon: Calculator },
+      { label: 'Deal Pipeline', href: '/pipeline', icon: GitBranch },
       { label: 'My Portfolio', href: '/properties', icon: Building2 },
       { label: 'Market Intelligence', href: '/market-intelligence', icon: Globe, featureKey: 'marketIntelligence' },
       { label: 'Financing Hub', href: '/financing-hub', icon: Landmark, featureKey: 'financingHub' },
     ],
   },
   {
-    label: 'MANAGEMENT',
+    label: 'Management',
     items: [
       { label: 'Properties', href: '/properties', icon: Home },
       { label: 'Tenants', href: '/tenants', icon: Users },
+      { label: 'Contacts', href: '/contacts', icon: Contact },
       { label: 'Maintenance', href: '/maintenance', icon: Wrench },
+      { label: 'Vacancies', href: '/vacancies', icon: DoorOpen },
       { label: 'Tenant Screening', href: '/tenant-screening', icon: Shield, featureKey: 'tenantScreening' },
     ],
   },
   {
-    label: 'AUTOMATION',
-    badge: 'AI Powered',
+    label: 'Automation',
+    badge: 'AI',
     items: [
+      { label: 'Automations', href: '/automations', icon: Workflow },
       { label: 'AI Assistant', href: '/ai-assistant', icon: Bot, featureKey: 'aiAssistant' },
       { label: 'AI Agents', href: '/ai-agents', icon: Zap, featureKey: 'emailAgents' },
     ],
   },
   {
-    label: 'FINANCIALS',
+    label: 'Financials',
     items: [
       { label: 'Accounting', href: '/accounting', icon: Receipt, featureKey: 'accounting' },
       { label: 'Documents', href: '/documents', icon: FileText },
     ],
   },
   {
-    label: 'ACCOUNT',
+    label: 'Account',
     items: [
       { label: 'Settings', href: '/settings', icon: Settings },
     ],
@@ -125,50 +135,37 @@ export default function DashboardLayout({
   const supabase = createClient();
   const { planName, plan, hasFeature, daysUntilRenewal, isLoading: subLoading } = useSubscription();
 
-  // User state
   const [user, setUser] = useState<{ email: string; full_name: string | null } | null>(null);
   const [_unreadCount, setUnreadCount] = useState(0);
-
-  // Dropdown state
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Mobile sidebar state
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-  // Locked feature alert
   const [lockedAlert, setLockedAlert] = useState<string | null>(null);
 
-  // Fetch user profile and unread notifications
   useEffect(() => {
     async function fetchUserData() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) return;
-
       const { data: profile } = await supabase
         .from('profiles')
         .select('email, full_name')
         .eq('id', authUser.id)
         .single();
-
       if (profile) {
         setUser(profile);
       } else {
         setUser({ email: authUser.email || '', full_name: null });
       }
-
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', authUser.id)
         .eq('read', false);
-
       setUnreadCount(count || 0);
     }
     fetchUserData();
   }, [supabase]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -179,12 +176,10 @@ export default function DashboardLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile sidebar on route change
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
 
-  // Clear locked alert after timeout
   useEffect(() => {
     if (lockedAlert) {
       const t = setTimeout(() => setLockedAlert(null), 3000);
@@ -192,7 +187,6 @@ export default function DashboardLayout({
     }
   }, [lockedAlert]);
 
-  // User initials
   const initials = user?.full_name
     ? user.full_name
         .split(' ')
@@ -202,7 +196,6 @@ export default function DashboardLayout({
         .slice(0, 2)
     : user?.email?.charAt(0).toUpperCase() || '?';
 
-  // Logout handler
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/login');
@@ -210,12 +203,10 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-black">
-      {/* ============================================================ */}
-      {/*  MOBILE OVERLAY                                               */}
-      {/* ============================================================ */}
+      {/* MOBILE OVERLAY */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-[55] md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55] md:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -224,19 +215,34 @@ export default function DashboardLayout({
       {/*  SIDEBAR                                                      */}
       {/* ============================================================ */}
       <aside className={cn(
-        'fixed left-0 top-0 w-60 h-screen bg-deep border-r border-border flex flex-col overflow-y-auto z-[60] transition-transform duration-300',
+        'fixed left-0 top-0 w-60 h-screen flex flex-col overflow-y-auto z-[60] transition-transform duration-300',
         'md:translate-x-0',
         mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      )}>
+      )} style={{ background: '#060910', borderRight: '1px solid #161E2A' }}>
+
+        {/* Top accent line */}
+        <div className="h-[2px] bg-gradient-to-r from-gold via-gold-light to-transparent" />
+
         {/* Brand */}
-        <div className="p-6">
-          <h1 className="font-display font-bold text-xl text-white tracking-tight">
-            RKV Consulting
-          </h1>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green animate-pulse inline-block" />
-            <span className="text-xs font-medium text-gold">
-              {subLoading ? '...' : plan.name} Plan
+        <div className="p-5 pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="font-display font-extrabold text-lg text-white tracking-tight">RKV</span>
+            <div className="w-px h-5 bg-border" />
+            <span className="font-body font-normal text-[11px] text-muted uppercase tracking-wider">
+              Consulting
+            </span>
+          </div>
+
+          {/* Subtitle */}
+          <p className="mt-2 font-body text-[11px] text-muted">
+            Portfolio Intelligence Platform
+          </p>
+
+          {/* Plan badge */}
+          <div className="mt-2 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-green" />
+            <span className="font-body text-[10px] text-muted font-medium uppercase tracking-wider">
+              {subLoading ? '...' : plan.name}
             </span>
           </div>
         </div>
@@ -244,21 +250,22 @@ export default function DashboardLayout({
         {/* Navigation groups */}
         <nav className="flex-1 px-3 pb-4">
           {NAV_GROUPS.map((group) => (
-            <div key={group.label} className="mb-5">
+            <div key={group.label} className="mb-4">
               {/* Group label */}
-              <div className="flex items-center gap-2 mb-2 px-3">
-                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-1.5 px-3">
+                <span className="label whitespace-nowrap">
                   {group.label}
                 </span>
+                <div className="flex-1 h-px bg-border/30" />
                 {group.badge && (
-                  <span className="text-[9px] font-semibold text-gold bg-gold/10 border border-gold/20 rounded-full px-1.5 py-0.5 leading-none">
+                  <span className="font-body text-[9px] font-semibold text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5">
                     {group.badge}
                   </span>
                 )}
               </div>
 
               {/* Nav items */}
-              <div className="space-y-0.5">
+              <div className="space-y-px">
                 {group.items.map((item) => {
                   const isActive = pathname === item.href;
                   const isLocked = item.featureKey ? !hasFeature(item.featureKey) : false;
@@ -271,14 +278,13 @@ export default function DashboardLayout({
                         type="button"
                         onClick={() => setLockedAlert(item.label)}
                         className={cn(
-                          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium',
-                          'text-muted hover:text-text hover:bg-white/5',
-                          'transition-colors duration-150 cursor-pointer',
+                          'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm',
+                          'text-muted-deep hover:text-muted transition-colors duration-150 cursor-pointer',
                         )}
                       >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 text-left">{item.label}</span>
-                        <Lock className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                        <Icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+                        <span className="flex-1 text-left font-body text-[13px]">{item.label}</span>
+                        <Lock className="h-3 w-3 text-muted-deep flex-shrink-0" />
                       </button>
                     );
                   }
@@ -288,14 +294,14 @@ export default function DashboardLayout({
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium',
-                        'transition-colors duration-150',
+                        'flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-body font-medium',
+                        'transition-all duration-150',
                         isActive
-                          ? 'border-l-2 border-gold bg-gold/10 text-gold'
-                          : 'text-muted hover:text-text hover:bg-white/5',
+                          ? 'text-gold bg-gold/10 border-l-2 border-gold'
+                          : 'text-muted hover:text-white hover:bg-white/[0.03]',
                       )}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className={cn('h-4 w-4 flex-shrink-0', isActive && 'text-gold')} strokeWidth={1.5} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -305,94 +311,116 @@ export default function DashboardLayout({
           ))}
         </nav>
 
-        {/* Bottom plan card */}
-        <div className="p-4 border-t border-border">
-          <div className="bg-card rounded-lg p-3">
-            <p className="text-sm font-semibold text-gold">{subLoading ? '...' : plan.name}</p>
-            <p className="text-xs text-muted mt-0.5">
-              {subLoading ? '...' : `${daysUntilRenewal} days until renewal`}
-            </p>
-            {planName !== 'elite' && (
-              <Link
-                href="/settings?tab=billing"
-                className="text-xs font-medium text-gold hover:text-gold-light transition-colors mt-2 inline-block"
-              >
-                Upgrade
-              </Link>
-            )}
+        {/* Bottom — User info */}
+        <div className="p-4 border-t border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-md bg-gold/10 flex items-center justify-center text-[11px] font-body font-semibold text-gold">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-body text-[12px] text-white font-medium truncate">{user?.full_name || user?.email || 'User'}</p>
+              <p className="font-body text-[10px] text-muted">
+                {subLoading ? '...' : `${daysUntilRenewal}d until renewal`}
+              </p>
+            </div>
           </div>
+          {planName !== 'elite' && (
+            <Link
+              href="/settings?tab=billing"
+              className="mt-2 block text-center font-body text-[11px] font-medium text-gold hover:text-gold-light transition-colors border border-gold/20 rounded-md px-2 py-1.5 hover:bg-gold/5 uppercase tracking-wider"
+            >
+              Upgrade Plan
+            </Link>
+          )}
         </div>
       </aside>
 
       {/* ============================================================ */}
       {/*  TOP BAR                                                      */}
       {/* ============================================================ */}
-      <header className="fixed top-0 left-0 md:left-60 right-0 h-14 md:h-16 bg-deep/80 backdrop-blur-xl border-b border-border z-40 flex items-center justify-between px-4 md:px-6">
+      <header className="fixed top-0 left-0 md:left-60 right-0 h-14 z-40 flex items-center justify-between px-4 md:px-5" style={{ background: '#080B0F', borderBottom: '1px solid #161E2A' }}>
         {/* Left: hamburger (mobile) + breadcrumb */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileSidebarOpen((prev) => !prev)}
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded text-muted hover:text-white hover:bg-white/5 transition-colors"
           >
             {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted hidden sm:inline">RKV</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted/50 hidden sm:inline" />
-            <span className="text-white font-medium">{getBreadcrumb(pathname)}</span>
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-muted hidden sm:inline font-body">RKV</span>
+            <span className="text-border hidden sm:inline">/</span>
+            <span className="text-white font-body font-medium">{getBreadcrumb(pathname)}</span>
           </div>
         </div>
 
-        {/* Right: notification + avatar */}
-        <div className="flex items-center gap-4">
-          {/* Notification Center */}
+        {/* Center: status indicators */}
+        <div className="hidden md:flex items-center gap-5">
+          {[
+            { label: 'Markets', status: 'Live' },
+            { label: 'AI', status: 'Ready' },
+            { label: 'Data', status: 'Updated' },
+          ].map((s) => (
+            <div key={s.label} className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green" />
+              <span className="font-body text-[11px] text-muted">
+                {s.label} <span className="text-muted-deep">· {s.status}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Right: search, notification, avatar */}
+        <div className="flex items-center gap-3">
+          <button className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-muted hover:text-gold transition-colors">
+            <Search className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+
           <NotificationCenter />
 
-          {/* User avatar dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
               className={cn(
-                'flex items-center justify-center w-9 h-9 rounded-full',
-                'bg-gold/15 text-gold font-semibold text-sm',
-                'hover:bg-gold/25 transition-colors cursor-pointer',
-                'border border-gold/20',
+                'flex items-center justify-center w-8 h-8 rounded-md',
+                'bg-gold/10 text-gold font-body text-[11px] font-semibold',
+                'hover:bg-gold/20 transition-colors cursor-pointer',
               )}
             >
               {initials}
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-12 w-64 bg-card border border-border rounded-xl shadow-card overflow-hidden animate-fade-up">
-                <div className="p-4 border-b border-border">
-                  <p className="text-sm font-semibold text-white truncate">
+              <div className="absolute right-0 top-11 w-60 rounded-lg shadow-card overflow-hidden animate-fade-up" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <div className="p-3 border-b border-border/50">
+                  <p className="text-[13px] font-medium text-white truncate">
                     {user?.full_name || 'User'}
                   </p>
-                  <p className="text-xs text-muted truncate mt-0.5">
+                  <p className="font-body text-[11px] text-muted truncate mt-0.5">
                     {user?.email}
                   </p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-[10px] font-semibold text-gold bg-gold/10 border border-gold/20 rounded-full px-2 py-0.5">
-                    {plan.name} Plan
+                  <span className="inline-flex items-center gap-1 mt-1.5 font-body text-[10px] font-medium text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                    {plan.name} Access
                   </span>
                 </div>
-                <div className="p-2">
+                <div className="p-1.5">
                   <Link
                     href="/settings"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted hover:text-white hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] text-muted hover:text-white hover:bg-white/5 transition-colors"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-3.5 w-3.5" strokeWidth={1.5} />
                     Settings
                   </Link>
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted hover:text-red hover:bg-red/5 transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-[13px] text-muted hover:text-red hover:bg-red/5 transition-colors cursor-pointer"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Logout
+                    <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Sign Out
                   </button>
                 </div>
               </div>
@@ -402,21 +430,21 @@ export default function DashboardLayout({
       </header>
 
       {/* ============================================================ */}
-      {/*  LOCKED FEATURE ALERT                                         */}
+      {/*  LOCKED FEATURE ALERT                                        */}
       {/* ============================================================ */}
       {lockedAlert && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] animate-fade-up">
-          <div className="flex items-center gap-3 bg-card border border-gold/30 rounded-xl px-5 py-3 shadow-glow">
+          <div className="flex items-center gap-3 rounded-lg px-5 py-3 shadow-card" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
             <Lock className="h-4 w-4 text-gold flex-shrink-0" />
-            <p className="text-sm text-white">
+            <p className="text-sm text-white font-body">
               <span className="font-semibold text-gold">{lockedAlert}</span> requires an upgrade.
             </p>
             <Link
               href="/settings?tab=billing"
-              className="text-xs font-semibold text-gold hover:text-gold-light transition-colors whitespace-nowrap"
+              className="font-body text-[11px] font-semibold text-gold hover:text-gold-light transition-colors whitespace-nowrap uppercase tracking-wider"
               onClick={() => setLockedAlert(null)}
             >
-              Upgrade Now
+              Upgrade
             </Link>
           </div>
         </div>
@@ -425,17 +453,17 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  MAIN CONTENT                                                 */}
       {/* ============================================================ */}
-      <main className="ml-0 md:ml-60 mt-14 md:mt-16 min-h-screen bg-black p-4 md:p-8 pb-24 md:pb-8">
+      <main className="ml-0 md:ml-60 mt-14 min-h-screen bg-black p-4 md:p-6 pb-24 md:pb-8">
         {children}
       </main>
 
       {/* ============================================================ */}
       {/*  MOBILE BOTTOM NAV                                            */}
       {/* ============================================================ */}
-      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-deep/95 backdrop-blur-xl border-t border-border z-50 md:hidden flex items-center justify-around px-2">
+      <nav className="fixed bottom-0 left-0 right-0 h-14 z-50 md:hidden flex items-center justify-around px-2" style={{ background: 'rgba(8, 11, 15, 0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #161E2A' }}>
         {[
           { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
-          { label: 'Properties', href: '/properties', icon: Building2 },
+          { label: 'Portfolio', href: '/properties', icon: Building2 },
           { label: 'Deals', href: '/deals', icon: Calculator },
           { label: 'Tenants', href: '/tenants', icon: Users },
           { label: 'Settings', href: '/settings', icon: Settings },
@@ -447,13 +475,13 @@ export default function DashboardLayout({
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg min-w-[56px]',
+                'flex flex-col items-center gap-0.5 px-3 py-1.5 min-w-[52px]',
                 'transition-colors duration-150',
-                isActive ? 'text-gold' : 'text-muted hover:text-white',
+                isActive ? 'text-gold' : 'text-muted-deep hover:text-muted',
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <Icon className="h-5 w-5" strokeWidth={1.5} />
+              <span className="font-body text-[9px] tracking-wider">{item.label}</span>
             </Link>
           );
         })}

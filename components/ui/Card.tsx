@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type CardVariant = 'default' | 'elevated' | 'interactive' | 'glass';
+export type CardVariant = 'default' | 'elevated' | 'interactive' | 'glass' | 'hud';
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -22,17 +22,17 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 /* ------------------------------------------------------------------ */
 
 const variantStyles: Record<CardVariant, string> = {
-  default: 'bg-card border border-border',
-  elevated: 'bg-card/90 border border-border shadow-card',
+  default: '',
+  elevated: 'shadow-card',
   interactive: [
-    'bg-card border border-border',
     'hover:scale-[1.01] hover:shadow-glow hover:border-gold/20',
     'transition-all duration-300 ease-out cursor-pointer',
   ].join(' '),
   glass: [
-    'bg-card/40 backdrop-blur-xl border border-white/5',
+    'backdrop-blur-xl !border-white/5',
     'shadow-card',
   ].join(' '),
+  hud: 'rounded-lg',
 };
 
 const paddingStyles: Record<CardPadding, string> = {
@@ -55,6 +55,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       footer,
       className,
       children,
+      style,
       ...props
     },
     ref,
@@ -63,20 +64,26 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl overflow-hidden',
+          'rounded-lg overflow-hidden glow-border',
           variantStyles[variant],
           // Only apply padding to the wrapper when there is no header/footer
           !header && !footer && paddingStyles[padding],
           className,
         )}
+        style={{
+          background: '#0C1018',
+          border: '1px solid #161E2A',
+          ...style,
+        }}
         {...props}
       >
         {header && (
           <div
             className={cn(
-              'border-b border-border',
+              'border-b',
               paddingStyles[padding === 'none' ? 'md' : padding],
             )}
+            style={{ borderColor: '#161E2A' }}
           >
             {header}
           </div>
@@ -91,9 +98,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         {footer && (
           <div
             className={cn(
-              'border-t border-border',
+              'border-t',
               paddingStyles[padding === 'none' ? 'md' : padding],
             )}
+            style={{ borderColor: '#161E2A' }}
           >
             {footer}
           </div>

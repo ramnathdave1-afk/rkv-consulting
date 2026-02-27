@@ -54,65 +54,67 @@ function getRadius(population: number): number {
 
 const DARK_THEME_CSS = `
   .leaflet-container {
-    background: #080A0E !important;
-    font-family: 'DM Sans', sans-serif;
+    background: #080B0F !important;
+    font-family: 'Inter', sans-serif;
   }
   .leaflet-control-attribution { display: none !important; }
   .leaflet-control-zoom {
-    border: 1px solid #1E2530 !important;
+    border: 1px solid #161E2A !important;
     border-radius: 8px !important;
     overflow: hidden;
   }
   .leaflet-control-zoom a {
-    background: #111620 !important;
-    color: #C9A84C !important;
-    border-color: #1E2530 !important;
+    background: #0C1018 !important;
+    color: #059669 !important;
+    border-color: #161E2A !important;
     width: 32px !important;
     height: 32px !important;
     line-height: 32px !important;
     font-size: 16px !important;
   }
   .leaflet-control-zoom a:hover {
-    background: #1a2030 !important;
-    color: #fff !important;
+    background: #161E2A !important;
+    color: #E2E8F0 !important;
   }
   .leaflet-popup-content-wrapper {
-    background: #111620 !important;
-    color: #e8eaed !important;
-    border: 1px solid #1E2530 !important;
+    background: #0C1018 !important;
+    color: #E2E8F0 !important;
+    border: 1px solid #161E2A !important;
     border-radius: 10px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
-    font-family: 'DM Sans', sans-serif !important;
+    box-shadow: 0 8px 32px rgba(5,150,105,0.08), 0 4px 16px rgba(0,0,0,0.5) !important;
+    font-family: 'Inter', sans-serif !important;
   }
   .leaflet-popup-tip {
-    background: #111620 !important;
-    border: 1px solid #1E2530 !important;
+    background: #0C1018 !important;
+    border: 1px solid #161E2A !important;
   }
   .leaflet-popup-close-button {
-    color: #666 !important;
+    color: #4A6080 !important;
   }
   .leaflet-popup-close-button:hover {
-    color: #C9A84C !important;
+    color: #059669 !important;
   }
   .leaflet-tooltip {
-    background: rgba(17, 22, 32, 0.96) !important;
-    color: #e8eaed !important;
-    border: 1px solid #1E2530 !important;
+    background: rgba(4, 8, 16, 0.96) !important;
+    color: #E2E8F0 !important;
+    border: 1px solid #161E2A !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 4px 20px rgba(5,150,105,0.06), 0 4px 16px rgba(0,0,0,0.5) !important;
     padding: 10px 14px !important;
-    font-family: 'DM Sans', sans-serif !important;
+    font-family: 'Inter', sans-serif !important;
     font-size: 12px !important;
+    backdrop-filter: blur(12px);
   }
   .leaflet-tooltip::before {
-    border-top-color: rgba(17, 22, 32, 0.96) !important;
+    border-top-color: rgba(4, 8, 16, 0.96) !important;
   }
   .rkv-map-tooltip-name {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
     font-size: 14px;
-    color: #C9A84C;
+    color: #059669;
     margin-bottom: 6px;
+    text-shadow: 0 0 8px rgba(5,150,105,0.3);
   }
   .rkv-map-tooltip-row {
     display: flex;
@@ -121,14 +123,17 @@ const DARK_THEME_CSS = `
     padding: 2px 0;
   }
   .rkv-map-tooltip-label {
-    color: #8891a0;
-    font-size: 11px;
+    color: #4A6080;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'JetBrains Mono', monospace;
   }
   .rkv-map-tooltip-value {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
     font-size: 12px;
-    color: #fff;
+    color: #E2E8F0;
   }
 `;
 
@@ -251,7 +256,7 @@ export default function LeafletMap({
         radius,
         fillColor: color,
         fillOpacity: isSelected ? 0.9 : 0.65,
-        color: isSelected ? '#C9A84C' : 'rgba(255,255,255,0.15)',
+        color: isSelected ? '#059669' : 'rgba(255,255,255,0.15)',
         weight: isSelected ? 3 : 1,
       });
 
@@ -301,7 +306,7 @@ export default function LeafletMap({
           radius: radius + 5,
           fillColor: 'transparent',
           fillOpacity: 0,
-          color: '#C9A84C',
+          color: '#059669',
           weight: 2.5,
           dashArray: '6 3',
           opacity: 0.85,
@@ -324,16 +329,18 @@ export default function LeafletMap({
   ]);
 
   return (
-    <div className="relative w-full h-full" style={{ background: '#080A0E' }}>
+    <div className="relative w-full h-full" style={{ background: '#080B0F' }}>
       <div ref={containerRef} className="w-full h-full" />
       {/* Vignette overlay */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse at center, transparent 50%, rgba(8,10,14,0.6) 100%)',
+            'radial-gradient(ellipse at center, transparent 50%, rgba(4,8,16,0.7) 100%)',
         }}
       />
+      {/* Subtle grid overlay */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03]" />
     </div>
   );
 }

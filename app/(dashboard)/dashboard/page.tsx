@@ -15,6 +15,8 @@ import {
   Sparkles,
   Plus,
   ArrowRight,
+  CalendarDays,
+  ChevronRight,
 } from 'lucide-react';
 import {
   LineChart,
@@ -49,7 +51,7 @@ import type {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const PIE_COLORS = ['#C9A84C', '#E8C97A', '#22C55E', '#3B82F6', '#A855F7', '#EF4444', '#F97316'];
+const PIE_COLORS = ['#059669', '#0EA5E9', '#059669', '#3B82F6', '#A855F7', '#DC2626', '#F97316'];
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   single_family: 'Single Family',
@@ -112,9 +114,9 @@ function getStatusBadge(status: string): { bg: string; text: string } {
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-deep border border-border rounded-lg px-3 py-2 shadow-card">
-      <p className="text-xs text-muted">{label}</p>
-      <p className="text-sm font-semibold text-gold">{formatFullCurrency(payload[0].value)}</p>
+    <div className="glass rounded-lg px-3 py-2 shadow-card" style={{ background: '#0C1018', border: '1px solid rgba(5, 150, 105, 0.2)' }}>
+      <p className="font-mono text-[10px] text-muted">{label}</p>
+      <p className="font-mono text-sm font-semibold text-gold">{formatFullCurrency(payload[0].value)}</p>
     </div>
   );
 }
@@ -563,7 +565,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {/*  ROW 1 - Metric Cards                                         */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Portfolio Value"
           value={formatCurrency(totalPortfolioValue)}
@@ -610,12 +612,12 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {/*  ROW 2 - Portfolio Performance + Property Breakdown            */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Portfolio Performance LineChart */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white">Portfolio Performance</h3>
-            <span className="text-xs text-muted">Last 12 months</span>
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-5">
+            <span className="label text-gold">Portfolio Performance</span>
+            <span className="font-body text-[10px] text-muted-deep">12 Months</span>
           </div>
           {loading ? (
             <Skeleton variant="chart" height="280px" />
@@ -629,14 +631,14 @@ export default function DashboardPage() {
                 />
                 <XAxis
                   dataKey="month"
-                  stroke="#6B7280"
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                  axisLine={{ stroke: '#1E2530' }}
+                  stroke="#4A6080"
+                  tick={{ fill: '#4A6080', fontSize: 12 }}
+                  axisLine={{ stroke: '#161E2A' }}
                   tickLine={false}
                 />
                 <YAxis
-                  stroke="#6B7280"
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  stroke="#4A6080"
+                  tick={{ fill: '#4A6080', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(val: number) => formatCurrency(val)}
@@ -646,13 +648,13 @@ export default function DashboardPage() {
                 <Line
                   type="monotone"
                   dataKey="cashFlow"
-                  stroke="#C9A84C"
+                  stroke="#059669"
                   strokeWidth={2.5}
                   dot={false}
                   activeDot={{
                     r: 5,
-                    fill: '#C9A84C',
-                    stroke: '#0D1117',
+                    fill: '#059669',
+                    stroke: '#0C1018',
                     strokeWidth: 2,
                   }}
                 />
@@ -661,11 +663,11 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Property Breakdown PieChart */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white">Property Breakdown</h3>
-            <span className="text-xs text-muted">{properties.length} properties</span>
+        {/* Property Breakdown */}
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-5">
+            <span className="label text-gold">Property Breakdown</span>
+            <span className="font-body text-[10px] text-muted-deep">{properties.length} Assets</span>
           </div>
           {loading ? (
             <Skeleton variant="chart" height="280px" />
@@ -752,14 +754,14 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       {/*  ROW 3 - Active Deals + Upcoming + AI Market Brief             */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Active Deals */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-white">Active Deals</h3>
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="label text-gold">Active Pipeline</span>
             <Link
               href="/deal-analyzer"
-              className="text-xs font-medium text-gold hover:text-gold-light transition-colors flex items-center gap-1"
+              className="font-body text-[10px] text-gold hover:text-gold-light transition-colors flex items-center gap-1"
             >
               View All <ArrowRight className="h-3 w-3" />
             </Link>
@@ -814,34 +816,33 @@ export default function DashboardPage() {
                 })}
               {deals.filter((d) => d.stage !== 'closed' && d.stage !== 'dead').length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-sm text-muted">No active deals</p>
+                  <p className="font-body text-[11px] text-muted-deep">No active deals</p>
                   <Link
                     href="/deal-analyzer?action=new"
-                    className="text-xs text-gold hover:text-gold-light mt-2 inline-block"
+                    className="font-body text-[11px] text-gold hover:text-gold-light mt-2 inline-block"
                   >
-                    Analyze a new deal
+                    Analyze New Deal
                   </Link>
                 </div>
               )}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm text-muted">No deals yet</p>
+              <p className="font-body text-[11px] text-muted-deep">No deals recorded</p>
               <Link
                 href="/deal-analyzer?action=new"
-                className="text-xs text-gold hover:text-gold-light mt-2 inline-block"
+                className="font-body text-[11px] text-gold hover:text-gold-light mt-2 inline-block"
               >
-                Analyze your first deal
+                Analyze First Deal
               </Link>
             </div>
           )}
         </div>
 
         {/* Upcoming Events */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold text-white">Upcoming</h3>
-            <span className="text-xs text-muted">Next 30 days</span>
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="label text-gold">Upcoming · 30 Days</span>
           </div>
           {loading ? (
             <div className="space-y-4">
@@ -893,58 +894,59 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* AI Market Brief */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-white">AI Market Brief</h3>
-              <Sparkles className="h-3.5 w-3.5 text-gold" />
-            </div>
+        {/* AI Intelligence Brief */}
+        <div className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          {/* Animated left border */}
+          <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg, #059669, #0EA5E9, #059669)', backgroundSize: '100% 200%', animation: 'border-rotate 3s ease infinite' }} />
+          <div className="flex items-center justify-between mb-4 pl-2">
+            <span className="label text-gold">AI Intelligence Brief</span>
+            <Sparkles className="h-3 w-3 text-gold opacity-50" />
           </div>
           {aiBrief ? (
-            <div className="space-y-4">
-              <p className="text-sm text-text leading-relaxed">{aiBrief}</p>
+            <div className="space-y-4 pl-2">
+              <p className="text-[13px] text-white/90 leading-relaxed font-body">{aiBrief}</p>
               {!aiBriefLoading && (
                 <button
                   type="button"
                   onClick={handleGenerateBrief}
-                  className="text-xs font-medium text-gold hover:text-gold-light transition-colors"
+                  className="font-body text-[10px] text-gold hover:text-gold-light transition-colors border border-gold/20 rounded px-2 py-1 hover:bg-gold/5"
                 >
-                  Regenerate
+                  Regenerate Brief
                 </button>
               )}
+              <p className="font-body text-[9px] text-muted-deep">Powered by Claude AI</p>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 border border-gold/20 mb-4">
+            <div className="flex flex-col items-center justify-center py-8 text-center pl-2">
+              <div className="w-12 h-12 rounded-lg bg-gold/8 flex items-center justify-center border border-gold/20 mb-4">
                 <Sparkles className="h-5 w-5 text-gold" />
               </div>
-              <p className="text-sm text-muted mb-4">
-                Get AI-powered insights about your portfolio and market conditions
+              <p className="text-[13px] text-muted mb-4 font-body">
+                AI-powered insights about your portfolio
               </p>
               <button
                 type="button"
                 onClick={handleGenerateBrief}
                 disabled={aiBriefLoading}
                 className={cn(
-                  'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold',
-                  'bg-gold text-black',
-                  'hover:brightness-110 hover:shadow-glow',
+                  'inline-flex items-center gap-2 px-4 py-2 rounded font-mono text-[11px] font-semibold',
+                  'bg-gold/10 text-gold border border-gold/30',
+                  'hover:bg-gold/20 hover:shadow-glow',
                   'transition-all duration-200',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                 )}
               >
                 {aiBriefLoading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Generating...
+                    Analyzing...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles className="h-3.5 w-3.5" />
                     Generate Brief
                   </>
                 )}
@@ -955,7 +957,239 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================ */}
-      {/*  ROW 4 - Recent Activity                                      */}
+      {/*  ROW 4 - Mini Calendar + Investment IQ                          */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Mini Calendar Widget — Next 7 Days */}
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="label text-gold">Next 7 Days</span>
+            <Link
+              href="/calendar"
+              className="font-body text-[10px] text-gold hover:text-gold-light transition-colors flex items-center gap-1"
+            >
+              Full Calendar <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} variant="text" height="48px" className="rounded-lg" />
+              ))}
+            </div>
+          ) : (() => {
+            // Build next 7 days of events
+            const next7Days: { date: Date; events: typeof upcomingEvents }[] = [];
+            for (let d = 0; d < 7; d++) {
+              const day = new Date(now.getTime() + d * 24 * 60 * 60 * 1000);
+              const dayEvents = upcomingEvents.filter(
+                (e) =>
+                  e.date.getFullYear() === day.getFullYear() &&
+                  e.date.getMonth() === day.getMonth() &&
+                  e.date.getDate() === day.getDate(),
+              );
+
+              // Also add recurring rent dues on the 1st
+              if (day.getDate() === 1 && d > 0) {
+                tenants.filter((t) => t.status === 'active').forEach((t) => {
+                  dayEvents.push({
+                    id: `mini-rent-${t.id}`,
+                    date: day,
+                    description: `${t.first_name} ${t.last_name} — Rent Due $${t.monthly_rent.toLocaleString()}`,
+                    type: 'rent',
+                    icon: DollarSign,
+                  });
+                });
+              }
+
+              next7Days.push({ date: day, events: dayEvents });
+            }
+
+            const hasAnyEvents = next7Days.some((d) => d.events.length > 0);
+
+            if (!hasAnyEvents) {
+              return (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CalendarDays className="h-8 w-8 text-muted/30 mb-3" />
+                  <p className="text-sm text-muted">Clear schedule ahead</p>
+                  <p className="text-xs text-muted/60 mt-1">No events in the next 7 days</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                {next7Days.map(({ date: dayDate, events: dayEvents }) => {
+                  const isToday = dayDate.toDateString() === now.toDateString();
+                  const dayLabel = isToday
+                    ? 'Today'
+                    : dayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                  return (
+                    <div key={dayDate.toISOString()}>
+                      <div className={cn(
+                        'flex items-center gap-2 px-2 py-1.5 rounded',
+                        isToday ? 'bg-gold/5' : '',
+                      )}>
+                        <span className={cn(
+                          'font-body text-[11px] font-medium',
+                          isToday ? 'text-gold' : 'text-muted',
+                        )}>
+                          {dayLabel}
+                        </span>
+                        {dayEvents.length > 0 && (
+                          <span className="text-[10px] text-muted bg-border/50 rounded-full px-1.5 py-0.5 font-mono">
+                            {dayEvents.length}
+                          </span>
+                        )}
+                      </div>
+                      {dayEvents.length > 0 && (
+                        <div className="ml-2 pl-3 border-l border-border/50 space-y-1 mb-2">
+                          {dayEvents.slice(0, 3).map((event) => {
+                            const EventIcon = event.icon;
+                            const colorMap: Record<string, string> = {
+                              rent: 'text-green',
+                              lease: 'text-gold',
+                              maintenance: 'text-gold-light',
+                            };
+                            return (
+                              <div
+                                key={event.id}
+                                className="flex items-center gap-2 py-1 px-2 rounded hover:bg-white/5 transition-colors"
+                              >
+                                <EventIcon className={cn('h-3 w-3 flex-shrink-0', colorMap[event.type] || 'text-muted')} />
+                                <span className="text-xs text-white truncate">{event.description}</span>
+                              </div>
+                            );
+                          })}
+                          {dayEvents.length > 3 && (
+                            <span className="text-[10px] text-muted ml-2">+{dayEvents.length - 3} more</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Investment IQ Score Widget */}
+        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="label text-gold">Investment IQ</span>
+            <Sparkles className="h-3 w-3 text-gold opacity-40" />
+          </div>
+          {loading ? (
+            <Skeleton variant="chart" height="240px" />
+          ) : (() => {
+            // Calculate IQ sub-scores
+            const cashFlowMargin = totalMonthlyRent > 0
+              ? (monthlyCashFlow / totalMonthlyRent) * 100
+              : 0;
+            const cashFlowScore = cashFlowMargin > 15 ? 92 : cashFlowMargin > 10 ? 78 : cashFlowMargin > 5 ? 62 : cashFlowMargin > 0 ? 40 : 20;
+
+            const uniqueTypes = new Set(properties.map((p) => p.property_type));
+            const diversificationScore = uniqueTypes.size >= 3 ? 88 : uniqueTypes.size >= 2 ? 60 : properties.length > 0 ? 30 : 0;
+
+            const avgAppreciation = properties.length > 0
+              ? properties.reduce((sum, p) => {
+                  const purchase = p.purchase_price || 0;
+                  const current = p.current_value || 0;
+                  return sum + (purchase > 0 ? ((current - purchase) / purchase) * 100 : 0);
+                }, 0) / properties.length
+              : 0;
+            const equityScore = avgAppreciation > 20 ? 90 : avgAppreciation > 10 ? 75 : avgAppreciation > 5 ? 60 : avgAppreciation > 0 ? 45 : 25;
+
+            const avgVacancy = properties.length > 0
+              ? properties.reduce((sum, p) => sum + (p.vacancy_rate || 5), 0) / properties.length
+              : 10;
+            const activeLeases = tenants.filter((t) => t.status === 'active' && t.lease_end && new Date(t.lease_end) > now).length;
+            const riskScore = avgVacancy < 5 && activeLeases >= properties.length ? 85 : avgVacancy < 8 ? 65 : 40;
+
+            const taxScore = properties.length > 0 ? 65 : 0; // Base — improves with categorized transactions
+
+            const marketScore = properties.length > 0 ? 70 : 0; // Base score
+
+            const overallIQ = properties.length > 0
+              ? Math.round((cashFlowScore * 0.25 + diversificationScore * 0.15 + equityScore * 0.2 + riskScore * 0.2 + taxScore * 0.1 + marketScore * 0.1))
+              : 0;
+
+            const grade = overallIQ >= 80 ? 'A' : overallIQ >= 60 ? 'B' : overallIQ >= 40 ? 'C' : 'D';
+            const gradeColor = overallIQ >= 80 ? '#059669' : overallIQ >= 60 ? '#0EA5E9' : overallIQ >= 40 ? '#D97706' : '#DC2626';
+
+            const radius = 52;
+            const circumference = 2 * Math.PI * radius;
+            const strokeDashoffset = circumference - (overallIQ / 100) * circumference;
+
+            const subScores = [
+              { label: 'Cash Flow', score: cashFlowScore, color: '#059669' },
+              { label: 'Diversification', score: diversificationScore, color: '#0EA5E9' },
+              { label: 'Equity Growth', score: equityScore, color: '#059669' },
+              { label: 'Risk Mgmt', score: riskScore, color: '#3B82F6' },
+              { label: 'Tax Efficiency', score: taxScore, color: '#D97706' },
+              { label: 'Market Strength', score: marketScore, color: '#8B5CF6' },
+            ];
+
+            if (properties.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-sm text-muted">Add properties to calculate your Investment IQ</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="flex flex-col items-center">
+                {/* Circular gauge */}
+                <div className="relative w-32 h-32">
+                  <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r={radius} fill="none" stroke="#161E2A" strokeWidth="8" />
+                    <circle
+                      cx="60" cy="60" r={radius} fill="none"
+                      stroke={gradeColor} strokeWidth="8" strokeLinecap="round"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="font-mono text-2xl font-bold text-white">{overallIQ}</span>
+                    <span className="font-display text-sm font-bold" style={{ color: gradeColor }}>{grade}</span>
+                  </div>
+                </div>
+
+                {/* Sub-scores grid */}
+                <div className="grid grid-cols-3 gap-3 mt-5 w-full">
+                  {subScores.map((sub) => (
+                    <div key={sub.label} className="text-center">
+                      <div className="h-1.5 bg-border rounded-full overflow-hidden mb-1.5">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${sub.score}%`, backgroundColor: sub.color }}
+                        />
+                      </div>
+                      <span className="font-mono text-[10px] font-semibold text-white">{sub.score}</span>
+                      <p className="font-body text-[9px] text-muted leading-tight">{sub.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <Link
+                  href="/settings?tab=preferences"
+                  className="mt-4 flex items-center gap-1 font-body text-[10px] text-gold hover:text-gold-light transition-colors"
+                >
+                  Improve Score <ChevronRight className="h-3 w-3" />
+                </Link>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/*  ROW 5 - Recent Activity                                      */}
       {/* ============================================================ */}
       <ActivityFeed activities={activities} />
     </div>

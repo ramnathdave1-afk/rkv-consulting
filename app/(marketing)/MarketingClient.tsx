@@ -243,12 +243,12 @@ function DealAnalysisPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
-        <span className="text-sm text-muted font-body">Deal #1847</span>
-        <span className="text-xs bg-green/20 text-green px-2 py-1 rounded-full">Strong Buy</span>
+        <span className="text-[11px] font-body uppercase tracking-wider text-muted">Deal #1847</span>
+        <span className="text-[10px] font-body uppercase tracking-wider bg-green/20 text-green px-2 py-1 rounded-full">Strong Buy</span>
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
-        <div className="text-sm text-muted mb-1 font-body">Property</div>
-        <div className="font-display font-bold">1247 Oak Street, Unit 4B</div>
+        <div className="text-[10px] font-body uppercase tracking-wider text-muted mb-1">Property</div>
+        <div className="font-display font-bold text-white">1247 Oak Street, Unit 4B</div>
         <div className="text-sm text-muted font-body">Austin, TX 78702</div>
       </div>
       <div className="grid grid-cols-3 gap-3">
@@ -258,14 +258,14 @@ function DealAnalysisPreview() {
           { label: 'IRR (5yr)', value: '18.7%', color: 'text-green' },
         ].map((m) => (
           <div key={m.label} className="bg-deep rounded-lg p-3 border border-border text-center">
-            <div className={`text-xl font-bold font-display ${m.color}`}>{m.value}</div>
-            <div className="text-xs text-muted font-body mt-1">{m.label}</div>
+            <div className={`text-xl font-bold font-mono ${m.color}`}>{m.value}</div>
+            <div className="text-[10px] font-body uppercase tracking-wider text-muted mt-1">{m.label}</div>
           </div>
         ))}
       </div>
       <div className="flex gap-2 mt-2">
         {['Risk: Low', 'Neighborhood: A-', 'Schools: 8/10'].map((tag) => (
-          <span key={tag} className="text-xs bg-card border border-border px-2 py-1 rounded font-body">
+          <span key={tag} className="text-[10px] font-body bg-deep border border-border px-2 py-1 rounded text-muted">
             {tag}
           </span>
         ))}
@@ -278,8 +278,8 @@ function PortfolioDashboardPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Portfolio Overview</span>
-        <span className="text-xs text-muted font-body">Live</span>
+        <span className="font-display font-bold text-white">Portfolio Overview</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-gold">Live</span>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {[
@@ -289,14 +289,14 @@ function PortfolioDashboardPreview() {
           { label: 'Cash Flow', value: '$18,400', trend: '+8%' },
         ].map((m) => (
           <div key={m.label} className="bg-deep rounded-lg p-3 border border-border">
-            <div className="text-xs text-muted font-body">{m.label}</div>
-            <div className="text-lg font-bold font-display">{m.value}</div>
-            {m.trend && <span className="text-xs text-green">{m.trend}</span>}
+            <div className="text-[10px] font-body uppercase tracking-wider text-muted">{m.label}</div>
+            <div className="text-lg font-bold font-mono text-white">{m.value}</div>
+            {m.trend && <span className="text-xs font-mono text-green">{m.trend}</span>}
           </div>
         ))}
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
-        <div className="text-xs text-muted mb-3 font-body">Monthly Revenue</div>
+        <div className="text-[10px] font-body uppercase tracking-wider text-muted mb-3">Monthly Revenue</div>
         <div className="flex items-end gap-1 h-16">
           {[40, 55, 48, 62, 58, 72, 68, 78, 85, 80, 92, 88].map((h, i) => (
             <div
@@ -304,7 +304,7 @@ function PortfolioDashboardPreview() {
               className="flex-1 rounded-t"
               style={{
                 height: `${h}%`,
-                backgroundColor: i === 11 ? '#C9A84C' : '#1E2530',
+                backgroundColor: i === 11 ? '#059669' : '#161E2A',
               }}
             />
           ))}
@@ -318,8 +318,8 @@ function TenantManagementPreview() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Tenant Activity</span>
-        <span className="text-xs bg-green/20 text-green px-2 py-1 rounded-full">All Current</span>
+        <span className="font-display font-bold text-white">Tenant Activity</span>
+        <span className="text-[10px] font-body uppercase tracking-wider bg-green/20 text-green px-2 py-1 rounded-full">All Current</span>
       </div>
       {[
         { name: 'Sarah M.', unit: '4B', status: 'Paid', date: 'Feb 1', color: 'text-green' },
@@ -329,17 +329,17 @@ function TenantManagementPreview() {
       ].map((t) => (
         <div key={t.unit} className="flex items-center justify-between bg-deep rounded-lg p-3 border border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted">
+            <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-body text-muted">
               {t.name.charAt(0)}
             </div>
             <div>
-              <div className="text-sm font-body">{t.name}</div>
-              <div className="text-xs text-muted font-body">Unit {t.unit}</div>
+              <div className="text-sm font-body text-white">{t.name}</div>
+              <div className="text-[10px] font-body text-muted">Unit {t.unit}</div>
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-sm font-body ${t.color}`}>{t.status}</div>
-            <div className="text-xs text-muted font-body">{t.date}</div>
+            <div className={`text-sm font-mono ${t.color}`}>{t.status}</div>
+            <div className="text-[10px] font-mono text-muted">{t.date}</div>
           </div>
         </div>
       ))}
@@ -351,13 +351,13 @@ function TenantScreeningPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Applicant Review</span>
-        <span className="text-xs text-muted font-body">3 pending</span>
+        <span className="font-display font-bold text-white">Applicant Review</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">3 pending</span>
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
         <div className="flex items-center justify-between mb-3">
-          <span className="font-body font-medium">Angela W.</span>
-          <span className="text-xs bg-green/20 text-green px-2 py-1 rounded-full">Score: 94</span>
+          <span className="font-body font-medium text-white">Angela W.</span>
+          <span className="text-[10px] font-mono bg-green/20 text-green px-2 py-1 rounded-full">Score: 94</span>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
           {[
@@ -367,15 +367,15 @@ function TenantScreeningPreview() {
             { label: 'Criminal', value: 'Clear', ok: true },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between bg-card rounded p-2">
-              <span className="text-muted font-body text-xs">{item.label}</span>
-              <span className="text-green text-xs font-body">{item.value}</span>
+              <span className="text-[10px] font-body uppercase tracking-wider text-muted">{item.label}</span>
+              <span className="text-xs font-mono text-green">{item.value}</span>
             </div>
           ))}
         </div>
       </div>
       <div className="flex gap-2">
-        <button className="flex-1 bg-green/20 text-green text-sm py-2 rounded-lg font-body">Approve</button>
-        <button className="flex-1 bg-red/20 text-red text-sm py-2 rounded-lg font-body">Decline</button>
+        <button className="flex-1 bg-green/20 text-green text-sm py-2 rounded-lg font-body text-[11px] uppercase tracking-wider">Approve</button>
+        <button className="flex-1 bg-red/20 text-red text-sm py-2 rounded-lg font-body text-[11px] uppercase tracking-wider">Decline</button>
       </div>
     </div>
   );
@@ -385,8 +385,8 @@ function ContractorNetworkPreview() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Matched Contractors</span>
-        <span className="text-xs text-muted font-body">Plumbing</span>
+        <span className="font-display font-bold text-white">Matched Contractors</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">Plumbing</span>
       </div>
       {[
         { name: 'Rivera Plumbing', rating: 4.9, bids: '$340', time: '2hr response' },
@@ -395,16 +395,16 @@ function ContractorNetworkPreview() {
       ].map((c) => (
         <div key={c.name} className="flex items-center justify-between bg-deep rounded-lg p-3 border border-border">
           <div>
-            <div className="text-sm font-body font-medium">{c.name}</div>
+            <div className="text-sm font-body font-medium text-white">{c.name}</div>
             <div className="flex items-center gap-2 mt-1">
               <Star className="w-3 h-3 text-gold fill-gold" />
-              <span className="text-xs text-gold font-body">{c.rating}</span>
-              <span className="text-xs text-muted font-body">{c.time}</span>
+              <span className="text-xs font-mono text-gold">{c.rating}</span>
+              <span className="text-[10px] font-body text-muted">{c.time}</span>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-display font-bold text-gold">{c.bids}</div>
-            <div className="text-xs text-muted font-body">Est. bid</div>
+            <div className="text-sm font-mono font-bold text-gold">{c.bids}</div>
+            <div className="text-[10px] font-body text-muted">Est. bid</div>
           </div>
         </div>
       ))}
@@ -416,8 +416,8 @@ function MarketIntelligencePreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Market Pulse</span>
-        <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded-full">Live</span>
+        <span className="font-display font-bold text-white">Market Pulse</span>
+        <span className="text-[10px] font-body uppercase tracking-wider bg-gold/20 text-gold px-2 py-1 rounded-full">Live</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -426,16 +426,16 @@ function MarketIntelligencePreview() {
           { city: 'Boise', trend: '-1.2%', signal: 'Cooling' },
         ].map((m) => (
           <div key={m.city} className="bg-deep rounded-lg p-3 border border-border text-center">
-            <div className="text-xs text-muted font-body">{m.city}</div>
-            <div className={`text-sm font-bold font-display ${m.trend.startsWith('+') ? 'text-green' : 'text-red'}`}>
+            <div className="text-[10px] font-body uppercase tracking-wider text-muted">{m.city}</div>
+            <div className={`text-sm font-bold font-mono ${m.trend.startsWith('+') ? 'text-green' : 'text-red'}`}>
               {m.trend}
             </div>
-            <div className="text-xs text-muted font-body mt-1">{m.signal}</div>
+            <div className="text-[10px] font-body text-muted mt-1">{m.signal}</div>
           </div>
         ))}
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
-        <div className="text-xs text-muted mb-3 font-body">Rent Growth by Region</div>
+        <div className="text-[10px] font-body uppercase tracking-wider text-muted mb-3">Rent Growth by Region</div>
         <div className="space-y-2">
           {[
             { region: 'Southeast', width: '78%' },
@@ -444,7 +444,7 @@ function MarketIntelligencePreview() {
             { region: 'Northeast', width: '38%' },
           ].map((r) => (
             <div key={r.region} className="flex items-center gap-2">
-              <span className="text-xs text-muted font-body w-20">{r.region}</span>
+              <span className="text-[10px] font-body text-muted w-20">{r.region}</span>
               <div className="flex-1 bg-card rounded-full h-2">
                 <div className="bg-gold rounded-full h-2" style={{ width: r.width }} />
               </div>
@@ -460,21 +460,21 @@ function AccountingPreview() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Tax Center</span>
-        <span className="text-xs text-muted font-body">FY 2025</span>
+        <span className="font-display font-bold text-white">Tax Center</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">FY 2025</span>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-deep rounded-lg p-3 border border-border">
-          <div className="text-xs text-muted font-body">Revenue</div>
-          <div className="text-lg font-bold font-display text-green">$284,200</div>
+          <div className="text-[10px] font-body uppercase tracking-wider text-muted">Revenue</div>
+          <div className="text-lg font-bold font-mono text-green">$284,200</div>
         </div>
         <div className="bg-deep rounded-lg p-3 border border-border">
-          <div className="text-xs text-muted font-body">Deductions Found</div>
-          <div className="text-lg font-bold font-display text-gold">$18,400</div>
+          <div className="text-[10px] font-body uppercase tracking-wider text-muted">Deductions Found</div>
+          <div className="text-lg font-bold font-mono text-gold">$18,400</div>
         </div>
       </div>
       <div className="bg-deep rounded-lg p-3 border border-border space-y-2">
-        <div className="text-xs text-muted font-body mb-2">Recent Transactions</div>
+        <div className="text-[10px] font-body uppercase tracking-wider text-muted mb-2">Recent Transactions</div>
         {[
           { desc: 'Roof repair - Unit 7A', amount: '-$2,340', cat: 'Maintenance' },
           { desc: 'Rent - Sarah M.', amount: '+$1,800', cat: 'Income' },
@@ -482,10 +482,10 @@ function AccountingPreview() {
         ].map((tx) => (
           <div key={tx.desc} className="flex items-center justify-between text-sm">
             <div>
-              <div className="font-body">{tx.desc}</div>
-              <div className="text-xs text-muted font-body">{tx.cat}</div>
+              <div className="font-body text-white">{tx.desc}</div>
+              <div className="text-[10px] font-body text-muted">{tx.cat}</div>
             </div>
-            <span className={`font-display font-bold ${tx.amount.startsWith('+') ? 'text-green' : 'text-red'}`}>
+            <span className={`font-mono font-bold ${tx.amount.startsWith('+') ? 'text-green' : 'text-red'}`}>
               {tx.amount}
             </span>
           </div>
@@ -499,9 +499,9 @@ function VoiceEmailAgentsPreview() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
-        <span className="font-display font-bold">Agent Activity</span>
-        <span className="flex items-center gap-1.5 text-xs text-green font-body">
-          <span className="w-1.5 h-1.5 bg-green rounded-full animate-pulse" />
+        <span className="font-display font-bold text-white">Agent Activity</span>
+        <span className="flex items-center gap-1.5 text-[10px] font-body uppercase tracking-wider text-green">
+          <span className="pulse-dot bg-green" />
           3 agents active
         </span>
       </div>
@@ -516,8 +516,8 @@ function VoiceEmailAgentsPreview() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-body font-medium">{a.agent}</span>
-              <span className="text-xs text-muted font-body">{a.time}</span>
+              <span className="text-sm font-body font-medium text-white">{a.agent}</span>
+              <span className="text-[10px] font-mono text-muted">{a.time}</span>
             </div>
             <div className="text-xs text-muted font-body mt-0.5">{a.action}</div>
           </div>
@@ -543,17 +543,17 @@ const featurePreviews = [
 /* ================================================================== */
 function DeepDiveDealAnalyzer() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Deal Analyzer</span>
+          <span className="text-sm font-display font-bold text-white">Deal Analyzer</span>
         </div>
-        <span className="text-xs bg-green/20 text-green px-2 py-0.5 rounded-full">Analysis Complete</span>
+        <span className="text-[10px] font-body uppercase tracking-wider bg-green/20 text-green px-2 py-0.5 rounded-full">Analysis Complete</span>
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
         <div className="text-sm font-body text-muted mb-1">1247 Oak Street, Austin TX</div>
-        <div className="text-lg font-display font-bold">$385,000</div>
+        <div className="text-lg font-mono font-bold text-white">$385,000</div>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {[
@@ -563,8 +563,8 @@ function DeepDiveDealAnalyzer() {
           { label: 'IRR', val: '18.7%' },
         ].map((m) => (
           <div key={m.label} className="text-center bg-deep rounded p-2 border border-border">
-            <div className="text-sm font-bold font-display text-gold">{m.val}</div>
-            <div className="text-[10px] text-muted font-body">{m.label}</div>
+            <div className="text-sm font-bold font-mono text-gold">{m.val}</div>
+            <div className="text-[10px] font-body uppercase tracking-wider text-muted">{m.label}</div>
           </div>
         ))}
       </div>
@@ -575,7 +575,7 @@ function DeepDiveDealAnalyzer() {
             className="flex-1 rounded-sm"
             style={{
               height: `${h}%`,
-              backgroundColor: i >= 8 ? '#C9A84C' : '#1E2530',
+              backgroundColor: i >= 8 ? '#059669' : '#161E2A',
             }}
           />
         ))}
@@ -586,13 +586,13 @@ function DeepDiveDealAnalyzer() {
 
 function DeepDiveMarketIntel() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Market Intelligence</span>
+          <span className="text-sm font-display font-bold text-white">Market Intelligence</span>
         </div>
-        <span className="text-xs bg-gold/20 text-gold px-2 py-0.5 rounded-full">Live Feed</span>
+        <span className="text-[10px] font-body uppercase tracking-wider bg-gold/20 text-gold px-2 py-0.5 rounded-full">Live Feed</span>
       </div>
       <div className="grid grid-cols-5 grid-rows-3 gap-1 h-28">
         {Array.from({ length: 15 }).map((_, i) => {
@@ -609,10 +609,10 @@ function DeepDiveMarketIntel() {
           { market: 'Boise, ID', val: '-1.2%', tag: 'Cooling' },
         ].map((m) => (
           <div key={m.market} className="flex items-center justify-between text-sm bg-deep rounded p-2 border border-border">
-            <span className="font-body">{m.market}</span>
+            <span className="font-body text-white">{m.market}</span>
             <div className="flex items-center gap-2">
-              <span className={`font-display font-bold ${m.val.startsWith('+') ? 'text-green' : 'text-red'}`}>{m.val}</span>
-              <span className="text-[10px] text-muted font-body">{m.tag}</span>
+              <span className={`font-mono font-bold ${m.val.startsWith('+') ? 'text-green' : 'text-red'}`}>{m.val}</span>
+              <span className="text-[10px] font-body text-muted">{m.tag}</span>
             </div>
           </div>
         ))}
@@ -623,14 +623,14 @@ function DeepDiveMarketIntel() {
 
 function DeepDiveVoiceAgent() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Phone className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Voice Agent</span>
+          <span className="text-sm font-display font-bold text-white">Voice Agent</span>
         </div>
-        <span className="flex items-center gap-1.5 text-xs text-green font-body">
-          <span className="w-1.5 h-1.5 bg-green rounded-full animate-pulse" />
+        <span className="flex items-center gap-1.5 text-[10px] font-body uppercase tracking-wider text-green">
+          <span className="pulse-dot bg-green" />
           Active
         </span>
       </div>
@@ -642,12 +642,12 @@ function DeepDiveVoiceAgent() {
       ].map((call) => (
         <div key={call.caller} className="flex items-center justify-between bg-deep rounded-lg p-3 border border-border">
           <div>
-            <div className="text-sm font-body">{call.caller}</div>
-            <div className="text-xs text-green font-body">{call.outcome}</div>
+            <div className="text-sm font-body text-white">{call.caller}</div>
+            <div className="text-xs font-body text-green">{call.outcome}</div>
           </div>
           <div className="text-right">
-            {call.amount && <div className="text-sm font-display font-bold text-gold">{call.amount}</div>}
-            <div className="text-xs text-muted font-body">{call.time}</div>
+            {call.amount && <div className="text-sm font-mono font-bold text-gold">{call.amount}</div>}
+            <div className="text-[10px] font-mono text-muted">{call.time}</div>
           </div>
         </div>
       ))}
@@ -657,13 +657,13 @@ function DeepDiveVoiceAgent() {
 
 function DeepDiveContractor() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-3 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-3 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Hammer className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Contractor Match</span>
+          <span className="text-sm font-display font-bold text-white">Contractor Match</span>
         </div>
-        <span className="text-xs text-muted font-body">Plumbing &middot; Urgent</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">Plumbing &middot; Urgent</span>
       </div>
       {[
         { name: 'Rivera Plumbing Co.', score: 97, bid: '$340', eta: '2 hours' },
@@ -672,15 +672,15 @@ function DeepDiveContractor() {
       ].map((c, i) => (
         <div key={c.name} className={`flex items-center justify-between bg-deep rounded-lg p-3 border ${i === 0 ? 'border-gold/50' : 'border-border'}`}>
           <div>
-            <div className="text-sm font-body font-medium">{c.name}</div>
+            <div className="text-sm font-body font-medium text-white">{c.name}</div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-gold font-body">Score: {c.score}</span>
-              <span className="text-xs text-muted font-body">ETA: {c.eta}</span>
+              <span className="text-[10px] font-mono text-gold">Score: {c.score}</span>
+              <span className="text-[10px] font-mono text-muted">ETA: {c.eta}</span>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-display font-bold">{c.bid}</div>
-            {i === 0 && <span className="text-[10px] text-gold font-body">Best Match</span>}
+            <div className="text-sm font-mono font-bold text-white">{c.bid}</div>
+            {i === 0 && <span className="text-[10px] font-body text-gold">Best Match</span>}
           </div>
         </div>
       ))}
@@ -690,13 +690,13 @@ function DeepDiveContractor() {
 
 function DeepDivePortfolio() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Portfolio</span>
+          <span className="text-sm font-display font-bold text-white">Portfolio</span>
         </div>
-        <span className="text-xs text-muted font-body">34 units</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">34 units</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -705,18 +705,18 @@ function DeepDivePortfolio() {
           { label: 'Cash Flow', value: '$18.4K', color: 'text-green' },
         ].map((m) => (
           <div key={m.label} className="bg-deep rounded p-3 border border-border text-center">
-            <div className={`text-lg font-bold font-display ${m.color}`}>{m.value}</div>
-            <div className="text-[10px] text-muted font-body">{m.label}</div>
+            <div className={`text-lg font-bold font-mono ${m.color}`}>{m.value}</div>
+            <div className="text-[10px] font-body uppercase tracking-wider text-muted">{m.label}</div>
           </div>
         ))}
       </div>
       <div className="bg-deep rounded-lg p-4 border border-border">
-        <div className="text-xs text-muted mb-2 font-body">12-Month Performance</div>
+        <div className="text-[10px] font-body uppercase tracking-wider text-muted mb-2">12-Month Performance</div>
         <svg viewBox="0 0 300 60" className="w-full h-12">
           <polyline
             points="0,50 25,42 50,45 75,35 100,38 125,30 150,28 175,22 200,25 225,18 250,15 275,10 300,8"
             fill="none"
-            stroke="#C9A84C"
+            stroke="#059669"
             strokeWidth="2"
           />
           <polyline
@@ -726,8 +726,8 @@ function DeepDivePortfolio() {
           />
           <defs>
             <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#C9A84C" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#C9A84C" stopOpacity="0" />
+              <stop offset="0%" stopColor="#059669" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>
@@ -738,22 +738,22 @@ function DeepDivePortfolio() {
 
 function DeepDiveAccounting() {
   return (
-    <div className="bg-card border border-border rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PieChart className="w-4 h-4 text-gold" />
-          <span className="text-sm font-display font-bold">Accounting</span>
+          <span className="text-sm font-display font-bold text-white">Accounting</span>
         </div>
-        <span className="text-xs text-muted font-body">FY 2025</span>
+        <span className="text-[10px] font-body uppercase tracking-wider text-muted">FY 2025</span>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-deep rounded p-3 border border-border">
-          <div className="text-xs text-muted font-body">Revenue</div>
-          <div className="text-lg font-bold font-display text-green">$284,200</div>
+          <div className="text-[10px] font-body uppercase tracking-wider text-muted">Revenue</div>
+          <div className="text-lg font-bold font-mono text-green">$284,200</div>
         </div>
         <div className="bg-deep rounded p-3 border border-border">
-          <div className="text-xs text-muted font-body">Deductions</div>
-          <div className="text-lg font-bold font-display text-gold">$18,400</div>
+          <div className="text-[10px] font-body uppercase tracking-wider text-muted">Deductions</div>
+          <div className="text-lg font-bold font-mono text-gold">$18,400</div>
         </div>
       </div>
       <div className="space-y-1.5">
@@ -764,11 +764,11 @@ function DeepDiveAccounting() {
           { cat: 'Utilities', pct: '16%', w: '16%' },
         ].map((c) => (
           <div key={c.cat} className="flex items-center gap-2 text-xs">
-            <span className="w-20 text-muted font-body">{c.cat}</span>
+            <span className="w-20 text-muted font-body text-[10px]">{c.cat}</span>
             <div className="flex-1 bg-deep rounded-full h-1.5">
               <div className="bg-gold rounded-full h-1.5" style={{ width: c.w }} />
             </div>
-            <span className="text-muted font-body w-8 text-right">{c.pct}</span>
+            <span className="text-muted font-mono text-[10px] w-8 text-right">{c.pct}</span>
           </div>
         ))}
       </div>
@@ -814,12 +814,12 @@ function MetricCounter({
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
     >
-      <div className="text-5xl md:text-6xl font-bold font-display text-gold mb-2">
+      <div className="text-4xl md:text-5xl font-bold font-mono text-gold mb-2">
         {prefix}
         {decimals > 0 ? count.toFixed(decimals) : Math.round(count)}
         {suffix}
       </div>
-      <div className="text-sm text-muted font-body">{label}</div>
+      <div className="text-[10px] font-body uppercase tracking-wider text-muted">{label}</div>
     </motion.div>
   );
 }
@@ -835,14 +835,14 @@ export default function MarketingPage() {
   const [agentActionIndex, setAgentActionIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  /* ── Scroll listener for navbar ──────────────────────────────────── */
+  /* -- Scroll listener for navbar ---------------------------------- */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* ── Pain point cycling ──────────────────────────────────────────── */
+  /* -- Pain point cycling ------------------------------------------ */
   useEffect(() => {
     if (painSettled) return;
 
@@ -859,7 +859,7 @@ export default function MarketingPage() {
     return () => clearInterval(interval);
   }, [painSettled]);
 
-  /* ── Agent action ticker ─────────────────────────────────────────── */
+  /* -- Agent action ticker ----------------------------------------- */
   useEffect(() => {
     const interval = setInterval(() => {
       setAgentActionIndex((prev) => (prev + 1) % agentActions.length);
@@ -867,7 +867,7 @@ export default function MarketingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  /* ── Smooth scroll handler ───────────────────────────────────────── */
+  /* -- Smooth scroll handler --------------------------------------- */
   const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -879,29 +879,35 @@ export default function MarketingPage() {
   const ActivePreview = featurePreviews[activeFeature];
 
   return (
-    <div className="min-h-screen bg-black font-body text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#080B0F] font-body text-white overflow-x-hidden">
       {/* ============================================================ */}
-      {/* SECTION 1 — NAVBAR                                           */}
+      {/* SECTION 1 -- NAVBAR                                          */}
       {/* ============================================================ */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-border/50' : 'bg-transparent'
+          scrolled
+            ? 'bg-[#080B0F]/90 backdrop-blur-xl border-b border-[#161E2A]/50'
+            : 'bg-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="relative max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 group">
-            <span className="text-gold text-lg">&#9679;</span>
-            <span className="font-display font-bold text-lg tracking-tight">RKV Consulting</span>
+          <a href="/" className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-md bg-gold/20 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-sm bg-gold" />
+            </div>
+            <span className="font-display font-bold text-[15px] tracking-tight text-gold">
+              RKV CONSULTING
+            </span>
           </a>
 
-          {/* Center nav — desktop */}
+          {/* Center nav -- desktop */}
           <div className="hidden md:flex items-center gap-8">
             {['Features', 'Pricing', 'About'].map((link) => (
               <button
                 key={link}
                 onClick={() => scrollTo(link.toLowerCase())}
-                className="text-sm text-muted hover:text-white transition-colors relative group font-body"
+                className="text-[14px] text-muted hover:text-white transition-colors relative group font-body"
               >
                 {link}
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full" />
@@ -913,13 +919,13 @@ export default function MarketingPage() {
           <div className="hidden md:flex items-center gap-4">
             <a
               href="/login"
-              className="text-sm text-muted hover:text-white transition-colors font-body"
+              className="text-[14px] text-muted hover:text-white transition-colors font-body border border-transparent hover:border-border px-4 py-1.5 rounded-lg"
             >
               Login
             </a>
             <a
               href="/signup"
-              className="bg-gold text-black text-sm font-body font-medium px-5 py-2 rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
+              className="bg-gold text-black text-[14px] font-body font-medium px-5 py-2 rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
             >
               Get Started
             </a>
@@ -944,23 +950,23 @@ export default function MarketingPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-black/95 backdrop-blur-xl border-b border-border overflow-hidden"
+              className="md:hidden bg-[#080B0F]/95 backdrop-blur-xl border-b border-[#161E2A] overflow-hidden"
             >
               <div className="px-6 py-4 space-y-3">
                 {['Features', 'Pricing', 'About'].map((link) => (
                   <button
                     key={link}
                     onClick={() => scrollTo(link.toLowerCase())}
-                    className="block w-full text-left text-sm text-muted hover:text-white transition-colors font-body py-2"
+                    className="block w-full text-left text-[14px] text-muted hover:text-white transition-colors font-body py-2"
                   >
                     {link}
                   </button>
                 ))}
                 <div className="flex gap-3 pt-2">
-                  <a href="/login" className="text-sm text-muted hover:text-white transition-colors font-body py-2">
+                  <a href="/login" className="text-[14px] text-muted hover:text-white transition-colors font-body py-2">
                     Login
                   </a>
-                  <a href="/signup" className="bg-gold text-black text-sm font-body font-medium px-5 py-2 rounded-lg">
+                  <a href="/signup" className="bg-gold text-black text-[14px] font-body font-medium px-5 py-2 rounded-lg">
                     Get Started
                   </a>
                 </div>
@@ -971,29 +977,33 @@ export default function MarketingPage() {
       </nav>
 
       {/* ============================================================ */}
-      {/* SECTION 2 — HERO                                             */}
+      {/* SECTION 2 -- HERO                                            */}
       {/* ============================================================ */}
       <section className="relative min-h-screen flex items-center justify-center text-center px-6 overflow-hidden">
-        {/* CSS Grid background */}
+        {/* Subtle radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage:
-              'linear-gradient(rgba(201,168,76,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.05) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-            animation: 'gridDrift 20s linear infinite',
+            background: 'radial-gradient(ellipse at center 40%, rgba(5, 150, 105, 0.06) 0%, transparent 60%)',
           }}
         />
-        <style jsx>{`
-          @keyframes gridDrift {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(60px, 60px); }
-          }
-        `}</style>
 
         <div className="relative z-10 max-w-4xl mx-auto">
+          {/* Status badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center justify-center gap-2 mb-10"
+          >
+            <span className="pulse-dot bg-gold" />
+            <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+              Live Platform · 14-Day Free Trial
+            </span>
+          </motion.div>
+
           {/* Cycling pain points */}
-          <div className="h-16 md:h-20 flex items-center justify-center mb-8">
+          <div className="h-12 md:h-14 flex items-center justify-center mb-8">
             <AnimatePresence mode="wait">
               {!painSettled ? (
                 <motion.p
@@ -1012,7 +1022,7 @@ export default function MarketingPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
-                  className="text-lg md:text-xl text-gold font-display font-bold"
+                  className="text-lg md:text-xl text-gold font-body"
                 >
                   RKV Consulting eliminates all of it.
                 </motion.p>
@@ -1025,11 +1035,11 @@ export default function MarketingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight mb-6"
+            className="text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6 text-white"
           >
-            The Operating System for
+            Your Portfolio.
             <br />
-            Serious Real Estate Investors.
+            <span className="text-gradient">On Autopilot.</span>
           </motion.h1>
 
           {/* Subheading */}
@@ -1037,7 +1047,7 @@ export default function MarketingPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-muted font-body text-lg md:text-xl max-w-2xl mx-auto mb-10"
+            className="text-muted font-body text-lg max-w-[560px] mx-auto mb-10"
           >
             AI-powered deal analysis, automated tenant management, and institutional-grade
             portfolio intelligence. Built for investors who refuse to settle.
@@ -1064,23 +1074,23 @@ export default function MarketingPage() {
             </button>
           </motion.div>
 
-          {/* Trust stats */}
+          {/* Trust metrics */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-0"
+            className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-0"
           >
             {[
-              { value: '3,200+', label: 'Investors' },
-              { value: '47hrs', label: 'Saved Monthly' },
-              { value: '$2.1B', label: 'Assets Managed' },
+              { value: '47:00', label: 'Hrs Saved Monthly' },
+              { value: '$12,400', label: 'Tax Savings Found' },
+              { value: '94%', label: 'Tenant Retention' },
             ].map((stat, i) => (
               <div key={stat.label} className="flex items-center">
-                {i > 0 && <div className="hidden sm:block w-px h-8 bg-border mx-8" />}
+                {i > 0 && <div className="hidden sm:block w-px h-10 bg-border mx-10" />}
                 <div className="text-center">
-                  <div className="text-xl font-display font-bold">{stat.value}</div>
-                  <div className="text-xs text-muted font-body">{stat.label}</div>
+                  <div className="text-2xl font-mono font-bold text-gold">{stat.value}</div>
+                  <div className="text-[10px] font-body uppercase tracking-wider text-muted mt-1">{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -1089,7 +1099,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 3 — PROBLEM STATEMENT                                */}
+      {/* SECTION 3 -- PROBLEM STATEMENT                               */}
       {/* ============================================================ */}
       <section className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -1098,7 +1108,7 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-16"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
           >
             Real estate investing is broken.
           </motion.h2>
@@ -1111,10 +1121,10 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-card border border-border border-l-2 border-l-red rounded-xl p-6"
+                className="bg-[#0C1018] border border-[#161E2A] border-l-2 border-l-red rounded-xl p-6"
               >
                 <problem.icon className="w-5 h-5 text-red mb-4" />
-                <h3 className="font-display font-bold text-lg mb-1">{problem.headline}</h3>
+                <h3 className="font-display font-bold text-lg mb-1 text-white">{problem.headline}</h3>
                 <p className="text-sm text-muted font-body">{problem.description}</p>
               </motion.div>
             ))}
@@ -1123,7 +1133,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 4 — SOLUTION OVERVIEW                                */}
+      {/* SECTION 4 -- SOLUTION OVERVIEW (Feature Showcase)            */}
       {/* ============================================================ */}
       <section id="features" className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -1132,7 +1142,7 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-4"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-4 text-white"
           >
             RKV Consulting handles all of it.
           </motion.h2>
@@ -1147,7 +1157,7 @@ export default function MarketingPage() {
           </motion.p>
 
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Left — category list */}
+            {/* Left -- category list */}
             <div className="lg:w-1/3 space-y-1">
               {featureCategories.map((cat, i) => (
                 <button
@@ -1155,21 +1165,21 @@ export default function MarketingPage() {
                   onClick={() => setActiveFeature(i)}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-300 flex items-center gap-3 group ${
                     activeFeature === i
-                      ? 'border-l-2 border-l-gold bg-card text-white'
+                      ? 'border-l-2 border-l-gold bg-gold/[0.08] text-white'
                       : 'border-l-2 border-l-transparent text-muted hover:text-white hover:bg-card/50'
                   }`}
                 >
                   {activeFeature === i && (
-                    <span className="w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0" />
+                    <span className="pulse-dot bg-gold flex-shrink-0" />
                   )}
-                  <span className="font-body text-sm">{cat}</span>
+                  <span className="font-body text-[11px] uppercase tracking-wider">{cat}</span>
                 </button>
               ))}
             </div>
 
-            {/* Right — preview panel */}
+            {/* Right -- preview panel */}
             <div className="lg:w-2/3">
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8 min-h-[400px]">
+              <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 md:p-8 min-h-[400px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeFeature}
@@ -1188,36 +1198,34 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 5 — METRICS                                          */}
+      {/* SECTION 5 -- METRICS                                         */}
       {/* ============================================================ */}
       <section className="py-24 md:py-32 px-6 relative">
-        {/* Top gold border gradient */}
+        {/* Top border gradient */}
         <div
           className="absolute top-0 left-0 right-0 h-px"
           style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, #C9A84C 50%, transparent 100%)',
+            background: 'linear-gradient(90deg, transparent 0%, #059669 50%, transparent 100%)',
           }}
         />
-        {/* Bottom gold border gradient */}
+        {/* Bottom border gradient */}
         <div
           className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, #C9A84C 50%, transparent 100%)',
+            background: 'linear-gradient(90deg, transparent 0%, #059669 50%, transparent 100%)',
           }}
         />
 
         <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8">
-          <MetricCounter target={47} suffix=" hrs" label="average saved monthly" />
-          <MetricCounter target={12400} prefix="$" label="additional annual profit identified" />
-          <MetricCounter target={94} suffix="%" label="reduction in tenant communication time" />
-          <MetricCounter target={3.2} suffix="x" label="faster deal analysis" decimals={1} />
+          <MetricCounter target={47} suffix=" Hrs" label="Hours Saved Monthly" />
+          <MetricCounter target={12400} prefix="$" label="Avg Tax Savings Found" />
+          <MetricCounter target={94} suffix="%" label="Tenant Retention Rate" />
+          <MetricCounter target={3.2} suffix="x" label="Average Returns" decimals={1} />
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 6 — FEATURE DEEP DIVES                               */}
+      {/* SECTION 6 -- FEATURE DEEP DIVES                              */}
       {/* ============================================================ */}
       <section className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto space-y-24 md:space-y-32">
@@ -1244,16 +1252,18 @@ export default function MarketingPage() {
                 {/* Text */}
                 <div className="w-full lg:w-1/2 space-y-6">
                   <div>
-                    <h3 className="text-2xl md:text-3xl font-display font-bold mb-2">
+                    <span className="text-[10px] font-body uppercase tracking-wider text-gold mb-3 block">
+                      {feature.subtitle}
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-display font-bold text-white">
                       {feature.title}
                     </h3>
-                    <p className="text-gold font-body">{feature.subtitle}</p>
                   </div>
                   <ul className="space-y-4">
                     {feature.bullets.map((bullet) => (
                       <li key={bullet} className="flex items-start gap-3">
                         <Check className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
-                        <span className="text-text font-body">{bullet}</span>
+                        <span className="text-white/90 font-body">{bullet}</span>
                       </li>
                     ))}
                   </ul>
@@ -1265,16 +1275,16 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 7 — AI AGENTS SPOTLIGHT                              */}
+      {/* SECTION 7 -- AI AGENTS SPOTLIGHT                             */}
       {/* ============================================================ */}
-      <section className="py-24 md:py-32 px-6 bg-deep">
+      <section className="py-24 md:py-32 px-6 bg-[#0C1018]/50">
         <div className="max-w-7xl mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-16"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
           >
             Meet your AI property management team.
           </motion.h2>
@@ -1322,22 +1332,23 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="bg-card border border-border rounded-xl p-8"
+                className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-8"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
                     <agent.icon className="w-5 h-5 text-gold" />
                   </div>
-                  <span className="flex items-center gap-1.5 text-xs text-green font-body">
-                    <span className="w-1.5 h-1.5 bg-green rounded-full animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-[10px] font-body uppercase tracking-wider text-green">
+                    <span className="pulse-dot bg-green" />
                     Active
                   </span>
                 </div>
-                <h3 className="text-xl font-display font-bold mb-2">{agent.name}</h3>
+                <span className="text-[10px] font-body uppercase tracking-wider text-muted mb-2 block">AI Agent</span>
+                <h3 className="text-xl font-display font-bold mb-2 text-white">{agent.name}</h3>
                 <p className="text-sm text-muted font-body mb-6">{agent.description}</p>
                 <ul className="space-y-2">
                   {agent.capabilities.map((cap) => (
-                    <li key={cap} className="flex items-center gap-2 text-sm font-body text-text">
+                    <li key={cap} className="flex items-center gap-2 text-sm font-body text-white/90">
                       <Check className="w-4 h-4 text-gold flex-shrink-0" />
                       {cap}
                     </li>
@@ -1348,12 +1359,12 @@ export default function MarketingPage() {
           </div>
 
           {/* Live feed ticker */}
-          <div className="bg-card border border-border rounded-xl p-6 relative overflow-hidden">
+          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 relative overflow-hidden">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="w-4 h-4 text-gold" />
-              <span className="text-sm font-display font-bold">Live Agent Feed</span>
-              <span className="flex items-center gap-1.5 text-xs text-green font-body ml-auto">
-                <span className="w-1.5 h-1.5 bg-green rounded-full animate-pulse" />
+              <span className="text-sm font-display font-bold text-white">Live Agent Feed</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-body uppercase tracking-wider text-green ml-auto">
+                <span className="pulse-dot bg-green" />
                 Real-time
               </span>
             </div>
@@ -1365,7 +1376,7 @@ export default function MarketingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.4 }}
-                  className="text-sm text-text font-body"
+                  className="text-sm text-white/90 font-body"
                 >
                   {agentActions[agentActionIndex]}
                 </motion.p>
@@ -1376,7 +1387,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 8 — PRICING PREVIEW                                  */}
+      {/* SECTION 8 -- PRICING PREVIEW                                 */}
       {/* ============================================================ */}
       <section id="pricing" className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -1385,7 +1396,7 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-16"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
           >
             Simple, transparent pricing.
           </motion.h2>
@@ -1398,26 +1409,26 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className={`relative bg-card border ${plan.borderColor} rounded-xl p-8 ${
+                className={`relative bg-[#0C1018] border ${plan.borderColor} rounded-xl p-8 ${
                   plan.badge ? 'ring-1 ring-gold/30' : ''
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-black text-xs font-body font-medium px-4 py-1 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-black text-[10px] font-body font-medium px-4 py-1 rounded-full uppercase tracking-wider">
                     {plan.badge}
                   </div>
                 )}
                 <div className="mb-6">
-                  <h3 className="text-lg font-display font-bold mb-2">{plan.name}</h3>
+                  <h3 className="text-lg font-display font-bold mb-2 text-white">{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-display font-bold">${plan.price}</span>
-                    <span className="text-sm text-muted font-body">/mo</span>
+                    <span className="text-3xl font-mono font-bold text-white">${plan.price}</span>
+                    <span className="text-sm text-muted font-mono">/mo</span>
                   </div>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm font-body text-text">
-                      <Check className="w-4 h-4 text-gold flex-shrink-0" />
+                    <li key={feature} className="flex items-center gap-2 text-sm font-body text-white/90">
+                      <Check className="w-4 h-4 text-green flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -1439,7 +1450,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 9 — TESTIMONIALS                                     */}
+      {/* SECTION 9 -- TESTIMONIALS                                    */}
       {/* ============================================================ */}
       <section className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -1448,7 +1459,7 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-16"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
           >
             Trusted by serious investors.
           </motion.h2>
@@ -1461,22 +1472,22 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="bg-card border border-border rounded-xl p-8 relative"
+                className="glass border border-gold/20 rounded-xl p-8 relative"
               >
-                {/* Gold quotation mark */}
+                {/* Quotation mark */}
                 <svg
-                  className="absolute top-6 left-6 w-8 h-8 text-gold/30"
+                  className="absolute top-6 left-6 w-8 h-8 text-gold/20"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                 </svg>
-                <p className="text-text font-body italic mb-6 mt-6 leading-relaxed">
+                <p className="text-white/90 font-body italic mb-6 mt-6 leading-relaxed">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div>
-                  <div className="font-display font-bold text-sm">{testimonial.author}</div>
-                  <div className="text-xs text-muted font-body">{testimonial.units}</div>
+                  <div className="font-body font-bold text-sm text-white">{testimonial.author}</div>
+                  <div className="text-[10px] font-body uppercase tracking-wider text-muted">{testimonial.units}</div>
                 </div>
               </motion.div>
             ))}
@@ -1485,16 +1496,116 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 10 — FINAL CTA                                       */}
+      {/* SECTION 10 -- COMPETITOR COMPARISON                           */}
       {/* ============================================================ */}
-      <section className="py-32 px-6 text-center">
-        <div className="max-w-3xl mx-auto">
+      <section className="py-24 md:py-32 px-6" style={{ background: '#060910' }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
+              Why investors switch to RKV.
+            </h2>
+            <p className="text-muted font-body max-w-2xl mx-auto">
+              One platform replaces your entire tech stack. Compare the capabilities.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="overflow-x-auto"
+          >
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="py-4 px-4 text-xs text-muted font-body uppercase tracking-wider">Feature</th>
+                  <th className="py-4 px-4 text-center">
+                    <span className="text-gold font-display font-bold text-sm">RKV</span>
+                  </th>
+                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Yardi</th>
+                  <th className="py-4 px-4 text-center text-xs text-muted font-body">AppFolio</th>
+                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Buildium</th>
+                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Stessa</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm font-body">
+                {[
+                  { feature: 'AI Deal Analysis', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                  { feature: 'AI Tenant Communication', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                  { feature: 'Voice & SMS Agents', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                  { feature: 'Market Intelligence', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                  { feature: 'Property Management', rkv: true, yardi: true, appfolio: true, buildium: true, stessa: false },
+                  { feature: 'Tenant Screening', rkv: true, yardi: true, appfolio: true, buildium: true, stessa: false },
+                  { feature: 'Maintenance Tracking', rkv: true, yardi: true, appfolio: true, buildium: true, stessa: false },
+                  { feature: 'Accounting & Tax', rkv: true, yardi: true, appfolio: true, buildium: true, stessa: true },
+                  { feature: 'Rent Collection', rkv: true, yardi: true, appfolio: true, buildium: true, stessa: false },
+                  { feature: 'Portfolio Analytics', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: true },
+                  { feature: 'Contractor Matching', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                  { feature: 'Auto-Pilot Mode', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
+                ].map((row, i) => (
+                  <tr key={row.feature} className={i % 2 === 0 ? 'bg-white/[0.01]' : ''}>
+                    <td className="py-3 px-4 text-white/80">{row.feature}</td>
+                    <td className="py-3 px-4 text-center">
+                      {row.rkv ? (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gold/15">
+                          <svg className="w-3 h-3 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </span>
+                      ) : <span className="text-muted-deep">—</span>}
+                    </td>
+                    {[row.yardi, row.appfolio, row.buildium, row.stessa].map((has, j) => (
+                      <td key={j} className="py-3 px-4 text-center">
+                        {has ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/5">
+                            <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          </span>
+                        ) : <span className="text-muted-deep">—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            {[
+              { value: '11+', label: 'Tools replaced by RKV' },
+              { value: '$2,400+', label: 'Annual savings vs. competitors' },
+              { value: '40hrs', label: 'Saved per month with AI automation' },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center py-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <p className="text-2xl font-bold text-gold font-mono">{stat.value}</p>
+                <p className="text-xs text-muted font-body mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* SECTION 11 -- FINAL CTA                                      */}
+      {/* ============================================================ */}
+      <section className="py-32 px-6 text-center relative">
+        <div className="relative max-w-3xl mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold mb-8"
+            className="text-3xl md:text-4xl font-display font-bold mb-8 text-white"
           >
             Stop managing your portfolio manually.
           </motion.h2>
@@ -1518,18 +1629,20 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 11 — FOOTER                                          */}
+      {/* SECTION 11 -- FOOTER                                         */}
       {/* ============================================================ */}
-      <footer id="about" className="bg-deep border-t border-border py-16 px-6">
+      <footer id="about" className="bg-[#080B0F] border-t border-[#161E2A] py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-gold text-lg">&#9679;</span>
-                <span className="font-display font-bold text-lg">RKV Consulting</span>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-6 h-6 rounded-md bg-gold/20 flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-gold" />
+                </div>
+                <span className="font-display font-bold text-[15px] text-gold">RKV CONSULTING</span>
               </div>
-              <p className="text-sm text-muted font-body leading-relaxed">
+              <p className="text-sm text-muted-deep font-body leading-relaxed">
                 The intelligent operating system for serious real estate investors. AI-powered.
                 Institutional-grade.
               </p>
@@ -1537,13 +1650,30 @@ export default function MarketingPage() {
 
             {/* Product */}
             <div>
-              <h4 className="font-display font-bold text-sm mb-4">Product</h4>
+              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Product</h4>
               <ul className="space-y-2">
                 {['Features', 'Pricing', 'Demo'].map((link) => (
                   <li key={link}>
                     <a
                       href={`/${link.toLowerCase()}`}
-                      className="text-sm text-muted hover:text-white transition-colors font-body"
+                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Company</h4>
+              <ul className="space-y-2">
+                {['About', 'Careers', 'Contact'].map((link) => (
+                  <li key={link}>
+                    <a
+                      href={`/${link.toLowerCase()}`}
+                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
                     >
                       {link}
                     </a>
@@ -1554,30 +1684,13 @@ export default function MarketingPage() {
 
             {/* Company */}
             <div>
-              <h4 className="font-display font-bold text-sm mb-4">Company</h4>
-              <ul className="space-y-2">
-                {['About', 'Careers', 'Contact'].map((link) => (
-                  <li key={link}>
-                    <a
-                      href={`/${link.toLowerCase()}`}
-                      className="text-sm text-muted hover:text-white transition-colors font-body"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="font-display font-bold text-sm mb-4">Legal</h4>
+              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Legal</h4>
               <ul className="space-y-2">
                 {['Privacy', 'Terms', 'Security'].map((link) => (
                   <li key={link}>
                     <a
                       href={`/${link.toLowerCase()}`}
-                      className="text-sm text-muted hover:text-white transition-colors font-body"
+                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
                     >
                       {link}
                     </a>
@@ -1589,7 +1702,7 @@ export default function MarketingPage() {
 
           {/* Bottom bar */}
           <div className="border-t border-border pt-8 text-center">
-            <p className="text-xs text-muted font-body">
+            <p className="text-[10px] font-body uppercase tracking-wider text-muted-deep">
               &copy; 2025 RKV Consulting. Built for serious investors.
             </p>
           </div>

@@ -60,7 +60,7 @@ function TabsList({ children, className }: TabsListProps) {
   return (
     <RadixTabs.List
       className={cn(
-        'flex items-center gap-1',
+        'flex items-center gap-1 bg-transparent',
         'border-b border-border',
         'overflow-x-auto scrollbar-none',
         className,
@@ -87,10 +87,10 @@ function TabsTrigger({
       value={value}
       disabled={disabled}
       className={cn(
-        'relative px-4 py-2.5 text-sm font-body font-medium',
-        'text-muted whitespace-nowrap',
+        'relative px-4 py-2.5 font-body text-[11px] uppercase tracking-wider font-medium',
+        'text-muted-deep whitespace-nowrap',
         'transition-colors duration-200 ease-out',
-        'hover:text-white',
+        'hover:text-muted',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-inset',
         'disabled:opacity-40 disabled:cursor-not-allowed',
         // Active state

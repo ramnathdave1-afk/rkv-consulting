@@ -44,10 +44,10 @@ interface OpportunityAlertsProps {
 /* ------------------------------------------------------------------ */
 
 const typeConfig: Record<AlertType, { icon: LucideIcon; label: string; bg: string; text: string }> = {
-  price_drop:   { icon: TrendingDown, label: 'Price Drops',    bg: 'bg-red/10',      text: 'text-red' },
-  new_listing:  { icon: Home,         label: 'New Listings',   bg: 'bg-green/10',    text: 'text-green' },
-  rate_change:  { icon: Percent,      label: 'Rate Changes',   bg: 'bg-gold/10',     text: 'text-gold' },
-  market_shift: { icon: BarChart3,    label: 'Market Shifts',  bg: 'bg-blue-400/10', text: 'text-blue-400' },
+  price_drop:   { icon: TrendingDown, label: 'Price Drops',    bg: 'bg-red/10',       text: 'text-red' },
+  new_listing:  { icon: Home,         label: 'New Listings',   bg: 'bg-green/10',     text: 'text-green' },
+  rate_change:  { icon: Percent,      label: 'Rate Changes',   bg: 'bg-gold/10',      text: 'text-gold' },
+  market_shift: { icon: BarChart3,    label: 'Market Shifts',  bg: 'bg-[#0EA5E9]/10', text: 'text-[#0EA5E9]' },
 };
 
 const impactConfig: Record<ImpactLevel, { variant: 'danger' | 'default' | 'success'; label: string }> = {
@@ -77,8 +77,11 @@ function AlertCard({ alert }: { alert: Alert }) {
 
   const relativeTime = formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true });
 
+  // Severity-based left border color
+  const leftBorderColor = alert.impact === 'high' ? '#DC2626' : alert.impact === 'medium' ? '#F59E0B' : '#059669';
+
   return (
-    <Card variant="default" padding="md" className="hover:border-gold/20 transition-all duration-200">
+    <Card variant="default" padding="md" className="hover:border-gold/20 transition-all duration-200" style={{ borderLeft: `2px solid ${leftBorderColor}` }}>
       <div className="flex items-start gap-4">
         {/* Icon */}
         <div className={cn('flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full', type.bg)}>
@@ -88,7 +91,7 @@ function AlertCard({ alert }: { alert: Alert }) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-1">
-            <h4 className="text-sm font-semibold text-white leading-snug">{alert.title}</h4>
+            <h4 className="text-sm font-semibold text-white leading-snug font-display">{alert.title}</h4>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Badge variant={impact.variant} size="sm">
                 {impact.label}
@@ -103,7 +106,7 @@ function AlertCard({ alert }: { alert: Alert }) {
               <Badge variant="info" size="sm">
                 {alert.market}
               </Badge>
-              <span className="flex items-center gap-1 text-[11px] text-muted/70">
+              <span className="flex items-center gap-1 text-[11px] text-muted-deep font-mono">
                 <Clock className="h-3 w-3" />
                 {relativeTime}
               </span>
@@ -113,8 +116,8 @@ function AlertCard({ alert }: { alert: Alert }) {
               <a
                 href={alert.actionUrl}
                 className={cn(
-                  'inline-flex items-center gap-1 text-xs font-medium text-gold',
-                  'hover:text-gold-light transition-colors duration-150',
+                  'inline-flex items-center gap-1 text-xs font-medium text-gold font-body uppercase tracking-wider',
+                  'border border-gold/30 rounded-md px-3 py-1 hover:bg-gold/10 transition-colors duration-150',
                 )}
               >
                 View Details
@@ -137,11 +140,11 @@ function EmptyState({ filter }: { filter: FilterKey }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-border/50 mb-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-border/50 mb-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
         <Bell className="h-7 w-7 text-muted" />
       </div>
-      <p className="text-sm font-medium text-white mb-1">No {label}</p>
-      <p className="text-xs text-muted/60 max-w-xs">
+      <p className="text-sm font-medium text-white font-display mb-1">No {label}</p>
+      <p className="text-xs text-muted-deep max-w-xs">
         New opportunity alerts will appear here as market conditions change.
       </p>
     </div>
@@ -177,7 +180,7 @@ export default function OpportunityAlerts({ alerts }: OpportunityAlertsProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-xl font-bold text-white">Opportunity Alerts</h2>
+          <h2 className="label text-gold">OPPORTUNITY ALERTS //</h2>
           {alerts.length > 0 && (
             <Badge variant="default" dot size="sm">
               {alerts.length} active

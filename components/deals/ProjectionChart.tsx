@@ -134,26 +134,26 @@ function ProjectionChart({ data, years: initialYears = 30 }: ProjectionChartProp
           <LineChart data={filteredData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#1E2530"
+              stroke="#161E2A"
               vertical={false}
             />
             <XAxis
               dataKey="year"
-              tick={{ fill: '#6B7280', fontSize: 11, fontFamily: 'DM Sans' }}
-              axisLine={{ stroke: '#1E2530' }}
+              tick={{ fill: '#4A6080', fontSize: 11, fontFamily: 'Inter' }}
+              axisLine={{ stroke: '#161E2A' }}
               tickLine={false}
               label={{
                 value: 'Year',
                 position: 'insideBottomRight',
                 offset: -5,
-                fill: '#6B7280',
+                fill: '#4A6080',
                 fontSize: 11,
-                fontFamily: 'DM Sans',
+                fontFamily: 'Inter',
               }}
             />
             <YAxis
               tickFormatter={formatDollar}
-              tick={{ fill: '#6B7280', fontSize: 11, fontFamily: 'DM Sans' }}
+              tick={{ fill: '#4A6080', fontSize: 11, fontFamily: 'Inter' }}
               axisLine={false}
               tickLine={false}
               width={65}
@@ -162,7 +162,7 @@ function ProjectionChart({ data, years: initialYears = 30 }: ProjectionChartProp
             <Legend
               wrapperStyle={{
                 paddingTop: '12px',
-                fontFamily: 'DM Sans',
+                fontFamily: 'Inter',
                 fontSize: '12px',
               }}
               iconType="circle"
@@ -172,29 +172,29 @@ function ProjectionChart({ data, years: initialYears = 30 }: ProjectionChartProp
               type="monotone"
               dataKey="equity"
               name="Equity"
-              stroke="#C9A84C"
+              stroke="#059669"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#C9A84C', stroke: '#080A0E', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#059669', stroke: '#080B0F', strokeWidth: 2 }}
             />
             <Line
               type="monotone"
               dataKey="cashFlow"
               name="Cash Flow"
-              stroke="#22C55E"
+              stroke="#059669"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#22C55E', stroke: '#080A0E', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#059669', stroke: '#080B0F', strokeWidth: 2 }}
             />
             <Line
               type="monotone"
               dataKey="totalWealth"
               name="Total Wealth"
-              stroke="#F0EDE8"
+              stroke="#E2E8F0"
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
-              activeDot={{ r: 4, fill: '#F0EDE8', stroke: '#080A0E', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#E2E8F0', stroke: '#080B0F', strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>

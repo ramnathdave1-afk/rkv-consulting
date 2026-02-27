@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { Card } from '@/components/ui/Card';
@@ -31,6 +31,15 @@ import {
   Plus,
   FileDown,
   MapPin,
+  Sparkles,
+  Grid3X3,
+  CalendarRange,
+  RefreshCw,
+  TrendingUp,
+  DollarSign,
+  Shield,
+  Target,
+  Loader2,
 } from 'lucide-react';
 import type { DealFormData } from '@/components/deals/DealForm';
 
@@ -121,16 +130,16 @@ function fmtPct(value: number): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 70) return '#22C55E';
-  if (score >= 40) return '#C9A84C';
-  return '#EF4444';
+  if (score >= 70) return '#059669';
+  if (score >= 40) return '#059669';
+  return '#DC2626';
 }
 
 /* ------------------------------------------------------------------ */
 /*  Donut custom label (for the expense chart)                         */
 /* ------------------------------------------------------------------ */
 
-const EXPENSE_COLORS = ['#C9A84C', '#EF4444', '#22C55E', '#6B7280', '#E8C97A'];
+const EXPENSE_COLORS = ['#059669', '#DC2626', '#059669', '#4A6080', '#0EA5E9'];
 
 /* ------------------------------------------------------------------ */
 /*  Tab 1: Dashboard                                                   */
@@ -181,9 +190,9 @@ function DashboardTab({ results, dealData: _dealData }: DealResultsProps) {
       {/* 6 metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {metrics.map((m) => (
-          <Card key={m.label} variant="default" padding="md">
-            <p className="text-xs text-muted font-body mb-1">{m.label}</p>
-            <p className={cn('text-xl font-display font-bold', m.good ? 'text-green' : 'text-red')}>
+          <Card key={m.label} variant="default" padding="md" className="rounded-lg">
+            <p className="label mb-1">{m.label}</p>
+            <p className={cn('text-xl font-mono font-bold', m.good ? 'text-green' : 'text-red')}>
               {m.value}
             </p>
             <p className="text-[11px] text-muted font-body mt-1.5 flex items-center gap-1">
@@ -200,7 +209,7 @@ function DashboardTab({ results, dealData: _dealData }: DealResultsProps) {
 
       {/* Scenario Cards */}
       <div>
-        <h3 className="font-display font-semibold text-sm text-white mb-3">Scenario Analysis</h3>
+        <h3 className="label mb-3">Scenario Analysis</h3>
         <ScenarioCards scenarios={results.scenarios} />
       </div>
 
@@ -294,7 +303,7 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Income */}
         <Card variant="default" padding="md">
-          <h4 className="font-display font-semibold text-sm text-white mb-4">Monthly Income</h4>
+          <h4 className="label mb-4">Monthly Income</h4>
           <div className="space-y-2.5">
             {incomeItems.map((item) => (
               <div
@@ -309,7 +318,7 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
                 </span>
                 <span
                   className={cn(
-                    'text-sm font-body font-medium tabular-nums',
+                    'text-sm font-mono font-medium tabular-nums',
                     item.value < 0 ? 'text-red' : item.highlight ? 'text-gold' : 'text-white',
                   )}
                 >
@@ -322,19 +331,19 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
 
         {/* Expenses */}
         <Card variant="default" padding="md">
-          <h4 className="font-display font-semibold text-sm text-white mb-4">Monthly Expenses</h4>
+          <h4 className="label mb-4">Monthly Expenses</h4>
           <div className="space-y-2.5">
             {expenseItems.map((item) => (
               <div key={item.label} className="flex items-center justify-between">
                 <span className="text-xs text-muted font-body">{item.label}</span>
-                <span className="text-sm font-body font-medium tabular-nums text-red">
+                <span className="text-sm font-mono font-medium tabular-nums text-red">
                   -{fmtFull$(item.value)}
                 </span>
               </div>
             ))}
             <div className="flex items-center justify-between pt-2 mt-2 border-t border-border">
               <span className="text-xs text-white font-body font-medium">Total Expenses</span>
-              <span className="text-sm font-body font-medium tabular-nums text-red">
+              <span className="text-sm font-mono font-medium tabular-nums text-red">
                 -{fmtFull$(totalExpenses)}
               </span>
             </div>
@@ -353,7 +362,7 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
       >
         <div className="text-center">
           <p className="text-xs text-muted font-body mb-1">Net Monthly Cash Flow</p>
-          <p className={cn('text-3xl font-display font-bold', netCashFlow >= 0 ? 'text-green' : 'text-red')}>
+          <p className={cn('text-3xl font-mono font-bold', netCashFlow >= 0 ? 'text-green' : 'text-red')}>
             {fmtFull$(netCashFlow)}
           </p>
           <p className="text-xs text-muted font-body mt-1">
@@ -364,7 +373,7 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
 
       {/* Expense donut */}
       <Card variant="default" padding="md">
-        <h4 className="font-display font-semibold text-sm text-white mb-4">Annual Expense Breakdown</h4>
+        <h4 className="label mb-4">Annual Expense Breakdown</h4>
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -383,17 +392,17 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
               </Pie>
               <ReTooltip
                 contentStyle={{
-                  backgroundColor: '#0D1117',
-                  border: '1px solid #1E2530',
+                  backgroundColor: '#0C1018',
+                  border: '1px solid #161E2A',
                   borderRadius: '8px',
-                  fontFamily: 'DM Sans',
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: '12px',
-                  color: '#F0EDE8',
+                  color: '#E2E8F0',
                 }}
                 formatter={(value: number | undefined) => fmtFull$(value ?? 0)}
               />
               <ReLegend
-                wrapperStyle={{ fontFamily: 'DM Sans', fontSize: '11px' }}
+                wrapperStyle={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '11px' }}
                 iconType="circle"
                 iconSize={8}
               />
@@ -438,7 +447,7 @@ function ProjectionTab({ results }: { results: AnalysisResults }) {
 
       {milestones.length > 0 && (
         <Card variant="default" padding="md">
-          <h4 className="font-display font-semibold text-sm text-white mb-4">Key Milestones</h4>
+          <h4 className="label mb-4">Key Milestones</h4>
           <div className="space-y-3">
             {milestones.map((m, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -448,7 +457,7 @@ function ProjectionTab({ results }: { results: AnalysisResults }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-white font-body truncate">{m.description}</p>
                 </div>
-                <span className="text-sm text-gold font-body font-medium tabular-nums">{m.value}</span>
+                <span className="text-sm text-gold font-mono font-medium tabular-nums">{m.value}</span>
               </div>
             ))}
           </div>
@@ -489,11 +498,11 @@ function AmortizationTab({ results }: { results: AnalysisResults }) {
       <div className="grid grid-cols-2 gap-3">
         <Card variant="default" padding="sm">
           <p className="text-xs text-muted font-body px-2">Cumulative Interest</p>
-          <p className="text-lg font-display font-bold text-red px-2">{fmtFull$(totalInterest)}</p>
+          <p className="text-lg font-mono font-bold text-red px-2">{fmtFull$(totalInterest)}</p>
         </Card>
         <Card variant="default" padding="sm">
           <p className="text-xs text-muted font-body px-2">Original Loan</p>
-          <p className="text-lg font-display font-bold text-white px-2">{fmtFull$(originalBalance)}</p>
+          <p className="text-lg font-mono font-bold text-white px-2">{fmtFull$(originalBalance)}</p>
         </Card>
       </div>
 
@@ -511,14 +520,14 @@ function AmortizationTab({ results }: { results: AnalysisResults }) {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-xs font-body">
+        <table className="w-full text-xs font-mono">
           <thead>
             <tr className="bg-deep border-b border-border">
-              <th className="text-left px-4 py-3 text-muted font-medium">Year</th>
-              <th className="text-right px-4 py-3 text-muted font-medium">Payment</th>
-              <th className="text-right px-4 py-3 text-muted font-medium">Principal</th>
-              <th className="text-right px-4 py-3 text-muted font-medium">Interest</th>
-              <th className="text-right px-4 py-3 text-muted font-medium">Balance</th>
+              <th className="text-left px-4 py-3 label">Year</th>
+              <th className="text-right px-4 py-3 label">Payment</th>
+              <th className="text-right px-4 py-3 label">Principal</th>
+              <th className="text-right px-4 py-3 label">Interest</th>
+              <th className="text-right px-4 py-3 label">Balance</th>
             </tr>
           </thead>
           <tbody>
@@ -560,12 +569,12 @@ function SensitivityTab({ results, dealData: _dealData }: DealResultsProps) {
       </p>
 
       <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-xs font-body">
+        <table className="w-full text-xs font-mono">
           <thead>
             <tr className="bg-deep border-b border-border">
-              <th className="px-3 py-3 text-left text-muted font-medium">Rent \ Expenses</th>
+              <th className="px-3 py-3 text-left label">Rent \ Expenses</th>
               {expLabels.map((label) => (
-                <th key={label} className="px-3 py-3 text-center text-muted font-medium">{label}</th>
+                <th key={label} className="px-3 py-3 text-center label">{label}</th>
               ))}
             </tr>
           </thead>
@@ -622,7 +631,7 @@ function RatiosTab({ results }: { results: AnalysisResults }) {
               <p className="text-xs text-muted font-body mt-0.5">Benchmark: {r.benchmark}</p>
             </div>
             <div className="flex items-center gap-3">
-              <span className={cn('text-lg font-display font-bold tabular-nums', r.good ? 'text-green' : 'text-red')}>
+              <span className={cn('text-lg font-mono font-bold tabular-nums', r.good ? 'text-green' : 'text-red')}>
                 {r.value}
               </span>
               <Badge variant={r.good ? 'success' : 'danger'} size="sm">
@@ -673,7 +682,7 @@ function AIAnalysisTab({ results }: { results: AnalysisResults }) {
     <div className="space-y-6">
       {/* Recommendation */}
       <Card variant="default" padding="lg">
-        <h4 className="font-display font-semibold text-sm text-gold mb-3">AI Recommendation</h4>
+        <h4 className="label mb-3">AI Recommendation</h4>
         <p className="text-sm text-white font-body leading-relaxed">
           {results.ai_recommendation || 'Based on the metrics, this deal warrants further analysis before making a decision.'}
         </p>
@@ -681,7 +690,7 @@ function AIAnalysisTab({ results }: { results: AnalysisResults }) {
 
       {/* Strengths */}
       <Card variant="default" padding="md">
-        <h4 className="font-display font-semibold text-sm text-green mb-3 flex items-center gap-2">
+        <h4 className="label !text-green mb-3 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4" /> Deal Strengths
         </h4>
         <ul className="space-y-2">
@@ -696,7 +705,7 @@ function AIAnalysisTab({ results }: { results: AnalysisResults }) {
 
       {/* Risks */}
       <Card variant="default" padding="md">
-        <h4 className="font-display font-semibold text-sm text-red mb-3 flex items-center gap-2">
+        <h4 className="label !text-red mb-3 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" /> Deal Risks
         </h4>
         <ul className="space-y-2">
@@ -712,7 +721,7 @@ function AIAnalysisTab({ results }: { results: AnalysisResults }) {
       {/* Market context */}
       {marketContext && (
         <Card variant="default" padding="md">
-          <h4 className="font-display font-semibold text-sm text-gold mb-3">Market Context</h4>
+          <h4 className="label mb-3">Market Context</h4>
           <p className="text-sm text-muted font-body leading-relaxed">{marketContext}</p>
         </Card>
       )}
@@ -720,8 +729,8 @@ function AIAnalysisTab({ results }: { results: AnalysisResults }) {
       {/* Suggested offer */}
       {suggestedOffer && (
         <Card variant="default" padding="md" className="border-gold/30">
-          <h4 className="font-display font-semibold text-sm text-gold mb-2">Suggested Offer Price</h4>
-          <p className="text-xl font-display font-bold text-gold">{suggestedOffer}</p>
+          <h4 className="label mb-2">Suggested Offer Price</h4>
+          <p className="text-xl font-mono font-bold text-gold">{suggestedOffer}</p>
         </Card>
       )}
     </div>
@@ -756,6 +765,787 @@ function CompareTab() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tab 9: Claude AI Deep Analysis                                     */
+/* ------------------------------------------------------------------ */
+
+interface AIDeepAnalysisSection {
+  title: string;
+  content: string[];
+}
+
+function parseAIResponse(text: string): AIDeepAnalysisSection[] {
+  const sections: AIDeepAnalysisSection[] = [];
+  const sectionHeaders = [
+    'Investment Summary',
+    'Risk Factors',
+    'Market Context',
+    'Recommendation',
+  ];
+
+  /* Try to split on ## headers first (markdown) */
+  let remaining = text;
+
+  for (let i = 0; i < sectionHeaders.length; i++) {
+    const header = sectionHeaders[i];
+    /* Match various header patterns: ## Header, **Header**, HEADER:, Header: */
+    const patterns = [
+      new RegExp(`##\\s*${header}[:\\s]*\\n`, 'i'),
+      new RegExp(`\\*\\*${header}\\*\\*[:\\s]*\\n`, 'i'),
+      new RegExp(`${header.toUpperCase()}:[\\s]*\\n`, 'i'),
+      new RegExp(`${header}:[\\s]*\\n`, 'i'),
+    ];
+
+    let matchIndex = -1;
+    let matchLength = 0;
+
+    for (const pattern of patterns) {
+      const match = remaining.match(pattern);
+      if (match && match.index !== undefined) {
+        if (matchIndex === -1 || match.index < matchIndex) {
+          matchIndex = match.index;
+          matchLength = match[0].length;
+        }
+      }
+    }
+
+    if (matchIndex !== -1) {
+      remaining = remaining.slice(matchIndex + matchLength);
+
+      /* Find where next section starts */
+      let nextStart = remaining.length;
+      for (let j = i + 1; j < sectionHeaders.length; j++) {
+        const nextHeader = sectionHeaders[j];
+        const nextPatterns = [
+          new RegExp(`##\\s*${nextHeader}`, 'i'),
+          new RegExp(`\\*\\*${nextHeader}\\*\\*`, 'i'),
+          new RegExp(`${nextHeader.toUpperCase()}:`, 'i'),
+          new RegExp(`${nextHeader}:`, 'i'),
+        ];
+        for (const np of nextPatterns) {
+          const nm = remaining.match(np);
+          if (nm && nm.index !== undefined && nm.index < nextStart) {
+            nextStart = nm.index;
+          }
+        }
+      }
+
+      const sectionText = remaining.slice(0, nextStart).trim();
+      const lines = sectionText
+        .split('\n')
+        .map((l) => l.replace(/^[-*•]\s*/, '').trim())
+        .filter((l) => l.length > 0);
+
+      sections.push({ title: header, content: lines });
+    }
+  }
+
+  /* Fallback: if no sections parsed, split into 4 equal parts */
+  if (sections.length === 0) {
+    const lines = text.split('\n').filter((l) => l.trim().length > 0);
+    const chunkSize = Math.max(1, Math.ceil(lines.length / 4));
+    for (let i = 0; i < sectionHeaders.length; i++) {
+      const chunk = lines.slice(i * chunkSize, (i + 1) * chunkSize);
+      if (chunk.length > 0) {
+        sections.push({
+          title: sectionHeaders[i],
+          content: chunk.map((l) => l.replace(/^[-*•]\s*/, '').trim()),
+        });
+      }
+    }
+  }
+
+  return sections;
+}
+
+function ShimmerBlock({ lines = 4, className }: { lines?: number; className?: string }) {
+  return (
+    <div className={cn('space-y-3', className)}>
+      {Array.from({ length: lines }).map((_, i) => (
+        <div
+          key={i}
+          className="h-4 rounded-md overflow-hidden relative"
+          style={{
+            backgroundColor: 'rgba(13, 32, 64, 0.3)',
+            width: i === lines - 1 ? '60%' : '100%',
+          }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(5,150,105,0.08) 40%, rgba(5,150,105,0.15) 50%, rgba(5,150,105,0.08) 60%, transparent 100%)',
+              animation: 'skeleton-scan 2s ease-in-out infinite',
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const SECTION_ICONS: Record<string, React.ReactNode> = {
+  'Investment Summary': <DollarSign className="w-4 h-4" />,
+  'Risk Factors': <Shield className="w-4 h-4" />,
+  'Market Context': <TrendingUp className="w-4 h-4" />,
+  'Recommendation': <Target className="w-4 h-4" />,
+};
+
+const SECTION_COLORS: Record<string, string> = {
+  'Investment Summary': '#059669',
+  'Risk Factors': '#DC2626',
+  'Market Context': '#0EA5E9',
+  'Recommendation': '#D4A843',
+};
+
+function ClaudeAIDeepAnalysisTab({ results, dealData }: DealResultsProps) {
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
+
+  const fetchAnalysis = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const dealPayload = {
+        propertyAddress: dealData.propertyAddress,
+        propertyType: dealData.propertyType,
+        askingPrice: dealData.askingPrice,
+        downPaymentPct: dealData.downPaymentPct,
+        interestRate: dealData.interestRate,
+        loanTerm: dealData.loanTerm,
+        expectedMonthlyRent: dealData.expectedMonthlyRent,
+        vacancyRate: dealData.vacancyRate,
+        monthlyOperatingExpenses: dealData.monthlyOperatingExpenses,
+        rehabEstimate: dealData.rehabEstimate,
+        afterRepairValue: dealData.afterRepairValue,
+        annualAppreciation: dealData.annualAppreciation,
+        annualRentGrowth: dealData.annualRentGrowth,
+        /* Calculated metrics */
+        capRate: results.capRate,
+        cashOnCash: results.cashOnCash,
+        monthlyCashFlow: results.monthlyCashFlow,
+        annualNOI: results.annualNOI,
+        dscr: results.dscr,
+        grm: results.grm,
+        ltv: results.ltv,
+        loanAmount: results.loanAmount,
+        monthlyMortgage: results.monthlyMortgage,
+        cashRequired: results.cashRequired,
+        onePercentRule: results.onePercentRule,
+        breakEvenOccupancy: results.breakEvenOccupancy,
+        debtYield: results.debtYield,
+        aiScore: results.aiScore,
+        aiRecommendation: results.aiRecommendation,
+      };
+
+      const res = await fetch('/api/ai/deal-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...dealPayload,
+          deepAnalysisMode: true,
+          requestFormat: 'structured_text',
+          sections: ['Investment Summary', 'Risk Factors', 'Market Context', 'Recommendation'],
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Analysis failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      /* The API returns { analysis: { summary, risks, opportunities, ... } } */
+      const analysis = data.analysis;
+
+      /* Build structured text from the analysis object */
+      let text = '';
+      if (analysis.summary) {
+        text += `## Investment Summary\n${analysis.summary}\n\n`;
+      } else {
+        text += `## Investment Summary\n- Purchase price: $${dealData.askingPrice.toLocaleString()} | Cap Rate: ${results.capRate.toFixed(2)}% | Cash-on-Cash: ${results.cashOnCash.toFixed(2)}%\n- Monthly Cash Flow: $${results.monthlyCashFlow.toLocaleString()} | Annual NOI: $${results.annualNOI.toLocaleString()}\n- DSCR: ${results.dscr.toFixed(2)}x | GRM: ${results.grm.toFixed(1)}\n\n`;
+      }
+
+      if (analysis.risks && Array.isArray(analysis.risks)) {
+        text += `## Risk Factors\n${analysis.risks.map((r: string) => `- ${r}`).join('\n')}\n\n`;
+      } else {
+        text += `## Risk Factors\n- Market volatility and interest rate fluctuation risk\n- Vacancy exceeding projected ${dealData.vacancyRate}% could erode returns\n- Maintenance and capex overruns on ${dealData.propertyType} property\n\n`;
+      }
+
+      if (analysis.score !== undefined) {
+        text += `## Market Context\n- AI Investment Score: ${analysis.score}/100 (Grade: ${analysis.grade || 'N/A'})\n`;
+        if (analysis.scenarios?.base) {
+          text += `- Base scenario projects ${analysis.scenarios.base.cash_on_cash_return?.toFixed(1) || results.cashOnCash.toFixed(1)}% cash-on-cash return\n`;
+          text += `- 5-year equity projection: $${(analysis.scenarios.base.five_year_equity || 0).toLocaleString()}\n`;
+        }
+        text += `- Break-even occupancy: ${results.breakEvenOccupancy.toFixed(1)}% | Debt yield: ${results.debtYield.toFixed(1)}%\n\n`;
+      } else {
+        text += `## Market Context\n- Property listed at $${dealData.askingPrice.toLocaleString()} in ${dealData.propertyAddress || 'target market'}\n- Break-even occupancy: ${results.breakEvenOccupancy.toFixed(1)}%\n- Debt yield: ${results.debtYield.toFixed(1)}%\n\n`;
+      }
+
+      if (analysis.recommendation) {
+        const recMap: Record<string, string> = {
+          strong_buy: 'STRONG BUY',
+          buy: 'BUY',
+          hold: 'HOLD / ANALYZE FURTHER',
+          pass: 'PASS',
+          strong_pass: 'STRONG PASS',
+        };
+        text += `## Recommendation\n- Verdict: ${recMap[analysis.recommendation] || analysis.recommendation}\n`;
+        if (analysis.opportunities && Array.isArray(analysis.opportunities)) {
+          text += analysis.opportunities.map((o: string) => `- ${o}`).join('\n') + '\n';
+        }
+      } else {
+        text += `## Recommendation\n- ${results.aiRecommendation}: ${results.ai_recommendation}\n`;
+      }
+
+      setAiResponse(text);
+      setHasGenerated(true);
+    } catch (err) {
+      console.error('[ClaudeAIDeepAnalysis] Error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate analysis');
+      /* Fallback: use the local analysis data */
+      const fallbackText = [
+        `## Investment Summary`,
+        `- This ${dealData.propertyType.replace('-', ' ')} property at $${dealData.askingPrice.toLocaleString()} generates $${results.monthlyCashFlow.toLocaleString()}/mo cash flow.`,
+        `- Cap Rate: ${results.capRate.toFixed(2)}% | Cash-on-Cash: ${results.cashOnCash.toFixed(2)}% | Annual NOI: $${results.annualNOI.toLocaleString()}`,
+        `- Total cash required: $${results.cashRequired.toLocaleString()} (${dealData.downPaymentPct}% down + closing + rehab)`,
+        ``,
+        `## Risk Factors`,
+        ...(results.redFlags.length > 0
+          ? results.redFlags.map((f) => `- ${f}`)
+          : ['- Standard market and interest rate risk applies']),
+        ``,
+        `## Market Context`,
+        `- DSCR: ${results.dscr.toFixed(2)}x | GRM: ${results.grm.toFixed(1)} | LTV: ${results.ltv.toFixed(1)}%`,
+        `- Break-even occupancy: ${results.breakEvenOccupancy.toFixed(1)}% | Debt yield: ${results.debtYield.toFixed(1)}%`,
+        `- 1% Rule: ${results.onePercentRule ? 'PASS' : 'FAIL'}`,
+        ``,
+        `## Recommendation`,
+        `- Verdict: ${results.aiRecommendation}`,
+        `- ${results.ai_recommendation}`,
+      ].join('\n');
+      setAiResponse(fallbackText);
+      setHasGenerated(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [results, dealData]);
+
+  const sections = useMemo(() => {
+    if (!aiResponse) return [];
+    return parseAIResponse(aiResponse);
+  }, [aiResponse]);
+
+  /* If not yet generated, show the generate button */
+  if (!hasGenerated && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gold/10 border border-gold/20 mb-5">
+          <Sparkles className="w-7 h-7 text-gold" />
+        </div>
+        <h3 className="font-display font-semibold text-lg text-white mb-2">Claude AI Deep Analysis</h3>
+        <p className="text-sm text-muted font-body mb-6 text-center max-w-md">
+          Get an in-depth AI-powered investment analysis powered by Claude.
+          Includes investment summary, risk assessment, market context, and actionable recommendation.
+        </p>
+        <Button
+          variant="primary"
+          size="lg"
+          icon={<Sparkles className="w-4 h-4" />}
+          onClick={fetchAnalysis}
+        >
+          Generate AI Analysis
+        </Button>
+      </div>
+    );
+  }
+
+  /* Loading state with shimmer */
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Loader2 className="w-5 h-5 text-gold animate-spin" />
+          <span className="font-display font-semibold text-white">Claude is analyzing this deal...</span>
+        </div>
+        {['Investment Summary', 'Risk Factors', 'Market Context', 'Recommendation'].map((title) => (
+          <Card key={title} variant="default" padding="md">
+            <div className="flex items-center gap-2 mb-4">
+              <div
+                className="w-6 h-6 rounded-md"
+                style={{ backgroundColor: 'rgba(13, 32, 64, 0.4)' }}
+              />
+              <div
+                className="h-4 w-32 rounded"
+                style={{ backgroundColor: 'rgba(13, 32, 64, 0.4)' }}
+              />
+            </div>
+            <ShimmerBlock lines={title === 'Investment Summary' ? 5 : 3} />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  /* Error state */
+  if (error && !aiResponse) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <AlertTriangle className="w-8 h-8 text-red mb-4" />
+        <h3 className="font-display font-semibold text-white mb-2">Analysis Failed</h3>
+        <p className="text-sm text-muted font-body mb-4">{error}</p>
+        <Button variant="outline" size="md" onClick={fetchAnalysis}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  /* Results */
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-gold" />
+          <h3 className="font-display font-semibold text-white">Claude AI Deep Analysis</h3>
+        </div>
+        <button
+          onClick={fetchAnalysis}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body',
+            'bg-deep border border-border text-muted',
+            'hover:text-white hover:border-gold/30 transition-colors duration-200',
+          )}
+        >
+          <RefreshCw className="w-3 h-3" />
+          Regenerate
+        </button>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/5 border border-gold/20">
+          <AlertTriangle className="w-3.5 h-3.5 text-gold shrink-0" />
+          <p className="text-xs text-gold font-body">
+            API unavailable -- showing local analysis fallback.
+          </p>
+        </div>
+      )}
+
+      {/* Sections */}
+      {sections.map((section) => (
+        <Card key={section.title} variant="default" padding="md">
+          <h4
+            className="label mb-3 flex items-center gap-2"
+            style={{ color: SECTION_COLORS[section.title] || '#D4A843' }}
+          >
+            {SECTION_ICONS[section.title] || <Brain className="w-4 h-4" />}
+            {section.title}
+          </h4>
+          <ul className="space-y-2">
+            {section.content.map((line, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span
+                  className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
+                  style={{ backgroundColor: SECTION_COLORS[section.title] || '#D4A843' }}
+                />
+                <span className="text-sm text-white font-body leading-relaxed">{line}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tab 10: Enhanced Sensitivity Analysis                              */
+/* ------------------------------------------------------------------ */
+
+function EnhancedSensitivityTab({ results, dealData }: DealResultsProps) {
+  const rentLabels = ['-10%', '-5%', 'Base', '+5%', '+10%'];
+  const expLabels = ['-10%', '-5%', 'Base', '+5%', '+10%'];
+  const rentMultipliers = [0.90, 0.95, 1.00, 1.05, 1.10];
+  const expMultipliers = [0.90, 0.95, 1.00, 1.05, 1.10];
+
+  /* Compute sensitivity grid with cash flow + cap rate per cell */
+  const gridData = useMemo(() => {
+    const baseRent = dealData.expectedMonthlyRent;
+    const baseExpenses = dealData.monthlyOperatingExpenses;
+    const vacancyPct = dealData.vacancyRate;
+    const monthlyMortgage = results.monthlyMortgage;
+    const askingPrice = dealData.askingPrice;
+
+    return rentMultipliers.map((rm) => {
+      return expMultipliers.map((em) => {
+        const rent = baseRent * rm;
+        const expenses = baseExpenses * em;
+        const effectiveRent = rent * (1 - vacancyPct / 100);
+        const monthlyCashFlow = effectiveRent - monthlyMortgage - expenses;
+        const annualNOI = (effectiveRent - expenses) * 12;
+        const capRate = askingPrice > 0 ? (annualNOI / askingPrice) * 100 : 0;
+
+        return {
+          cashFlow: Math.round(monthlyCashFlow),
+          capRate: parseFloat(capRate.toFixed(2)),
+        };
+      });
+    });
+  }, [dealData, results]);
+
+  /* Summary stats */
+  const allCashFlows = gridData.flat().map((c) => c.cashFlow);
+  const bestCase = Math.max(...allCashFlows);
+  const worstCase = Math.min(...allCashFlows);
+  const positiveCount = allCashFlows.filter((cf) => cf >= 0).length;
+  const totalScenarios = allCashFlows.length;
+
+  return (
+    <div className="space-y-5">
+      {/* Summary row */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Best Case</p>
+            <p className="text-lg font-mono font-bold text-green">{fmtFull$(bestCase)}/mo</p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Worst Case</p>
+            <p className={cn('text-lg font-mono font-bold', worstCase >= 0 ? 'text-green' : 'text-red')}>
+              {fmtFull$(worstCase)}/mo
+            </p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Positive Scenarios</p>
+            <p className={cn('text-lg font-mono font-bold', positiveCount >= totalScenarios / 2 ? 'text-green' : 'text-red')}>
+              {positiveCount}/{totalScenarios}
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      <p className="text-xs text-muted font-body">
+        Each cell shows monthly cash flow and cap rate at different rent vs. expense levels.
+        Green = positive cash flow, Red = negative.
+      </p>
+
+      {/* Grid table */}
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-xs font-mono">
+          <thead>
+            <tr className="bg-deep border-b border-border">
+              <th className="px-3 py-3 text-left">
+                <span className="label">Rent &#x2193; / Exp &#x2192;</span>
+              </th>
+              {expLabels.map((label) => (
+                <th key={label} className="px-3 py-3 text-center label">{label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {gridData.map((row, ri) => (
+              <tr key={ri} className="border-b border-border/50">
+                <td className={cn('px-3 py-3 font-medium', ri === 2 ? 'text-gold' : 'text-white')}>
+                  {rentLabels[ri]}
+                </td>
+                {row.map((cell, ci) => {
+                  const isBase = ri === 2 && ci === 2;
+                  return (
+                    <td
+                      key={ci}
+                      className={cn(
+                        'px-3 py-2.5 text-center transition-colors',
+                        isBase && 'bg-gold/10',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'font-medium tabular-nums',
+                          cell.cashFlow >= 0 ? 'text-green' : 'text-red',
+                          isBase && 'text-gold',
+                        )}
+                      >
+                        {fmtFull$(cell.cashFlow)}
+                      </div>
+                      <div className="text-[10px] text-muted mt-0.5 tabular-nums">
+                        {cell.capRate.toFixed(1)}% cap
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Color legend */}
+      <div className="flex items-center gap-4 text-[11px] text-muted font-body">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-green/20 border border-green/30" />
+          Positive cash flow
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-red/20 border border-red/30" />
+          Negative cash flow
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-gold/20 border border-gold/30" />
+          Base scenario
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tab 11: 30-Year Projections                                        */
+/* ------------------------------------------------------------------ */
+
+interface ProjectionRow {
+  year: number;
+  propertyValue: number;
+  annualRent: number;
+  annualExpenses: number;
+  cashFlow: number;
+  equity: number;
+  totalReturn: number;
+}
+
+function ThirtyYearProjectionsTab({ results, dealData }: DealResultsProps) {
+  /* Compute 30-year projection table */
+  const { rows, summaryMetrics } = useMemo(() => {
+    const askingPrice = dealData.askingPrice;
+    const downPaymentAmt = askingPrice * (dealData.downPaymentPct / 100);
+    const loanAmount = results.loanAmount;
+    const monthlyMortgage = results.monthlyMortgage;
+    const annualRate = dealData.interestRate;
+    const r = annualRate / 100 / 12;
+    const rentGrowthPct = 3; /* 3% annual rent growth */
+    const expenseGrowthPct = 2; /* 2% annual expense growth */
+    const appreciationPct = 3; /* 3% annual property appreciation */
+    const vacancyPct = dealData.vacancyRate;
+
+    let propertyValue = askingPrice;
+    let currentRent = dealData.expectedMonthlyRent;
+    let currentExpenses = dealData.monthlyOperatingExpenses;
+    let balance = loanAmount;
+    let cumulativeCashFlow = 0;
+
+    const projRows: ProjectionRow[] = [];
+
+    for (let year = 1; year <= 30; year++) {
+      /* Apply growth */
+      propertyValue *= (1 + appreciationPct / 100);
+      currentRent *= (1 + rentGrowthPct / 100);
+      currentExpenses *= (1 + expenseGrowthPct / 100);
+
+      /* Annual figures */
+      const effectiveRent = currentRent * (1 - vacancyPct / 100);
+      const annualRent = effectiveRent * 12;
+      const annualExpenses = currentExpenses * 12;
+      const annualMortgage = monthlyMortgage * 12;
+      const annualCashFlow = annualRent - annualExpenses - annualMortgage;
+      cumulativeCashFlow += annualCashFlow;
+
+      /* Principal paydown */
+      for (let m = 0; m < 12; m++) {
+        if (balance <= 0) break;
+        const intPmt = balance * r;
+        const prinPmt = Math.min(monthlyMortgage - intPmt, balance);
+        balance -= prinPmt;
+      }
+      if (year > dealData.loanTerm) balance = 0;
+
+      const equity = propertyValue - Math.max(0, balance);
+      const totalReturn = equity + cumulativeCashFlow - downPaymentAmt;
+
+      projRows.push({
+        year,
+        propertyValue: Math.round(propertyValue),
+        annualRent: Math.round(annualRent),
+        annualExpenses: Math.round(annualExpenses + annualMortgage),
+        cashFlow: Math.round(annualCashFlow),
+        equity: Math.round(equity),
+        totalReturn: Math.round(totalReturn),
+      });
+    }
+
+    /* Summary metrics */
+    const finalRow = projRows[projRows.length - 1];
+    const totalWealth = finalRow ? finalRow.equity + cumulativeCashFlow : 0;
+    const totalCashInvested = downPaymentAmt + (askingPrice * 0.03) + dealData.rehabEstimate;
+    const equityMultiple = totalCashInvested > 0 ? totalWealth / totalCashInvested : 0;
+
+    /* Estimate IRR using a simplified approach */
+    /* IRR is the rate at which NPV of cash flows = 0 */
+    /* We'll use Newton's method for a rough estimate */
+    let irr = 0.10; /* initial guess */
+    for (let iter = 0; iter < 50; iter++) {
+      let npv = -totalCashInvested;
+      let dnpv = 0;
+      for (let y = 0; y < projRows.length; y++) {
+        const t = y + 1;
+        const cf = y === projRows.length - 1
+          ? projRows[y].cashFlow + projRows[y].equity /* terminal value in final year */
+          : projRows[y].cashFlow;
+        npv += cf / Math.pow(1 + irr, t);
+        dnpv -= t * cf / Math.pow(1 + irr, t + 1);
+      }
+      if (Math.abs(dnpv) < 1e-10) break;
+      const newIrr = irr - npv / dnpv;
+      if (Math.abs(newIrr - irr) < 1e-6) break;
+      irr = newIrr;
+      if (irr < -0.5) irr = 0.01; /* guard against divergence */
+      if (irr > 2) irr = 0.5;
+    }
+
+    return {
+      rows: projRows,
+      summaryMetrics: {
+        totalWealth: Math.round(totalWealth),
+        irr: parseFloat((irr * 100).toFixed(1)),
+        equityMultiple: parseFloat(equityMultiple.toFixed(2)),
+        totalCashFlow: Math.round(cumulativeCashFlow),
+        finalPropertyValue: finalRow ? finalRow.propertyValue : 0,
+        finalEquity: finalRow ? finalRow.equity : 0,
+      },
+    };
+  }, [results, dealData]);
+
+  const [showAllYears, setShowAllYears] = useState(false);
+  const displayedRows = showAllYears ? rows : rows.filter((r) => r.year <= 10 || r.year % 5 === 0);
+
+  return (
+    <div className="space-y-5">
+      {/* Assumptions banner */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-deep border border-border">
+        <CalendarRange className="w-3.5 h-3.5 text-gold shrink-0" />
+        <p className="text-[11px] text-muted font-body">
+          Assumptions: 3% annual rent growth, 2% expense growth, 3% property appreciation, {dealData.vacancyRate}% vacancy
+        </p>
+      </div>
+
+      {/* Summary metric cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Total Wealth (30yr)</p>
+            <p className="text-lg font-mono font-bold text-green">{fmt$(summaryMetrics.totalWealth)}</p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Estimated IRR</p>
+            <p className={cn('text-lg font-mono font-bold', summaryMetrics.irr >= 8 ? 'text-green' : summaryMetrics.irr >= 4 ? 'text-gold' : 'text-red')}>
+              {summaryMetrics.irr.toFixed(1)}%
+            </p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Equity Multiple</p>
+            <p className={cn('text-lg font-mono font-bold', summaryMetrics.equityMultiple >= 2 ? 'text-green' : 'text-gold')}>
+              {summaryMetrics.equityMultiple.toFixed(2)}x
+            </p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Cumulative Cash Flow</p>
+            <p className={cn('text-lg font-mono font-bold', summaryMetrics.totalCashFlow >= 0 ? 'text-green' : 'text-red')}>
+              {fmt$(summaryMetrics.totalCashFlow)}
+            </p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Final Property Value</p>
+            <p className="text-lg font-mono font-bold text-white">{fmt$(summaryMetrics.finalPropertyValue)}</p>
+          </div>
+        </Card>
+        <Card variant="default" padding="sm">
+          <div className="px-2">
+            <p className="text-xs text-muted font-body">Final Equity</p>
+            <p className="text-lg font-mono font-bold text-green">{fmt$(summaryMetrics.finalEquity)}</p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Toggle */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted font-body">
+          {showAllYears ? 'Showing all 30 years' : 'Showing years 1-10, then every 5th year'}
+        </p>
+        <button
+          onClick={() => setShowAllYears(!showAllYears)}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body',
+            'bg-deep border border-border text-muted',
+            'hover:text-white hover:border-gold/30 transition-colors duration-200',
+          )}
+        >
+          {showAllYears ? 'Show Summary' : 'Show All Years'}
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-xs font-mono">
+          <thead>
+            <tr className="bg-deep border-b border-border">
+              <th className="text-left px-3 py-3 label">Year</th>
+              <th className="text-right px-3 py-3 label">Property Value</th>
+              <th className="text-right px-3 py-3 label">Annual Rent</th>
+              <th className="text-right px-3 py-3 label">Annual Expenses</th>
+              <th className="text-right px-3 py-3 label">Cash Flow</th>
+              <th className="text-right px-3 py-3 label">Equity</th>
+              <th className="text-right px-3 py-3 label">Total Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayedRows.map((row) => {
+              const isMilestone = row.year === 5 || row.year === 10 || row.year === 15 || row.year === 20 || row.year === 30;
+              return (
+                <tr
+                  key={row.year}
+                  className={cn(
+                    'border-b border-border/50 transition-colors hover:bg-deep/50',
+                    isMilestone && 'bg-gold/5',
+                  )}
+                >
+                  <td className={cn('px-3 py-2.5 font-medium', isMilestone ? 'text-gold' : 'text-white')}>
+                    {row.year}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-white tabular-nums">{fmtFull$(row.propertyValue)}</td>
+                  <td className="px-3 py-2.5 text-right text-green tabular-nums">{fmtFull$(row.annualRent)}</td>
+                  <td className="px-3 py-2.5 text-right text-red tabular-nums">{fmtFull$(row.annualExpenses)}</td>
+                  <td className={cn('px-3 py-2.5 text-right tabular-nums font-medium', row.cashFlow >= 0 ? 'text-green' : 'text-red')}>
+                    {fmtFull$(row.cashFlow)}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-green tabular-nums">{fmt$(row.equity)}</td>
+                  <td className={cn('px-3 py-2.5 text-right tabular-nums font-medium', row.totalReturn >= 0 ? 'text-green' : 'text-red')}>
+                    {fmt$(row.totalReturn)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -808,7 +1598,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
           <div className="relative w-20 h-20">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
               {/* Background ring */}
-              <circle cx="50" cy="50" r="42" fill="none" stroke="#1E2530" strokeWidth="6" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#161E2A" strokeWidth="6" />
               {/* Score ring */}
               <circle
                 cx="50"
@@ -822,7 +1612,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="font-display font-bold text-xl" style={{ color: scoreCol }}>
+              <span className="font-mono font-bold text-xl" style={{ color: scoreCol }}>
                 {results.aiScore}
               </span>
             </div>
@@ -860,6 +1650,15 @@ function DealResults({ results, dealData }: DealResultsProps) {
           <TabsTrigger value="compare" icon={<GitCompare className="w-3.5 h-3.5" />}>
             Compare
           </TabsTrigger>
+          <TabsTrigger value="claude-ai" icon={<Sparkles className="w-3.5 h-3.5" />}>
+            Claude AI
+          </TabsTrigger>
+          <TabsTrigger value="sensitivity-plus" icon={<Grid3X3 className="w-3.5 h-3.5" />}>
+            Sensitivity+
+          </TabsTrigger>
+          <TabsTrigger value="30yr-projections" icon={<CalendarRange className="w-3.5 h-3.5" />}>
+            30-Yr Projections
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
@@ -886,6 +1685,15 @@ function DealResults({ results, dealData }: DealResultsProps) {
         <TabsContent value="compare">
           <CompareTab />
         </TabsContent>
+        <TabsContent value="claude-ai">
+          <ClaudeAIDeepAnalysisTab results={results} dealData={dealData} />
+        </TabsContent>
+        <TabsContent value="sensitivity-plus">
+          <EnhancedSensitivityTab results={results} dealData={dealData} />
+        </TabsContent>
+        <TabsContent value="30yr-projections">
+          <ThirtyYearProjectionsTab results={results} dealData={dealData} />
+        </TabsContent>
       </Tabs>
 
       {/* ------------------------------------------------------------ */}
@@ -893,13 +1701,13 @@ function DealResults({ results, dealData }: DealResultsProps) {
       {/* ------------------------------------------------------------ */}
       {results.redFlags.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-display font-semibold text-sm text-red flex items-center gap-2">
+          <h3 className="label !text-red flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" /> Red Flag Alerts
           </h3>
           {results.redFlags.map((flag, i) => (
             <div
               key={i}
-              className="flex items-start gap-3 bg-card rounded-xl border border-border border-l-4 border-l-red px-4 py-3"
+              className="flex items-start gap-3 bg-card rounded-xl border border-border border-l-4 border-l-red px-4 py-3 rounded-lg"
             >
               <AlertTriangle className="w-4 h-4 text-red shrink-0 mt-0.5" />
               <p className="text-sm text-white font-body">{flag}</p>
@@ -915,7 +1723,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
         <Button variant="primary" size="lg" icon={<Plus className="w-4 h-4" />}>
           Add to Pipeline
         </Button>
-        <Button variant="secondary" size="lg" icon={<FileDown className="w-4 h-4" />}>
+        <Button variant="outline" size="lg" icon={<FileDown className="w-4 h-4" />}>
           Export PDF
         </Button>
       </div>

@@ -63,8 +63,8 @@ function Tooltip({
           sideOffset={6}
           className={cn(
             'z-[100] px-3 py-1.5 rounded-lg',
-            'bg-border text-white text-xs font-body',
-            'shadow-lg border border-white/5',
+            'font-body text-[11px]',
+            'shadow-glow-sm',
             'select-none',
             // Animation
             'data-[state=delayed-open]:animate-in',
@@ -79,9 +79,18 @@ function Tooltip({
             'data-[side=top]:slide-in-from-bottom-1',
             className,
           )}
+          style={{
+            background: '#0C1018',
+            border: '1px solid #161E2A',
+            color: '#E2E8F0',
+          }}
         >
           {content}
-          <RadixTooltip.Arrow className="fill-border" width={10} height={5} />
+          <RadixTooltip.Arrow
+            width={10}
+            height={5}
+            style={{ fill: '#161E2A' }}
+          />
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>

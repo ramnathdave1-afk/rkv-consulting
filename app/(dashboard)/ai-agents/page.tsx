@@ -335,24 +335,34 @@ export default function AIAgentsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Fetch activity logs
     const { data: logs } = await supabase
       .from('agent_logs')
-      .select('id, agent_type, action, status, created_at')
+      .select('id, agent_type, trigger_event, subject, content, outcome, status, created_at, tenant_id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
     if (logs) {
-      setActivityLogs(logs as AgentLogEntry[]);
+      // Map logs to the expected format
+      const mappedLogs = logs.map((l: Record<string, unknown>) => ({
+        id: l.id as string,
+        agent_type: l.agent_type as string,
+        action: (l.trigger_event || l.subject || 'Action') as string,
+        status: l.status as string,
+        created_at: l.created_at as string,
+        details: (l.outcome || l.content) as string,
+      }));
+      setActivityLogs(mappedLogs);
 
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthLogs = logs.filter((l: AgentLogEntry) => new Date(l.created_at) >= monthStart);
+      const monthLogs = mappedLogs.filter((l: AgentLogEntry) => new Date(l.created_at) >= monthStart);
 
       const emailLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'email_agent' || l.agent_type === 'email');
       const voiceLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'voice_agent' || l.agent_type === 'voice');
       const smsLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'sms_agent' || l.agent_type === 'sms');
-      const completedLogs = monthLogs.filter((l: AgentLogEntry) => l.status === 'success');
+      const completedLogs = monthLogs.filter((l: AgentLogEntry) => l.status === 'sent' || l.status === 'success');
 
       setOverviewStats({
         emailsSent: emailLogs.length,
@@ -360,6 +370,71 @@ export default function AIAgentsPage() {
         smsSent: smsLogs.length,
         tasksCompleted: completedLogs.length,
       });
+    }
+
+    // Fetch real tenants for SMS threads
+    const { data: tenants } = await supabase
+      .from('tenants')
+      .select('id, first_name, last_name, phone, properties(address)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .not('phone', 'is', null)
+      .limit(10);
+
+    if (tenants && tenants.length > 0) {
+      // Build SMS threads from real tenant data + agent_logs
+      const realThreads: SMSThread[] = [];
+      for (const tenant of tenants) {
+        const { data: smsLogs } = await supabase
+          .from('agent_logs')
+          .select('id, content, status, created_at')
+          .eq('tenant_id', tenant.id)
+          .eq('agent_type', 'sms')
+          .order('created_at', { ascending: true })
+          .limit(20);
+
+        const messages: SMSMsg[] = (smsLogs || []).map((log: Record<string, unknown>) => ({
+          id: log.id as string,
+          direction: 'outbound' as const,
+          content: (log.content as string) || 'Message sent',
+          sender: 'agent' as const,
+          timestamp: log.created_at as string,
+          status: (log.status as string) === 'sent' ? 'delivered' as const : 'sent' as const,
+        }));
+
+        const property = Array.isArray(tenant.properties)
+          ? tenant.properties[0]
+          : tenant.properties;
+
+        realThreads.push({
+          tenantId: tenant.id,
+          tenantName: `${tenant.first_name} ${tenant.last_name}`,
+          propertyAddress: (property as Record<string, unknown>)?.address as string || 'Unknown',
+          messages,
+          unreadCount: 0,
+          autoResponse: false,
+        });
+      }
+
+      if (realThreads.length > 0) {
+        setSmsThreads(realThreads);
+        setSelectedThread(realThreads[0].tenantId);
+      }
+    }
+
+    // Fetch saved sequence states
+    const { data: savedSequences } = await supabase
+      .from('agent_sequences')
+      .select('type, enabled')
+      .eq('user_id', user.id);
+
+    if (savedSequences) {
+      setSequences((prev) =>
+        prev.map((seq) => {
+          const saved = savedSequences.find((s: Record<string, unknown>) => s.type === seq.type);
+          return saved ? { ...seq, active: saved.enabled as boolean } : seq;
+        })
+      );
     }
   }, [supabase]);
 
@@ -371,30 +446,79 @@ export default function AIAgentsPage() {
   /*  Handlers                                                         */
   /* ---------------------------------------------------------------- */
 
-  function toggleSequence(id: string) {
+  async function toggleSequence(id: string) {
+    const seq = sequences.find((s) => s.id === id);
+    if (!seq) return;
+
+    const newActive = !seq.active;
     setSequences((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s))
+      prev.map((s) => (s.id === id ? { ...s, active: newActive } : s))
     );
+
+    // Persist to Supabase agent_sequences table
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Upsert the sequence state
+      await supabase
+        .from('agent_sequences')
+        .upsert(
+          {
+            id: id.startsWith('seq-') ? undefined : id,
+            user_id: user.id,
+            name: seq.name,
+            type: seq.type,
+            agent_type: 'email',
+            enabled: newActive,
+            steps: seq.steps,
+          },
+          { onConflict: 'id' }
+        );
+    } catch (err) {
+      console.error('Failed to persist sequence toggle:', err);
+    }
   }
 
-  function handleSendSMS() {
-    if (!smsInput.trim() || !selectedThread) return;
-    const newMsg: SMSMsg = {
-      id: `s-${Date.now()}`,
-      direction: 'outbound',
-      content: smsInput.trim(),
-      sender: 'investor',
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    };
-    setSmsThreads((prev) =>
-      prev.map((t) =>
-        t.tenantId === selectedThread
-          ? { ...t, messages: [...t.messages, newMsg] }
-          : t
-      )
-    );
-    setSmsInput('');
+  const [smsSending, setSmsSending] = useState(false);
+
+  async function handleSendSMS() {
+    if (!smsInput.trim() || !selectedThread || smsSending) return;
+    setSmsSending(true);
+
+    try {
+      // Call real SMS API
+      const res = await fetch('/api/agents/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: selectedThread,
+          message: smsInput.trim(),
+        }),
+      });
+
+      const newMsg: SMSMsg = {
+        id: `s-${Date.now()}`,
+        direction: 'outbound',
+        content: smsInput.trim(),
+        sender: 'investor',
+        timestamp: new Date().toISOString(),
+        status: res.ok ? 'sent' : 'failed',
+      };
+
+      setSmsThreads((prev) =>
+        prev.map((t) =>
+          t.tenantId === selectedThread
+            ? { ...t, messages: [...t.messages, newMsg] }
+            : t
+        )
+      );
+      setSmsInput('');
+    } catch {
+      console.error('Failed to send SMS');
+    } finally {
+      setSmsSending(false);
+    }
   }
 
   function toggleAutoResponse(tenantId: string) {
@@ -463,14 +587,14 @@ export default function AIAgentsPage() {
                 ].map((stat) => {
                   const Icon = stat.icon;
                   return (
-                    <Card key={stat.label}>
+                    <Card key={stat.label} className="rounded-lg">
                       <div className="flex items-center gap-4">
                         <div className={cn('flex items-center justify-center w-12 h-12 rounded-xl', stat.bg)}>
                           <Icon className={cn('h-6 w-6', stat.color)} />
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted uppercase tracking-wider font-semibold">{stat.label}</p>
-                          <p className="text-2xl font-bold text-white font-display tabular-nums">{stat.value}</p>
+                          <p className="label">{stat.label}</p>
+                          <p className="text-2xl font-bold text-white font-mono tabular-nums">{stat.value}</p>
                         </div>
                       </div>
                     </Card>
@@ -520,7 +644,7 @@ export default function AIAgentsPage() {
                               >
                                 {log.status}
                               </Badge>
-                              <span className="text-[10px] text-muted">
+                              <span className="text-[10px] text-muted font-mono">
                                 {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                               </span>
                             </div>
@@ -585,7 +709,7 @@ export default function AIAgentsPage() {
                     {/* Expanded steps */}
                     {isExpanded && (
                       <div className="mt-4 pt-4 border-t border-border space-y-3 animate-fade-up">
-                        <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">Sequence Steps</p>
+                        <p className="label">Sequence Steps</p>
                         {seq.steps.map((step, idx) => (
                           <div key={idx} className="flex items-start gap-3 pl-2">
                             {/* Step indicator */}
@@ -667,9 +791,43 @@ export default function AIAgentsPage() {
                     </div>
 
                     <Button
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
                       icon={<Play className="h-3.5 w-3.5" />}
+                      onClick={async () => {
+                        // Get first active tenant for test call
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) return;
+                        const { data: tenants } = await supabase
+                          .from('tenants')
+                          .select('id')
+                          .eq('user_id', user.id)
+                          .eq('status', 'active')
+                          .limit(1);
+                        if (!tenants?.length) {
+                          alert('No active tenants found for test call');
+                          return;
+                        }
+                        try {
+                          const res = await fetch('/api/agents/voice', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              tenantId: tenants[0].id,
+                              purpose: 'general',
+                            }),
+                          });
+                          const data = await res.json();
+                          if (res.ok) {
+                            alert('Test call initiated successfully');
+                            fetchData(); // Refresh activity logs
+                          } else {
+                            alert(data.error || 'Failed to initiate test call');
+                          }
+                        } catch {
+                          alert('Failed to connect to voice service');
+                        }
+                      }}
                     >
                       Test Call
                     </Button>
@@ -757,9 +915,9 @@ export default function AIAgentsPage() {
 
               <div className="flex gap-4" style={{ height: '600px' }}>
                 {/* Thread list */}
-                <div className="w-72 flex-shrink-0 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+                <div className="w-72 flex-shrink-0 bg-card border border-border rounded-xl overflow-hidden flex flex-col rounded-lg">
                   <div className="p-3 border-b border-border">
-                    <p className="text-xs font-semibold text-muted uppercase tracking-wider">Threads</p>
+                    <p className="label">Threads</p>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     {smsThreads.map((thread) => (
@@ -798,7 +956,7 @@ export default function AIAgentsPage() {
                 </div>
 
                 {/* Conversation panel */}
-                <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+                <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden flex flex-col rounded-lg">
                   {activeThread ? (
                     <>
                       {/* Thread header */}
@@ -847,7 +1005,7 @@ export default function AIAgentsPage() {
                               )}
                               <p className="text-sm leading-relaxed">{msg.content}</p>
                               <div className="flex items-center gap-1.5 mt-1.5">
-                                <span className="text-[10px] text-muted">
+                                <span className="text-[10px] text-muted font-mono">
                                   {new Date(msg.timestamp).toLocaleTimeString('en-US', {
                                     hour: 'numeric',
                                     minute: '2-digit',
@@ -991,7 +1149,7 @@ export default function AIAgentsPage() {
                                 </div>
 
                                 {/* Timestamp */}
-                                <time className="text-xs text-muted whitespace-nowrap flex-shrink-0">
+                                <time className="text-xs text-muted font-mono whitespace-nowrap flex-shrink-0">
                                   {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                                 </time>
                               </div>
@@ -999,18 +1157,18 @@ export default function AIAgentsPage() {
                               {/* Expanded detail panel */}
                               {isExpanded && (
                                 <div className="mt-3 pt-3 border-t border-border animate-fade-up">
-                                  <div className="grid grid-cols-2 gap-3 text-xs">
+                                  <div className="grid grid-cols-2 gap-3 text-xs bg-card/50 rounded-lg p-3 border border-border/50">
                                     <div>
-                                      <p className="text-muted font-medium">Agent Type</p>
-                                      <p className="text-white capitalize">{log.agent_type.replace('_', ' ')}</p>
+                                      <p className="label mb-1">Agent Type</p>
+                                      <p className="text-white capitalize font-mono">{log.agent_type.replace('_', ' ')}</p>
                                     </div>
                                     <div>
-                                      <p className="text-muted font-medium">Status</p>
-                                      <p className="text-white capitalize">{log.status}</p>
+                                      <p className="label mb-1">Status</p>
+                                      <p className="text-white capitalize font-mono">{log.status}</p>
                                     </div>
                                     <div>
-                                      <p className="text-muted font-medium">Timestamp</p>
-                                      <p className="text-white">
+                                      <p className="label mb-1">Timestamp</p>
+                                      <p className="text-white font-mono">
                                         {new Date(log.created_at).toLocaleString('en-US', {
                                           month: 'short',
                                           day: 'numeric',
@@ -1022,7 +1180,7 @@ export default function AIAgentsPage() {
                                       </p>
                                     </div>
                                     <div>
-                                      <p className="text-muted font-medium">Action ID</p>
+                                      <p className="label mb-1">Action ID</p>
                                       <p className="text-white font-mono text-[10px]">{log.id}</p>
                                     </div>
                                   </div>

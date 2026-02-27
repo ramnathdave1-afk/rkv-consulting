@@ -348,50 +348,50 @@ export default function TenantsPage() {
       {/* ============================================================ */}
       <div className="grid grid-cols-4 gap-4">
         {/* Total Tenants */}
-        <Card className="flex items-center gap-4">
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Users className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Total Tenants</p>
-            <p className="text-xl font-bold text-white">{tenants.length}</p>
-            <p className="text-[10px] text-muted">{activeTenants.length} active</p>
+            <p className="label">Total Tenants</p>
+            <p className="text-xl font-bold font-mono text-white">{tenants.length}</p>
+            <p className="text-[10px] font-body text-muted">{activeTenants.length} active</p>
           </div>
         </Card>
 
         {/* Occupancy Rate */}
-        <Card className="flex items-center gap-4">
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <Building2 className="h-5 w-5 text-green" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Occupancy Rate</p>
-            <p className="text-xl font-bold text-white">{occupancyRate}%</p>
-            <p className="text-[10px] text-muted">{occupiedUnits}/{totalUnits} units</p>
+            <p className="label">Occupancy Rate</p>
+            <p className="text-xl font-bold font-mono text-white">{occupancyRate}%</p>
+            <p className="text-[10px] font-body text-muted">{occupiedUnits}/{totalUnits} units</p>
           </div>
         </Card>
 
         {/* Avg Days to Fill Vacancy */}
-        <Card className="flex items-center gap-4">
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Clock className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Avg Days to Fill</p>
-            <p className="text-xl font-bold text-white">{avgDaysToFill}</p>
-            <p className="text-[10px] text-muted">vacancy turnaround</p>
+            <p className="label">Avg Days to Fill</p>
+            <p className="text-xl font-bold font-mono text-white">{avgDaysToFill}</p>
+            <p className="text-[10px] font-body text-muted">vacancy turnaround</p>
           </div>
         </Card>
 
         {/* Rent Collection Rate */}
-        <Card className="flex items-center gap-4">
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <TrendingUp className="h-5 w-5 text-green" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Collection Rate</p>
-            <p className="text-xl font-bold text-white">{collectionRate}%</p>
-            <p className="text-[10px] text-muted">{paidThisMonth}/{totalWithPayments} paid this month</p>
+            <p className="label">Collection Rate</p>
+            <p className="text-xl font-bold font-mono text-white">{collectionRate}%</p>
+            <p className="text-[10px] font-body text-muted">{paidThisMonth}/{totalWithPayments} paid this month</p>
           </div>
         </Card>
       </div>
@@ -405,7 +405,7 @@ export default function TenantsPage() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white">
               {lateTenants.length} payment{lateTenants.length > 1 ? 's' : ''} overdue totaling{' '}
-              <span className="text-red">{formatCurrency(overdueTotal)}</span>
+              <span className="text-red font-mono">{formatCurrency(overdueTotal)}</span>
             </p>
             <p className="text-xs text-muted mt-0.5">
               Automated AI collection sequences can recover late payments via email, SMS, and voice.
@@ -441,7 +441,7 @@ export default function TenantsPage() {
             >
               {f.label}
               <span className={cn(
-                'text-[10px] px-1.5 py-0.5 rounded-full font-semibold',
+                'text-[10px] px-1.5 py-0.5 rounded-full font-semibold font-mono',
                 activeFilter === f.key
                   ? 'bg-black/20 text-black'
                   : 'bg-border text-muted',
@@ -495,37 +495,40 @@ export default function TenantsPage() {
               >
                 <Card
                   variant="interactive"
-                  className="h-full"
+                  className="h-full rounded-lg"
+                  style={{ background: '#0C1018', border: '1px solid #161E2A' }}
                 >
                   {/* Top row: name + payment status */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="min-w-0">
-                      <h3 className="font-display font-semibold text-base text-white">
+                      <h3 className="font-body font-semibold text-base text-white">
                         {tenant.first_name} {tenant.last_name}
                       </h3>
-                      <p className="text-xs text-muted mt-0.5 truncate">
+                      <p className="text-xs font-body text-muted mt-0.5 truncate">
                         {tenant.property?.address
                           ? `${tenant.property.address}, ${tenant.property.city}, ${tenant.property.state}`
                           : 'No property assigned'}
                       </p>
                     </div>
-                    <Badge
-                      variant={paymentStatus.variant}
-                      size="sm"
-                      dot
-                    >
+                    <span className={cn(
+                      'font-mono text-[10px] px-2 py-0.5 rounded border',
+                      paymentStatus.variant === 'success' && 'bg-green/10 text-green border-green/20',
+                      paymentStatus.variant === 'danger' && 'bg-red/10 text-red border-red/20',
+                      paymentStatus.variant === 'warning' && 'bg-gold/10 text-gold border-gold/20',
+                      paymentStatus.variant === 'default' && 'bg-muted/10 text-muted border-muted/20',
+                    )}>
                       {paymentStatus.label}
-                    </Badge>
+                    </span>
                   </div>
 
                   {/* Monthly rent */}
-                  <p className="text-2xl font-bold text-white mb-3">
+                  <p className="text-2xl font-bold font-mono text-white mb-3">
                     {formatCurrency(tenant.monthly_rent)}
                     <span className="text-xs text-muted font-normal ml-1">/mo</span>
                   </p>
 
                   {/* Lease dates */}
-                  <div className="flex items-center gap-4 text-xs text-muted mb-3">
+                  <div className="flex items-center gap-4 text-xs font-mono text-muted mb-3">
                     <span>
                       Lease: {formatDate(tenant.lease_start)} - {formatDate(tenant.lease_end)}
                     </span>
@@ -552,7 +555,7 @@ export default function TenantsPage() {
                   </div>
 
                   {/* Quick action row */}
-                  <div className="flex items-center gap-2 border-t border-border pt-3">
+                  <div className="flex items-center gap-2 border-t border-border pt-3" style={{ borderColor: '#161E2A' }}>
                     <button
                       onClick={(e) => {
                         e.preventDefault();

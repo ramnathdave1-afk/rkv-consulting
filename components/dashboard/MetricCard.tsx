@@ -24,12 +24,7 @@ function formatValue(value: string | number): string {
 
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'animate-pulse rounded-md bg-border/50',
-        className,
-      )}
-    />
+    <div className={cn('animate-pulse rounded bg-border/30', className)} />
   );
 }
 
@@ -46,24 +41,14 @@ export default function MetricCard({
   loading = false,
 }: MetricCardProps) {
   const isPositive = change >= 0;
-  const sparklineColor = trend === 'down' ? '#EF4444' : '#C9A84C';
+  const sparklineColor = trend === 'down' ? '#DC2626' : '#059669';
 
   if (loading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-          <Skeleton className="h-10 w-20" />
-        </div>
-        <div className="mt-4">
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="mt-3">
-          <Skeleton className="h-4 w-40" />
-        </div>
+      <div className="relative overflow-hidden rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Skeleton className="h-3 w-20 mb-4" />
+        <Skeleton className="h-8 w-28 mb-3" />
+        <Skeleton className="h-3 w-32" />
       </div>
     );
   }
@@ -71,66 +56,59 @@ export default function MetricCard({
   return (
     <div
       className={cn(
-        'bg-card border border-border rounded-xl p-6',
-        'transition-all duration-200 ease-out',
-        'hover:scale-[1.02] hover:shadow-glow hover:border-gold/30',
-        'group cursor-default',
+        'relative overflow-hidden rounded-lg p-5 group',
+        'transition-all duration-300 ease-out cursor-default',
       )}
+      style={{ background: '#0C1018', border: '1px solid #161E2A' }}
     >
-      {/* Top row: icon + title ... sparkline */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-border/50">
-            <Icon className="h-5 w-5 text-muted" />
-          </div>
-          <span className="text-sm font-medium text-muted">{title}</span>
-        </div>
+      {/* Subtle background */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none" />
 
+      {/* Top row: label + sparkline */}
+      <div className="relative flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Icon className="h-3.5 w-3.5 text-gold opacity-60" strokeWidth={1.5} />
+          <span className="label text-gold">{title}</span>
+        </div>
         {sparklineData && sparklineData.length >= 2 && (
           <SparklineChart
             data={sparklineData}
-            width={80}
-            height={40}
+            width={72}
+            height={32}
             color={sparklineColor}
-            showArea
           />
         )}
       </div>
 
-      {/* Middle: large value */}
-      <div className="mt-4">
-        <span className="text-3xl font-bold tracking-tight text-white">
-          {prefix}
-          {formatValue(value)}
-          {suffix}
+      {/* Large value */}
+      <div className="relative">
+        <span className="font-mono text-[28px] font-semibold text-white leading-none tracking-tight inline-block">
+          {prefix}{formatValue(value)}{suffix}
         </span>
       </div>
 
-      {/* Bottom: change badge + label */}
-      <div className="mt-3 flex items-center gap-2">
+      {/* Bottom: change indicator */}
+      <div className="relative mt-3 flex items-center gap-2">
         <span
           className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold',
-            isPositive
-              ? 'bg-green/10 text-green'
-              : 'bg-red/10 text-red',
+            'inline-flex items-center gap-1 font-mono text-[11px] font-medium',
+            isPositive ? 'text-green' : 'text-red',
           )}
         >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            className={cn(!isPositive && 'rotate-180')}
-          >
-            <path
-              d="M6 2.5L9.5 6.5H2.5L6 2.5Z"
-              fill="currentColor"
-            />
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={cn(!isPositive && 'rotate-180')}>
+            <path d="M5 1.5L8.5 6H1.5L5 1.5Z" fill="currentColor" />
           </svg>
-          {Math.abs(change).toFixed(1)}%
+          {isPositive ? '+' : ''}{change.toFixed(1)}%
         </span>
-        <span className="text-xs text-muted">{changeLabel}</span>
+        <span className="font-mono text-[10px] text-muted-deep">{changeLabel}</span>
+      </div>
+
+      {/* Thin progress bar at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-border/30">
+        <div
+          className="h-full bg-gold/30 transition-all duration-1000"
+          style={{ width: `${Math.min(100, Math.abs(change) * 5)}%` }}
+        />
       </div>
     </div>
   );

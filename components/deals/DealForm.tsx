@@ -269,7 +269,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       {/*  Property Info                                                */}
       {/* ------------------------------------------------------------ */}
       <div className="space-y-4">
-        <p className="text-xs font-display font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
+        <p className="label flex items-center gap-2">
           <Home className="w-3.5 h-3.5" /> Property Info
         </p>
 
@@ -331,7 +331,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       {/*  Financing                                                    */}
       {/* ------------------------------------------------------------ */}
       <div className="space-y-4">
-        <p className="text-xs font-display font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
+        <p className="label flex items-center gap-2">
           <DollarSign className="w-3.5 h-3.5" /> Financing
         </p>
 
@@ -339,7 +339,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
         <div className="w-full">
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm text-muted font-body">Down Payment</label>
-            <span className="text-sm font-body font-medium text-gold tabular-nums">{downPaymentPct}%</span>
+            <span className="text-sm font-mono font-medium text-gold tabular-nums">{downPaymentPct}%</span>
           </div>
           <input
             type="range"
@@ -395,7 +395,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       {/*  Income & Expenses                                            */}
       {/* ------------------------------------------------------------ */}
       <div className="space-y-4">
-        <p className="text-xs font-display font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
+        <p className="label flex items-center gap-2">
           <BarChart3 className="w-3.5 h-3.5" /> Income & Expenses
         </p>
 
@@ -430,7 +430,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       {/*  Growth Assumptions                                           */}
       {/* ------------------------------------------------------------ */}
       <div className="space-y-4">
-        <p className="text-xs font-display font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
+        <p className="label flex items-center gap-2">
           <TrendingUp className="w-3.5 h-3.5" /> Growth Assumptions
         </p>
 
@@ -461,10 +461,10 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       {/* ------------------------------------------------------------ */}
       {/*  Usage counter                                                */}
       {/* ------------------------------------------------------------ */}
-      <div className="bg-deep rounded-xl border border-border p-4">
+      <div className="bg-deep rounded-xl border border-border p-4 rounded-lg">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-muted font-body">Monthly analyses</span>
-          <span className="text-xs font-body font-medium tabular-nums text-white">
+          <span className="text-xs font-mono font-medium tabular-nums text-white">
             {usageCount} of {usageLimit} used
           </span>
         </div>
@@ -488,7 +488,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
           <p className="text-sm text-red font-body font-medium">Monthly limit reached</p>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             fullWidth
             size="lg"
             onClick={() => {

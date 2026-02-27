@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   DragDropContext,
   Droppable,
@@ -42,12 +42,13 @@ import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Select } from '@/components/ui/Input';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 /* ================================================================== */
 /*  Types                                                              */
@@ -109,6 +110,30 @@ interface Property {
   id: string;
   address: string;
   name: string;
+}
+
+interface PropertyWithLocation extends Property {
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface MatchedContractor {
+  id: string;
+  company_name?: string;
+  contact_name?: string;
+  phone?: string;
+  trade?: string;
+  city?: string;
+  state?: string;
+  composite_score?: number;
+  score_composite?: number;
+  google_rating?: number;
+  google_review_count?: number;
+  price_range_min?: number;
+  price_range_max?: number;
+  [key: string]: unknown;
 }
 
 interface Tenant {
@@ -177,32 +202,7 @@ type SortDir = 'asc' | 'desc';
 /*  Suggested Contractors (placeholder data)                           */
 /* ================================================================== */
 
-const SUGGESTED_CONTRACTORS = [
-  {
-    id: '1',
-    name: 'QuickFix Plumbing & HVAC',
-    trade: 'Plumbing, HVAC',
-    rating: 4.8,
-    priceRange: '$$',
-    responseTime: '< 2 hours',
-  },
-  {
-    id: '2',
-    name: 'Elite Electrical Services',
-    trade: 'Electrical, Safety',
-    rating: 4.6,
-    priceRange: '$$$',
-    responseTime: '< 4 hours',
-  },
-  {
-    id: '3',
-    name: 'AllPro Maintenance Co.',
-    trade: 'General, Appliance, Exterior',
-    rating: 4.4,
-    priceRange: '$',
-    responseTime: '< 24 hours',
-  },
-];
+/* (Placeholder contractors removed — now uses live matching API) */
 
 /* ================================================================== */
 /*  Helper: days open                                                  */
@@ -229,13 +229,13 @@ function StatCard({
   iconBg: string;
 }) {
   return (
-    <Card className="flex items-center gap-4">
+    <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
       <div className={cn('flex items-center justify-center w-11 h-11 rounded-xl', iconBg)}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <p className="text-xs text-muted font-body">{label}</p>
-        <p className="text-2xl font-display font-bold text-white leading-tight">{value}</p>
+        <p className="label">{label}</p>
+        <p className="text-2xl font-mono font-bold text-white leading-tight">{value}</p>
       </div>
     </Card>
   );
@@ -245,7 +245,7 @@ function StatCard({
 function PriorityBadge({ priority }: { priority: Priority }) {
   const config = PRIORITY_CONFIG[priority];
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border', config.className)}>
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold border', config.className)}>
       {config.label}
     </span>
   );
@@ -267,7 +267,7 @@ function StatusBadge({ status }: { status: MaintenanceStatus }) {
     completed: 'bg-green/15 text-green border-green/20',
   };
   return (
-    <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border', colorMap[status])}>
+    <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-semibold border', colorMap[status])}>
       <span className={cn('w-1.5 h-1.5 rounded-full', col?.dotColor)} />
       {labelMap[status]}
     </span>
@@ -318,10 +318,11 @@ function KanbanCard({
           {...provided.dragHandleProps}
           onClick={onClick}
           className={cn(
-            'bg-card border border-border rounded-lg p-4 cursor-grab select-none',
+            'rounded-lg rounded-lg p-4 cursor-grab select-none',
             'hover:border-gold/20 hover:shadow-glow-sm transition-all duration-200',
             snapshot.isDragging && 'shadow-glow border-gold/30 rotate-1 scale-[1.02]',
           )}
+          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
         >
           {/* Property address */}
           <p className="text-xs text-muted font-body truncate mb-1">
@@ -351,7 +352,7 @@ function KanbanCard({
           )}
 
           {/* Bottom row: days open + cost */}
-          <div className="flex items-center justify-between text-xs text-muted">
+          <div className="flex items-center justify-between text-xs text-muted font-mono">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {days === 0 ? 'Today' : `${days}d open`}
@@ -383,14 +384,14 @@ function KanbanColumn({
   onCardClick: (req: MaintenanceRequest) => void;
 }) {
   return (
-    <div className={cn('bg-deep rounded-xl p-4 min-w-[280px] flex flex-col border-t-2', column.borderColor)}>
+    <div className={cn('rounded-xl p-4 min-w-[280px] flex flex-col border-t-2', column.borderColor)} style={{ background: '#0C1018' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className={cn('w-2 h-2 rounded-full', column.dotColor)} />
-          <h3 className="text-sm font-display font-semibold text-white">{column.label}</h3>
+          <h3 className="label">{column.label}</h3>
         </div>
-        <span className="flex items-center justify-center min-w-[22px] h-[22px] rounded-full bg-border/60 text-[10px] font-bold text-muted px-1.5">
+        <span className="flex items-center justify-center min-w-[22px] h-[22px] rounded-full bg-border/60 text-[10px] font-bold font-mono text-muted px-1.5">
           {requests.length}
         </span>
       </div>
@@ -452,7 +453,7 @@ function ListView({
   ];
 
   return (
-    <div className="bg-deep border border-border rounded-xl overflow-hidden">
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -462,7 +463,7 @@ function ListView({
                   key={h.field}
                   onClick={() => onSort(h.field)}
                   className={cn(
-                    'px-4 py-3 text-[11px] font-semibold text-muted uppercase tracking-wider cursor-pointer',
+                    'px-4 py-3 text-[10px] font-medium text-gold uppercase tracking-wider cursor-pointer',
                     'hover:text-white transition-colors whitespace-nowrap select-none',
                     h.className,
                   )}
@@ -518,15 +519,15 @@ function ListView({
                       {catConfig.label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted font-body text-right tabular-nums">
+                  <td className="px-4 py-3 text-sm text-muted font-mono text-right tabular-nums">
                     {days === 0 ? 'Today' : `${days}d`}
                   </td>
-                  <td className="px-4 py-3 text-sm text-text font-body text-right tabular-nums">
+                  <td className="px-4 py-3 text-sm text-text font-mono text-right tabular-nums">
                     {req.estimated_cost != null
                       ? `$${req.estimated_cost.toLocaleString()}`
                       : '-'}
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted font-body whitespace-nowrap">
+                  <td className="px-4 py-3 text-sm text-muted font-mono whitespace-nowrap">
                     {format(new Date(req.created_at), 'MMM d, yyyy')}
                   </td>
                 </tr>
@@ -585,10 +586,11 @@ function DetailPanel({
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 440, opacity: 0 }}
         transition={{ type: 'spring' as const, damping: 28, stiffness: 300 }}
-        className="fixed right-0 top-16 bottom-0 w-[440px] bg-deep border-l border-border z-40 overflow-y-auto shadow-card"
+        className="fixed right-0 top-16 bottom-0 w-[440px] z-40 overflow-y-auto shadow-card"
+        style={{ background: '#0C1018', borderLeft: '1px solid #161E2A' }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-deep/95 backdrop-blur-sm border-b border-border px-6 py-4 flex items-start justify-between z-10">
+        <div className="sticky top-0 backdrop-blur-sm px-6 py-4 flex items-start justify-between z-10" style={{ background: 'rgba(4,8,16,0.95)', borderBottom: '1px solid #161E2A' }}>
           <div className="flex-1 mr-4">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-3 h-3 text-muted" />
@@ -621,7 +623,7 @@ function DetailPanel({
 
           {/* Description */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Description</h4>
+            <h4 className="label mb-2">Description</h4>
             <p className="text-sm text-text font-body leading-relaxed">
               {request.description || 'No description provided.'}
             </p>
@@ -629,8 +631,8 @@ function DetailPanel({
 
           {/* Property Address */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Property</h4>
-            <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
+            <h4 className="label mb-2">Property</h4>
+            <div className="rounded-lg rounded-lg p-3 flex items-center gap-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">
                 <MapPin className="w-4 h-4 text-gold" />
               </div>
@@ -638,7 +640,7 @@ function DetailPanel({
                 <p className="text-sm font-medium text-white font-body">
                   {request.property?.name || 'Property'}
                 </p>
-                <p className="text-xs text-muted">{request.property?.address || 'No address'}</p>
+                <p className="text-xs text-muted font-mono">{request.property?.address || 'No address'}</p>
               </div>
             </div>
           </div>
@@ -646,8 +648,8 @@ function DetailPanel({
           {/* Tenant info */}
           {request.tenant && (
             <div>
-              <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Reported By</h4>
-              <div className="bg-card border border-border rounded-lg p-3">
+              <h4 className="label mb-2">Reported By</h4>
+              <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-400/10 flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-400" />
@@ -657,14 +659,14 @@ function DetailPanel({
                       {request.tenant.first_name} {request.tenant.last_name}
                     </p>
                     {request.tenant.unit && (
-                      <p className="text-xs text-muted mt-0.5">Unit {request.tenant.unit}</p>
+                      <p className="text-xs text-muted font-mono mt-0.5">Unit {request.tenant.unit}</p>
                     )}
                   </div>
                 </div>
                 <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                  <p className="text-xs text-muted">{request.tenant.email}</p>
+                  <p className="text-xs text-muted font-mono">{request.tenant.email}</p>
                   {request.tenant.phone && (
-                    <p className="text-xs text-muted flex items-center gap-1.5">
+                    <p className="text-xs text-muted font-mono flex items-center gap-1.5">
                       <Phone className="w-3 h-3" />
                       {request.tenant.phone}
                     </p>
@@ -676,19 +678,19 @@ function DetailPanel({
 
           {/* Cost Tracking */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Cost Tracking</h4>
-            <div className="bg-card border border-border rounded-lg p-3">
+            <h4 className="label mb-2">Cost Tracking</h4>
+            <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[10px] text-muted uppercase tracking-wider">Estimated</p>
-                  <p className="text-sm font-semibold text-white font-body mt-0.5">
+                  <p className="label">Estimated</p>
+                  <p className="text-sm font-semibold text-white font-mono mt-0.5">
                     {request.estimated_cost != null ? `$${request.estimated_cost.toLocaleString()}` : '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted uppercase tracking-wider">Actual</p>
+                  <p className="label">Actual</p>
                   <p className={cn(
-                    'text-sm font-semibold font-body mt-0.5',
+                    'text-sm font-semibold font-mono mt-0.5',
                     request.actual_cost != null
                       ? request.actual_cost > (request.estimated_cost || 0)
                         ? 'text-red'
@@ -704,7 +706,7 @@ function DetailPanel({
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted">Variance</span>
                     <span className={cn(
-                      'font-semibold',
+                      'font-semibold font-mono',
                       request.actual_cost - request.estimated_cost > 0 ? 'text-red' : 'text-green',
                     )}>
                       {request.actual_cost - request.estimated_cost > 0 ? '+' : ''}
@@ -718,10 +720,10 @@ function DetailPanel({
 
           {/* Status Timeline */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Timeline</h4>
+            <h4 className="label mb-3">Timeline</h4>
             <div className="relative pl-6">
               {/* Vertical line */}
-              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
+              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-gold/30" />
               <div className="space-y-4">
                 {timelineSteps.map((step) => (
                   <div key={step.label} className="relative flex items-start gap-3">
@@ -739,7 +741,7 @@ function DetailPanel({
                         {step.label}
                       </p>
                       {step.date && (
-                        <p className="text-xs text-muted mt-0.5">
+                        <p className="text-xs text-muted font-mono mt-0.5">
                           {format(new Date(step.date), 'MMM d, yyyy h:mm a')}
                         </p>
                       )}
@@ -752,7 +754,7 @@ function DetailPanel({
 
           {/* Photo Gallery */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Photos</h4>
+            <h4 className="label mb-2">Photos</h4>
             {request.photos && request.photos.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
                 {request.photos.map((photo, i) => (
@@ -779,9 +781,9 @@ function DetailPanel({
 
           {/* Contractor Section */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Contractor</h4>
+            <h4 className="label mb-2">Contractor</h4>
             {request.contractor_name ? (
-              <div className="bg-card border border-border rounded-lg p-3">
+              <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-green/10 flex items-center justify-center">
                     <Wrench className="w-4 h-4 text-green" />
@@ -789,7 +791,7 @@ function DetailPanel({
                   <div>
                     <p className="text-sm font-medium text-white font-body">{request.contractor_name}</p>
                     {request.contractor_phone && (
-                      <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
+                      <p className="text-xs text-muted font-mono mt-0.5 flex items-center gap-1.5">
                         <Phone className="w-3 h-3" />
                         {request.contractor_phone}
                       </p>
@@ -798,7 +800,7 @@ function DetailPanel({
                 </div>
                 {request.contractor_bid != null && (
                   <div className="mt-2 pt-2 border-t border-border/50">
-                    <p className="text-xs text-gold flex items-center gap-1.5">
+                    <p className="text-xs text-gold font-mono flex items-center gap-1.5">
                       <DollarSign className="w-3 h-3" />
                       Bid: ${request.contractor_bid.toLocaleString()}
                     </p>
@@ -806,7 +808,7 @@ function DetailPanel({
                 )}
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-lg p-3 text-center">
+              <div className="rounded-lg p-3 text-center" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <p className="text-xs text-muted mb-2">No contractor assigned</p>
               </div>
             )}
@@ -814,7 +816,7 @@ function DetailPanel({
 
           {/* Notes */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Completion Notes</h4>
+            <h4 className="label mb-2">Completion Notes</h4>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -1258,59 +1260,293 @@ function NewRequestModal({
 /*  Contractor Matching Section                                        */
 /* ================================================================== */
 
-function ContractorMatching() {
+function ContractorMatching({
+  selectedRequest,
+  onAssignContractor,
+}: {
+  selectedRequest: MaintenanceRequest | null;
+  onAssignContractor: (id: string, name: string, phone: string) => void;
+}) {
+  const [contractors, setContractors] = useState<MatchedContractor[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const geoHook = useGeolocation();
+  const lastFetchKey = useRef('');
+
+  // Determine location source
+  const propertyLocation = selectedRequest?.property
+    ? {
+        city: (selectedRequest.property as PropertyWithLocation).city || '',
+        state: (selectedRequest.property as PropertyWithLocation).state || '',
+        zip: (selectedRequest.property as PropertyWithLocation).zip || '',
+      }
+    : null;
+
+  const hasPropertyLocation = propertyLocation && (propertyLocation.city || propertyLocation.zip);
+  const activeLocation = hasPropertyLocation
+    ? propertyLocation
+    : geoHook.location
+      ? { city: geoHook.location.city, state: geoHook.location.state, zip: geoHook.location.zip }
+      : null;
+
+  const locationLabel = hasPropertyLocation
+    ? `${propertyLocation!.city}${propertyLocation!.state ? `, ${propertyLocation!.state}` : ''}`
+    : geoHook.location
+      ? `${geoHook.location.city}${geoHook.location.state ? `, ${geoHook.location.state}` : ''}`
+      : null;
+
+  const locationSource = hasPropertyLocation ? 'PROPERTY' : geoHook.location ? 'YOUR LOCATION' : null;
+
+  // Fetch contractors when location + category are available
+  useEffect(() => {
+    if (!selectedRequest || !activeLocation) return;
+    const category = selectedRequest.category || 'general';
+    const fetchKey = `${category}-${activeLocation.city}-${activeLocation.state}-${activeLocation.zip}`;
+    if (fetchKey === lastFetchKey.current) return;
+    lastFetchKey.current = fetchKey;
+
+    async function fetchContractors() {
+      setLoading(true);
+      setMatchError(null);
+      try {
+        const res = await fetch('/api/contractors/match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: selectedRequest!.category || 'general',
+            city: activeLocation!.city,
+            state: activeLocation!.state,
+            zip: activeLocation!.zip,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to match');
+        setContractors(data.contractors || []);
+      } catch (err) {
+        setMatchError(err instanceof Error ? err.message : 'Failed to find contractors');
+        setContractors([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchContractors();
+  }, [selectedRequest, activeLocation]);
+
+  // Reset when request changes
+  useEffect(() => {
+    lastFetchKey.current = '';
+    setContractors([]);
+    setMatchError(null);
+  }, [selectedRequest?.id]);
+
+  function handleAssign(contractor: MatchedContractor) {
+    if (!selectedRequest) return;
+    setAssigningId(contractor.id);
+    onAssignContractor(
+      selectedRequest.id,
+      contractor.company_name || contractor.contact_name || 'Unknown',
+      contractor.phone || ''
+    );
+    setTimeout(() => setAssigningId(null), 1000);
+  }
+
   return (
     <div className="mt-8">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-display font-semibold text-white">Suggested Contractors</h3>
+          <h3 className="label text-[11px]">Contractor Matching</h3>
           <p className="text-xs text-muted font-body mt-0.5">
-            Matched based on category, availability, and ratings
+            Location-based matching by category, score, and ratings
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="info" size="sm">
-            Coming Soon
-          </Badge>
-          <button
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all"
-          >
-            <Search className="w-4 h-4" />
-            Find Contractors
-          </button>
+          {locationSource && locationLabel && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green/20 bg-green/5">
+              <span className="pulse-dot" />
+              <span className="font-mono text-[10px] text-green uppercase tracking-wider">
+                {locationSource}: {locationLabel}
+              </span>
+            </div>
+          )}
+          {!hasPropertyLocation && !geoHook.location && (
+            <button
+              onClick={geoHook.requestLocation}
+              disabled={geoHook.loading}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-mono font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all uppercase tracking-wider text-[11px]"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {geoHook.loading ? 'Locating...' : 'Share Location'}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {SUGGESTED_CONTRACTORS.map((contractor) => (
-          <Card key={contractor.id} className="relative">
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-semibold text-white font-body">{contractor.name}</p>
-                <p className="text-xs text-muted font-body mt-0.5">{contractor.trade}</p>
+      {/* Geolocation error */}
+      {geoHook.error && !hasPropertyLocation && (
+        <div className="mb-4 px-4 py-2.5 rounded-lg border border-red/20 bg-red/5">
+          <p className="font-mono text-[11px] text-red">{geoHook.error}</p>
+        </div>
+      )}
+
+      {/* No request selected */}
+      {!selectedRequest && (
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <MapPin className="w-8 h-8 text-muted-deep mx-auto mb-3" />
+          <p className="font-mono text-sm text-muted-deep">SELECT A MAINTENANCE REQUEST</p>
+          <p className="font-mono text-[11px] text-muted-deep mt-1">
+            to find contractors in the area
+          </p>
+        </div>
+      )}
+
+      {/* Loading */}
+      {selectedRequest && loading && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="space-y-3">
+                <div className="h-4 w-32 rounded bg-border/30 relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gold/5 to-transparent" />
+                </div>
+                <div className="h-3 w-20 rounded bg-border/30 relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gold/5 to-transparent" />
+                </div>
+                <div className="h-3 w-full rounded bg-border/30 relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gold/5 to-transparent" />
+                </div>
+                <div className="h-8 w-full rounded bg-border/30 relative overflow-hidden">
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gold/5 to-transparent" />
+                </div>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-              <StarRating rating={contractor.rating} />
+      {/* No location available */}
+      {selectedRequest && !loading && !activeLocation && !geoHook.error && (
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <MapPin className="w-8 h-8 text-gold/40 mx-auto mb-3" />
+          <p className="font-mono text-sm text-muted">LOCATION REQUIRED</p>
+          <p className="font-mono text-[11px] text-muted-deep mt-1 mb-4">
+            Share your location to find nearby contractors
+          </p>
+          <button
+            onClick={geoHook.requestLocation}
+            disabled={geoHook.loading}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-mono font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all uppercase tracking-wider"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            {geoHook.loading ? 'Locating...' : 'Enable Location'}
+          </button>
+        </div>
+      )}
 
-              <div className="flex items-center justify-between text-xs text-muted">
-                <span>Price: {contractor.priceRange}</span>
-                <span>Response: {contractor.responseTime}</span>
+      {/* Error */}
+      {selectedRequest && !loading && matchError && (
+        <div className="rounded-lg p-6 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <p className="font-mono text-sm text-red">{matchError}</p>
+        </div>
+      )}
+
+      {/* Empty results */}
+      {selectedRequest && !loading && !matchError && activeLocation && contractors.length === 0 && (
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <Search className="w-8 h-8 text-muted-deep mx-auto mb-3" />
+          <p className="font-mono text-sm text-muted-deep">NO CONTRACTORS FOUND</p>
+          <p className="font-mono text-[11px] text-muted-deep mt-1">
+            No contractors matched for {selectedRequest.category} in {locationLabel}
+          </p>
+          {hasPropertyLocation && !geoHook.location && (
+            <button
+              onClick={geoHook.requestLocation}
+              disabled={geoHook.loading}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-mono font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all uppercase tracking-wider"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              Try Your Location Instead
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Contractor cards */}
+      {selectedRequest && !loading && contractors.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {contractors.map((contractor) => {
+            const score = contractor.composite_score || contractor.score_composite || 0;
+            const rating = contractor.google_rating || 0;
+            const isAssigning = assigningId === contractor.id;
+
+            return (
+              <div
+                key={contractor.id}
+                className="rounded-lg p-5 transition-all duration-300 hover:shadow-glow-sm"
+                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              >
+                <div className="space-y-3">
+                  {/* Name & trade */}
+                  <div>
+                    <p className="text-sm font-semibold text-white font-body">
+                      {contractor.company_name || contractor.contact_name || 'Unknown'}
+                    </p>
+                    <p className="text-xs text-muted font-mono mt-0.5">{contractor.trade || 'General'}</p>
+                  </div>
+
+                  {/* Score bar */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-mono text-[10px] text-muted-deep uppercase tracking-wider">Score</span>
+                      <span className="font-mono text-[11px] text-gold font-medium">{(score * 10).toFixed(0)}/100</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-border/30 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(100, score * 10)}%`,
+                          background: score >= 7 ? '#059669' : score >= 5 ? '#FFB800' : '#DC2626',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rating */}
+                  {rating > 0 && <StarRating rating={rating} />}
+
+                  {/* Price & Location */}
+                  <div className="flex items-center justify-between text-[11px] text-muted font-mono">
+                    {contractor.price_range_min != null && contractor.price_range_max != null ? (
+                      <span>${contractor.price_range_min}–${contractor.price_range_max}</span>
+                    ) : (
+                      <span>—</span>
+                    )}
+                    {contractor.city && (
+                      <span className="text-muted-deep">{contractor.city}{contractor.state ? `, ${contractor.state}` : ''}</span>
+                    )}
+                  </div>
+
+                  {/* Assign button */}
+                  <button
+                    onClick={() => handleAssign(contractor)}
+                    disabled={isAssigning}
+                    className={cn(
+                      'w-full py-2 rounded-lg text-[11px] font-mono font-medium uppercase tracking-wider transition-all',
+                      isAssigning
+                        ? 'bg-green/10 text-green border border-green/30'
+                        : 'text-gold border border-gold/30 hover:bg-gold/10'
+                    )}
+                  >
+                    {isAssigning ? 'Assigned' : 'Assign'}
+                  </button>
+                </div>
               </div>
-
-              <Button variant="secondary" size="sm" fullWidth disabled>
-                Assign
-              </Button>
-            </div>
-
-            {/* Overlay hint */}
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <p className="text-xs text-gold font-semibold font-body px-4 text-center">
-                Real contractor matching with reviews coming soon
-              </p>
-            </div>
-          </Card>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1342,6 +1578,169 @@ function LoadingSkeleton() {
 }
 
 /* ================================================================== */
+/*  Preventive Maintenance Scheduler                                   */
+/* ================================================================== */
+
+const PREVENTIVE_ITEMS = [
+  { id: 'hvac_filter', label: 'HVAC Filter Replacement', frequency: 90, icon: Wind, category: 'hvac' as Category },
+  { id: 'hvac_service', label: 'HVAC Annual Service', frequency: 365, icon: Wind, category: 'hvac' as Category },
+  { id: 'gutter_clean', label: 'Gutter Cleaning', frequency: 180, icon: Droplets, category: 'exterior' as Category },
+  { id: 'smoke_detector', label: 'Smoke Detector Battery', frequency: 365, icon: Shield, category: 'safety' as Category },
+  { id: 'water_heater', label: 'Water Heater Flush', frequency: 365, icon: Droplets, category: 'plumbing' as Category },
+  { id: 'pest_inspect', label: 'Pest Inspection', frequency: 180, icon: Bug, category: 'pest_control' as Category },
+  { id: 'roof_inspect', label: 'Roof Inspection', frequency: 365, icon: Hammer, category: 'exterior' as Category },
+  { id: 'landscape', label: 'Landscaping Service', frequency: 30, icon: TreePine, category: 'landscaping' as Category },
+  { id: 'fire_extinguisher', label: 'Fire Extinguisher Check', frequency: 365, icon: Shield, category: 'safety' as Category },
+  { id: 'plumbing_inspect', label: 'Plumbing Inspection', frequency: 365, icon: Droplets, category: 'plumbing' as Category },
+];
+
+interface PreventiveRecord {
+  property_id: string;
+  item_id: string;
+  last_completed: string | null;
+}
+
+function PreventiveScheduler({ properties }: { properties: Property[] }) {
+  const [records, setRecords] = useState<PreventiveRecord[]>([]);
+  const [expanded, setExpanded] = useState<string | null>(properties[0]?.id || null);
+
+  function getRecord(propertyId: string, itemId: string): PreventiveRecord | undefined {
+    return records.find((r) => r.property_id === propertyId && r.item_id === itemId);
+  }
+
+  function getDaysUntilDue(lastCompleted: string | null, frequencyDays: number): number {
+    if (!lastCompleted) return -1; // overdue (never done)
+    const last = new Date(lastCompleted);
+    const next = new Date(last.getTime() + frequencyDays * 24 * 60 * 60 * 1000);
+    return Math.ceil((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
+
+  function getStatusBadge(daysUntil: number) {
+    if (daysUntil < 0) return { label: 'Overdue', className: 'bg-red/15 text-red' };
+    if (daysUntil <= 14) return { label: `${daysUntil}d`, className: 'bg-orange-400/15 text-orange-400' };
+    if (daysUntil <= 30) return { label: `${daysUntil}d`, className: 'bg-gold/15 text-gold' };
+    return { label: `${daysUntil}d`, className: 'bg-green/15 text-green' };
+  }
+
+  function markComplete(propertyId: string, itemId: string) {
+    const today = new Date().toISOString().split('T')[0];
+    setRecords((prev) => {
+      const existing = prev.findIndex(
+        (r) => r.property_id === propertyId && r.item_id === itemId
+      );
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = { ...updated[existing], last_completed: today };
+        return updated;
+      }
+      return [...prev, { property_id: propertyId, item_id: itemId, last_completed: today }];
+    });
+  }
+
+  const overdueCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const prop of properties) {
+      let count = 0;
+      for (const item of PREVENTIVE_ITEMS) {
+        const rec = getRecord(prop.id, item.id);
+        const days = getDaysUntilDue(rec?.last_completed || null, item.frequency);
+        if (days < 0) count++;
+      }
+      counts[prop.id] = count;
+    }
+    return counts;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [properties, records]);
+
+  if (properties.length === 0) {
+    return (
+      <EmptyState
+        icon={<Shield />}
+        title="No properties to schedule"
+        description="Add properties to set up preventive maintenance schedules."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h3 className="text-sm font-medium text-white font-body">Preventive Maintenance Schedule</h3>
+          <p className="text-xs text-muted font-body mt-0.5">Track recurring maintenance to protect your investments</p>
+        </div>
+        <div className="text-xs text-muted font-body">
+          {Object.values(overdueCounts).reduce((a, b) => a + b, 0)} items overdue
+        </div>
+      </div>
+
+      {properties.map((prop) => (
+        <div key={prop.id} className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <button
+            onClick={() => setExpanded(expanded === prop.id ? null : prop.id)}
+            className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-muted" />
+              <span className="text-sm font-medium text-white font-body">{prop.address}</span>
+              {overdueCounts[prop.id] > 0 && (
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red/15 text-red">
+                  {overdueCounts[prop.id]} overdue
+                </span>
+              )}
+            </div>
+            {expanded === prop.id ? (
+              <ChevronUp className="h-4 w-4 text-muted" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted" />
+            )}
+          </button>
+
+          {expanded === prop.id && (
+            <div className="border-t border-border/30 divide-y divide-border/20">
+              {PREVENTIVE_ITEMS.map((item) => {
+                const rec = getRecord(prop.id, item.id);
+                const daysUntil = getDaysUntilDue(rec?.last_completed || null, item.frequency);
+                const status = getStatusBadge(daysUntil);
+                const Icon = item.icon;
+
+                return (
+                  <div key={item.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.01]">
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4 text-muted" />
+                      <div>
+                        <p className="text-sm text-white font-body">{item.label}</p>
+                        <p className="text-[10px] text-muted font-body">
+                          Every {item.frequency < 365 ? `${item.frequency} days` : 'year'}
+                          {rec?.last_completed && (
+                            <> · Last: {format(new Date(rec.last_completed), 'MMM d, yyyy')}</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full', status.className)}>
+                        {status.label}
+                      </span>
+                      <button
+                        onClick={() => markComplete(prop.id, item.id)}
+                        className="text-xs text-gold hover:text-gold-light transition-colors font-body"
+                      >
+                        Mark Done
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  Main Page                                                          */
 /* ================================================================== */
 
@@ -1353,7 +1752,7 @@ export default function MaintenancePage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list' | 'preventive'>('kanban');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -1368,7 +1767,7 @@ export default function MaintenancePage() {
       const [reqRes, propRes, tenRes] = await Promise.all([
         supabase
           .from('maintenance_requests')
-          .select('*, property:properties(id, address, name), tenant:tenants(id, first_name, last_name, email, phone, unit)')
+          .select('*, property:properties(id, address, name, city, state, zip), tenant:tenants(id, first_name, last_name, email, phone, unit)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
         supabase
@@ -1804,49 +2203,73 @@ export default function MaintenancePage() {
           <List className="w-4 h-4" />
           List
         </button>
+        <button
+          onClick={() => setView('preventive')}
+          className={cn(
+            'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-body font-medium transition-all duration-200',
+            view === 'preventive'
+              ? 'bg-gold/15 text-gold'
+              : 'text-muted hover:text-white',
+          )}
+        >
+          <Shield className="w-4 h-4" />
+          Preventive
+        </button>
       </div>
+
+      {/* ============================================================ */}
+      {/*  Preventive Maintenance Scheduler                              */}
+      {/* ============================================================ */}
+      {view === 'preventive' && (
+        <PreventiveScheduler properties={properties} />
+      )}
 
       {/* ============================================================ */}
       {/*  Content                                                      */}
       {/* ============================================================ */}
-      {requests.length === 0 ? (
-        <EmptyState
-          icon={<Wrench />}
-          title="No maintenance requests yet"
-          description="Create your first maintenance request to start tracking repairs and upkeep across your properties."
-          action={{
-            label: 'New Request',
-            onClick: () => setModalOpen(true),
-            icon: <Plus />,
-          }}
-        />
-      ) : view === 'kanban' ? (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {STATUS_COLUMNS.map((col) => (
-              <KanbanColumn
-                key={col.id}
-                column={col}
-                requests={grouped[col.id]}
-                onCardClick={handleCardClick}
-              />
-            ))}
-          </div>
-        </DragDropContext>
-      ) : (
-        <ListView
-          requests={sortedRequests}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={handleSort}
-          onRowClick={handleCardClick}
-        />
+      {view !== 'preventive' && (
+        requests.length === 0 ? (
+          <EmptyState
+            icon={<Wrench />}
+            title="No maintenance requests yet"
+            description="Create your first maintenance request to start tracking repairs and upkeep across your properties."
+            action={{
+              label: 'New Request',
+              onClick: () => setModalOpen(true),
+              icon: <Plus />,
+            }}
+          />
+        ) : view === 'kanban' ? (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {STATUS_COLUMNS.map((col) => (
+                <KanbanColumn
+                  key={col.id}
+                  column={col}
+                  requests={grouped[col.id]}
+                  onCardClick={handleCardClick}
+                />
+              ))}
+            </div>
+          </DragDropContext>
+        ) : (
+          <ListView
+            requests={sortedRequests}
+            sortField={sortField}
+            sortDir={sortDir}
+            onSort={handleSort}
+            onRowClick={handleCardClick}
+          />
+        )
       )}
 
       {/* ============================================================ */}
       {/*  Contractor Auto-Matching                                     */}
       {/* ============================================================ */}
-      <ContractorMatching />
+      <ContractorMatching
+        selectedRequest={selectedRequest}
+        onAssignContractor={handleAssignContractor}
+      />
 
       {/* ============================================================ */}
       {/*  New Request Modal                                            */}

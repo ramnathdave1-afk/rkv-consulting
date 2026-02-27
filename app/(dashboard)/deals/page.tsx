@@ -6,7 +6,7 @@ import { DealForm, type DealFormData } from '@/components/deals/DealForm';
 import { DealResults, type AnalysisResults, type AmortizationRow } from '@/components/deals/DealResults';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { EmptyState } from '@/components/ui/EmptyState';
+
 import type { ScenarioData } from '@/components/deals/ScenarioCards';
 import type { ProjectionYearData } from '@/components/deals/ProjectionChart';
 import {
@@ -630,7 +630,7 @@ export default function DealsPage() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Bookmark className="w-4 h-4 text-gold" />
-              <h3 className="font-display font-semibold text-sm text-white">Saved Deals</h3>
+              <h3 className="label">Saved Deals</h3>
               {savedDeals.length > 0 && (
                 <Badge variant="default" size="sm">{savedDeals.length}</Badge>
               )}
@@ -639,7 +639,7 @@ export default function DealsPage() {
             {savedDeals.length === 0 ? (
               <div className="py-8 text-center">
                 <Building2 className="w-8 h-8 text-muted/40 mx-auto mb-3" />
-                <p className="text-xs text-muted font-body">
+                <p className="text-xs text-muted font-mono">
                   Analyzed deals will appear here
                 </p>
               </div>
@@ -650,11 +650,12 @@ export default function DealsPage() {
                     key={deal.id}
                     onClick={() => handleLoadDeal(deal)}
                     className={cn(
-                      'w-full text-left bg-card rounded-xl border border-border',
+                      'w-full text-left rounded-xl rounded-lg',
                       'px-4 py-3 transition-all duration-200',
                       'hover:border-gold/20 hover:shadow-glow-sm',
                       currentDealData?.propertyAddress === deal.address && 'border-gold/30 bg-gold/5',
                     )}
+                    style={{ background: '#0C1018', border: '1px solid #161E2A' }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -662,19 +663,29 @@ export default function DealsPage() {
                           {deal.address}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-muted font-body flex items-center gap-1">
+                          <span className="text-[10px] text-muted font-mono flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {deal.date}
                           </span>
                           <Badge
                             variant={deal.status === 'pipeline' ? 'default' : 'info'}
                             size="sm"
+                            className="font-mono text-[10px]"
                           >
                             {deal.status}
                           </Badge>
                         </div>
                       </div>
-                      <Badge variant={scoreBadgeVariant(deal.aiScore)} size="sm">
+                      <Badge
+                        variant={scoreBadgeVariant(deal.aiScore)}
+                        size="sm"
+                        className={cn(
+                          'font-mono text-[10px]',
+                          deal.aiScore >= 70 && 'shadow-[0_0_8px_rgba(5,150,105,0.4)]',
+                          deal.aiScore >= 50 && deal.aiScore < 70 && 'shadow-[0_0_8px_rgba(217,119,6,0.4)]',
+                          deal.aiScore < 50 && 'shadow-[0_0_8px_rgba(220,38,38,0.4)]',
+                        )}
+                      >
                         {deal.aiScore}
                       </Badge>
                     </div>
@@ -724,11 +735,13 @@ export default function DealsPage() {
             <DealResults results={currentResults} dealData={currentDealData} />
           ) : (
             /* Empty state */
-            <EmptyState
-              icon={<BarChart3 className="w-7 h-7" />}
-              title="Deal Analysis Engine"
-              description="Enter property details in the form on the left to run a comprehensive investment analysis with AI-powered insights."
-            />
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <BarChart3 className="w-7 h-7 text-gold mb-4" />
+              <h3 className="label mb-3">Deal Analysis Engine</h3>
+              <p className="text-xs text-muted font-mono max-w-sm">
+                Enter property details in the form on the left to run a comprehensive investment analysis with AI-powered insights
+              </p>
+            </div>
           )}
         </div>
       </div>

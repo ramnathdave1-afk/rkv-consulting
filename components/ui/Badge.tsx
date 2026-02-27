@@ -13,6 +13,8 @@ export type BadgeVariant =
   | 'danger'
   | 'warning'
   | 'info'
+  | 'violet'
+  | 'muted'
   | 'plan';
 
 export type BadgeSize = 'sm' | 'md';
@@ -30,11 +32,13 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 /* ------------------------------------------------------------------ */
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-gold/15 text-gold border-gold/20',
-  success: 'bg-green/15 text-green border-green/20',
-  danger: 'bg-red/15 text-red border-red/20',
-  warning: 'bg-gold-light/15 text-gold-light border-gold-light/20',
-  info: 'bg-muted/15 text-muted border-muted/20',
+  default: 'bg-gold/10 text-gold border-gold/20',
+  success: 'bg-green/10 text-green border-green/20',
+  danger: 'bg-red/10 text-red border-red/20',
+  warning: 'bg-gold-light/10 text-gold-light border-gold-light/20',
+  info: 'bg-gold/10 text-gold border-gold/20',
+  violet: 'bg-[#0EA5E9]/10 text-[#0EA5E9] border-[#0EA5E9]/20',
+  muted: 'bg-muted/10 text-muted border-muted/20',
   plan: '', // dynamically set
 };
 
@@ -43,13 +47,15 @@ const dotColorMap: Record<BadgeVariant, string> = {
   success: 'bg-green',
   danger: 'bg-red',
   warning: 'bg-gold-light',
-  info: 'bg-muted',
+  info: 'bg-gold',
+  violet: 'bg-[#0EA5E9]',
+  muted: 'bg-muted',
   plan: 'bg-gold',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
   sm: 'px-2 py-0.5 text-[10px]',
-  md: 'px-2.5 py-1 text-xs',
+  md: 'px-2.5 py-1 text-[10px]',
 };
 
 /* ------------------------------------------------------------------ */
@@ -77,7 +83,7 @@ function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 font-body font-medium rounded-full border',
+        'inline-flex items-center gap-1.5 font-body font-medium rounded border',
         'whitespace-nowrap select-none',
         variantStyles[variant],
         sizeStyles[size],

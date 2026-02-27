@@ -45,14 +45,14 @@ const NOTIFICATION_TYPES: Record<
   },
   maintenance: {
     icon: Wrench,
-    color: 'text-blue-400',
-    bg: 'bg-blue-400/10',
+    color: 'text-gold',
+    bg: 'bg-gold/10',
     route: '/maintenance',
   },
   agent: {
     icon: Bot,
-    color: 'text-purple-400',
-    bg: 'bg-purple-400/10',
+    color: 'text-violet-400',
+    bg: 'bg-violet-400/10',
     route: '/ai-agents',
   },
   market: {
@@ -144,8 +144,8 @@ export default function NotificationCenter() {
         className={cn(
           'relative flex items-center justify-center',
           'w-10 h-10 rounded-xl',
-          'bg-[#111620] border border-[#1E2530]',
-          'text-[#6B7280] hover:text-white hover:border-[#C9A84C]/30',
+          'bg-card border border-border',
+          'text-muted hover:text-white hover:border-gold/30',
           'transition-all duration-200',
         )}
       >
@@ -171,23 +171,20 @@ export default function NotificationCenter() {
           className={cn(
             'absolute right-0 top-12 z-50',
             'w-[380px] max-h-[480px]',
-            'bg-[#111620] border border-[#1E2530] rounded-xl',
+            'glass border border-border rounded-xl',
             'shadow-2xl shadow-black/40',
-            'overflow-hidden',
+            'overflow-hidden rounded-lg',
             'animate-fade-up',
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E2530]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <div className="flex items-center gap-2">
-              <h3
-                className="text-sm font-semibold text-white"
-                style={{ fontFamily: 'Syne, sans-serif' }}
-              >
+              <h3 className="label">
                 Notifications
               </h3>
               {unreadCount > 0 && (
-                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-[#C9A84C]/15 text-[#C9A84C] text-[10px] font-bold">
+                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gold/15 text-gold text-[10px] font-bold font-mono">
                   {unreadCount}
                 </span>
               )}
@@ -197,7 +194,7 @@ export default function NotificationCenter() {
                 <button
                   type="button"
                   onClick={() => markAllAsRead.mutate()}
-                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-[#C9A84C] hover:bg-[#C9A84C]/10 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-gold hover:bg-gold/10 transition-colors"
                 >
                   <Check className="w-3 h-3" />
                   Mark all read
@@ -206,7 +203,7 @@ export default function NotificationCenter() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="p-1 rounded-md text-[#6B7280] hover:text-white hover:bg-white/5 transition-colors"
+                className="p-1 rounded-md text-muted hover:text-white hover:bg-white/5 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -219,19 +216,19 @@ export default function NotificationCenter() {
               <div className="p-4 space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-8 h-8 rounded-lg bg-[#1E2530]" />
+                    <div className="w-8 h-8 rounded-lg bg-border" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-[#1E2530] rounded w-3/4" />
-                      <div className="h-2.5 bg-[#1E2530] rounded w-1/2" />
+                      <div className="h-3 bg-border rounded w-3/4" />
+                      <div className="h-2.5 bg-border rounded w-1/2" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4">
-                <Bell className="w-8 h-8 text-[#6B7280]/30 mb-3" />
-                <p className="text-sm text-[#6B7280]">No notifications yet</p>
-                <p className="text-xs text-[#6B7280]/60 mt-1">
+                <Bell className="w-8 h-8 text-muted/30 mb-3" />
+                <p className="text-sm text-muted">No notifications yet</p>
+                <p className="text-xs text-muted/60 mt-1">
                   You&apos;ll see updates here as they happen
                 </p>
               </div>
@@ -252,7 +249,7 @@ export default function NotificationCenter() {
                       'w-full flex items-start gap-3 px-4 py-3',
                       'text-left transition-colors',
                       'hover:bg-white/[0.03]',
-                      !notif.read && 'bg-[#C9A84C]/[0.03]',
+                      !notif.read && 'bg-gold/[0.03]',
                     )}
                   >
                     {/* Icon */}
@@ -270,26 +267,25 @@ export default function NotificationCenter() {
                     <div className="flex-1 min-w-0">
                       <p
                         className={cn(
-                          'text-sm leading-snug',
-                          notif.read ? 'text-[#6B7280]' : 'text-white',
+                          'text-sm leading-snug font-body',
+                          notif.read ? 'text-muted' : 'text-white',
                         )}
-                        style={{ fontFamily: 'DM Sans, sans-serif' }}
                       >
                         {notif.title}
                       </p>
                       {notif.message && (
-                        <p className="text-xs text-[#6B7280] mt-0.5 truncate">
+                        <p className="text-xs text-muted mt-0.5 truncate">
                           {notif.message}
                         </p>
                       )}
-                      <p className="text-[10px] text-[#6B7280]/60 mt-1">
+                      <p className="text-[10px] text-muted/60 mt-1 font-mono">
                         {timeAgo(notif.created_at)}
                       </p>
                     </div>
 
                     {/* Unread indicator */}
                     {!notif.read && (
-                      <span className="w-2 h-2 rounded-full bg-[#C9A84C] flex-shrink-0 mt-1.5" />
+                      <span className="pulse-dot flex-shrink-0 mt-1.5" />
                     )}
                   </button>
                 );

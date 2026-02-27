@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils';
 /* ------------------------------------------------------------------ */
 
 export interface EmptyStateProps {
-  /** Lucide icon or custom SVG -- rendered in gold outline style */
+  /** Lucide icon or custom SVG -- rendered in cyan outline style */
   icon?: ReactNode;
-  /** Main heading -- rendered in Syne display font */
+  /** Main heading -- rendered in display font */
   title: string;
   /** Supporting copy */
   description?: string;
@@ -45,14 +45,15 @@ function EmptyState({
         className,
       )}
     >
-      {/* Icon */}
+      {/* Icon -- hexagonal container */}
       {icon && (
         <div
           className={cn(
             'flex items-center justify-center',
-            'w-16 h-16 rounded-2xl mb-5',
+            'w-16 h-16 mb-5',
             'bg-gold/10 text-gold',
             'border border-gold/20',
+            'rounded-lg',
           )}
         >
           <span className="w-7 h-7 [&>svg]:w-full [&>svg]:h-full [&>svg]:stroke-[1.5]">
@@ -73,18 +74,18 @@ function EmptyState({
         </p>
       )}
 
-      {/* Action button */}
+      {/* Action button -- outline cyan style */}
       {action && (
         <button
           onClick={action.onClick}
           className={cn(
             'inline-flex items-center justify-center gap-2',
-            'h-10 px-5 rounded-lg text-sm font-semibold font-body',
-            'bg-gold text-black',
-            'hover:brightness-110 hover:shadow-glow',
-            'active:brightness-95',
+            'h-10 px-5 rounded-lg text-sm font-medium font-body',
+            'bg-transparent text-gold border border-gold/30',
+            'hover:bg-gold/10 hover:shadow-glow-sm',
+            'active:bg-gold/15',
             'transition-all duration-200 ease-out',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
           )}
         >
           {action.icon && (

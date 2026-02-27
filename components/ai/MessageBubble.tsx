@@ -127,51 +127,85 @@ export function MessageBubble({
     }
   })();
 
-  return (
-    <div
-      className={cn(
-        'flex gap-3 group max-w-[85%]',
-        isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
-      )}
-    >
-      {/* Avatar */}
-      {isUser ? (
-        <div className="flex-shrink-0 flex items-start">
-          <div className="w-8 h-8 rounded-full bg-gold/15 border border-gold/20 flex items-center justify-center">
-            <span className="text-xs font-semibold text-gold">
+  if (isUser) {
+    return (
+      <div className="flex justify-end group">
+        <div className="max-w-[75%]">
+          {/* User label */}
+          <div className="flex items-center justify-end gap-2 mb-1.5 px-1">
+            <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
+            <span className="font-body text-[11px] text-gold uppercase tracking-wider">
               {userInitials}
             </span>
           </div>
-        </div>
-      ) : (
-        <div className="flex-shrink-0 flex items-start">
-          <div className="w-8 h-8 rounded-full bg-gold/15 border border-gold/20 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-gold">AI</span>
+          {/* User message */}
+          <div className="relative">
+            <div
+              className="px-4 py-3 text-sm leading-relaxed font-body text-[#E2E8F0] rounded-lg"
+              style={{
+                background: 'rgba(5,150,105,0.07)',
+                border: '1px solid rgba(5,150,105,0.25)',
+              }}
+            >
+              {/* Copy button */}
+              <button
+                type="button"
+                onClick={handleCopy}
+                className={cn(
+                  'absolute -top-2 left-0 opacity-0 group-hover:opacity-100',
+                  'transition-opacity duration-150',
+                  'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+                  'hover:border-gold/20 text-muted hover:text-gold',
+                )}
+                title="Copy message"
+              >
+                {copied ? (
+                  <Check className="h-3 w-3 text-green" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </button>
+
+              {/* Content */}
+              <div className="space-y-0">{formatContent(content)}</div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Message bubble */}
+  // Assistant message
+  return (
+    <div className="group w-full">
+      {/* AI label */}
+      <div className="flex items-center gap-2 mb-1.5 px-1">
+        <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+          RKV
+        </span>
+        <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
+      </div>
+      {/* AI message */}
       <div className="relative">
+        {/* Animated gradient left border */}
         <div
-          className={cn(
-            'px-4 py-3 text-sm leading-relaxed font-body',
-            isUser
-              ? 'bg-gold/20 border border-gold/30 rounded-2xl rounded-br-sm text-white'
-              : 'bg-card border border-border rounded-2xl rounded-bl-sm text-text'
-          )}
-        >
-          {/* Copy button - appears on hover */}
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
+          style={{
+            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            backgroundSize: '100% 200%',
+            animation: 'gradientShift 3s ease infinite',
+          }}
+        />
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+          {/* Copy button */}
           <button
             type="button"
             onClick={handleCopy}
             className={cn(
-              'absolute -top-2 opacity-0 group-hover:opacity-100',
+              'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded-lg bg-deep border border-border',
-              'hover:bg-card hover:border-gold/20',
-              'text-muted hover:text-gold',
-              isUser ? 'left-0' : 'right-0'
+              'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+              'hover:border-gold/20 text-muted hover:text-gold',
             )}
             title="Copy message"
           >
@@ -185,16 +219,6 @@ export function MessageBubble({
           {/* Content */}
           <div className="space-y-0">{formatContent(content)}</div>
         </div>
-
-        {/* Timestamp */}
-        <p
-          className={cn(
-            'text-xs text-muted mt-1.5 px-1',
-            isUser ? 'text-right' : 'text-left'
-          )}
-        >
-          {formattedTime}
-        </p>
       </div>
     </div>
   );

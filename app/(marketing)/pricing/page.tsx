@@ -55,7 +55,7 @@ const plans: PricingPlan[] = [
     annualMonthly: 16,
     description: 'For investors just getting started',
     icon: <Shield className="w-5 h-5" />,
-    borderColor: 'border-border',
+    borderColor: 'border-[#161E2A]',
     priceColor: 'text-white',
     ctaText: 'Start with Basic',
     ctaStyle: 'ghost',
@@ -275,6 +275,93 @@ const STRIPE_PRICES: Record<string, Record<BillingPeriod, string>> = {
 }
 
 /* ================================================================== */
+/*  ROI CALCULATOR                                                     */
+/* ================================================================== */
+
+function ROICalculator() {
+  const [numProperties, setNumProperties] = useState(5)
+
+  // Cost estimates
+  const hoursPerPropertyPerMonth = 8 // hours managing each property
+  const hourlyRate = 50 // opportunity cost per hour
+  const toolCostPerProperty = 15 // avg cost of Yardi/AppFolio per unit/month
+  const accountantCostPerYear = 800 // per property
+  const missedMaintenanceCost = 1200 // avg per property per year from delayed maintenance
+
+  const timeSavedHours = numProperties * hoursPerPropertyPerMonth * 0.6 // 60% time saved
+  const timeSavedDollars = timeSavedHours * hourlyRate * 12
+  const toolSavings = numProperties * toolCostPerProperty * 12
+  const accountingSavings = numProperties * (accountantCostPerYear * 0.3) // 30% reduction
+  const maintenanceSavings = numProperties * (missedMaintenanceCost * 0.4) // 40% reduction
+  const totalAnnualSavings = timeSavedDollars + toolSavings + accountingSavings + maintenanceSavings
+
+  const rkvCost = numProperties <= 5 ? 49 * 12 : numProperties <= 50 ? 99 * 12 : 199 * 12
+  const netSavings = totalAnnualSavings - rkvCost
+  const roi = rkvCost > 0 ? Math.round((netSavings / rkvCost) * 100) : 0
+
+  return (
+    <div className="space-y-8">
+      {/* Slider */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-sm font-medium text-white font-body">Number of Properties</label>
+          <span className="text-2xl font-bold text-gold font-mono">{numProperties}</span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={100}
+          value={numProperties}
+          onChange={(e) => setNumProperties(parseInt(e.target.value))}
+          className="w-full h-2 bg-[#161E2A] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:shadow-lg"
+        />
+        <div className="flex justify-between text-[10px] text-muted font-body mt-1">
+          <span>1</span>
+          <span>25</span>
+          <span>50</span>
+          <span>75</span>
+          <span>100</span>
+        </div>
+      </div>
+
+      {/* Savings breakdown */}
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { label: 'Time Saved', value: `$${timeSavedDollars.toLocaleString()}`, sub: `${Math.round(timeSavedHours * 12)} hrs/year` },
+          { label: 'Tool Consolidation', value: `$${toolSavings.toLocaleString()}`, sub: 'vs. multiple tools' },
+          { label: 'Accounting Savings', value: `$${Math.round(accountingSavings).toLocaleString()}`, sub: 'Schedule E automation' },
+          { label: 'Maintenance Prevention', value: `$${Math.round(maintenanceSavings).toLocaleString()}`, sub: 'proactive scheduling' },
+        ].map((item) => (
+          <div key={item.label} className="rounded-lg p-4" style={{ background: '#080B0F', border: '1px solid #161E2A' }}>
+            <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">{item.label}</p>
+            <p className="text-lg font-bold text-green font-mono">{item.value}</p>
+            <p className="text-[10px] text-muted font-body mt-0.5">{item.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary */}
+      <div className="border-t border-[#161E2A] pt-6">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">Total Annual Savings</p>
+            <p className="text-2xl font-bold text-green font-mono">${totalAnnualSavings.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">RKV Annual Cost</p>
+            <p className="text-2xl font-bold text-white font-mono">${rkvCost.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">Net ROI</p>
+            <p className="text-2xl font-bold text-gold font-mono">{roi}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ================================================================== */
 /*  INNER COMPONENT (uses useSearchParams)                             */
 /* ================================================================== */
 
@@ -347,12 +434,12 @@ function PricingPageInner() {
     const colorMap = {
       gold: 'bg-gold/10 text-gold border-gold/20',
       green: 'bg-green/10 text-green border-green/20',
-      muted: 'bg-border text-muted border-border',
+      muted: 'bg-[#161E2A] text-muted border-[#161E2A]',
     }
     return (
       <span
         className={cn(
-          'ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border',
+          'ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-[0.1em] border',
           colorMap[color]
         )}
       >
@@ -368,7 +455,7 @@ function PricingPageInner() {
     if (value === false) {
       return <X className="w-4 h-4 text-muted/40 mx-auto" />
     }
-    return <span className="text-sm text-white font-body">{value}</span>
+    return <span className="text-sm text-white font-mono">{value}</span>
   }
 
   /* ================================================================ */
@@ -376,15 +463,22 @@ function PricingPageInner() {
   /* ================================================================ */
 
   return (
-    <div className="min-h-screen bg-black font-body">
+    <div className="min-h-screen bg-[#080B0F] font-body">
       {/* ============================================================ */}
       {/*  HERO SECTION                                                 */}
       {/* ============================================================ */}
-      <section className="pt-24 pb-16 px-6">
-        <div className="max-w-6xl mx-auto text-center">
+      <section className="pt-24 pb-16 px-6 relative">
+        {/* Radial glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at center 30%, rgba(5, 150, 105, 0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div className="relative max-w-6xl mx-auto text-center">
           {/* Brand */}
           <motion.p
-            className="text-gold font-display font-semibold text-sm tracking-widest uppercase mb-6"
+            className="text-[10px] font-mono uppercase tracking-wider text-gold mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -421,7 +515,7 @@ function PricingPageInner() {
           >
             <span
               className={cn(
-                'text-sm font-medium transition-colors',
+                'text-sm font-mono transition-colors',
                 billing === 'monthly' ? 'text-white' : 'text-muted'
               )}
             >
@@ -435,7 +529,7 @@ function PricingPageInner() {
               }
               className={cn(
                 'relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50',
-                billing === 'annual' ? 'bg-gold' : 'bg-border'
+                billing === 'annual' ? 'bg-gold' : 'bg-[#161E2A]'
               )}
               aria-label="Toggle billing period"
             >
@@ -448,7 +542,7 @@ function PricingPageInner() {
 
             <span
               className={cn(
-                'text-sm font-medium transition-colors',
+                'text-sm font-mono transition-colors',
                 billing === 'annual' ? 'text-white' : 'text-muted'
               )}
             >
@@ -459,7 +553,7 @@ function PricingPageInner() {
             <AnimatePresence>
               {billing === 'annual' && (
                 <motion.span
-                  className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gold/15 text-gold border border-gold/25"
+                  className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.1em] font-semibold bg-gold/15 text-gold border border-gold/25"
                   initial={{ opacity: 0, scale: 0.8, x: -10 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.8, x: -10 }}
@@ -490,15 +584,14 @@ function PricingPageInner() {
                 key={plan.id}
                 className={cn(
                   'relative w-full lg:w-1/3 rounded-2xl p-8',
-                  'bg-card',
-                  isPopular ? 'border-2 border-gold lg:-mt-4 lg:scale-105' : 'border',
-                  isPopular ? '' : plan.borderColor,
+                  'bg-[#0C1018] rounded-lg',
+                  isPopular ? 'border-2 border-gold lg:-mt-4 lg:scale-105' : 'border border-[#161E2A]',
                   'transition-all duration-300'
                 )}
                 style={
                   isPopular
                     ? {
-                        boxShadow: '0 0 40px rgba(201,168,76,0.15)',
+                        boxShadow: '0 0 40px rgba(5,150,105,0.15)',
                       }
                     : undefined
                 }
@@ -509,7 +602,7 @@ function PricingPageInner() {
                 {/* Popular badge */}
                 {isPopular && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-gold text-black font-display tracking-wide uppercase">
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-gold text-black">
                       <Zap className="w-3 h-3" />
                       Most Popular
                     </span>
@@ -523,7 +616,7 @@ function PricingPageInner() {
                   </span>
                   <span
                     className={cn(
-                      'text-sm font-semibold font-display uppercase tracking-wider',
+                      'text-[10px] font-mono uppercase tracking-wider font-semibold',
                       plan.labelColor
                     )}
                   >
@@ -536,16 +629,17 @@ function PricingPageInner() {
                   <div className="flex items-baseline gap-1">
                     <span
                       className={cn(
-                        'text-5xl font-bold font-display',
-                        plan.priceColor
+                        'text-5xl font-bold font-mono',
+                        plan.priceColor,
+                        isPopular && 'text-gold'
                       )}
                     >
                       ${price}
                     </span>
-                    <span className="text-muted text-sm">/mo</span>
+                    <span className="text-muted text-sm font-mono">/mo</span>
                   </div>
                   {billing === 'annual' && (
-                    <p className="text-muted text-xs mt-1">
+                    <p className="text-muted text-xs mt-1 font-mono">
                       ${plan.annualPrice}/year
                     </p>
                   )}
@@ -557,7 +651,7 @@ function PricingPageInner() {
                 </p>
 
                 {/* Divider */}
-                <div className="h-px bg-border mb-6" />
+                <div className="h-px bg-[#161E2A] mb-6" />
 
                 {/* Features */}
                 <ul className="space-y-3 mb-8">
@@ -575,7 +669,7 @@ function PricingPageInner() {
                       )}
                       <span
                         className={cn(
-                          'font-body',
+                          'font-mono text-[12px]',
                           feat.included ? 'text-white/90' : 'text-muted/60'
                         )}
                       >
@@ -584,7 +678,7 @@ function PricingPageInner() {
                         {feat.tooltip && (
                           <span className="relative group inline-block ml-1">
                             <Info className="w-3 h-3 text-muted/50 inline cursor-help" />
-                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-deep border border-border text-xs text-white/80 w-52 text-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 font-body">
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-[#0C1018] border border-[#161E2A] text-xs text-white/80 w-52 text-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 font-mono">
                               {feat.tooltip}
                             </span>
                           </span>
@@ -602,7 +696,7 @@ function PricingPageInner() {
                     'w-full py-3.5 rounded-xl font-display font-semibold text-sm tracking-wide transition-all duration-200',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                     plan.ctaStyle === 'ghost' &&
-                      'border border-border text-white hover:border-white/30 hover:bg-white/5 focus-visible:ring-white/30',
+                      'border border-[#161E2A] text-white hover:border-white/30 hover:bg-white/5 focus-visible:ring-white/30',
                     plan.ctaStyle === 'gold' &&
                       'bg-gold text-black hover:brightness-110 shadow-glow focus-visible:ring-gold/50',
                     plan.ctaStyle === 'green' &&
@@ -611,7 +705,7 @@ function PricingPageInner() {
                   )}
                   style={
                     plan.ctaStyle === 'gold'
-                      ? { boxShadow: '0 0 30px rgba(201,168,76,0.25)' }
+                      ? { boxShadow: '0 0 30px rgba(5,150,105,0.25)' }
                       : undefined
                   }
                   whileHover={{ scale: isLoading ? 1 : 1.02 }}
@@ -675,7 +769,7 @@ function PricingPageInner() {
           </motion.p>
 
           <motion.div
-            className="overflow-x-auto rounded-2xl border border-border"
+            className="overflow-x-auto rounded-2xl border border-[#161E2A] rounded-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -684,25 +778,25 @@ function PricingPageInner() {
             <table className="w-full min-w-[640px]">
               {/* Sticky header */}
               <thead>
-                <tr className="bg-deep sticky top-0 z-10">
-                  <th className="text-left px-6 py-4 font-display font-semibold text-sm text-muted uppercase tracking-wider w-2/5">
+                <tr className="bg-[#0C1018] sticky top-0 z-10">
+                  <th className="text-left px-6 py-4 text-[10px] font-mono uppercase tracking-wider text-muted w-2/5">
                     Feature
                   </th>
                   <th className="text-center px-6 py-4 font-display font-semibold text-sm text-white w-1/5">
                     Basic
-                    <span className="block text-xs text-muted font-normal font-body mt-0.5">
+                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
                       ${billing === 'monthly' ? '20' : '16'}/mo
                     </span>
                   </th>
                   <th className="text-center px-6 py-4 font-display font-semibold text-sm text-gold w-1/5">
                     Pro
-                    <span className="block text-xs text-muted font-normal font-body mt-0.5">
+                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
                       ${billing === 'monthly' ? '99' : '79'}/mo
                     </span>
                   </th>
                   <th className="text-center px-6 py-4 font-display font-semibold text-sm text-green w-1/5">
                     Elite
-                    <span className="block text-xs text-muted font-normal font-body mt-0.5">
+                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
                       ${billing === 'monthly' ? '199' : '159'}/mo
                     </span>
                   </th>
@@ -713,10 +807,10 @@ function PricingPageInner() {
                 {comparisonData.map((category) => (
                   <React.Fragment key={category.name}>
                     {/* Category header row */}
-                    <tr className="bg-card/80">
+                    <tr className="bg-[#0C1018]/80">
                       <td
                         colSpan={4}
-                        className="px-6 py-3 font-display font-semibold text-xs text-gold uppercase tracking-widest"
+                        className="px-6 py-3 text-[10px] font-mono uppercase tracking-wider text-gold font-semibold"
                       >
                         {category.name}
                       </td>
@@ -727,11 +821,11 @@ function PricingPageInner() {
                       <tr
                         key={row.feature}
                         className={cn(
-                          'border-t border-border/50 transition-colors hover:bg-white/[0.02]',
-                          rowIndex % 2 === 0 ? 'bg-card/30' : 'bg-card/10'
+                          'border-t border-[#161E2A]/50 transition-colors hover:bg-white/[0.02]',
+                          rowIndex % 2 === 0 ? 'bg-[#0C1018]/30' : 'bg-[#0C1018]/10'
                         )}
                       >
-                        <td className="px-6 py-3.5 text-sm text-white/80 font-body">
+                        <td className="px-6 py-3.5 text-sm text-white/80 font-mono">
                           {row.feature}
                         </td>
                         <td className="px-6 py-3.5 text-center">
@@ -788,7 +882,7 @@ function PricingPageInner() {
                 <Accordion.Item
                   key={index}
                   value={`faq-${index}`}
-                  className="bg-card border border-border rounded-xl overflow-hidden transition-colors data-[state=open]:border-gold/30"
+                  className="bg-[#0C1018] border border-[#161E2A] rounded-xl overflow-hidden transition-colors data-[state=open]:border-gold/30 rounded-lg"
                 >
                   <Accordion.Trigger className="w-full flex items-center justify-between px-6 py-5 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold/40 rounded-xl">
                     <span className="font-display font-semibold text-sm text-white pr-4">
@@ -811,23 +905,57 @@ function PricingPageInner() {
       </section>
 
       {/* ============================================================ */}
+      {/*  ROI CALCULATOR                                                */}
+      {/* ============================================================ */}
+      <section className="py-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl font-display font-bold text-white mb-3">
+              Calculate Your Savings
+            </h2>
+            <p className="text-muted font-body">
+              See how much RKV saves you compared to managing properties manually or with multiple tools.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-[#0C1018] border border-[#161E2A] rounded-2xl p-8"
+          >
+            <ROICalculator />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/*  BOTTOM CTA                                                   */}
       {/* ============================================================ */}
       <section className="pb-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
-            className="bg-card border border-border rounded-2xl p-12 relative overflow-hidden"
+            className="bg-[#0C1018] border border-[#161E2A] rounded-2xl p-12 relative overflow-hidden rounded-lg glow-border"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
+            {/* Blueprint grid background */}
+            <div className="absolute inset-0 blueprint-grid opacity-[0.04] pointer-events-none" />
             {/* Glow background */}
             <div
               className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(ellipse at center, rgba(201,168,76,0.3) 0%, transparent 70%)',
+                  'radial-gradient(ellipse at center, rgba(5,150,105,0.3) 0%, transparent 70%)',
               }}
             />
             <h3 className="relative font-display font-bold text-2xl text-white mb-3">
@@ -839,7 +967,7 @@ function PricingPageInner() {
             <motion.button
               onClick={() => handleCTAClick('pro')}
               className="relative inline-flex items-center px-8 py-3.5 rounded-xl bg-gold text-black font-display font-semibold text-sm tracking-wide hover:brightness-110 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-              style={{ boxShadow: '0 0 30px rgba(201,168,76,0.25)' }}
+              style={{ boxShadow: '0 0 30px rgba(5,150,105,0.25)' }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -860,7 +988,7 @@ export default function PricingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="min-h-screen bg-[#080B0F] flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
         </div>
       }

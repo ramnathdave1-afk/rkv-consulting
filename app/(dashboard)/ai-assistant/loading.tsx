@@ -1,12 +1,20 @@
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    </div>
+  );
+}
+
 export default function AIAssistantLoading() {
   return (
-    <div className="flex h-[calc(100vh-80px)] animate-pulse">
+    <div className="flex h-[calc(100vh-80px)]">
       {/* Sidebar */}
-      <div className="w-[280px] border-r border-border p-4 space-y-3">
-        <div className="h-10 w-full bg-card rounded-lg" />
-        <div className="h-px bg-border my-2" />
+      <div className="w-[280px] border-r border-[#161E2A]/50 p-4 space-y-3">
+        <SkeletonBlock className="h-10 w-full" />
+        <div className="h-px bg-[#161E2A]/50 my-2" />
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 w-full bg-card rounded-lg" />
+          <SkeletonBlock key={i} className="h-12 w-full" />
         ))}
       </div>
 
@@ -16,17 +24,17 @@ export default function AIAssistantLoading() {
         <div className="flex-1 p-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-              <div className={`bg-card border border-border rounded-xl p-4 max-w-[60%] space-y-2`}>
-                <div className="h-4 w-full bg-border rounded" />
-                <div className="h-4 w-3/4 bg-border rounded" />
+              <div className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-4 max-w-[60%] space-y-2">
+                <SkeletonBlock className="h-4 w-full" />
+                <SkeletonBlock className="h-4 w-3/4" />
               </div>
             </div>
           ))}
         </div>
 
         {/* Input */}
-        <div className="border-t border-border p-4">
-          <div className="h-12 w-full bg-card rounded-xl" />
+        <div className="border-t border-[#161E2A]/50 p-4">
+          <SkeletonBlock className="h-12 w-full rounded-xl" />
         </div>
       </div>
     </div>

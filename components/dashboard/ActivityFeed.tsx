@@ -27,37 +27,18 @@ interface ActivityFeedProps {
 
 const typeConfig: Record<
   Activity['type'],
-  { icon: LucideIcon; bg: string; text: string }
+  { icon: LucideIcon; color: string }
 > = {
-  payment: {
-    icon: DollarSign,
-    bg: 'bg-green/10',
-    text: 'text-green',
-  },
-  maintenance: {
-    icon: Wrench,
-    bg: 'bg-gold/10',
-    text: 'text-gold',
-  },
-  agent: {
-    icon: Bot,
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-400',
-  },
-  document: {
-    icon: FileText,
-    bg: 'bg-muted/10',
-    text: 'text-muted',
-  },
+  payment: { icon: DollarSign, color: 'text-green' },
+  maintenance: { icon: Wrench, color: 'text-gold' },
+  agent: { icon: Bot, color: 'text-violet' },
+  document: { icon: FileText, color: 'text-muted' },
 };
 
 function RelativeTime({ timestamp }: { timestamp: string | Date }) {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   return (
-    <time
-      dateTime={date.toISOString()}
-      className="text-xs text-muted whitespace-nowrap"
-    >
+    <time dateTime={date.toISOString()} className="font-mono text-[10px] text-muted-deep whitespace-nowrap">
       {formatDistanceToNow(date, { addSuffix: true })}
     </time>
   );
@@ -70,33 +51,20 @@ export default function ActivityFeed({
 }: ActivityFeedProps) {
   if (!activities || activities.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-white mb-4">
-          Recent Activity
-        </h3>
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-border/50 mb-3">
-            <FileText className="h-6 w-6 text-muted" />
-          </div>
-          <p className="text-sm text-muted">No recent activity</p>
-          <p className="text-xs text-muted/60 mt-1">
-            Activity from your properties will appear here
-          </p>
+      <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <h3 className="label text-gold mb-4">Activity Log</h3>
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <span className="font-body text-[11px] text-muted-deep">No activity recorded</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-white mb-4">
-        Recent Activity
-      </h3>
+    <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <h3 className="label text-gold mb-4">Activity Log</h3>
 
-      <div
-        className="overflow-y-auto pr-1 -mr-1 space-y-1"
-        style={{ maxHeight }}
-      >
+      <div className="overflow-y-auto pr-1 -mr-1 space-y-px" style={{ maxHeight }}>
         {activities.map((activity, index) => {
           const config = typeConfig[activity.type];
           const IconComponent = activity.icon || config.icon;
@@ -104,54 +72,35 @@ export default function ActivityFeed({
           return (
             <div
               key={activity.id}
-              className={cn(
-                'flex items-start gap-3 rounded-lg px-3 py-3',
-                'transition-colors duration-150',
-                'hover:bg-border/20',
-              )}
-              style={{
-                animationDelay: `${index * 50}ms`,
-              }}
+              className="flex items-start gap-3 rounded px-2 py-2.5 hover:bg-white/[0.02] transition-colors animate-stagger-fade"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Icon circle */}
-              <div
-                className={cn(
-                  'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
-                  config.bg,
+              {/* Vertical line connector */}
+              <div className="flex flex-col items-center gap-1 pt-0.5">
+                <IconComponent className={cn('h-3.5 w-3.5', config.color)} strokeWidth={1.5} />
+                {index < activities.length - 1 && (
+                  <div className="w-px flex-1 bg-border/30 min-h-[16px]" />
                 )}
-              >
-                <IconComponent className={cn('h-4 w-4', config.text)} />
               </div>
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white leading-snug">
-                  {activity.description}
-                </p>
+                <p className="text-[13px] text-white leading-snug">{activity.description}</p>
                 {activity.property && (
-                  <p className="text-xs text-muted mt-0.5 truncate">
-                    {activity.property}
-                  </p>
+                  <p className="font-body text-[10px] text-muted-deep mt-0.5 truncate">{activity.property}</p>
                 )}
               </div>
 
-              {/* Timestamp */}
               <RelativeTime timestamp={activity.timestamp} />
             </div>
           );
         })}
       </div>
 
-      {/* View All link */}
       {onViewAll && (
-        <div className="mt-4 pt-3 border-t border-border">
+        <div className="mt-3 pt-3 border-t border-border/30">
           <button
             onClick={onViewAll}
-            className={cn(
-              'w-full text-center text-sm font-medium text-gold',
-              'hover:text-gold-light transition-colors duration-150',
-              'cursor-pointer',
-            )}
+            className="w-full text-center font-body text-[11px] text-gold hover:text-gold-light transition-colors cursor-pointer"
           >
             View All Activity
           </button>

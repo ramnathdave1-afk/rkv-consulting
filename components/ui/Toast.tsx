@@ -9,14 +9,14 @@ import { cn } from '@/lib/utils';
 /* ------------------------------------------------------------------ */
 
 const toastBaseStyle: React.CSSProperties = {
-  background: '#111620',
-  color: '#F0EDE8',
-  border: '1px solid #1E2530',
-  borderRadius: '0.75rem',
+  background: '#0C1018',
+  color: '#E2E8F0',
+  border: '1px solid #161E2A',
+  borderRadius: '0.5rem',
   padding: '12px 16px',
-  fontSize: '0.875rem',
-  fontFamily: 'var(--font-body), DM Sans, sans-serif',
-  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
+  fontSize: '0.8125rem',
+  fontFamily: 'var(--font-body), Inter, system-ui, sans-serif',
+  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 30px rgba(5, 150, 105, 0.03)',
 };
 
 /* ------------------------------------------------------------------ */
@@ -28,11 +28,11 @@ const customToast = {
     toast.success(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #22C55E',
+        borderLeft: '3px solid #059669',
       },
       iconTheme: {
-        primary: '#22C55E',
-        secondary: '#111620',
+        primary: '#059669',
+        secondary: '#0C1018',
       },
       ...options,
     }),
@@ -41,11 +41,11 @@ const customToast = {
     toast.error(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #EF4444',
+        borderLeft: '3px solid #DC2626',
       },
       iconTheme: {
-        primary: '#EF4444',
-        secondary: '#111620',
+        primary: '#DC2626',
+        secondary: '#0C1018',
       },
       ...options,
     }),
@@ -54,7 +54,7 @@ const customToast = {
     toast(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #C9A84C',
+        borderLeft: '3px solid #059669',
       },
       icon: (
         <svg
@@ -62,7 +62,7 @@ const customToast = {
           height="18"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#C9A84C"
+          stroke="#059669"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -109,21 +109,21 @@ function Toaster({ className }: ToasterProps) {
           success: {
             style: {
               ...toastBaseStyle,
-              borderLeft: '3px solid #22C55E',
+              borderLeft: '3px solid #059669',
             },
             iconTheme: {
-              primary: '#22C55E',
-              secondary: '#111620',
+              primary: '#059669',
+              secondary: '#0C1018',
             },
           },
           error: {
             style: {
               ...toastBaseStyle,
-              borderLeft: '3px solid #EF4444',
+              borderLeft: '3px solid #DC2626',
             },
             iconTheme: {
-              primary: '#EF4444',
-              secondary: '#111620',
+              primary: '#DC2626',
+              secondary: '#0C1018',
             },
           },
         }}

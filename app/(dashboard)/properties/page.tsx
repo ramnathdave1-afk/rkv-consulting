@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
   Building2,
@@ -24,6 +24,7 @@ import {
   Sparkles,
   Check,
   AlertCircle,
+  X,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -316,7 +317,7 @@ function AddPropertyModal({
 
             {/* Mortgage */}
             <div className="pt-2 border-t border-border">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Mortgage</p>
+              <p className="label mb-3">Mortgage</p>
               <div className="grid grid-cols-3 gap-4">
                 <Input label="Mortgage Balance" type="number" value={form.mortgage_balance} onChange={(e) => set('mortgage_balance', e.target.value)} placeholder="0" />
                 <Input label="Mortgage Rate (%)" type="number" step="0.01" value={form.mortgage_rate} onChange={(e) => set('mortgage_rate', e.target.value)} placeholder="0.00" />
@@ -329,7 +330,7 @@ function AddPropertyModal({
 
             {/* Operating expenses */}
             <div className="pt-2 border-t border-border">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Operating Expenses</p>
+              <p className="label mb-3">Operating Expenses</p>
               <div className="grid grid-cols-3 gap-4">
                 <Input label="Insurance (Annual)" type="number" value={form.insurance_annual} onChange={(e) => set('insurance_annual', e.target.value)} placeholder="0" />
                 <Input label="Property Tax (Annual)" type="number" value={form.property_tax_annual} onChange={(e) => set('property_tax_annual', e.target.value)} placeholder="0" />
@@ -339,7 +340,7 @@ function AddPropertyModal({
 
             {/* Physical */}
             <div className="pt-2 border-t border-border">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Property Details</p>
+              <p className="label mb-3">Property Details</p>
               <div className="grid grid-cols-4 gap-4">
                 <Input label="Bedrooms" type="number" value={form.bedrooms} onChange={(e) => set('bedrooms', e.target.value)} placeholder="0" />
                 <Input label="Bathrooms" type="number" value={form.bathrooms} onChange={(e) => set('bathrooms', e.target.value)} placeholder="0" />
@@ -867,15 +868,16 @@ function PortfolioSummary({
           <div
             key={card.label}
             className={cn(
-              'bg-card border border-border rounded-xl p-4',
+              'rounded-xl p-4',
               'hover:border-gold/30 hover:shadow-glow-sm transition-all duration-200',
             )}
+            style={{ background: '#0C1018', border: '1px solid #161E2A' }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Icon className="h-4 w-4 text-muted" />
-              <span className="text-xs text-muted font-medium">{card.label}</span>
+              <span className="label">{card.label}</span>
             </div>
-            <p className={cn('text-xl font-bold font-display', card.color || 'text-white')}>
+            <p className={cn('text-xl font-bold font-mono', card.color || 'text-white')}>
               {card.value}
             </p>
           </div>
@@ -909,10 +911,11 @@ function PropertyCard({
     <Link href={`/properties/${property.id}`}>
       <div
         className={cn(
-          'bg-card border border-border rounded-xl p-6',
+          'rounded-xl p-6',
           'hover:border-gold/30 hover:shadow-glow-sm',
           'transition-all duration-200 cursor-pointer group',
         )}
+        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
       >
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
@@ -929,33 +932,33 @@ function PropertyCard({
               )}
             </div>
           </div>
-          <Badge variant="info" size="sm">
+          <Badge variant="info" size="sm" className="font-mono text-[10px]">
             {formatPropertyType(property.property_type)}
           </Badge>
         </div>
 
         {/* Rent */}
-        <p className="text-2xl font-bold font-display text-green mb-3">
-          {fmt(property.monthly_rent)}<span className="text-sm text-muted font-body font-normal">/mo</span>
+        <p className="text-2xl font-bold font-mono text-green mb-3">
+          {fmt(property.monthly_rent)}<span className="text-sm text-muted font-mono font-normal">/mo</span>
         </p>
 
         {/* Metrics row */}
         <div className="flex items-center gap-4 mb-4 text-xs">
           <div>
-            <span className="text-muted">Cap Rate</span>
-            <p className="text-white font-semibold">{fmtPct(capRate)}</p>
+            <span className="label">Cap Rate</span>
+            <p className="text-white font-semibold font-mono">{fmtPct(capRate)}</p>
           </div>
           <div className="w-px h-6 bg-border" />
           <div>
-            <span className="text-muted">Cash Flow</span>
-            <p className={cn('font-semibold', cashFlow >= 0 ? 'text-green' : 'text-red')}>
+            <span className="label">Cash Flow</span>
+            <p className={cn('font-semibold font-mono', cashFlow >= 0 ? 'text-green' : 'text-red')}>
               {fmt(cashFlow)}
             </p>
           </div>
           <div className="w-px h-6 bg-border" />
           <div>
-            <span className="text-muted">Equity</span>
-            <p className="text-white font-semibold">{fmt(equity)}</p>
+            <span className="label">Equity</span>
+            <p className="text-white font-semibold font-mono">{fmt(equity)}</p>
           </div>
         </div>
 
@@ -967,7 +970,8 @@ function PropertyCard({
                 {tenant.name.charAt(0).toUpperCase()}
               </div>
               <span className="text-xs text-text">{tenant.name}</span>
-              <Badge variant={tenant.status === 'active' ? 'success' : 'warning'} size="sm">
+              <Badge variant={tenant.status === 'active' ? 'success' : 'warning'} size="sm" className="font-mono text-[10px]">
+                {tenant.status === 'active' && <span className="pulse-dot mr-1" />}
                 {tenant.status}
               </Badge>
             </div>
@@ -1026,7 +1030,7 @@ function PropertyListView({
     const isActive = sortKey === field;
     return (
       <th
-        className="text-left px-4 py-3 text-xs text-muted font-medium cursor-pointer hover:text-white transition-colors select-none"
+        className="text-left px-4 py-3 text-[10px] text-gold font-body font-medium uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none"
         onClick={() => onSort(field)}
       >
         <div className="flex items-center gap-1">
@@ -1038,7 +1042,7 @@ function PropertyListView({
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-deep">
@@ -1050,7 +1054,7 @@ function PropertyListView({
               <SortHeader label="Cash Flow" field="cash_flow" />
               <SortHeader label="Cap Rate" field="cap_rate" />
               <SortHeader label="Equity" field="equity" />
-              <th className="text-left px-4 py-3 text-xs text-muted font-medium">Tenant</th>
+              <th className="text-left px-4 py-3 text-[10px] text-gold font-body font-medium uppercase tracking-wider">Tenant</th>
               <SortHeader label="Status" field="status" />
             </tr>
           </thead>
@@ -1071,15 +1075,15 @@ function PropertyListView({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="info" size="sm">{formatPropertyType(p.property_type)}</Badge>
+                      <Badge variant="info" size="sm" className="font-mono text-[10px]">{formatPropertyType(p.property_type)}</Badge>
                     </td>
-                    <td className="px-4 py-3 text-white">{fmt(p.current_value)}</td>
-                    <td className="px-4 py-3 text-green font-medium">{fmt(p.monthly_rent)}</td>
-                    <td className={cn('px-4 py-3 font-medium', cashFlow >= 0 ? 'text-green' : 'text-red')}>
+                    <td className="px-4 py-3 text-white font-mono">{fmt(p.current_value)}</td>
+                    <td className="px-4 py-3 text-green font-medium font-mono">{fmt(p.monthly_rent)}</td>
+                    <td className={cn('px-4 py-3 font-medium font-mono', cashFlow >= 0 ? 'text-green' : 'text-red')}>
                       {fmt(cashFlow)}
                     </td>
-                    <td className="px-4 py-3 text-white">{fmtPct(capRate)}</td>
-                    <td className="px-4 py-3 text-white">{fmt(equity)}</td>
+                    <td className="px-4 py-3 text-white font-mono">{fmtPct(capRate)}</td>
+                    <td className="px-4 py-3 text-white font-mono">{fmt(equity)}</td>
                     <td className="px-4 py-3">
                       {tenant ? (
                         <span className="text-text">{tenant.name}</span>
@@ -1088,7 +1092,8 @@ function PropertyListView({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={p.status === 'active' ? 'success' : 'warning'} size="sm">
+                      <Badge variant={p.status === 'active' ? 'success' : 'warning'} size="sm" className="font-mono text-[10px]">
+                        {p.status === 'active' && <span className="pulse-dot mr-1" />}
                         {p.status}
                       </Badge>
                     </td>
@@ -1107,34 +1112,158 @@ function PropertyListView({
 /*  Map View (Placeholder)                                             */
 /* ------------------------------------------------------------------ */
 
-function PropertyMapView() {
-  return (
-    <div className="bg-card border border-border rounded-xl p-8">
-      {/*
-        Google Maps integration would go here.
-        Use @googlemaps/js-api-loader with the API key from environment variables.
-        Plot each property as a marker and show info cards on click.
-      */}
-      <div className="relative h-[500px] rounded-lg overflow-hidden bg-deep">
-        {/* Grid pattern placeholder */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(201,168,76,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.3) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <MapPin className="h-12 w-12 text-gold/40 mb-4" />
-          <p className="text-lg font-display font-semibold text-white mb-2">Map View</p>
-          <p className="text-sm text-muted">
-            Map view requires a Google Maps API key.
-          </p>
-          <p className="text-xs text-muted mt-1">
-            Add <code className="text-gold/60">NEXT_PUBLIC_GOOGLE_MAPS_KEY</code> to your environment variables.
-          </p>
+function PropertyMapView({ properties }: { properties: Property[] }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstanceRef = useRef<any>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+    if (!apiKey || !mapRef.current || mapInstanceRef.current) return;
+
+    let cancelled = false;
+
+    async function initMap() {
+      const { getGoogleMapsLoader } = await import('@/lib/apis/googlemaps');
+      const loader = getGoogleMapsLoader();
+      await (loader as unknown as { importLibrary: (lib: string) => Promise<unknown> }).importLibrary('maps');
+
+      if (cancelled || !mapRef.current) return;
+
+      const map = new google.maps.Map(mapRef.current, {
+        center: { lat: 39.5, lng: -98.35 },
+        zoom: 4,
+        styles: [
+          { elementType: 'geometry', stylers: [{ color: '#0C1018' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#0C1018' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#4A6080' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#161E2A' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#080B0F' }] },
+          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+        ],
+        disableDefaultUI: true,
+        zoomControl: true,
+        backgroundColor: '#080B0F',
+      });
+
+      mapInstanceRef.current = map;
+      setMapLoaded(true);
+
+      const geocoder = new google.maps.Geocoder();
+      const bounds = new google.maps.LatLngBounds();
+      let hasMarkers = false;
+
+      for (const prop of properties) {
+        if (!prop.address) continue;
+        try {
+          const result = await geocoder.geocode({ address: prop.address });
+          if (result.results[0]) {
+            const position = result.results[0].geometry.location;
+            bounds.extend(position);
+            hasMarkers = true;
+
+            const cashFlow = calcCashFlow(prop);
+            const pinColor = cashFlow >= 0 ? '#059669' : '#DC2626';
+
+            const marker = new google.maps.Marker({
+              map,
+              position,
+              title: prop.address,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: pinColor,
+                fillOpacity: 0.9,
+                strokeColor: 'rgba(255,255,255,0.3)',
+                strokeWeight: 2,
+                scale: 10,
+              },
+            });
+
+            marker.addListener('click', () => setSelectedProperty(prop));
+          }
+        } catch {
+          // Skip properties that can't be geocoded
+        }
+      }
+
+      if (hasMarkers) {
+        map.fitBounds(bounds, 60);
+      }
+    }
+
+    initMap();
+    return () => { cancelled = true; };
+  }, [properties]);
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+
+  if (!apiKey) {
+    return (
+      <div className="rounded-xl p-8" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="relative h-[500px] rounded-lg overflow-hidden bg-deep">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <MapPin className="h-12 w-12 text-gold/40 mb-4" />
+            <p className="label mb-2">Map View</p>
+            <p className="text-sm text-muted font-body">
+              Add <code className="text-gold font-mono text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.
+            </p>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="relative h-[600px]">
+        <div ref={mapRef} className="w-full h-full" />
+        {!mapLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-deep">
+            <div className="animate-spin h-8 w-8 border-2 border-gold border-t-transparent rounded-full" />
+          </div>
+        )}
+
+        {selectedProperty && (
+          <div className="absolute top-4 right-4 w-72 rounded-xl p-4 z-10" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{selectedProperty.address}</p>
+                <p className="text-xs text-muted font-body mt-0.5">{formatPropertyType(selectedProperty.property_type)}</p>
+              </div>
+              <button onClick={() => setSelectedProperty(null)} className="text-muted hover:text-white ml-2">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] text-muted uppercase tracking-wider font-body">Value</p>
+                <p className="text-sm font-bold text-white font-mono">{fmt(selectedProperty.current_value)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted uppercase tracking-wider font-body">Rent</p>
+                <p className="text-sm font-bold text-white font-mono">{fmt(selectedProperty.monthly_rent)}/mo</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted uppercase tracking-wider font-body">Cash Flow</p>
+                <p className={cn('text-sm font-bold font-mono', calcCashFlow(selectedProperty) >= 0 ? 'text-green' : 'text-red')}>
+                  {fmt(calcCashFlow(selectedProperty))}/mo
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted uppercase tracking-wider font-body">Cap Rate</p>
+                <p className="text-sm font-bold text-white font-mono">{fmtPct(calcCapRate(selectedProperty))}</p>
+              </div>
+            </div>
+            <Link
+              href={`/properties/${selectedProperty.id}`}
+              className="mt-3 block text-center text-xs text-gold hover:text-gold-light transition-colors font-body"
+            >
+              View Details →
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1167,8 +1296,8 @@ function PortfolioEmptyState({
       <h2 className="font-display font-bold text-2xl text-white mb-3">
         Your portfolio starts here
       </h2>
-      <p className="text-sm text-muted font-body leading-relaxed mb-8 max-w-md">
-        Add your first property manually or paste your entire portfolio and let AI organize it instantly.
+      <p className="text-sm text-muted font-mono leading-relaxed mb-8 max-w-md">
+        Add your first property manually or paste your entire portfolio and let AI organize it instantly
       </p>
 
       <div className="flex items-center gap-4">
@@ -1181,7 +1310,7 @@ function PortfolioEmptyState({
           Add Property Manually
         </Button>
         <Button
-          variant="secondary"
+          variant="outline"
           size="lg"
           onClick={onImport}
           icon={<Upload className="h-5 w-5" />}
@@ -1356,7 +1485,7 @@ export default function PropertiesPage() {
             <Button variant="primary" onClick={() => setAddModalOpen(true)} icon={<Plus className="h-4 w-4" />}>
               Add Property
             </Button>
-            <Button variant="secondary" onClick={() => setImportModalOpen(true)} icon={<Upload className="h-4 w-4" />}>
+            <Button variant="outline" onClick={() => setImportModalOpen(true)} icon={<Upload className="h-4 w-4" />}>
               Import Portfolio
             </Button>
           </div>
@@ -1398,7 +1527,7 @@ export default function PropertiesPage() {
           <Button variant="primary" onClick={() => setAddModalOpen(true)} icon={<Plus className="h-4 w-4" />}>
             Add Property
           </Button>
-          <Button variant="secondary" onClick={() => setImportModalOpen(true)} icon={<Upload className="h-4 w-4" />}>
+          <Button variant="outline" onClick={() => setImportModalOpen(true)} icon={<Upload className="h-4 w-4" />}>
             Import Portfolio
           </Button>
         </div>
@@ -1425,7 +1554,7 @@ export default function PropertiesPage() {
             type="button"
             onClick={() => setViewMode(key)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+              'flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-body font-medium uppercase tracking-wider transition-colors',
               viewMode === key
                 ? 'bg-gold/10 text-gold border border-gold/20'
                 : 'text-muted hover:text-white',
@@ -1467,7 +1596,7 @@ export default function PropertiesPage() {
         />
       )}
 
-      {viewMode === 'map' && <PropertyMapView />}
+      {viewMode === 'map' && <PropertyMapView properties={properties} />}
 
       {/* ============================================================ */}
       {/*  MODALS                                                       */}

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Sparkles,
   BarChart3,
   DollarSign,
   TrendingUp,
@@ -19,6 +18,12 @@ import {
   Send,
   Copy,
   Check,
+  Activity,
+  Building2,
+  Users,
+  Globe2,
+  ChevronRight,
+  Zap,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -42,6 +47,16 @@ interface Conversation {
   created_at: string;
   updated_at: string;
   messages: Message[];
+}
+
+interface PortfolioContext {
+  properties: any[];
+  tenants: any[];
+  deals: any[];
+  maintenance: any[];
+  totalValue: number;
+  totalRent: number;
+  totalExpenses: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -70,6 +85,19 @@ const QUICK_ACTIONS = [
   { icon: Wrench, label: 'Maintenance cost analysis', prompt: 'Analyze my maintenance costs across all properties and identify trends, high-cost items, and cost-saving opportunities.' },
   { icon: LineChart, label: 'Market trend report', prompt: 'Generate a market trend report for the areas where I own properties, including pricing trends, rent growth, and demand indicators.' },
   { icon: RefreshCw, label: 'Lease renewal advice', prompt: 'Review my upcoming lease renewals and advise on rent adjustments, renewal terms, and retention strategies.' },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Quick Commands for left sidebar                                    */
+/* ------------------------------------------------------------------ */
+
+const QUICK_COMMANDS = [
+  { label: 'ANALYZE PORTFOLIO', prompt: 'Analyze my portfolio performance and give me key insights on cash flow, equity growth, and areas for improvement.' },
+  { label: 'SCAN MARKET CONDITIONS', prompt: 'Scan current market conditions for all areas where I own properties and identify trends.' },
+  { label: 'REVIEW DEAL PIPELINE', prompt: 'Review my current deal pipeline and advise on next steps for each deal.' },
+  { label: 'CALCULATE TAX EXPOSURE', prompt: 'Review my portfolio and calculate my current tax exposure, including depreciation and potential deductions.' },
+  { label: 'IDENTIFY OPPORTUNITIES', prompt: 'Based on my portfolio and current market conditions, identify the best investment opportunities for me.' },
+  { label: 'GENERATE MARKET BRIEF', prompt: 'Generate a market trend report for the areas where I own properties, including pricing trends, rent growth, and demand indicators.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -146,11 +174,11 @@ function renderMarkdown(text: string): React.ReactNode[] {
         elements.push(
           <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-border">
             {codeLang && (
-              <div className="px-3 py-1.5 bg-deep/80 border-b border-border text-[10px] text-muted uppercase tracking-wider font-mono">
+              <div className="px-3 py-1.5 bg-[#0C1018]/80 border-b border-border text-[10px] text-muted uppercase tracking-wider font-mono">
                 {codeLang}
               </div>
             )}
-            <pre className="px-4 py-3 bg-deep/50 overflow-x-auto">
+            <pre className="px-4 py-3 bg-[#0C1018]/50 overflow-x-auto">
               <code className="text-xs text-gold-light font-mono leading-relaxed">
                 {codeLines.join('\n')}
               </code>
@@ -178,7 +206,6 @@ function renderMarkdown(text: string): React.ReactNode[] {
       }
 
       if (isSeparator) {
-        // Parse alignments
         const cells = line.trim().slice(1, -1).split('|');
         tableAlignments = cells.map((c) => {
           const trimmed = c.trim();
@@ -339,57 +366,86 @@ function ChatBubble({
     }
   })();
 
-  return (
-    <div
-      className={cn(
-        'flex gap-3 group max-w-[85%]',
-        isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'
-      )}
-    >
-      {/* Avatar */}
-      <div className="flex-shrink-0 flex items-start">
-        <div className="w-8 h-8 rounded-full bg-gold/15 border border-gold/20 flex items-center justify-center">
-          <span className={cn('font-bold', isUser ? 'text-xs text-gold' : 'text-[10px] text-gold')}>
-            {isUser ? userInitials : 'AI'}
-          </span>
+  if (isUser) {
+    return (
+      <div className="flex justify-end group">
+        <div className="max-w-[75%]">
+          {/* User label */}
+          <div className="flex items-center justify-end gap-2 mb-1.5 px-1">
+            <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
+            <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+              {userInitials}
+            </span>
+          </div>
+          {/* User message */}
+          <div className="relative">
+            <div
+              className="px-4 py-3 text-sm leading-relaxed font-body text-[#E2E8F0] rounded-lg"
+              style={{
+                background: 'rgba(5,150,105,0.07)',
+                border: '1px solid rgba(5,150,105,0.25)',
+              }}
+            >
+              {/* Copy button */}
+              <button
+                type="button"
+                onClick={handleCopy}
+                className={cn(
+                  'absolute -top-2 left-0 opacity-0 group-hover:opacity-100',
+                  'transition-opacity duration-150',
+                  'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+                  'hover:border-gold/20 text-muted hover:text-gold',
+                )}
+                title="Copy message"
+              >
+                {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+              </button>
+              <p>{content}</p>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Bubble */}
+  // Assistant message
+  return (
+    <div className="group w-full">
+      {/* AI label */}
+      <div className="flex items-center gap-2 mb-1.5 px-1">
+        <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+          RKV
+        </span>
+        <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
+      </div>
+      {/* AI message */}
       <div className="relative">
+        {/* Animated gradient left border */}
         <div
-          className={cn(
-            'px-4 py-3 text-sm leading-relaxed font-body',
-            isUser
-              ? 'bg-gold/20 border border-gold/30 rounded-2xl rounded-br-sm text-white'
-              : 'bg-card border border-border rounded-2xl rounded-bl-sm text-text'
-          )}
-        >
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
+          style={{
+            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            backgroundSize: '100% 200%',
+            animation: 'gradientShift 3s ease infinite',
+          }}
+        />
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
           {/* Copy button */}
           <button
             type="button"
             onClick={handleCopy}
             className={cn(
-              'absolute -top-2 opacity-0 group-hover:opacity-100',
+              'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded-lg bg-deep border border-border',
-              'hover:bg-card hover:border-gold/20',
-              'text-muted hover:text-gold',
-              isUser ? 'left-0' : 'right-0'
+              'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+              'hover:border-gold/20 text-muted hover:text-gold',
             )}
             title="Copy message"
           >
             {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
           </button>
-
-          <div className="space-y-0">
-            {isUser ? <p>{content}</p> : renderMarkdown(content)}
-          </div>
+          <div className="space-y-0">{renderMarkdown(content)}</div>
         </div>
-
-        <p className={cn('text-xs text-muted mt-1.5 px-1', isUser ? 'text-right' : 'text-left')}>
-          {formattedTime}
-        </p>
       </div>
     </div>
   );
@@ -401,14 +457,28 @@ function ChatBubble({
 
 function StreamingBubble({ content, isStreaming }: { content: string; isStreaming: boolean }) {
   return (
-    <div className="flex gap-3 mr-auto max-w-[85%]">
-      <div className="flex-shrink-0 flex items-start">
-        <div className="w-8 h-8 rounded-full bg-gold/15 border border-gold/20 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-gold">AI</span>
-        </div>
+    <div className="w-full">
+      {/* AI label */}
+      <div className="flex items-center gap-2 mb-1.5 px-1">
+        <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+          RKV {content ? '' : '// Processing'}
+        </span>
+        {!content && (
+          <span className="font-mono text-[11px] text-gold animate-pulse">...</span>
+        )}
       </div>
-      <div>
-        <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed font-body text-text">
+      {/* Message body */}
+      <div className="relative">
+        {/* Animated gradient left border */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
+          style={{
+            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            backgroundSize: '100% 200%',
+            animation: 'gradientShift 3s ease infinite',
+          }}
+        />
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
           {content ? (
             <div className="space-y-0">
               {renderMarkdown(content)}
@@ -417,16 +487,180 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
               )}
             </div>
           ) : isStreaming ? (
-            <div className="flex items-center gap-1.5 py-1">
-              <span className="w-2 h-2 rounded-full bg-gold/60 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-gold/60 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-gold/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+            /* Scanning progress bar */
+            <div className="space-y-2">
+              <div className="h-[2px] w-48 bg-[#161E2A] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
+                  style={{
+                    width: '40%',
+                    animation: 'scanLine 1.5s ease-in-out infinite',
+                  }}
+                />
+              </div>
             </div>
           ) : null}
         </div>
-        {!isStreaming && content && (
-          <p className="text-xs text-muted mt-1.5 px-1">Just now</p>
-        )}
+      </div>
+      {!isStreaming && content && (
+        <p className="text-xs text-muted mt-1.5 px-5 font-mono">Just now</p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Live Context Panel (Right sidebar)                                 */
+/* ------------------------------------------------------------------ */
+
+function LiveContextPanel({ context }: { context: PortfolioContext }) {
+  const { properties, tenants, deals, totalValue, totalRent, totalExpenses } = context;
+  const cities = Array.from(new Set(properties.map((p: any) => p.city).filter(Boolean)));
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[#161E2A]">
+        <p className="font-body uppercase tracking-wider text-[10px] text-gold">
+          LIVE CONTEXT
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
+        {/* Portfolio Snapshot */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 className="h-3 w-3 text-gold" />
+            <p className="font-body uppercase tracking-wider text-[10px] text-gold">
+              PORTFOLIO
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            {properties.length > 0 ? (
+              properties.slice(0, 6).map((p: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="font-body text-[10px] text-muted truncate max-w-[130px]">
+                    {p.address || p.city || 'Property'}
+                  </span>
+                  <span className={cn(
+                    'font-mono text-[10px]',
+                    p.status === 'occupied' ? 'text-green' : p.status === 'vacant' ? 'text-red' : 'text-muted'
+                  )}>
+                    {(p.status || 'N/A').toUpperCase()}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="font-body text-[10px] text-muted-deep">No properties loaded</p>
+            )}
+            {properties.length > 6 && (
+              <p className="font-body text-[10px] text-muted-deep">
+                +{properties.length - 6} more
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Market Data */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Globe2 className="h-3 w-3 text-gold" />
+            <p className="font-body uppercase tracking-wider text-[10px] text-gold">
+              MARKETS
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            {cities.length > 0 ? (
+              cities.slice(0, 5).map((city: string, idx: number) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="font-body text-[10px] text-muted">
+                    {city}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="pulse-dot" />
+                    <span className="font-body text-[10px] text-green">Live</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="font-body text-[10px] text-muted-deep">No markets tracked</p>
+            )}
+          </div>
+        </div>
+
+        {/* Tenant Status */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-3 w-3 text-gold" />
+            <p className="font-body uppercase tracking-wider text-[10px] text-gold">
+              TENANTS
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            {tenants.length > 0 ? (
+              tenants.slice(0, 5).map((t: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <span className="font-body text-[10px] text-muted truncate max-w-[120px]">
+                    {t.first_name} {t.last_name?.[0]}.
+                  </span>
+                  <span className={cn(
+                    'font-mono text-[10px]',
+                    t.status === 'active' ? 'text-green' : 'text-red'
+                  )}>
+                    {(t.status || 'N/A').toUpperCase()}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="font-body text-[10px] text-muted-deep">No tenants loaded</p>
+            )}
+          </div>
+        </div>
+
+        {/* Financial Context */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Activity className="h-3 w-3 text-gold" />
+            <p className="font-body uppercase tracking-wider text-[10px] text-gold">
+              FINANCIALS
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-body text-[10px] text-muted-deep">Portfolio</span>
+              <span className="font-mono text-[11px] text-[#E2E8F0]">
+                ${totalValue > 0 ? totalValue.toLocaleString() : '--'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-[10px] text-muted-deep">Income/Mo</span>
+              <span className="font-mono text-[11px] text-green">
+                ${totalRent > 0 ? totalRent.toLocaleString() : '--'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-[10px] text-muted-deep">Expenses/Mo</span>
+              <span className="font-mono text-[11px] text-red">
+                ${totalExpenses > 0 ? totalExpenses.toLocaleString() : '--'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-t border-[#161E2A] pt-1.5 mt-1">
+              <span className="font-body text-[10px] text-muted-deep">Cash Flow</span>
+              <span className={cn(
+                'font-mono text-[11px] font-bold',
+                (totalRent - totalExpenses) >= 0 ? 'text-green' : 'text-red'
+              )}>
+                ${(totalRent - totalExpenses) > 0 ? (totalRent - totalExpenses).toLocaleString() : '--'}/mo
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-[10px] text-muted-deep">Deals</span>
+              <span className="font-mono text-[11px] text-gold">
+                {deals.length} Active
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -452,6 +686,15 @@ export default function AIAssistantPage() {
   const [usageLimit, setUsageLimit] = useState(200);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [input, setInput] = useState('');
+  const [portfolioContext, setPortfolioContext] = useState<PortfolioContext>({
+    properties: [],
+    tenants: [],
+    deals: [],
+    maintenance: [],
+    totalValue: 0,
+    totalRent: 0,
+    totalExpenses: 0,
+  });
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -525,6 +768,52 @@ export default function AIAssistantPage() {
       const limit = getLimit('aiMessagesLimit');
       setUsageLimit(limit === Infinity ? 9999 : limit);
     }
+
+    // Fetch portfolio context for right panel
+    const [propertiesRes, tenantsRes, dealsRes, maintenanceRes] = await Promise.all([
+      supabase
+        .from('properties')
+        .select('address, city, state, property_type, current_value, monthly_rent, monthly_expenses, status')
+        .eq('user_id', user.id)
+        .limit(20),
+      supabase
+        .from('tenants')
+        .select('first_name, last_name, status, monthly_rent, lease_end')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .limit(20),
+      supabase
+        .from('deals')
+        .select('address, asking_price, stage, analysis')
+        .eq('user_id', user.id)
+        .neq('stage', 'dead')
+        .limit(10),
+      supabase
+        .from('maintenance_requests')
+        .select('title, status, priority, category')
+        .eq('user_id', user.id)
+        .in('status', ['open', 'in_progress', 'scheduled'])
+        .limit(10),
+    ]);
+
+    const properties = propertiesRes.data || [];
+    const tenants = tenantsRes.data || [];
+    const deals = dealsRes.data || [];
+    const maintenance = maintenanceRes.data || [];
+
+    const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
+    const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
+    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_expenses || 0), 0);
+
+    setPortfolioContext({
+      properties,
+      tenants,
+      deals,
+      maintenance,
+      totalValue,
+      totalRent,
+      totalExpenses,
+    });
   }, [supabase, getLimit]);
 
   useEffect(() => {
@@ -874,81 +1163,120 @@ GUIDELINES:
 
   return (
     <FeatureGate feature="aiAssistant">
-      <div className="-m-8 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
-        {/* Usage counter bar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-border bg-deep/50">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-gold" />
-            <h2 className="font-display font-bold text-sm text-white">
-              AI Assistant
-            </h2>
+      {/* Keyframe animations */}
+      <style jsx global>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 0%; }
+          50% { background-position: 0% 100%; }
+        }
+        @keyframes scanLine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+        @keyframes hexRotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      <div className="-m-8 flex flex-col bg-[#080B0F]" style={{ height: 'calc(100vh - 4rem)' }}>
+        {/* ============================================================ */}
+        {/*  TOP BAR - HEADER                                            */}
+        {/* ============================================================ */}
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-[#161E2A] bg-[#0C1018]">
+          <div className="flex items-center gap-3">
+            {/* Sidebar toggle */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg text-muted hover:text-gold hover:bg-gold/5 transition-colors"
+            >
+              {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            </button>
+
+            <div>
+              <h2 className="font-display font-bold text-xl text-[#E2E8F0] leading-none">
+                RKV Intelligence
+              </h2>
+              <p className="font-body text-[11px] text-gold mt-0.5">
+                {portfolioContext.properties.length} Properties // {portfolioContext.tenants.length} Tenants // {Array.from(new Set(portfolioContext.properties.map((p: any) => p.city).filter(Boolean))).length} Markets
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {/* Model badge */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md border border-[#161E2A] bg-[#0C1018]">
+              <span className="font-body text-[10px] text-muted uppercase tracking-wider">Claude Sonnet</span>
+              <div className="flex items-center gap-1.5">
+                <span className="pulse-dot" />
+                <span className="font-body text-[10px] text-green">Active</span>
+              </div>
+            </div>
+
+            {/* Usage meter */}
             <div className="flex items-center gap-2">
-              <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden">
+              <div className="w-20 h-1.5 bg-[#161E2A] rounded-full overflow-hidden">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
                     usageCount / usageLimit > 0.9
-                      ? 'bg-red'
+                      ? 'bg-[#DC2626]'
                       : usageCount / usageLimit > 0.7
                       ? 'bg-gold'
-                      : 'bg-green'
+                      : 'bg-[#059669]'
                   )}
                   style={{ width: `${Math.min((usageCount / usageLimit) * 100, 100)}%` }}
                 />
               </div>
-              <span className="text-xs text-muted tabular-nums">
-                {usageCount} of {usageLimit === 9999 ? 'Unlimited' : usageLimit.toLocaleString()} messages
+              <span className="font-mono text-[10px] text-muted tabular-nums">
+                {usageCount}/{usageLimit === 9999 ? 'UNL' : usageLimit}
               </span>
-              <span className="text-[10px] text-muted/60 capitalize">
+              <span className="font-body text-[10px] text-muted-deep">
                 ({usagePlanLabel})
               </span>
             </div>
           </div>
         </div>
 
-        {/* Main area: sidebar + chat */}
+        {/* ============================================================ */}
+        {/*  MAIN 3-PANEL LAYOUT                                         */}
+        {/* ============================================================ */}
         <div className="flex-1 flex overflow-hidden">
+
           {/* ========================================================== */}
-          {/*  LEFT SIDEBAR (280px)                                       */}
+          {/*  LEFT PANEL (260px) - SESSION HISTORY + QUICK COMMANDS      */}
           {/* ========================================================== */}
           <div
             className={cn(
-              'flex-shrink-0 bg-deep border-r border-border transition-all duration-300 overflow-hidden flex flex-col',
-              sidebarOpen ? 'w-[280px]' : 'w-0'
+              'flex-shrink-0 bg-[#0C1018] border-r border-[#161E2A] transition-all duration-300 overflow-hidden flex flex-col',
+              sidebarOpen ? 'w-[260px]' : 'w-0'
             )}
           >
-            {/* Sidebar header */}
-            <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
-              <h3 className="text-sm font-semibold text-white font-display">
-                Conversations
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
-            </div>
+            {/* Session History Header */}
+            <div className="px-4 pt-4 pb-2 flex-shrink-0">
+              <p className="font-body uppercase tracking-wider text-[10px] text-gold mb-3">
+                SESSION HISTORY
+              </p>
 
-            {/* New Chat button */}
-            <div className="p-3 flex-shrink-0">
+              {/* Initialize New Session button */}
               <button
                 type="button"
                 onClick={handleNewConversation}
                 className={cn(
                   'w-full flex items-center justify-center gap-2',
-                  'h-9 px-4 rounded-lg text-sm font-semibold',
-                  'bg-gold text-black',
-                  'hover:brightness-110 hover:shadow-glow',
+                  'h-9 px-4 rounded-md text-[11px] font-body font-semibold uppercase tracking-wider',
+                  'bg-transparent text-gold',
+                  'border border-gold/40 hover:border-gold hover:bg-gold/5',
                   'transition-all duration-200',
                 )}
               >
-                <Plus className="h-4 w-4" />
-                New Conversation
+                <Plus className="h-3.5 w-3.5" />
+                New Session
               </button>
             </div>
 
@@ -956,10 +1284,10 @@ GUIDELINES:
             <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
               {conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center px-3">
-                  <MessageSquare className="h-8 w-8 text-muted/30 mb-3" />
-                  <p className="text-xs text-muted">No conversations yet</p>
-                  <p className="text-[10px] text-muted/60 mt-1">
-                    Start a new chat to begin
+                  <MessageSquare className="h-6 w-6 text-[#161E2A] mb-3" />
+                  <p className="font-body text-[10px] text-muted-deep">No sessions found</p>
+                  <p className="font-body text-[10px] text-muted-deep/60 mt-1">
+                    Start a new session to begin
                   </p>
                 </div>
               ) : (
@@ -967,20 +1295,23 @@ GUIDELINES:
                   <div
                     key={conv.id}
                     className={cn(
-                      'group relative flex items-start gap-2 px-3 py-2.5 rounded-lg cursor-pointer',
-                      'transition-colors duration-150',
+                      'group relative flex items-start gap-2.5 px-3 py-2.5 rounded-md cursor-pointer',
+                      'transition-all duration-150',
                       activeConversationId === conv.id
-                        ? 'bg-gold/10 border-l-2 border-gold'
-                        : 'hover:bg-white/5'
+                        ? 'bg-gold/8 border-l-2 border-gold'
+                        : 'hover:bg-white/3 border-l-2 border-transparent'
                     )}
                     onClick={() => handleSelectConversation(conv.id)}
                   >
-                    <MessageSquare className="h-3.5 w-3.5 text-muted flex-shrink-0 mt-0.5" />
+                    <ChevronRight className={cn(
+                      'h-3 w-3 flex-shrink-0 mt-1 transition-colors',
+                      activeConversationId === conv.id ? 'text-gold' : 'text-[#161E2A]'
+                    )} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate leading-snug">
+                      <p className="text-[12px] text-[#E2E8F0] truncate leading-snug font-body">
                         {conv.title}
                       </p>
-                      <p className="text-[10px] text-muted mt-0.5">
+                      <p className="font-mono text-[11px] text-muted-deep mt-0.5">
                         {formatConversationDate(conv.updated_at || conv.created_at)}
                       </p>
                     </div>
@@ -990,7 +1321,7 @@ GUIDELINES:
                         e.stopPropagation();
                         handleDeleteConversation(conv.id);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded-md text-muted hover:text-red hover:bg-red/10 transition-all"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded-md text-muted hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-all"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -999,72 +1330,76 @@ GUIDELINES:
               )}
             </div>
 
-            {/* Quick Actions section */}
-            <div className="flex-shrink-0 border-t border-border">
+            {/* Quick Commands section */}
+            <div className="flex-shrink-0 border-t border-[#161E2A]">
               <div className="p-3">
-                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2 px-1">
+                <p className="font-body uppercase tracking-wider text-[10px] text-gold mb-2 px-1">
                   Quick Actions
                 </p>
-                <div className="grid grid-cols-1 gap-1 max-h-[280px] overflow-y-auto">
-                  {QUICK_ACTIONS.map((action, idx) => {
-                    const Icon = action.icon;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSendMessage(action.prompt)}
-                        disabled={isStreaming}
-                        className={cn(
-                          'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left',
-                          'text-xs text-muted',
-                          'hover:bg-gold/5 hover:text-white',
-                          'transition-all duration-150 group/qa',
-                          isStreaming && 'opacity-50 cursor-not-allowed',
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5 text-gold/60 group-hover/qa:text-gold flex-shrink-0 transition-colors" />
-                        <span className="truncate">{action.label}</span>
-                      </button>
-                    );
-                  })}
+                <div className="space-y-0.5">
+                  {QUICK_COMMANDS.map((cmd, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendMessage(cmd.prompt)}
+                      disabled={isStreaming}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left',
+                        'font-body text-[11px] text-muted',
+                        'hover:bg-gold/5 hover:text-gold',
+                        'transition-all duration-150',
+                        isStreaming && 'opacity-50 cursor-not-allowed',
+                      )}
+                    >
+                      <span className="text-gold/40">&gt;</span>
+                      <span className="truncate">{cmd.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
           {/* ========================================================== */}
-          {/*  MAIN CHAT AREA                                             */}
+          {/*  CENTER PANEL - CHAT INTERFACE                               */}
           {/* ========================================================== */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Toggle sidebar button when collapsed */}
-            {!sidebarOpen && (
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="absolute top-14 left-3 z-10 p-2 rounded-lg bg-card border border-border text-muted hover:text-white hover:bg-white/5 transition-colors"
-              >
-                <PanelLeftOpen className="h-4 w-4" />
-              </button>
-            )}
+          <div className="flex-1 flex flex-col min-w-0 bg-[#080B0F]">
 
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
               {isEmpty ? (
-                /* ---- Empty state with suggested prompts ---- */
+                /* ---- Empty state ---- */
                 <div className="flex flex-col items-center justify-center h-full max-w-xl mx-auto text-center">
-                  <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center mb-6">
-                    <Sparkles className="h-7 w-7 text-gold" />
+                  {/* Hexagonal shape with rotating border concept */}
+                  <div className="relative w-24 h-24 mb-6">
+                    {/* Rotating hex outline */}
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ animation: 'hexRotate 20s linear infinite' }}
+                    >
+                      <div
+                        className="w-20 h-20"
+                        style={{
+                          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                          border: '1px solid rgba(5,150,105,0.3)',
+                          background: 'rgba(5,150,105,0.05)',
+                        }}
+                      />
+                    </div>
+                    {/* Center icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Zap className="h-8 w-8 text-gold" />
+                    </div>
                   </div>
 
-                  <h2 className="font-display font-bold text-xl text-white mb-2">
-                    RKV AI Assistant
+                  <h2 className="font-display font-bold text-xl text-[#E2E8F0] mb-2">
+                    How can I help?
                   </h2>
-                  <p className="text-sm text-muted mb-8 leading-relaxed">
-                    Your personal AI advisor for real estate investment decisions.
-                    Ask me anything about your portfolio, market conditions, or property management.
+                  <p className="font-body text-[11px] text-muted-deep mb-8 leading-relaxed max-w-sm">
+                    Real-time AI analysis powered by your portfolio data, market conditions, and financial metrics.
                   </p>
 
-                  {/* Suggested prompts grid */}
+                  {/* Suggested prompts in 2x2 grid with left cyan border */}
                   <div className="grid grid-cols-2 gap-3 w-full">
                     {QUICK_ACTIONS.slice(0, 4).map((action, idx) => {
                       const Icon = action.icon;
@@ -1074,16 +1409,19 @@ GUIDELINES:
                           type="button"
                           onClick={() => handleSendMessage(action.prompt)}
                           className={cn(
-                            'flex items-start gap-3 p-4 rounded-xl text-left',
-                            'bg-card border border-border',
-                            'hover:border-gold/20 hover:bg-gold/5 hover:shadow-glow-sm',
+                            'flex items-start gap-3 p-3.5 rounded-md text-left',
+                            'bg-transparent',
+                            'border-l-2 border-gold/30 border-t border-r border-b border-t-[#161E2A] border-r-[#161E2A] border-b-[#161E2A]',
+                            'hover:border-l-gold hover:bg-gold/5',
+                            'hover:shadow-[0_0_20px_rgba(5,150,105,0.08)]',
                             'transition-all duration-200 group/prompt',
                           )}
+                          style={{ animation: `fadeInUp 0.4s ease ${idx * 0.1}s both` }}
                         >
-                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center group-hover/prompt:bg-gold/20 transition-colors">
-                            <Icon className="h-4 w-4 text-gold" />
+                          <div className="flex-shrink-0 w-7 h-7 rounded-md bg-gold/10 border border-gold/20 flex items-center justify-center group-hover/prompt:bg-gold/20 transition-colors">
+                            <Icon className="h-3.5 w-3.5 text-gold" />
                           </div>
-                          <span className="text-sm text-muted group-hover/prompt:text-white transition-colors leading-snug">
+                          <span className="text-[12px] text-muted group-hover/prompt:text-[#E2E8F0] transition-colors leading-snug font-body">
                             {action.label}
                           </span>
                         </button>
@@ -1117,19 +1455,20 @@ GUIDELINES:
             </div>
 
             {/* ---- Input area ---- */}
-            <div className="flex-shrink-0 border-t border-border bg-deep/50 px-6 py-4">
+            <div className="flex-shrink-0 border-t border-[#161E2A] bg-[#0C1018] px-6 py-4">
               <div className="max-w-3xl mx-auto">
-                <div className="relative flex items-end gap-3 bg-card border border-border rounded-xl px-4 py-3 focus-within:border-gold/30 focus-within:shadow-glow-sm transition-all">
+                <div className="relative flex items-end gap-3 bg-transparent border border-[#161E2A] rounded-lg px-4 py-3 focus-within:border-gold/30 focus-within:shadow-[0_0_20px_rgba(5,150,105,0.08)] transition-all">
                   <textarea
                     ref={textareaRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value.slice(0, MAX_CHARS))}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask anything about your properties..."
+                    placeholder="Ask a question..."
                     rows={1}
                     className={cn(
-                      'flex-1 bg-transparent text-sm text-white placeholder-muted/60',
-                      'resize-none outline-none font-body',
+                      'flex-1 bg-transparent text-sm text-[#E2E8F0] font-body',
+                      'placeholder:font-body placeholder:text-muted-deep',
+                      'resize-none outline-none',
                       'min-h-[24px] max-h-[160px]',
                     )}
                     disabled={isStreaming}
@@ -1138,38 +1477,53 @@ GUIDELINES:
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span
                       className={cn(
-                        'text-[10px] tabular-nums',
+                        'font-mono text-[10px] tabular-nums',
                         input.length > MAX_CHARS * 0.9
-                          ? 'text-red'
-                          : 'text-muted/40'
+                          ? 'text-[#DC2626]'
+                          : 'text-muted-deep'
                       )}
                     >
                       {input.length}/{MAX_CHARS}
                     </span>
 
+                    {/* Hexagonal send button */}
                     <button
                       type="button"
                       onClick={handleSend}
                       disabled={!input.trim() || isStreaming}
                       className={cn(
-                        'flex items-center justify-center w-8 h-8 rounded-lg',
+                        'flex items-center justify-center w-9 h-9',
                         'transition-all duration-200',
                         input.trim() && !isStreaming
-                          ? 'bg-gold text-black hover:brightness-110 hover:shadow-glow'
-                          : 'bg-border/50 text-muted/40 cursor-not-allowed'
+                          ? 'text-[#080B0F] hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]'
+                          : 'text-muted-deep cursor-not-allowed'
                       )}
+                      style={{
+                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                        background: input.trim() && !isStreaming
+                          ? '#059669'
+                          : '#161E2A',
+                      }}
                     >
                       <Send className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
-                <p className="text-[10px] text-muted/40 text-center mt-2">
-                  AI can make mistakes. Verify important information independently.
+                <p className="font-body text-[10px] text-muted-deep text-center mt-2">
+                  AI responses may contain inaccuracies. Verify critical data independently.
                 </p>
               </div>
             </div>
           </div>
+
+          {/* ========================================================== */}
+          {/*  RIGHT PANEL (280px) - LIVE CONTEXT                         */}
+          {/* ========================================================== */}
+          <div className="hidden xl:flex flex-shrink-0 w-[280px] bg-[#0C1018] border-l border-[#161E2A] flex-col">
+            <LiveContextPanel context={portfolioContext} />
+          </div>
+
         </div>
       </div>
     </FeatureGate>

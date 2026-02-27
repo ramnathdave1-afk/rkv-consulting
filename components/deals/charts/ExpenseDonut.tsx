@@ -7,17 +7,17 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#C9A84C';
-const _GOLD_LIGHT = '#E8C97A';
-const CARD_BG = '#111620';
-const BORDER = '#1E2530';
-const GREEN = '#22C55E';
-const MUTED = '#6B7280';
-const CYAN = '#06B6D4';
-const AMBER = '#D97706';
+const GOLD = '#059669';
+const _GOLD_LIGHT = '#0EA5E9';
+const CARD_BG = '#0C1018';
+const BORDER = '#161E2A';
+const GREEN = '#059669';
+const MUTED = '#4A6080';
+const VIOLET = '#0EA5E9';
+const CYAN_LIGHT = '#0EA5E9';
 
-// Gold-to-muted palette — 6 distinct tones that read well on dark backgrounds
-const EXPENSE_COLORS = [GOLD, '#EF4444', GREEN, CYAN, AMBER, MUTED];
+// Futuristic palette — 6 distinct tones that read well on dark backgrounds
+const EXPENSE_COLORS = [GOLD, '#DC2626', GREEN, VIOLET, CYAN_LIGHT, MUTED];
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -49,10 +49,10 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#F0EDE8', fontWeight: 600, marginBottom: 4, fontFamily: 'Syne, sans-serif' }}>
+      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 4, fontFamily: 'Syne, sans-serif' }}>
         {entry.name}
       </p>
-      <p style={{ color: '#F0EDE8', fontVariantNumeric: 'tabular-nums' }}>
+      <p style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
         {formatCurrency(entry.value)}
       </p>
     </div>
@@ -102,7 +102,7 @@ export default function ExpenseDonut({
   if (total === 0) {
     return (
       <div className="w-full flex items-center justify-center h-[280px]">
-        <p style={{ color: MUTED, fontFamily: 'DM Sans', fontSize: 13 }}>No expense data</p>
+        <p style={{ color: MUTED, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>No expense data</p>
       </div>
     );
   }
@@ -138,7 +138,7 @@ export default function ExpenseDonut({
             textAnchor="middle"
             dominantBaseline="central"
             style={{
-              fill: '#F0EDE8',
+              fill: '#E2E8F0',
               fontSize: 18,
               fontFamily: 'Syne, sans-serif',
               fontWeight: 700,
@@ -165,15 +165,15 @@ export default function ExpenseDonut({
       {/* Custom legend below chart */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-1 px-2">
         {rawData.map((d, i) => (
-          <div key={d.name} className="flex items-center gap-2 text-xs" style={{ fontFamily: 'DM Sans' }}>
+          <div key={d.name} className="flex items-center gap-2 text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             <div
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: EXPENSE_COLORS[i % EXPENSE_COLORS.length] }}
             />
-            <span style={{ color: '#9CA3AF' }} className="truncate">
+            <span style={{ color: '#4A6080' }} className="truncate">
               {d.name}
             </span>
-            <span style={{ color: '#F0EDE8', fontVariantNumeric: 'tabular-nums' }} className="ml-auto">
+            <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }} className="ml-auto">
               {total > 0 ? `${((d.value / total) * 100).toFixed(0)}%` : '—'}
             </span>
           </div>

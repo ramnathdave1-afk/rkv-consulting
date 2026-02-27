@@ -277,12 +277,12 @@ function calcMortgageTermRemaining(p: Property): string {
 /*  Recharts theme                                                     */
 /* ------------------------------------------------------------------ */
 
-const CHART_GOLD = '#C9A84C';
-const CHART_GREEN = '#22C55E';
-const CHART_RED = '#EF4444';
-const CHART_MUTED = '#6B7280';
-const CHART_BORDER = '#1E2530';
-const PIE_COLORS = ['#C9A84C', '#22C55E', '#EF4444', '#3B82F6', '#A855F7', '#F97316', '#06B6D4'];
+const CHART_GOLD = '#059669';
+const CHART_GREEN = '#059669';
+const CHART_RED = '#DC2626';
+const CHART_MUTED = '#4A6080';
+const CHART_BORDER = '#161E2A';
+const PIE_COLORS = ['#059669', '#059669', '#DC2626', '#3B82F6', '#A855F7', '#F97316', '#06B6D4'];
 
 function ChartTooltipContent({
   active,
@@ -295,10 +295,10 @@ function ChartTooltipContent({
 }) {
   if (!active || !payload) return null;
   return (
-    <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-card">
-      <p className="text-xs text-muted mb-1">{label}</p>
+    <div className="rounded-lg px-3 py-2 shadow-card rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <p className="text-xs text-muted mb-1 font-mono">{label}</p>
       {payload.map((item, i) => (
-        <p key={i} className="text-sm font-medium" style={{ color: item.color }}>
+        <p key={i} className="text-sm font-medium font-mono" style={{ color: item.color }}>
           {item.name}: {fmt(item.value)}
         </p>
       ))}
@@ -352,15 +352,16 @@ function MetricCard({
   return (
     <div
       className={cn(
-        'bg-card border border-border rounded-xl p-4',
+        'rounded-xl p-4',
         'hover:border-gold/30 hover:shadow-glow-sm transition-all duration-200',
       )}
+      style={{ background: '#0C1018', border: '1px solid #161E2A' }}
     >
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-4 w-4 text-muted" />
-        <span className="text-xs text-muted font-medium">{label}</span>
+        <span className="label">{label}</span>
       </div>
-      <p className={cn('text-xl font-bold font-display', color || 'text-white')}>{value}</p>
+      <p className={cn('text-xl font-bold font-mono', color || 'text-white')}>{value}</p>
     </div>
   );
 }
@@ -419,7 +420,7 @@ function OverviewTab({
         {/* ---- Mortgage Details ---- */}
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+            <h3 className="label mb-4 flex items-center gap-2">
               <Landmark className="h-4 w-4 text-gold" />
               Mortgage Details
             </h3>
@@ -430,27 +431,27 @@ function OverviewTab({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Interest Rate</span>
-                <span className="text-white">
+                <span className="text-white font-mono">
                   {property.mortgage_rate ? `${property.mortgage_rate}%` : '--'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Remaining Balance</span>
-                <span className="text-white font-medium">{fmt(property.mortgage_balance)}</span>
+                <span className="text-white font-medium font-mono">{fmt(property.mortgage_balance)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Monthly Payment</span>
-                <span className="text-white font-medium">{fmt(property.mortgage_payment)}</span>
+                <span className="text-white font-medium font-mono">{fmt(property.mortgage_payment)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Term Remaining</span>
-                <span className="text-white">{calcMortgageTermRemaining(property)}</span>
+                <span className="text-white font-mono">{calcMortgageTermRemaining(property)}</span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-muted">LTV Ratio</span>
                 <span
                   className={cn(
-                    'font-medium',
+                    'font-medium font-mono',
                     ltv && ltv > 80 ? 'text-red' : 'text-white',
                   )}
                 >
@@ -474,7 +475,7 @@ function OverviewTab({
           >
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display font-semibold text-white text-base flex items-center gap-2">
+                <h3 className="label flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-gold" />
                   Insurance
                 </h3>
@@ -492,11 +493,11 @@ function OverviewTab({
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">Annual Premium</span>
-                  <span className="text-white font-medium">{fmt(property.insurance_annual)}</span>
+                  <span className="text-white font-medium font-mono">{fmt(property.insurance_annual)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">Monthly (est.)</span>
-                  <span className="text-white">
+                  <span className="text-white font-mono">
                     {fmt(Math.round((property.insurance_annual || 0) / 12))}
                   </span>
                 </div>
@@ -529,11 +530,11 @@ function OverviewTab({
         ) : (
           <Card>
             <div className="p-5">
-              <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+              <h3 className="label mb-4 flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-gold" />
                 Insurance
               </h3>
-              <p className="text-sm text-muted">No insurance information on file.</p>
+              <p className="text-sm text-muted font-mono">No insurance information on file</p>
             </div>
           </Card>
         )}
@@ -541,7 +542,7 @@ function OverviewTab({
         {/* ---- Property Details ---- */}
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+            <h3 className="label mb-4 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-gold" />
               Property Details
             </h3>
@@ -552,25 +553,25 @@ function OverviewTab({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Bedrooms</span>
-                <span className="text-white">{property.bedrooms ?? '--'}</span>
+                <span className="text-white font-mono">{property.bedrooms ?? '--'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Bathrooms</span>
-                <span className="text-white">{property.bathrooms ?? '--'}</span>
+                <span className="text-white font-mono">{property.bathrooms ?? '--'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Square Feet</span>
-                <span className="text-white">
+                <span className="text-white font-mono">
                   {property.sqft ? property.sqft.toLocaleString() : '--'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Year Built</span>
-                <span className="text-white">{property.year_built ?? '--'}</span>
+                <span className="text-white font-mono">{property.year_built ?? '--'}</span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-muted">Purchase Price</span>
-                <span className="text-white font-medium">{fmt(property.purchase_price)}</span>
+                <span className="text-white font-medium font-mono">{fmt(property.purchase_price)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Purchase Date</span>
@@ -583,28 +584,28 @@ function OverviewTab({
         {/* ---- Tax & HOA ---- */}
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+            <h3 className="label mb-4 flex items-center gap-2">
               <Receipt className="h-4 w-4 text-gold" />
               Tax & HOA
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Annual Property Tax</span>
-                <span className="text-white font-medium">{fmt(property.tax_annual)}</span>
+                <span className="text-white font-medium font-mono">{fmt(property.tax_annual)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Monthly Tax (est.)</span>
-                <span className="text-white">{fmt(Math.round((property.tax_annual || 0) / 12))}</span>
+                <span className="text-white font-mono">{fmt(Math.round((property.tax_annual || 0) / 12))}</span>
               </div>
               {(property.hoa_monthly || 0) > 0 && (
                 <div className="flex justify-between text-sm pt-2 border-t border-border">
                   <span className="text-muted">HOA Monthly</span>
-                  <span className="text-white">{fmt(property.hoa_monthly)}</span>
+                  <span className="text-white font-mono">{fmt(property.hoa_monthly)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-muted">Total Monthly Expenses</span>
-                <span className="text-red font-medium">
+                <span className="text-red font-medium font-mono">
                   {fmt(Math.round(calcMonthlyExpenses(property)))}
                 </span>
               </div>
@@ -616,7 +617,7 @@ function OverviewTab({
       {/* ---- Notes ---- */}
       <Card className="lg:col-span-2">
         <div className="p-5">
-          <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+          <h3 className="label mb-4 flex items-center gap-2">
             <StickyNote className="h-4 w-4 text-gold" />
             Notes
           </h3>
@@ -756,7 +757,7 @@ function PerformanceTab({ property }: { property: Property }) {
       {/* Cash Flow Line Chart */}
       <Card>
         <div className="p-5">
-          <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+          <h3 className="label mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 text-gold" />
             Monthly Cash Flow (12 months)
           </h3>
@@ -794,7 +795,7 @@ function PerformanceTab({ property }: { property: Property }) {
         {/* Equity Growth */}
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4">Equity Growth</h3>
+            <h3 className="label mb-4">Equity Growth</h3>
             <div className="h-[250px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={equityData}>
@@ -827,7 +828,7 @@ function PerformanceTab({ property }: { property: Property }) {
         {/* Annual Income vs Expenses */}
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4">
+            <h3 className="label mb-4">
               Annual Income vs Expenses
             </h3>
             <div className="h-[250px]">
@@ -858,7 +859,7 @@ function PerformanceTab({ property }: { property: Property }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <div className="p-5">
-            <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+            <h3 className="label mb-4 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-gold" />
               Investment Summary
             </h3>
@@ -867,7 +868,7 @@ function PerformanceTab({ property }: { property: Property }) {
                 <span className="text-muted">IRR Estimate</span>
                 <span
                   className={cn(
-                    'font-bold',
+                    'font-bold font-mono',
                     irrEstimate && irrEstimate >= 0 ? 'text-green' : 'text-red',
                   )}
                 >
@@ -876,24 +877,24 @@ function PerformanceTab({ property }: { property: Property }) {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Time Held</span>
-                <span className="text-white">{yearsHeld.toFixed(1)} years</span>
+                <span className="text-white font-mono">{yearsHeld.toFixed(1)} years</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Total Cash Received (est.)</span>
-                <span className="text-green font-medium">
+                <span className="text-green font-medium font-mono">
                   {fmt(Math.round(totalCashReceived))}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Total Equity Gained</span>
-                <span className="text-white font-medium">
+                <span className="text-white font-medium font-mono">
                   {fmt(Math.round(totalEquityGained))}
                 </span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-muted">Total Return</span>
                 <span
-                  className={cn('font-bold', totalReturn >= 0 ? 'text-green' : 'text-red')}
+                  className={cn('font-bold font-mono', totalReturn >= 0 ? 'text-green' : 'text-red')}
                 >
                   {fmtPct(totalReturn)}
                 </span>
@@ -901,7 +902,7 @@ function PerformanceTab({ property }: { property: Property }) {
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Annualized ROI</span>
                 <span
-                  className={cn('font-bold', annualizedROI >= 0 ? 'text-green' : 'text-red')}
+                  className={cn('font-bold font-mono', annualizedROI >= 0 ? 'text-green' : 'text-red')}
                 >
                   {fmtPct(annualizedROI)}
                 </span>
@@ -912,28 +913,28 @@ function PerformanceTab({ property }: { property: Property }) {
 
         <Card className="border-gold/20">
           <div className="p-5">
-            <h3 className="font-display font-semibold text-gold text-base mb-4 flex items-center gap-2">
+            <h3 className="label mb-4 flex items-center gap-2">
               <Calculator className="h-4 w-4" />
               What if I sold today?
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Estimated Sale Price</span>
-                <span className="text-white font-medium">{fmt(currentValue)}</span>
+                <span className="text-white font-medium font-mono">{fmt(currentValue)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Closing Costs (6%)</span>
-                <span className="text-red">-{fmt(Math.round(closingCosts))}</span>
+                <span className="text-red font-mono">-{fmt(Math.round(closingCosts))}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">Mortgage Payoff</span>
-                <span className="text-red">-{fmt(mortgagePayoff)}</span>
+                <span className="text-red font-mono">-{fmt(mortgagePayoff)}</span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-white font-semibold">Net Proceeds</span>
                 <span
                   className={cn(
-                    'text-xl font-bold font-display',
+                    'text-xl font-bold font-mono',
                     netProceeds >= 0 ? 'text-green' : 'text-red',
                   )}
                 >
@@ -943,7 +944,7 @@ function PerformanceTab({ property }: { property: Property }) {
               <div className="flex justify-between text-sm pt-2 border-t border-border">
                 <span className="text-muted">Capital Gains (est.)</span>
                 <span
-                  className={cn('font-medium', capitalGains >= 0 ? 'text-gold' : 'text-red')}
+                  className={cn('font-medium font-mono', capitalGains >= 0 ? 'text-gold' : 'text-red')}
                 >
                   {capitalGains >= 0 ? '+' : ''}
                   {fmt(Math.round(capitalGains))}
@@ -988,7 +989,7 @@ function TenantsTab({
       {/* Lease Timeline Bars */}
       <Card>
         <div className="p-5">
-          <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+          <h3 className="label mb-4 flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gold" />
             Lease Timeline
           </h3>
@@ -1031,11 +1032,13 @@ function TenantsTab({
                         variant={tenant.status === 'active' ? 'success' : 'warning'}
                         size="sm"
                         dot
+                        className="font-mono text-[10px]"
                       >
+                        {tenant.status === 'active' && <span className="pulse-dot mr-1" />}
                         {tenant.status}
                       </Badge>
                     </div>
-                    <span className="text-xs text-muted">
+                    <span className="text-xs text-muted font-mono">
                       {daysRemaining > 0 ? `${daysRemaining} days remaining` : 'Lease ended'}
                     </span>
                   </div>
@@ -1073,7 +1076,7 @@ function TenantsTab({
             <Card>
               <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display font-semibold text-white text-base flex items-center gap-2">
+                  <h3 className="label flex items-center gap-2">
                     <Users className="h-4 w-4 text-gold" />
                     {tenantDisplayName(tenant)}
                   </h3>
@@ -1082,7 +1085,9 @@ function TenantsTab({
                       variant={tenant.status === 'active' ? 'success' : 'warning'}
                       size="sm"
                       dot
+                      className="font-mono text-[10px]"
                     >
+                      {tenant.status === 'active' && <span className="pulse-dot mr-1" />}
                       {tenant.status}
                     </Badge>
                   </div>
@@ -1099,13 +1104,13 @@ function TenantsTab({
                   </div>
                   <div>
                     <span className="text-xs text-muted">Rent Amount</span>
-                    <p className="text-sm text-green font-medium">
+                    <p className="text-sm text-green font-medium font-mono">
                       {fmt(tenant.monthly_rent)}/mo
                     </p>
                   </div>
                   <div>
                     <span className="text-xs text-muted">Security Deposit</span>
-                    <p className="text-sm text-white">{fmt(tenant.security_deposit)}</p>
+                    <p className="text-sm text-white font-mono">{fmt(tenant.security_deposit)}</p>
                   </div>
                 </div>
 
@@ -1138,30 +1143,30 @@ function TenantsTab({
             {/* Payment History */}
             <Card>
               <div className="p-5">
-                <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+                <h3 className="label mb-4 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-gold" />
                   Payment History - {tenantDisplayName(tenant)}
                 </h3>
                 {tenantPayments.length === 0 ? (
-                  <p className="text-sm text-muted py-4 text-center">No payment records yet.</p>
+                  <p className="text-sm text-muted py-4 text-center font-mono">No payment records yet</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left px-3 py-2 text-xs text-muted font-medium">
+                          <th className="text-left px-3 py-2 label">
                             Due Date
                           </th>
-                          <th className="text-right px-3 py-2 text-xs text-muted font-medium">
+                          <th className="text-right px-3 py-2 label">
                             Amount Due
                           </th>
-                          <th className="text-right px-3 py-2 text-xs text-muted font-medium">
+                          <th className="text-right px-3 py-2 label">
                             Amount Paid
                           </th>
-                          <th className="text-left px-3 py-2 text-xs text-muted font-medium">
+                          <th className="text-left px-3 py-2 label">
                             Paid Date
                           </th>
-                          <th className="text-right px-3 py-2 text-xs text-muted font-medium">
+                          <th className="text-right px-3 py-2 label">
                             Status
                           </th>
                         </tr>
@@ -1175,10 +1180,10 @@ function TenantsTab({
                             <td className="px-3 py-2.5 text-white">
                               {fmtDate(payment.due_date)}
                             </td>
-                            <td className="px-3 py-2.5 text-right text-white font-medium">
+                            <td className="px-3 py-2.5 text-right text-white font-medium font-mono">
                               {fmt(payment.amount_due)}
                             </td>
-                            <td className="px-3 py-2.5 text-right text-white">
+                            <td className="px-3 py-2.5 text-right text-white font-mono">
                               {fmt(payment.amount_paid)}
                             </td>
                             <td className="px-3 py-2.5 text-muted">
@@ -1194,6 +1199,7 @@ function TenantsTab({
                                       : 'danger'
                                 }
                                 size="sm"
+                                className="font-mono text-[10px]"
                               >
                                 {payment.status}
                               </Badge>
@@ -1269,7 +1275,7 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
       {/* Status Pipeline Visualization */}
       <Card>
         <div className="p-5">
-          <h3 className="font-display font-semibold text-white text-base mb-4 flex items-center gap-2">
+          <h3 className="label mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 text-gold" />
             Status Pipeline
           </h3>
@@ -1291,12 +1297,12 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
                         : 'bg-deep/50 border-border/50',
                     )}
                   >
-                    <Badge variant={statusColors[status] || 'info'} size="sm">
+                    <Badge variant={statusColors[status] || 'info'} size="sm" className="font-mono text-[10px]">
                       {status.replace('_', ' ')}
                     </Badge>
                     <span
                       className={cn(
-                        'text-lg font-bold font-display',
+                        'text-lg font-bold font-mono',
                         count > 0 ? 'text-white' : 'text-muted',
                       )}
                     >
@@ -1309,14 +1315,14 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
           </div>
           <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
             <span className="text-sm text-muted">Total Maintenance Cost</span>
-            <span className="text-lg font-bold font-display text-white">{fmt(totalCost)}</span>
+            <span className="text-lg font-bold font-mono text-white">{fmt(totalCost)}</span>
           </div>
         </div>
       </Card>
 
       {/* Header with add button */}
       <div className="flex items-center justify-between">
-        <h3 className="font-display font-semibold text-white text-base">All Requests</h3>
+        <h3 className="label">All Requests</h3>
         <Button variant="primary" size="sm" icon={<Plus className="h-3.5 w-3.5" />}>
           New Request
         </Button>
@@ -1330,10 +1336,10 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h4 className="text-sm font-semibold text-white truncate">{req.title}</h4>
-                  <Badge variant={statusColors[req.status] || 'info'} size="sm">
+                  <Badge variant={statusColors[req.status] || 'info'} size="sm" className="font-mono text-[10px]">
                     {req.status.replace('_', ' ')}
                   </Badge>
-                  <Badge variant={priorityColors[req.priority] || 'info'} size="sm">
+                  <Badge variant={priorityColors[req.priority] || 'info'} size="sm" className="font-mono text-[10px]">
                     {req.priority}
                   </Badge>
                   {req.category && (
@@ -1366,7 +1372,7 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
               </div>
               <div className="text-right flex-shrink-0 ml-4 space-y-1">
                 {(req.actual_cost || req.estimated_cost) && (
-                  <p className="text-sm text-white font-medium">
+                  <p className="text-sm text-white font-medium font-mono">
                     {fmt(req.actual_cost || req.estimated_cost)}
                     {!req.actual_cost && req.estimated_cost && (
                       <span className="text-xs text-muted ml-1">(est.)</span>
@@ -1460,26 +1466,26 @@ function FinancialsTab({
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <div className="p-4 text-center">
-            <p className="text-xs text-muted mb-1">Total Income</p>
-            <p className="text-xl font-bold font-display text-green">
+            <p className="label mb-1">Total Income</p>
+            <p className="text-xl font-bold font-mono text-green">
               {fmt(monthlyPnL.income)}
             </p>
           </div>
         </Card>
         <Card>
           <div className="p-4 text-center">
-            <p className="text-xs text-muted mb-1">Total Expenses</p>
-            <p className="text-xl font-bold font-display text-red">
+            <p className="label mb-1">Total Expenses</p>
+            <p className="text-xl font-bold font-mono text-red">
               {fmt(monthlyPnL.expenses)}
             </p>
           </div>
         </Card>
         <Card>
           <div className="p-4 text-center">
-            <p className="text-xs text-muted mb-1">Net P&L</p>
+            <p className="label mb-1">Net P&L</p>
             <p
               className={cn(
-                'text-xl font-bold font-display',
+                'text-xl font-bold font-mono',
                 monthlyPnL.net >= 0 ? 'text-green' : 'text-red',
               )}
             >
@@ -1494,7 +1500,7 @@ function FinancialsTab({
         {expenseData.length > 0 && (
           <Card>
             <div className="p-5">
-              <h3 className="font-display font-semibold text-white text-base mb-4">
+              <h3 className="label mb-4">
                 Category Breakdown
               </h3>
               <div className="h-[250px]">
@@ -1516,11 +1522,11 @@ function FinancialsTab({
                     <Tooltip
                       formatter={(value: number | undefined) => fmt(value ?? 0)}
                       contentStyle={{
-                        background: '#111620',
-                        border: '1px solid #1E2530',
+                        background: '#0C1018',
+                        border: '1px solid #161E2A',
                         borderRadius: 8,
                       }}
-                      itemStyle={{ color: '#F0EDE8' }}
+                      itemStyle={{ color: '#E2E8F0' }}
                     />
                     <Legend
                       formatter={(value: string) => (
@@ -1538,7 +1544,7 @@ function FinancialsTab({
         <Card className={expenseData.length === 0 ? 'lg:col-span-2' : ''}>
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-semibold text-white text-base">Transactions</h3>
+              <h3 className="label">Transactions</h3>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -1559,7 +1565,7 @@ function FinancialsTab({
                   type="button"
                   onClick={() => setCategoryFilter(cat)}
                   className={cn(
-                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                    'px-3 py-1.5 rounded-lg text-[10px] font-body font-medium uppercase tracking-wider transition-colors',
                     categoryFilter === cat
                       ? 'bg-gold/10 text-gold border border-gold/20'
                       : 'text-muted hover:text-white hover:bg-white/5',
@@ -1571,22 +1577,22 @@ function FinancialsTab({
             </div>
 
             {filtered.length === 0 ? (
-              <p className="text-sm text-muted py-6 text-center">No transactions found.</p>
+              <p className="text-sm text-muted py-6 text-center font-body">No transactions found</p>
             ) : (
               <div className="max-h-[400px] overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-card">
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-xs text-muted font-medium">
+                      <th className="text-left px-3 py-2 label">
                         Date
                       </th>
-                      <th className="text-left px-3 py-2 text-xs text-muted font-medium">
+                      <th className="text-left px-3 py-2 label">
                         Category
                       </th>
-                      <th className="text-left px-3 py-2 text-xs text-muted font-medium">
+                      <th className="text-left px-3 py-2 label">
                         Description
                       </th>
-                      <th className="text-right px-3 py-2 text-xs text-muted font-medium">
+                      <th className="text-right px-3 py-2 label">
                         Amount
                       </th>
                     </tr>
@@ -1608,7 +1614,7 @@ function FinancialsTab({
                         </td>
                         <td
                           className={cn(
-                            'px-3 py-2.5 text-right font-medium',
+                            'px-3 py-2.5 text-right font-medium font-mono',
                             txn.type === 'income' ? 'text-green' : 'text-red',
                           )}
                         >
@@ -1731,7 +1737,7 @@ function DocumentsTab({
       {(expiringDocs.length > 0 || expiredDocs.length > 0) && (
         <Card className="border-gold/30">
           <div className="p-4">
-            <h4 className="text-sm font-semibold text-gold mb-3 flex items-center gap-2">
+            <h4 className="label mb-3 flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               Document Alerts
             </h4>
@@ -1804,7 +1810,7 @@ function DocumentsTab({
               type="button"
               onClick={() => setTypeFilter(type)}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                'px-3 py-1.5 rounded-lg text-[10px] font-body font-medium uppercase tracking-wider transition-colors',
                 typeFilter === type
                   ? 'bg-gold/10 text-gold border border-gold/20'
                   : 'text-muted hover:text-white hover:bg-white/5',
@@ -1818,7 +1824,7 @@ function DocumentsTab({
 
       {/* Documents list */}
       {filteredDocs.length === 0 ? (
-        <p className="text-sm text-muted py-6 text-center">No documents uploaded yet.</p>
+        <p className="text-sm text-muted py-6 text-center font-body">No documents uploaded yet</p>
       ) : (
         <div className="space-y-2">
           {filteredDocs.map((doc) => {
@@ -2048,8 +2054,9 @@ export default function PropertyDetailPage() {
               {property.address}
               {property.unit ? `, ${property.unit}` : ''}
             </h1>
-            <Badge variant="info">{formatPropertyType(property.property_type)}</Badge>
-            <Badge variant={property.status === 'active' ? 'success' : 'warning'} dot>
+            <Badge variant="info" className="font-mono text-[10px]">{formatPropertyType(property.property_type)}</Badge>
+            <Badge variant={property.status === 'active' ? 'success' : 'warning'} dot className="font-mono text-[10px]">
+              {property.status === 'active' && <span className="pulse-dot mr-1" />}
               {property.status}
             </Badge>
           </div>

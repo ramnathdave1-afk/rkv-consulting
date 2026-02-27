@@ -501,7 +501,7 @@ export default function DocumentsPage() {
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
               className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-medium font-body',
+                'px-4 py-1.5 rounded-full text-[10px] font-medium font-body uppercase tracking-wider',
                 'transition-all duration-200 ease-out',
                 activeFilter === f.key
                   ? 'bg-gold text-black'
@@ -544,43 +544,43 @@ export default function DocumentsPage() {
       {/*  STATS ROW                                                    */}
       {/* ============================================================ */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex items-center gap-4">
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <FileText className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Total Documents</p>
-            <p className="text-xl font-bold text-white">{totalDocs}</p>
+            <p className="label">Total Documents</p>
+            <p className="text-xl font-bold text-white font-mono">{totalDocs}</p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4">
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Clock className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Expiring Soon</p>
-            <p className="text-xl font-bold text-white">{expiringSoon}</p>
+            <p className="label">Expiring Soon</p>
+            <p className="text-xl font-bold text-white font-mono">{expiringSoon}</p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4">
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red/10 shrink-0">
             <PenLine className="h-5 w-5 text-red" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Unsigned</p>
-            <p className="text-xl font-bold text-white">{unsigned}</p>
+            <p className="label">Unsigned</p>
+            <p className="text-xl font-bold text-white font-mono">{unsigned}</p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4">
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <HardDrive className="h-5 w-5 text-green" />
           </div>
           <div>
-            <p className="text-xs text-muted font-body">Storage Used</p>
-            <p className="text-xl font-bold text-white">{formatFileSize(totalStorage)}</p>
+            <p className="label">Storage Used</p>
+            <p className="text-xl font-bold text-white font-mono">{formatFileSize(totalStorage)}</p>
           </div>
         </Card>
       </div>
@@ -624,6 +624,7 @@ export default function DocumentsPage() {
                   'hover:border-gold/20 hover:shadow-glow-sm',
                   'transition-all duration-200',
                 )}
+                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
               >
                 {/* File icon + type */}
                 <div className="flex items-start justify-between mb-3">
@@ -653,8 +654,8 @@ export default function DocumentsPage() {
 
                 {/* Date + size row */}
                 <div className="flex items-center justify-between text-xs text-muted mt-2">
-                  <span>{formatDate(doc.created_at)}</span>
-                  <span>{formatFileSize(doc.file_size)}</span>
+                  <span className="font-mono">{formatDate(doc.created_at)}</span>
+                  <span className="font-mono">{formatFileSize(doc.file_size)}</span>
                 </div>
 
                 {/* Expiry warning */}
@@ -729,7 +730,7 @@ export default function DocumentsPage() {
         /* ============================================================ */
         /*  TABLE VIEW                                                   */
         /* ============================================================ */
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -797,10 +798,10 @@ export default function DocumentsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-muted">{formatDate(doc.created_at)}</span>
+                        <span className="text-sm text-muted font-mono">{formatDate(doc.created_at)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-muted">{formatFileSize(doc.file_size)}</span>
+                        <span className="text-sm text-muted font-mono">{formatFileSize(doc.file_size)}</span>
                       </td>
                       <td className="px-4 py-3">
                         {doc.expires_at ? (
@@ -884,7 +885,7 @@ export default function DocumentsPage() {
                   'transition-colors duration-200',
                   isDragActive
                     ? 'border-gold bg-gold/5'
-                    : 'border-border hover:border-gold/40 hover:bg-white/[0.02]',
+                    : 'border-[#161E2A] hover:border-gold/50 hover:bg-white/[0.02]',
                 )}
               >
                 <input {...getInputProps()} />
@@ -907,7 +908,7 @@ export default function DocumentsPage() {
                   <FileText className="h-5 w-5 text-gold shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white truncate">{uploadFile.name}</p>
-                    <p className="text-xs text-muted">{formatFileSize(uploadFile.size)}</p>
+                    <p className="text-xs text-muted font-mono">{formatFileSize(uploadFile.size)}</p>
                   </div>
                   <button
                     onClick={() => setUploadFile(null)}

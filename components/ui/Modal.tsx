@@ -147,11 +147,16 @@ function ModalContent({
             className={cn(
               'fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)]',
               '-translate-x-1/2 -translate-y-1/2',
-              'bg-card border border-border rounded-xl shadow-card',
+              'backdrop-blur-xl rounded-lg',
               'focus:outline-none',
               maxWidthMap[maxWidth],
               className,
             )}
+            style={{
+              background: '#0C1018',
+              border: '1px solid #161E2A',
+              boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(5, 150, 105, 0.05)',
+            }}
             variants={contentVariants}
             initial="hidden"
             animate="visible"
@@ -185,7 +190,7 @@ function ModalContent({
 function ModalHeader({ title, description, className }: ModalHeaderProps) {
   return (
     <div className={cn('px-6 pt-6 pb-2', className)}>
-      <Dialog.Title className="text-lg font-display font-semibold text-white">
+      <Dialog.Title className="text-lg font-display font-bold text-white">
         {title}
       </Dialog.Title>
       {description && (
@@ -202,9 +207,10 @@ function ModalFooter({ children, className }: ModalFooterProps) {
   return (
     <div
       className={cn(
-        'px-6 py-4 border-t border-border flex items-center justify-end gap-3',
+        'px-6 py-4 flex items-center justify-end gap-3',
         className,
       )}
+      style={{ borderTop: '1px solid #161E2A' }}
     >
       {children}
     </div>

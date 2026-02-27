@@ -4,7 +4,7 @@
 // Adds live data fetching from Rentcast, FRED, BLS APIs
 // ============================================================================
 
-import type { HeatMapMetricConfig, HeatMapCityMarketData } from '@/types';
+import type { HeatMapMetricConfig } from '@/types';
 
 // ─── Metric Configuration ────────────────────────────────────────────
 
@@ -140,53 +140,73 @@ export const US_STATES: { code: string; name: string; center: [number, number] }
 ];
 
 // ─── Major Metro Areas ───────────────────────────────────────────────
+// Each metro includes a representative zip code and realistic fallback market
+// data so the heat map renders immediately even before live API calls complete.
 
-export const MAJOR_METROS: { name: string; state: string; center: [number, number]; population: number }[] = [
-  { name: 'New York', state: 'NY', center: [40.7128, -74.0060], population: 8336817 },
-  { name: 'Los Angeles', state: 'CA', center: [34.0522, -118.2437], population: 3979576 },
-  { name: 'Chicago', state: 'IL', center: [41.8781, -87.6298], population: 2693976 },
-  { name: 'Houston', state: 'TX', center: [29.7604, -95.3698], population: 2320268 },
-  { name: 'Phoenix', state: 'AZ', center: [33.4484, -112.0740], population: 1680992 },
-  { name: 'Philadelphia', state: 'PA', center: [39.9526, -75.1652], population: 1603797 },
-  { name: 'San Antonio', state: 'TX', center: [29.4241, -98.4936], population: 1547253 },
-  { name: 'San Diego', state: 'CA', center: [32.7157, -117.1611], population: 1423851 },
-  { name: 'Dallas', state: 'TX', center: [32.7767, -96.7970], population: 1343573 },
-  { name: 'Austin', state: 'TX', center: [30.2672, -97.7431], population: 1028225 },
-  { name: 'Jacksonville', state: 'FL', center: [30.3322, -81.6557], population: 954614 },
-  { name: 'San Jose', state: 'CA', center: [37.3382, -121.8863], population: 1021795 },
-  { name: 'Fort Worth', state: 'TX', center: [32.7555, -97.3308], population: 918915 },
-  { name: 'Columbus', state: 'OH', center: [39.9612, -82.9988], population: 905748 },
-  { name: 'Charlotte', state: 'NC', center: [35.2271, -80.8431], population: 874579 },
-  { name: 'Indianapolis', state: 'IN', center: [39.7684, -86.1581], population: 887642 },
-  { name: 'San Francisco', state: 'CA', center: [37.7749, -122.4194], population: 873965 },
-  { name: 'Seattle', state: 'WA', center: [47.6062, -122.3321], population: 737015 },
-  { name: 'Denver', state: 'CO', center: [39.7392, -104.9903], population: 715522 },
-  { name: 'Nashville', state: 'TN', center: [36.1627, -86.7816], population: 689447 },
-  { name: 'Oklahoma City', state: 'OK', center: [35.4676, -97.5164], population: 681054 },
-  { name: 'Las Vegas', state: 'NV', center: [36.1699, -115.1398], population: 641903 },
-  { name: 'Portland', state: 'OR', center: [45.5152, -122.6784], population: 652503 },
-  { name: 'Memphis', state: 'TN', center: [35.1495, -90.0490], population: 633104 },
-  { name: 'Louisville', state: 'KY', center: [38.2527, -85.7585], population: 633045 },
-  { name: 'Baltimore', state: 'MD', center: [39.2904, -76.6122], population: 585708 },
-  { name: 'Milwaukee', state: 'WI', center: [43.0389, -87.9065], population: 577222 },
-  { name: 'Albuquerque', state: 'NM', center: [35.0844, -106.6504], population: 564559 },
-  { name: 'Tucson', state: 'AZ', center: [32.2226, -110.9747], population: 542629 },
-  { name: 'Fresno', state: 'CA', center: [36.7378, -119.7871], population: 542107 },
-  { name: 'Sacramento', state: 'CA', center: [38.5816, -121.4944], population: 524943 },
-  { name: 'Atlanta', state: 'GA', center: [33.7490, -84.3880], population: 498715 },
-  { name: 'Miami', state: 'FL', center: [25.7617, -80.1918], population: 467963 },
-  { name: 'Raleigh', state: 'NC', center: [35.7796, -78.6382], population: 467665 },
-  { name: 'Tampa', state: 'FL', center: [27.9506, -82.4572], population: 399700 },
-  { name: 'Minneapolis', state: 'MN', center: [44.9778, -93.2650], population: 429606 },
-  { name: 'Cleveland', state: 'OH', center: [41.4993, -81.6944], population: 372624 },
-  { name: 'Pittsburgh', state: 'PA', center: [40.4406, -79.9959], population: 302407 },
-  { name: 'St. Louis', state: 'MO', center: [38.6270, -90.1994], population: 301578 },
-  { name: 'Orlando', state: 'FL', center: [28.5383, -81.3792], population: 307573 },
-  { name: 'Boise', state: 'ID', center: [43.6150, -116.2023], population: 235684 },
-  { name: 'Salt Lake City', state: 'UT', center: [40.7608, -111.8910], population: 200133 },
-  { name: 'Richmond', state: 'VA', center: [37.5407, -77.4360], population: 226610 },
-  { name: 'Birmingham', state: 'AL', center: [33.5186, -86.8104], population: 200733 },
-  { name: 'Pottstown', state: 'PA', center: [40.2454, -75.6496], population: 22670 },
+export interface MetroData {
+  name: string;
+  state: string;
+  center: [number, number];
+  population: number;
+  zip: string;
+  fallback: {
+    medianPrice: number;
+    pricePerSqft: number;
+    daysOnMarket: number;
+    activeInventory: number;
+    monthsOfSupply: number;
+    yoyChange: number;
+    medianRent: number;
+    populationGrowth: number;
+  };
+}
+
+export const MAJOR_METROS: MetroData[] = [
+  { name: 'New York', state: 'NY', center: [40.7128, -74.0060], population: 8336817, zip: '10001', fallback: { medianPrice: 749000, pricePerSqft: 685, daysOnMarket: 62, activeInventory: 34200, monthsOfSupply: 5.1, yoyChange: 3.2, medianRent: 3450, populationGrowth: 0.2 } },
+  { name: 'Los Angeles', state: 'CA', center: [34.0522, -118.2437], population: 3979576, zip: '90001', fallback: { medianPrice: 895000, pricePerSqft: 595, daysOnMarket: 38, activeInventory: 12800, monthsOfSupply: 2.8, yoyChange: 5.1, medianRent: 2950, populationGrowth: -0.1 } },
+  { name: 'Chicago', state: 'IL', center: [41.8781, -87.6298], population: 2693976, zip: '60601', fallback: { medianPrice: 335000, pricePerSqft: 228, daysOnMarket: 42, activeInventory: 14500, monthsOfSupply: 3.4, yoyChange: 4.8, medianRent: 2100, populationGrowth: -0.5 } },
+  { name: 'Houston', state: 'TX', center: [29.7604, -95.3698], population: 2320268, zip: '77001', fallback: { medianPrice: 325000, pricePerSqft: 168, daysOnMarket: 45, activeInventory: 21500, monthsOfSupply: 4.2, yoyChange: 2.1, medianRent: 1750, populationGrowth: 1.8 } },
+  { name: 'Phoenix', state: 'AZ', center: [33.4484, -112.0740], population: 1680992, zip: '85001', fallback: { medianPrice: 435000, pricePerSqft: 272, daysOnMarket: 35, activeInventory: 15200, monthsOfSupply: 3.6, yoyChange: 3.5, medianRent: 1850, populationGrowth: 2.4 } },
+  { name: 'Philadelphia', state: 'PA', center: [39.9526, -75.1652], population: 1603797, zip: '19101', fallback: { medianPrice: 275000, pricePerSqft: 195, daysOnMarket: 52, activeInventory: 8900, monthsOfSupply: 4.0, yoyChange: 5.2, medianRent: 1750, populationGrowth: 0.1 } },
+  { name: 'San Antonio', state: 'TX', center: [29.4241, -98.4936], population: 1547253, zip: '78201', fallback: { medianPrice: 280000, pricePerSqft: 155, daysOnMarket: 55, activeInventory: 9800, monthsOfSupply: 4.8, yoyChange: 1.5, medianRent: 1450, populationGrowth: 1.6 } },
+  { name: 'San Diego', state: 'CA', center: [32.7157, -117.1611], population: 1423851, zip: '92101', fallback: { medianPrice: 875000, pricePerSqft: 620, daysOnMarket: 28, activeInventory: 4200, monthsOfSupply: 1.9, yoyChange: 6.8, medianRent: 3100, populationGrowth: 0.6 } },
+  { name: 'Dallas', state: 'TX', center: [32.7767, -96.7970], population: 1343573, zip: '75201', fallback: { medianPrice: 395000, pricePerSqft: 215, daysOnMarket: 40, activeInventory: 16200, monthsOfSupply: 3.5, yoyChange: 1.8, medianRent: 1850, populationGrowth: 1.9 } },
+  { name: 'Austin', state: 'TX', center: [30.2672, -97.7431], population: 1028225, zip: '78701', fallback: { medianPrice: 465000, pricePerSqft: 285, daysOnMarket: 52, activeInventory: 11500, monthsOfSupply: 5.2, yoyChange: -1.2, medianRent: 1750, populationGrowth: 2.8 } },
+  { name: 'Jacksonville', state: 'FL', center: [30.3322, -81.6557], population: 954614, zip: '32099', fallback: { medianPrice: 345000, pricePerSqft: 198, daysOnMarket: 42, activeInventory: 7800, monthsOfSupply: 3.8, yoyChange: 3.2, medianRent: 1650, populationGrowth: 1.5 } },
+  { name: 'San Jose', state: 'CA', center: [37.3382, -121.8863], population: 1021795, zip: '95101', fallback: { medianPrice: 1350000, pricePerSqft: 845, daysOnMarket: 22, activeInventory: 2100, monthsOfSupply: 1.4, yoyChange: 7.5, medianRent: 3650, populationGrowth: 0.3 } },
+  { name: 'Fort Worth', state: 'TX', center: [32.7555, -97.3308], population: 918915, zip: '76102', fallback: { medianPrice: 340000, pricePerSqft: 185, daysOnMarket: 38, activeInventory: 8500, monthsOfSupply: 3.2, yoyChange: 2.5, medianRent: 1650, populationGrowth: 2.1 } },
+  { name: 'Columbus', state: 'OH', center: [39.9612, -82.9988], population: 905748, zip: '43085', fallback: { medianPrice: 285000, pricePerSqft: 178, daysOnMarket: 28, activeInventory: 4600, monthsOfSupply: 2.5, yoyChange: 6.1, medianRent: 1450, populationGrowth: 1.1 } },
+  { name: 'Charlotte', state: 'NC', center: [35.2271, -80.8431], population: 874579, zip: '28202', fallback: { medianPrice: 395000, pricePerSqft: 225, daysOnMarket: 32, activeInventory: 8200, monthsOfSupply: 2.8, yoyChange: 4.5, medianRent: 1750, populationGrowth: 2.2 } },
+  { name: 'Indianapolis', state: 'IN', center: [39.7684, -86.1581], population: 887642, zip: '46204', fallback: { medianPrice: 265000, pricePerSqft: 155, daysOnMarket: 30, activeInventory: 5200, monthsOfSupply: 2.6, yoyChange: 5.8, medianRent: 1350, populationGrowth: 0.9 } },
+  { name: 'San Francisco', state: 'CA', center: [37.7749, -122.4194], population: 873965, zip: '94102', fallback: { medianPrice: 1250000, pricePerSqft: 925, daysOnMarket: 30, activeInventory: 3800, monthsOfSupply: 2.2, yoyChange: 2.5, medianRent: 3500, populationGrowth: -0.8 } },
+  { name: 'Seattle', state: 'WA', center: [47.6062, -122.3321], population: 737015, zip: '98101', fallback: { medianPrice: 785000, pricePerSqft: 520, daysOnMarket: 25, activeInventory: 5100, monthsOfSupply: 2.1, yoyChange: 4.2, medianRent: 2650, populationGrowth: 0.8 } },
+  { name: 'Denver', state: 'CO', center: [39.7392, -104.9903], population: 715522, zip: '80202', fallback: { medianPrice: 565000, pricePerSqft: 325, daysOnMarket: 28, activeInventory: 7800, monthsOfSupply: 2.8, yoyChange: 1.9, medianRent: 2100, populationGrowth: 1.2 } },
+  { name: 'Nashville', state: 'TN', center: [36.1627, -86.7816], population: 689447, zip: '37201', fallback: { medianPrice: 445000, pricePerSqft: 285, daysOnMarket: 35, activeInventory: 9200, monthsOfSupply: 3.5, yoyChange: 2.8, medianRent: 1950, populationGrowth: 1.5 } },
+  { name: 'Oklahoma City', state: 'OK', center: [35.4676, -97.5164], population: 681054, zip: '73102', fallback: { medianPrice: 215000, pricePerSqft: 128, daysOnMarket: 35, activeInventory: 6800, monthsOfSupply: 3.2, yoyChange: 3.5, medianRent: 1150, populationGrowth: 0.8 } },
+  { name: 'Las Vegas', state: 'NV', center: [36.1699, -115.1398], population: 641903, zip: '89101', fallback: { medianPrice: 415000, pricePerSqft: 245, daysOnMarket: 32, activeInventory: 8500, monthsOfSupply: 3.0, yoyChange: 4.2, medianRent: 1650, populationGrowth: 2.1 } },
+  { name: 'Portland', state: 'OR', center: [45.5152, -122.6784], population: 652503, zip: '97201', fallback: { medianPrice: 525000, pricePerSqft: 325, daysOnMarket: 38, activeInventory: 5800, monthsOfSupply: 3.2, yoyChange: 1.2, medianRent: 1950, populationGrowth: 0.2 } },
+  { name: 'Memphis', state: 'TN', center: [35.1495, -90.0490], population: 633104, zip: '38103', fallback: { medianPrice: 195000, pricePerSqft: 115, daysOnMarket: 48, activeInventory: 5600, monthsOfSupply: 4.5, yoyChange: 2.8, medianRent: 1200, populationGrowth: -0.3 } },
+  { name: 'Louisville', state: 'KY', center: [38.2527, -85.7585], population: 633045, zip: '40202', fallback: { medianPrice: 245000, pricePerSqft: 152, daysOnMarket: 32, activeInventory: 4200, monthsOfSupply: 2.8, yoyChange: 5.5, medianRent: 1250, populationGrowth: 0.3 } },
+  { name: 'Baltimore', state: 'MD', center: [39.2904, -76.6122], population: 585708, zip: '21201', fallback: { medianPrice: 225000, pricePerSqft: 148, daysOnMarket: 42, activeInventory: 6500, monthsOfSupply: 3.5, yoyChange: 4.2, medianRent: 1550, populationGrowth: -0.6 } },
+  { name: 'Milwaukee', state: 'WI', center: [43.0389, -87.9065], population: 577222, zip: '53202', fallback: { medianPrice: 235000, pricePerSqft: 145, daysOnMarket: 35, activeInventory: 3800, monthsOfSupply: 2.5, yoyChange: 6.2, medianRent: 1250, populationGrowth: -0.1 } },
+  { name: 'Albuquerque', state: 'NM', center: [35.0844, -106.6504], population: 564559, zip: '87101', fallback: { medianPrice: 315000, pricePerSqft: 185, daysOnMarket: 30, activeInventory: 3200, monthsOfSupply: 2.2, yoyChange: 5.8, medianRent: 1350, populationGrowth: 0.8 } },
+  { name: 'Tucson', state: 'AZ', center: [32.2226, -110.9747], population: 542629, zip: '85701', fallback: { medianPrice: 325000, pricePerSqft: 215, daysOnMarket: 32, activeInventory: 4500, monthsOfSupply: 2.8, yoyChange: 4.5, medianRent: 1350, populationGrowth: 1.2 } },
+  { name: 'Fresno', state: 'CA', center: [36.7378, -119.7871], population: 542107, zip: '93721', fallback: { medianPrice: 365000, pricePerSqft: 225, daysOnMarket: 28, activeInventory: 2800, monthsOfSupply: 2.0, yoyChange: 6.5, medianRent: 1550, populationGrowth: 0.6 } },
+  { name: 'Sacramento', state: 'CA', center: [38.5816, -121.4944], population: 524943, zip: '95814', fallback: { medianPrice: 485000, pricePerSqft: 310, daysOnMarket: 22, activeInventory: 3500, monthsOfSupply: 1.8, yoyChange: 5.2, medianRent: 2050, populationGrowth: 0.9 } },
+  { name: 'Atlanta', state: 'GA', center: [33.7490, -84.3880], population: 498715, zip: '30301', fallback: { medianPrice: 395000, pricePerSqft: 225, daysOnMarket: 30, activeInventory: 14500, monthsOfSupply: 3.2, yoyChange: 3.8, medianRent: 1950, populationGrowth: 1.4 } },
+  { name: 'Miami', state: 'FL', center: [25.7617, -80.1918], population: 467963, zip: '33101', fallback: { medianPrice: 585000, pricePerSqft: 425, daysOnMarket: 52, activeInventory: 18500, monthsOfSupply: 6.2, yoyChange: 2.5, medianRent: 2850, populationGrowth: 1.8 } },
+  { name: 'Raleigh', state: 'NC', center: [35.7796, -78.6382], population: 467665, zip: '27601', fallback: { medianPrice: 425000, pricePerSqft: 235, daysOnMarket: 25, activeInventory: 5200, monthsOfSupply: 2.2, yoyChange: 5.5, medianRent: 1750, populationGrowth: 2.5 } },
+  { name: 'Tampa', state: 'FL', center: [27.9506, -82.4572], population: 399700, zip: '33602', fallback: { medianPrice: 385000, pricePerSqft: 265, daysOnMarket: 38, activeInventory: 11200, monthsOfSupply: 4.0, yoyChange: 2.8, medianRent: 1850, populationGrowth: 1.6 } },
+  { name: 'Minneapolis', state: 'MN', center: [44.9778, -93.2650], population: 429606, zip: '55401', fallback: { medianPrice: 345000, pricePerSqft: 215, daysOnMarket: 28, activeInventory: 5800, monthsOfSupply: 2.5, yoyChange: 3.8, medianRent: 1650, populationGrowth: 0.4 } },
+  { name: 'Cleveland', state: 'OH', center: [41.4993, -81.6944], population: 372624, zip: '44101', fallback: { medianPrice: 185000, pricePerSqft: 118, daysOnMarket: 38, activeInventory: 4800, monthsOfSupply: 3.2, yoyChange: 5.5, medianRent: 1150, populationGrowth: -0.8 } },
+  { name: 'Pittsburgh', state: 'PA', center: [40.4406, -79.9959], population: 302407, zip: '15201', fallback: { medianPrice: 225000, pricePerSqft: 148, daysOnMarket: 42, activeInventory: 3800, monthsOfSupply: 3.5, yoyChange: 4.8, medianRent: 1350, populationGrowth: -0.2 } },
+  { name: 'St. Louis', state: 'MO', center: [38.6270, -90.1994], population: 301578, zip: '63101', fallback: { medianPrice: 215000, pricePerSqft: 135, daysOnMarket: 32, activeInventory: 5200, monthsOfSupply: 3.0, yoyChange: 4.2, medianRent: 1250, populationGrowth: -0.4 } },
+  { name: 'Orlando', state: 'FL', center: [28.5383, -81.3792], population: 307573, zip: '32801', fallback: { medianPrice: 385000, pricePerSqft: 245, daysOnMarket: 35, activeInventory: 9800, monthsOfSupply: 3.5, yoyChange: 3.5, medianRent: 1850, populationGrowth: 1.8 } },
+  { name: 'Boise', state: 'ID', center: [43.6150, -116.2023], population: 235684, zip: '83702', fallback: { medianPrice: 445000, pricePerSqft: 275, daysOnMarket: 38, activeInventory: 3200, monthsOfSupply: 3.5, yoyChange: -0.5, medianRent: 1650, populationGrowth: 2.5 } },
+  { name: 'Salt Lake City', state: 'UT', center: [40.7608, -111.8910], population: 200133, zip: '84101', fallback: { medianPrice: 515000, pricePerSqft: 295, daysOnMarket: 28, activeInventory: 4200, monthsOfSupply: 2.8, yoyChange: 2.5, medianRent: 1750, populationGrowth: 1.6 } },
+  { name: 'Richmond', state: 'VA', center: [37.5407, -77.4360], population: 226610, zip: '23219', fallback: { medianPrice: 345000, pricePerSqft: 205, daysOnMarket: 25, activeInventory: 3500, monthsOfSupply: 2.2, yoyChange: 5.8, medianRent: 1550, populationGrowth: 0.8 } },
+  { name: 'Birmingham', state: 'AL', center: [33.5186, -86.8104], population: 200733, zip: '35203', fallback: { medianPrice: 215000, pricePerSqft: 128, daysOnMarket: 42, activeInventory: 4500, monthsOfSupply: 3.8, yoyChange: 3.5, medianRent: 1150, populationGrowth: 0.2 } },
+  { name: 'Pottstown', state: 'PA', center: [40.2454, -75.6496], population: 22670, zip: '19464', fallback: { medianPrice: 295000, pricePerSqft: 175, daysOnMarket: 28, activeInventory: 850, monthsOfSupply: 2.5, yoyChange: 6.2, medianRent: 1450, populationGrowth: 0.3 } },
 ];
 
 // ─── Live Data Fetching Functions ────────────────────────────────────
@@ -198,19 +218,20 @@ export async function fetchRentcastMarketData(
   city: string,
   state: string,
   zip?: string
-): Promise<Partial<HeatMapCityMarketData['byType']['all']> | null> {
+): Promise<Record<string, unknown> | null> {
   try {
     const params = new URLSearchParams();
     if (zip) {
-      params.set('zipCode', zip);
-    } else {
-      params.set('city', city);
-      params.set('state', state);
+      params.set('zip', zip);
     }
+    params.set('city', city);
+    params.set('state', state);
 
     const res = await fetch(`/api/market/live?${params.toString()}`);
     if (!res.ok) return null;
-    return await res.json();
+    const json = await res.json();
+    // API returns { market: { sales, rental, investment, ... } }
+    return json.market ?? json;
   } catch {
     return null;
   }
@@ -226,7 +247,9 @@ export async function fetchFREDData(
   try {
     const res = await fetch(`/api/market/historical?series=${seriesId}&limit=${limit}`);
     if (!res.ok) return null;
-    return await res.json();
+    const json = await res.json();
+    // API returns { series, data: [...] } — extract just the data array
+    return json.data ?? json;
   } catch {
     return null;
   }

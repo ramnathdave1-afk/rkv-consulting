@@ -16,6 +16,10 @@ import {
   Trash2,
   AlertTriangle,
   Check,
+  Share2,
+  Bot,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -45,6 +49,12 @@ interface ProfileData {
   calling_hours_start: string | null;
   calling_hours_end: string | null;
   autopilot_enabled: boolean;
+  portfolio_sharing_enabled: boolean;
+  ai_voice: string | null;
+  escalation_email_on_no_answer: boolean;
+  escalation_to_human: boolean;
+  cc_landlord: boolean;
+  max_calls_per_day: number | null;
 }
 
 interface NotificationPrefs {
@@ -126,7 +136,7 @@ function UsageMeter({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm text-white font-medium">{label}</span>
-        <span className="text-xs text-muted">
+        <span className="text-xs text-muted font-mono">
           {used.toLocaleString()} / {displayLimit}
         </span>
       </div>
@@ -180,7 +190,7 @@ function IntegrationCard({
       </div>
 
       <Button
-        variant={connected ? 'ghost' : 'secondary'}
+        variant={connected ? 'ghost' : 'outline'}
         size="sm"
         onClick={onAction}
       >
@@ -247,6 +257,16 @@ function SettingsInner() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
+  // Sharing
+  const [portfolioSharing, setPortfolioSharing] = useState(false);
+
+  // Agent Config
+  const [aiVoice, setAiVoice] = useState('professional_male');
+  const [escalateEmailOnNoAnswer, setEscalateEmailOnNoAnswer] = useState(false);
+  const [escalateToHuman, setEscalateToHuman] = useState(false);
+  const [ccLandlord, setCcLandlord] = useState(false);
+  const [maxCallsPerDay, setMaxCallsPerDay] = useState(3);
+
   // Modals
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
@@ -283,6 +303,12 @@ function SettingsInner() {
       setCallingStart(p.calling_hours_start || '09:00');
       setCallingEnd(p.calling_hours_end || '19:00');
       setAutopilot(p.autopilot_enabled || false);
+      setPortfolioSharing(p.portfolio_sharing_enabled || false);
+      setAiVoice(p.ai_voice || 'professional_male');
+      setEscalateEmailOnNoAnswer(p.escalation_email_on_no_answer || false);
+      setEscalateToHuman(p.escalation_to_human || false);
+      setCcLandlord(p.cc_landlord || false);
+      setMaxCallsPerDay(p.max_calls_per_day || 3);
 
       // Parse notification preferences
       const np = p.notification_preferences || {};
@@ -400,6 +426,63 @@ function SettingsInner() {
     } catch (err) {
       console.error('Save preferences error:', err);
       toast.error('Failed to save preferences');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  /* ---- Save sharing --------------------------------------------- */
+
+  async function handleSaveSharing() {
+    if (!profile) return;
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          portfolio_sharing_enabled: portfolioSharing,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast.success('Sharing preferences saved');
+    } catch (err) {
+      console.error('Save sharing error:', err);
+      toast.error('Failed to save sharing preferences');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  /* ---- Save agent config ---------------------------------------- */
+
+  async function handleSaveAgentConfig() {
+    if (!profile) return;
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ai_tone_preference: aiTone,
+          calling_hours_start: callingStart,
+          calling_hours_end: callingEnd,
+          ai_voice: aiVoice,
+          escalation_email_on_no_answer: escalateEmailOnNoAnswer,
+          escalation_to_human: escalateToHuman,
+          cc_landlord: ccLandlord,
+          max_calls_per_day: maxCallsPerDay,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast.success('Agent configuration saved');
+    } catch (err) {
+      console.error('Save agent config error:', err);
+      toast.error('Failed to save agent configuration');
     } finally {
       setSaving(false);
     }
@@ -535,7 +618,7 @@ function SettingsInner() {
       <div className="space-y-6">
         <div className="h-8 w-32 bg-border/50 rounded animate-pulse" />
         <div className="flex gap-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="h-10 w-24 bg-border/50 rounded-lg animate-pulse" />
           ))}
         </div>
@@ -595,6 +678,12 @@ function SettingsInner() {
           </TabsTrigger>
           <TabsTrigger value="preferences" icon={<Sliders className="h-4 w-4" />}>
             Preferences
+          </TabsTrigger>
+          <TabsTrigger value="sharing" icon={<Share2 className="h-4 w-4" />}>
+            Sharing
+          </TabsTrigger>
+          <TabsTrigger value="agent-config" icon={<Bot className="h-4 w-4" />}>
+            Agent Config
           </TabsTrigger>
         </TabsList>
 
@@ -665,14 +754,14 @@ function SettingsInner() {
             <Card padding="lg">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wider font-semibold mb-1">
+                  <p className="label mb-1">
                     Current Plan
                   </p>
                   <h2 className="font-display font-bold text-3xl text-gold">
                     {subLoading ? '...' : plan.name}
                   </h2>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="text-lg font-bold text-white">
+                    <span className="text-lg font-bold text-white font-mono">
                       ${plan.price}
                       <span className="text-sm text-muted font-normal">/month</span>
                     </span>
@@ -724,7 +813,7 @@ function SettingsInner() {
                     Change Plan
                   </Button>
                 )}
-                <Button variant="secondary" onClick={handleManageBilling}>
+                <Button variant="outline" onClick={handleManageBilling}>
                   Manage Billing
                 </Button>
                 {isActive && planName !== 'basic' && (
@@ -746,7 +835,7 @@ function SettingsInner() {
         {/* ========================================================== */}
         <TabsContent value="notifications">
           <Card padding="lg" className="max-w-2xl">
-            <h3 className="font-display font-semibold text-lg text-white mb-4">
+            <h3 className="label text-[11px] mb-4">
               Notification Preferences
             </h3>
 
@@ -771,7 +860,7 @@ function SettingsInner() {
               />
 
               <div className="pt-4 pb-2">
-                <p className="text-xs text-muted uppercase tracking-wider font-semibold">
+                <p className="label">
                   Alert Types
                 </p>
               </div>
@@ -825,7 +914,7 @@ function SettingsInner() {
         {/* ========================================================== */}
         <TabsContent value="integrations">
           <div className="max-w-3xl space-y-4">
-            <h3 className="font-display font-semibold text-lg text-white mb-2">
+            <h3 className="label text-[11px] mb-2">
               Connected Services
             </h3>
             <p className="text-sm text-muted mb-4">
@@ -867,7 +956,7 @@ function SettingsInner() {
 
             {/* API Keys section */}
             <Card padding="lg" className="mt-6">
-              <h4 className="text-sm font-semibold text-white mb-4">API Keys</h4>
+              <h4 className="label mb-4">API Keys</h4>
               <p className="text-xs text-muted mb-4">
                 API keys are configured through environment variables for security. Contact your administrator to update these values.
               </p>
@@ -898,7 +987,7 @@ function SettingsInner() {
           <div className="max-w-2xl space-y-6">
             {/* Change Password */}
             <Card padding="lg">
-              <h3 className="font-display font-semibold text-lg text-white mb-4">
+              <h3 className="label text-[11px] mb-4">
                 Change Password
               </h3>
               <div className="space-y-4">
@@ -971,7 +1060,7 @@ function SettingsInner() {
 
             {/* Two-Factor Authentication */}
             <Card padding="lg">
-              <h3 className="font-display font-semibold text-lg text-white mb-2">
+              <h3 className="label text-[11px] mb-2">
                 Two-Factor Authentication
               </h3>
               <p className="text-sm text-muted mb-4">
@@ -990,7 +1079,7 @@ function SettingsInner() {
 
             {/* Active Sessions */}
             <Card padding="lg">
-              <h3 className="font-display font-semibold text-lg text-white mb-4">
+              <h3 className="label text-[11px] mb-4">
                 Active Sessions
               </h3>
               <div className="flex items-center justify-between p-3 bg-deep rounded-lg border border-border">
@@ -1009,7 +1098,7 @@ function SettingsInner() {
               </div>
               <div className="mt-4">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
                   icon={<LogOut className="w-3.5 h-3.5" />}
                   onClick={handleSignOutAll}
@@ -1021,7 +1110,7 @@ function SettingsInner() {
 
             {/* Danger Zone */}
             <Card padding="lg" className="border-red/20">
-              <h3 className="font-display font-semibold text-lg text-red mb-2">
+              <h3 className="label text-[11px] !text-red mb-2">
                 Danger Zone
               </h3>
               <p className="text-sm text-muted mb-4">
@@ -1043,13 +1132,50 @@ function SettingsInner() {
         {/* ========================================================== */}
         <TabsContent value="preferences">
           <Card padding="lg" className="max-w-2xl">
-            <h3 className="font-display font-semibold text-lg text-white mb-6">
+            <h3 className="label text-[11px] mb-6">
               Application Preferences
             </h3>
 
             <div className="space-y-6">
-              {/* AI Tone */}
+              {/* Experience Level */}
               <div>
+                <label className="block text-sm text-muted font-body mb-1.5">
+                  Experience Level
+                </label>
+                <p className="text-xs text-muted/70 mb-3">
+                  Controls how much guidance and explanation you see throughout the app
+                </p>
+                <div className="flex flex-col gap-2">
+                  {([
+                    { value: 'guided', label: 'Guided Mode', desc: "I'm new to investing — show me explanations, benchmarks, and step-by-step guidance", icon: '🎓' },
+                    { value: 'standard', label: 'Standard Mode', desc: 'I know the basics — balanced view with optional tooltips', icon: '📊' },
+                    { value: 'pro', label: 'Pro Mode', desc: 'Show me everything — advanced metrics, no hand-holding', icon: '⚡' },
+                  ] as const).map((mode) => (
+                    <button
+                      key={mode.value}
+                      onClick={() => {
+                        localStorage.setItem('rkv_experience_mode', mode.value);
+                        toast.success(`Switched to ${mode.label}`);
+                      }}
+                      className={cn(
+                        'flex items-start gap-3 p-3 rounded-lg text-left transition-all duration-200',
+                        (typeof window !== 'undefined' && localStorage.getItem('rkv_experience_mode') === mode.value) || (!localStorage.getItem('rkv_experience_mode') && mode.value === 'standard')
+                          ? 'bg-gold/10 border border-gold/20'
+                          : 'bg-card border border-border hover:border-gold/30',
+                      )}
+                    >
+                      <span className="text-lg mt-0.5">{mode.icon}</span>
+                      <div>
+                        <span className="text-sm font-medium text-white">{mode.label}</span>
+                        <p className="text-xs text-muted mt-0.5">{mode.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Tone */}
+              <div className="border-t border-border pt-4">
                 <label className="block text-sm text-muted font-body mb-1.5">
                   AI Tone
                 </label>
@@ -1183,6 +1309,232 @@ function SettingsInner() {
             </div>
           </Card>
         </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 7: SHARING                                              */}
+        {/* ========================================================== */}
+        <TabsContent value="sharing">
+          <Card padding="lg" className="max-w-2xl">
+            <h3 className="label text-[11px] mb-6">
+              Portfolio Sharing
+            </h3>
+
+            <div className="space-y-6">
+              {/* Public Portfolio Toggle */}
+              <ToggleSwitch
+                label="Public Portfolio"
+                description="Enable a shareable public link to your portfolio"
+                checked={portfolioSharing}
+                onCheckedChange={setPortfolioSharing}
+              />
+
+              {/* Shareable URL (shown when enabled) */}
+              {portfolioSharing && profile && (
+                <div className="space-y-3 p-4 bg-deep rounded-lg border border-border">
+                  <p className="text-xs text-muted font-body mb-2">
+                    Shareable Portfolio URL
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-10 px-3 flex items-center bg-black/40 border border-border rounded-lg overflow-hidden">
+                      <span className="text-sm text-white font-mono truncate">
+                        {typeof window !== 'undefined'
+                          ? `${window.location.origin}/portfolio/${profile.id}`
+                          : `/portfolio/${profile.id}`}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={<Copy className="w-3.5 h-3.5" />}
+                      onClick={() => {
+                        const url = `${window.location.origin}/portfolio/${profile.id}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Link copied to clipboard');
+                      }}
+                    >
+                      Copy
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={<ExternalLink className="w-3.5 h-3.5" />}
+                      onClick={() => {
+                        const url = `${window.location.origin}/portfolio/${profile.id}`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      Preview
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted">
+                    Anyone with this link can view your public portfolio.
+                  </p>
+                </div>
+              )}
+
+              {!portfolioSharing && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
+                  <Share2 className="h-4 w-4 text-muted shrink-0" />
+                  <p className="text-xs text-muted">
+                    Enable sharing to generate a public portfolio link you can share with clients and partners.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8">
+              <Button
+                onClick={handleSaveSharing}
+                loading={saving}
+                icon={<Save className="w-4 h-4" />}
+              >
+                Save Sharing Settings
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 8: AGENT CONFIG                                         */}
+        {/* ========================================================== */}
+        <TabsContent value="agent-config">
+          <Card padding="lg" className="max-w-2xl">
+            <h3 className="label text-[11px] mb-6">
+              AI Agent Configuration
+            </h3>
+
+            <div className="space-y-6">
+              {/* Calling Hours */}
+              <div>
+                <p className="text-sm text-muted font-body mb-1.5">
+                  Calling Hours
+                </p>
+                <p className="text-xs text-muted/70 mb-2">
+                  Time window during which AI agents are allowed to place calls
+                </p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="time"
+                    value={callingStart}
+                    onChange={(e) => setCallingStart(e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-muted">to</span>
+                  <Input
+                    type="time"
+                    value={callingEnd}
+                    onChange={(e) => setCallingEnd(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              {/* AI Voice */}
+              <div className="border-t border-border pt-4">
+                <label className="block text-sm text-muted font-body mb-1.5">
+                  AI Voice
+                </label>
+                <select
+                  value={aiVoice}
+                  onChange={(e) => setAiVoice(e.target.value)}
+                  className={cn(
+                    'w-full h-10 px-3 pr-8 text-sm appearance-none',
+                    'bg-deep text-white border border-border rounded-lg font-body',
+                    'focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40',
+                    'transition-all duration-200',
+                  )}
+                >
+                  <option value="professional_male">Professional Male</option>
+                  <option value="professional_female">Professional Female</option>
+                  <option value="warm_friendly">Warm &amp; Friendly</option>
+                  <option value="authoritative">Authoritative</option>
+                </select>
+              </div>
+
+              {/* AI Tone */}
+              <div className="border-t border-border pt-4">
+                <label className="block text-sm text-muted font-body mb-1.5">
+                  AI Tone
+                </label>
+                <select
+                  value={aiTone}
+                  onChange={(e) => setAiTone(e.target.value)}
+                  className={cn(
+                    'w-full h-10 px-3 pr-8 text-sm appearance-none',
+                    'bg-deep text-white border border-border rounded-lg font-body',
+                    'focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40',
+                    'transition-all duration-200',
+                  )}
+                >
+                  <option value="professional">Professional</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="concise">Concise</option>
+                  <option value="detailed">Detailed</option>
+                </select>
+              </div>
+
+              {/* Escalation Rules */}
+              <div className="border-t border-border pt-4">
+                <p className="label text-[11px] mb-2">
+                  Escalation Rules
+                </p>
+                <div className="divide-y divide-border">
+                  <ToggleSwitch
+                    label="Auto-escalate to email if no answer on call"
+                    description="When a call goes unanswered, automatically send a follow-up email"
+                    checked={escalateEmailOnNoAnswer}
+                    onCheckedChange={setEscalateEmailOnNoAnswer}
+                  />
+                  <ToggleSwitch
+                    label="Auto-escalate to human if AI cannot resolve"
+                    description="Route conversations to a human agent when AI reaches its limits"
+                    checked={escalateToHuman}
+                    onCheckedChange={setEscalateToHuman}
+                  />
+                  <ToggleSwitch
+                    label="CC landlord on all agent communications"
+                    description="Send a copy of all AI agent communications to the property landlord"
+                    checked={ccLandlord}
+                    onCheckedChange={setCcLandlord}
+                  />
+                </div>
+              </div>
+
+              {/* Max Calls Per Day */}
+              <div className="border-t border-border pt-4">
+                <label className="block text-sm text-muted font-body mb-1.5">
+                  Max Calls Per Day Per Tenant
+                </label>
+                <p className="text-xs text-muted/70 mb-2">
+                  Limit the number of AI-initiated calls to each tenant per day (1-5)
+                </p>
+                <Input
+                  type="number"
+                  value={maxCallsPerDay.toString()}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1 && val <= 5) {
+                      setMaxCallsPerDay(val);
+                    }
+                  }}
+                  min={1}
+                  max={5}
+                  className="max-w-[120px]"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <Button
+                onClick={handleSaveAgentConfig}
+                loading={saving}
+                icon={<Save className="w-4 h-4" />}
+              >
+                Save Agent Config
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* ============================================================ */}
@@ -1261,7 +1613,7 @@ function SettingsInner() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-gray-400">Loading settings...</div>}>
+    <Suspense fallback={<div className="p-8 text-muted">Loading settings...</div>}>
       <SettingsInner />
     </Suspense>
   );

@@ -1,34 +1,42 @@
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    </div>
+  );
+}
+
 export default function AccountingLoading() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="h-8 w-40 bg-card rounded-lg" />
-        <div className="h-4 w-56 bg-card rounded-lg mt-2" />
+        <SkeletonBlock className="h-8 w-40" />
+        <SkeletonBlock className="h-4 w-56 mt-2" />
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 bg-card border border-border rounded-lg p-1 w-fit">
+      <div className="flex gap-1 rounded-lg border border-[#161E2A]/50 bg-[#161E2A]/20 p-1 w-fit">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-9 w-28 bg-border rounded-md" />
+          <SkeletonBlock key={i} className="h-9 w-28 rounded-md" />
         ))}
       </div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-card border border-border rounded-xl p-5 space-y-2">
-            <div className="h-3 w-20 bg-border rounded" />
-            <div className="h-8 w-28 bg-border rounded" />
-            <div className="h-3 w-16 bg-border rounded" />
+          <div key={i} className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-5 space-y-2">
+            <SkeletonBlock className="h-3 w-20" />
+            <SkeletonBlock className="h-8 w-28" />
+            <SkeletonBlock className="h-3 w-16" />
           </div>
         ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card border border-border rounded-xl p-6 h-80" />
-        <div className="bg-card border border-border rounded-xl p-6 h-80" />
+        <SkeletonBlock className="h-80 rounded-xl" />
+        <SkeletonBlock className="h-80 rounded-xl" />
       </div>
     </div>
   );

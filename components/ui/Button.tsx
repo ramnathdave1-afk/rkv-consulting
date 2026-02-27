@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'solid' | 'ghost' | 'outline' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -24,31 +24,36 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
-    'bg-gold text-black font-semibold',
-    'hover:shadow-glow hover:brightness-110',
-    'active:brightness-95',
+    'bg-gold/10 text-gold border border-gold/30',
+    'hover:bg-gold/20 hover:shadow-glow',
+    'active:bg-gold/25',
   ].join(' '),
-  secondary: [
-    'bg-transparent border border-gold text-gold',
-    'hover:bg-gold/10 hover:shadow-glow-sm',
-    'active:bg-gold/15',
+  solid: [
+    'bg-gold text-black font-semibold',
+    'hover:brightness-110 hover:shadow-glow',
+    'active:brightness-95',
   ].join(' '),
   ghost: [
     'bg-transparent text-muted',
     'hover:text-white hover:bg-white/5',
     'active:bg-white/10',
   ].join(' '),
+  outline: [
+    'bg-transparent border border-gold/30 text-gold',
+    'hover:bg-gold/10 hover:shadow-glow-sm',
+    'active:bg-gold/15',
+  ].join(' '),
   danger: [
-    'bg-red text-white font-semibold',
-    'hover:bg-red/90 hover:shadow-[0_0_20px_rgba(239,68,68,0.25)]',
-    'active:bg-red/80',
+    'bg-red/10 text-red border border-red/30',
+    'hover:bg-red/20 hover:shadow-[0_0_20px_rgba(220,38,38,0.25)]',
+    'active:bg-red/25',
   ].join(' '),
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-8 px-3 text-xs gap-1.5 rounded-lg',
   md: 'h-10 px-4 text-sm gap-2 rounded-lg',
-  lg: 'h-12 px-6 text-base gap-2.5 rounded-xl',
+  lg: 'h-12 px-6 text-base gap-2.5 rounded-lg',
 };
 
 /* ------------------------------------------------------------------ */
@@ -112,7 +117,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center font-body',
           'transition-all duration-200 ease-out',
           'select-none whitespace-nowrap',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
           // Variant + size
           variantStyles[variant],
           sizeStyles[size],

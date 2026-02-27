@@ -244,7 +244,7 @@ function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
 
-  const color = score >= 70 ? '#22c55e' : score >= 40 ? '#C9A84C' : '#ef4444';
+  const color = score >= 70 ? '#059669' : score >= 40 ? '#059669' : '#DC2626';
 
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
@@ -272,7 +272,7 @@ function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={cn('text-3xl font-bold font-display', getScoreColor(score))}>
+        <span className={cn('text-3xl font-bold font-mono', getScoreColor(score))}>
           {score}
         </span>
         <span className="text-[10px] text-muted">/ 100</span>
@@ -386,7 +386,7 @@ function ScreeningContent() {
       </div>
 
       {/* Integration note */}
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-3">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-3 rounded-lg">
         <Shield className="h-4 w-4 text-gold shrink-0" />
         <p className="text-xs text-muted">
           <span className="text-gold font-medium">Note:</span> Screening data shown below is sample data for demonstration. Production integration would connect to TransUnion SmartMove or Experian RentBureau APIs for live credit checks, background screening, and eviction history.
@@ -401,12 +401,12 @@ function ScreeningContent() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left px-5 py-3 text-xs text-muted font-medium">Applicant Name</th>
-                <th className="text-left px-5 py-3 text-xs text-muted font-medium">Property</th>
-                <th className="text-center px-5 py-3 text-xs text-muted font-medium">Status</th>
-                <th className="text-center px-5 py-3 text-xs text-muted font-medium">Score</th>
-                <th className="text-left px-5 py-3 text-xs text-muted font-medium">Date</th>
-                <th className="text-right px-5 py-3 text-xs text-muted font-medium">Actions</th>
+                <th className="text-left px-5 py-3 label">Applicant Name</th>
+                <th className="text-left px-5 py-3 label">Property</th>
+                <th className="text-center px-5 py-3 label">Status</th>
+                <th className="text-center px-5 py-3 label">Score</th>
+                <th className="text-left px-5 py-3 label">Date</th>
+                <th className="text-right px-5 py-3 label">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -442,7 +442,7 @@ function ScreeningContent() {
                     <td className="px-5 py-3 text-center">
                       {screening.result ? (
                         <div className="flex items-center justify-center gap-1.5">
-                          <span className={cn('text-lg font-bold font-display', getScoreColor(screening.result.overall_score))}>
+                          <span className={cn('text-lg font-bold font-mono', getScoreColor(screening.result.overall_score))}>
                             {screening.result.overall_score}
                           </span>
                           <span className="text-[10px] text-muted">/100</span>
@@ -499,14 +499,14 @@ function ScreeningContent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Overall Score */}
             <Card className="flex flex-col items-center justify-center text-center py-8">
-              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold">Overall Score</p>
+              <p className="label mb-4">Overall Score</p>
               <ScoreRing score={result.overall_score} size={120} />
               <p className="text-xs text-muted mt-3">{getScoreLabel(result.overall_score)}</p>
             </Card>
 
             {/* Recommendation */}
             <Card className="flex flex-col items-center justify-center text-center py-8">
-              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold">AI Recommendation</p>
+              <p className="label mb-4">AI Recommendation</p>
               {(() => {
                 const rec = getRecommendationBadge(result.recommendation);
                 return (
@@ -539,22 +539,22 @@ function ScreeningContent() {
 
             {/* Quick stats */}
             <Card className="py-8 px-6">
-              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold text-center">Key Metrics</p>
+              <p className="label mb-4 text-center">Key Metrics</p>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Credit Score</span>
-                  <span className="text-sm font-bold text-white">{result.credit_score || 'N/A'}</span>
+                  <span className="text-sm font-bold font-mono text-white">{result.credit_score || 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Monthly Income</span>
-                  <span className="text-sm font-bold text-white">
+                  <span className="text-sm font-bold font-mono text-white">
                     ${(result.monthly_income || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Income-to-Rent</span>
                   <span className={cn(
-                    'text-sm font-bold',
+                    'text-sm font-bold font-mono',
                     (result.income_to_rent_ratio || 0) >= 3 ? 'text-green' : 'text-red',
                   )}>
                     {result.income_to_rent_ratio}x
@@ -562,7 +562,7 @@ function ScreeningContent() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Rental History</span>
-                  <span className="text-sm font-bold text-white">{result.rental_history_years} years</span>
+                  <span className="text-sm font-bold font-mono text-white">{result.rental_history_years} years</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Employer</span>
@@ -579,13 +579,13 @@ function ScreeningContent() {
               header={
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">Credit Score</span>
+                  <span className="label !text-gold">Credit Score</span>
                 </div>
               }
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-white">{result.credit_score || 'N/A'}</span>
+                  <span className="text-2xl font-bold font-mono text-white">{result.credit_score || 'N/A'}</span>
                   <Badge
                     variant={
                       result.credit_grade === 'excellent' || result.credit_grade === 'good'
@@ -603,7 +603,7 @@ function ScreeningContent() {
 
                 {/* Credit gauge bar */}
                 <div>
-                  <div className="flex items-center justify-between text-[10px] text-muted mb-1.5">
+                  <div className="flex items-center justify-between text-[10px] text-muted font-mono mb-1.5">
                     <span>300</span>
                     <span>580</span>
                     <span>670</span>
@@ -641,7 +641,7 @@ function ScreeningContent() {
               header={
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">Background Check</span>
+                  <span className="label !text-gold">Background Check</span>
                 </div>
               }
             >
@@ -677,7 +677,7 @@ function ScreeningContent() {
               header={
                 <div className="flex items-center gap-2">
                   <Home className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">Eviction History</span>
+                  <span className="label !text-gold">Eviction History</span>
                 </div>
               }
             >
@@ -711,21 +711,21 @@ function ScreeningContent() {
               header={
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">Income Verification</span>
+                  <span className="label !text-gold">Income Verification</span>
                 </div>
               }
             >
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-xs text-muted">Monthly Income</span>
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold font-mono text-white">
                     ${(result.monthly_income || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-xs text-muted">Income-to-Rent Ratio</span>
                   <span className={cn(
-                    'text-sm font-semibold',
+                    'text-sm font-semibold font-mono',
                     (result.income_to_rent_ratio || 0) >= 3 ? 'text-green' : 'text-red',
                   )}>
                     {result.income_to_rent_ratio}x
@@ -756,7 +756,7 @@ function ScreeningContent() {
               header={
                 <div className="flex items-center gap-2">
                   <Bot className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">AI Recommendation</span>
+                  <span className="label !text-gold">AI Recommendation</span>
                 </div>
               }
             >
@@ -817,7 +817,7 @@ function ScreeningContent() {
                       Approve
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
                       icon={<HelpCircle className="h-3.5 w-3.5" />}
                       onClick={() => handleRequestMoreInfo(selectedScreening.id)}
@@ -916,7 +916,7 @@ function ScreeningContent() {
             {/* Application form preview */}
             <div className="border border-border rounded-xl overflow-hidden">
               <div className="bg-deep px-5 py-3 border-b border-border">
-                <p className="text-xs font-semibold text-muted uppercase tracking-wider">
+                <p className="label">
                   Application Form Preview
                 </p>
               </div>

@@ -1,32 +1,40 @@
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    </div>
+  );
+}
+
 export default function TenantScreeningLoading() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="h-8 w-48 bg-card rounded-lg" />
-          <div className="h-4 w-64 bg-card rounded-lg mt-2" />
+          <SkeletonBlock className="h-8 w-48" />
+          <SkeletonBlock className="h-4 w-64 mt-2" />
         </div>
-        <div className="h-10 w-40 bg-card rounded-lg" />
+        <SkeletonBlock className="h-10 w-40" />
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-border flex gap-6">
+      <div className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 overflow-hidden">
+        <div className="p-4 border-b border-[#161E2A]/50 flex gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-4 w-24 bg-border rounded" />
+            <SkeletonBlock key={i} className="h-4 w-24" />
           ))}
         </div>
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="p-4 border-b border-border/50 flex items-center gap-6">
+          <div key={i} className="p-4 border-b border-[#161E2A]/30 flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-border rounded-full" />
-              <div className="h-4 w-32 bg-border rounded" />
+              <SkeletonBlock className="h-8 w-8 rounded-full" />
+              <SkeletonBlock className="h-4 w-32" />
             </div>
-            <div className="h-4 w-28 bg-border rounded" />
-            <div className="h-6 w-20 bg-border rounded-full" />
-            <div className="h-6 w-12 bg-border rounded" />
-            <div className="h-4 w-20 bg-border rounded" />
+            <SkeletonBlock className="h-4 w-28" />
+            <SkeletonBlock className="h-6 w-20 rounded-full" />
+            <SkeletonBlock className="h-6 w-12" />
+            <SkeletonBlock className="h-4 w-20" />
           </div>
         ))}
       </div>

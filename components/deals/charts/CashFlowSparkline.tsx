@@ -8,11 +8,11 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#C9A84C';
-const CARD_BG = '#111620';
-const BORDER = '#1E2530';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GOLD = '#059669';
+const CARD_BG = '#0C1018';
+const BORDER = '#161E2A';
+const GREEN = '#059669';
+const RED = '#DC2626';
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -44,7 +44,7 @@ function CustomTooltip({
         fontSize: 11,
       }}
     >
-      <span style={{ color: '#9CA3AF', marginRight: 6 }}>Mo {label}</span>
+      <span style={{ color: '#4A6080', marginRight: 6 }}>Mo {label}</span>
       <span
         style={{
           color: val >= 0 ? GREEN : RED,

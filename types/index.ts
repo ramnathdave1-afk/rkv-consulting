@@ -966,3 +966,285 @@ export interface OnboardingProgress {
   dataConnected: boolean;
   completed: boolean;
 }
+
+// ============================================================================
+// Webhook & Automation Types (Phase 8)
+// ============================================================================
+
+/** Supported webhook event types */
+export type WebhookEventType =
+  | 'rent_received'
+  | 'maintenance_created'
+  | 'tenant_added'
+  | 'deal_saved'
+  | 'lease_expiring'
+  | 'agent_action';
+
+/** User's webhook configuration (Zapier / custom integrations) */
+export interface WebhookConfig {
+  id: string; // uuid
+  user_id: string; // uuid, references profiles.id
+  webhook_url: string;
+  events_enabled: WebhookEventType[];
+  active: boolean;
+  created_at: string; // timestamptz
+  updated_at: string; // timestamptz
+}
+
+/** Log entry for a fired webhook */
+export interface WebhookLog {
+  id: string; // uuid
+  user_id: string; // uuid, references profiles.id
+  event_type: string;
+  payload: Record<string, unknown>; // jsonb
+  response_status: number | null;
+  response_body: string | null;
+  error: string | null;
+  created_at: string; // timestamptz
+}
+
+// ============================================================================
+// Calendar Event Types
+// ============================================================================
+
+export type CalendarEventType =
+  | 'rent_due'
+  | 'lease_expiry'
+  | 'maintenance'
+  | 'mortgage'
+  | 'tax_deadline'
+  | 'deal_closing'
+  | 'insurance_renewal'
+  | 'meeting'
+  | 'call'
+  | 'showing'
+  | 'inspection'
+  | 'deadline'
+  | 'anniversary'
+  | 'other';
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:mm
+  type: CalendarEventType;
+  color: string;
+  propertyId?: string;
+  propertyAddress?: string;
+  tenantId?: string;
+  tenantName?: string;
+  amount?: number;
+  notes?: string;
+  source: 'auto' | 'manual';
+}
+
+// ============================================================================
+// Contact CRM Types
+// ============================================================================
+
+export type ContactType =
+  | 'private_lender'
+  | 'real_estate_agent'
+  | 'contractor'
+  | 'wholesaler'
+  | 'attorney'
+  | 'cpa'
+  | 'property_manager'
+  | 'partner_jv'
+  | 'other';
+
+export interface CRMContact {
+  id: string;
+  user_id: string;
+  name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  type: ContactType;
+  relationship_score: number; // 1-10
+  last_contacted: string | null; // date
+  birthday: string | null; // date
+  preferred_contact_method: 'email' | 'phone' | 'text' | 'in_person' | null;
+  notes: string | null;
+  metadata: Record<string, unknown> | null; // jsonb for type-specific fields
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================================
+// Automation Types
+// ============================================================================
+
+export type AutomationType =
+  | 'rent_collection'
+  | 'lease_renewal'
+  | 'new_tenant_welcome'
+  | 'maintenance_response'
+  | 'vacancy_marketing'
+  | 'market_monitoring'
+  | 'tax_tracking'
+  | 'insurance_monitoring'
+  | 'contractor_followup';
+
+export interface AutomationConfig {
+  id: string;
+  user_id: string;
+  type: AutomationType;
+  enabled: boolean;
+  last_triggered: string | null;
+  settings: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomWorkflow {
+  id: string;
+  user_id: string;
+  name: string;
+  trigger: string;
+  conditions: WorkflowCondition[];
+  actions: WorkflowAction[];
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowCondition {
+  field: string;
+  operator: 'equals' | 'greater_than' | 'less_than' | 'contains';
+  value: string;
+}
+
+export interface WorkflowAction {
+  type: 'send_email' | 'make_call' | 'send_sms' | 'create_task' | 'send_notification' | 'add_note' | 'update_status' | 'wait';
+  config: Record<string, unknown>;
+  delay_days?: number;
+}
+
+export interface AutomationLog {
+  id: string;
+  user_id: string;
+  automation_type: string;
+  action: string;
+  affected_entity: string;
+  property_address: string | null;
+  outcome: 'success' | 'failed' | 'pending';
+  created_at: string;
+}
+
+// ============================================================================
+// Vacancy Marketing Types
+// ============================================================================
+
+export interface VacancyListing {
+  id: string;
+  property_id: string;
+  title: string;
+  description: string;
+  highlights: string[];
+  rental_terms: {
+    price: number;
+    deposit: number;
+    lease_length: string;
+    pet_policy: string;
+  };
+  platforms: {
+    zillow: boolean;
+    facebook: boolean;
+    apartments_com: boolean;
+    craigslist: boolean;
+  };
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+}
+
+export interface VacancyInquiry {
+  id: string;
+  property_id: string;
+  prospect_name: string;
+  prospect_email: string;
+  prospect_phone: string | null;
+  message: string;
+  source: 'zillow' | 'facebook' | 'apartments_com' | 'craigslist' | 'direct';
+  interest_score: 'high' | 'medium' | 'low';
+  status: 'new' | 'contacted' | 'showing_scheduled' | 'application_sent' | 'closed';
+  created_at: string;
+}
+
+export interface ShowingAppointment {
+  id: string;
+  property_id: string;
+  prospect_name: string;
+  prospect_email: string;
+  date: string;
+  time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'canceled';
+  notes: string | null;
+}
+
+// ============================================================================
+// Beginner Mode Types
+// ============================================================================
+
+export type ExperienceMode = 'guided' | 'standard' | 'pro';
+
+export interface InvestmentIQScore {
+  overall: number;
+  grade: string;
+  cashFlowHealth: number;
+  portfolioDiversification: number;
+  equityGrowth: number;
+  riskManagement: number;
+  taxEfficiency: number;
+  marketStrength: number;
+}
+
+export interface AIConciergerSuggestion {
+  id: string;
+  type: 'lease_expiry' | 'overdue_maintenance' | 'rent_overdue' | 'deal_stale' | 'portfolio_tip';
+  headline: string;
+  context: string;
+  actionLabel: string;
+  actionUrl?: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+/** Rent status entry for a tenant in the current month */
+export interface RentStatus {
+  tenant_id: string;
+  tenant_name: string;
+  tenant_email: string | null;
+  tenant_phone: string | null;
+  property_id: string;
+  property_address: string | null;
+  property_city: string | null;
+  property_state: string | null;
+  amount_due: number;
+  amount_paid: number;
+  due_date: string;
+  paid_date: string | null;
+  late_fee_charged: number;
+  status: 'paid' | 'partial' | 'overdue' | 'pending';
+}
+
+/** Lease renewal queue item */
+export interface LeaseRenewalItem {
+  tenant_id: string;
+  tenant_name: string;
+  tenant_email: string | null;
+  tenant_phone: string | null;
+  property_id: string;
+  property_address: string | null;
+  property_city: string | null;
+  property_state: string | null;
+  property_type: string | null;
+  lease_start: string | null;
+  lease_end: string | null;
+  monthly_rent: number;
+  security_deposit: number | null;
+  days_remaining: number;
+}
+
+/** Lease renewal action types */
+export type LeaseRenewalAction = 'send_renewal' | 'send_reminder' | 'mark_renewed';

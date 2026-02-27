@@ -18,13 +18,13 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#C9A84C';
-const CARD_BG = '#111620';
-const BORDER = '#1E2530';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
-const MUTED = '#6B7280';
-const GRID = '#1E2530';
+const GOLD = '#059669';
+const CARD_BG = '#0C1018';
+const BORDER = '#161E2A';
+const GREEN = '#059669';
+const RED = '#DC2626';
+const MUTED = '#4A6080';
+const GRID = '#161E2A';
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -57,7 +57,7 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#F0EDE8', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif' }}>
+      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif' }}>
         {label}
       </p>
       {payload.map((entry, i) => (
@@ -71,7 +71,7 @@ function CustomTooltip({
           }}
         >
           <span style={{ color: entry.color, fontSize: 11 }}>{entry.name}</span>
-          <span style={{ color: '#F0EDE8', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
             {formatCurrency(entry.value)}
           </span>
         </div>
@@ -115,14 +115,14 @@ export default function EquityGrowthChart({ data }: EquityGrowthChartProps) {
             dataKey="year"
             stroke={MUTED}
             fontSize={11}
-            fontFamily="DM Sans"
+            fontFamily="'JetBrains Mono', monospace"
             tickLine={false}
             axisLine={{ stroke: BORDER }}
           />
           <YAxis
             stroke={MUTED}
             fontSize={10}
-            fontFamily="DM Sans"
+            fontFamily="'JetBrains Mono', monospace"
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) =>
@@ -136,7 +136,7 @@ export default function EquityGrowthChart({ data }: EquityGrowthChartProps) {
             wrapperStyle={{
               fontSize: 11,
               fontFamily: 'DM Sans, sans-serif',
-              color: '#9CA3AF',
+              color: '#4A6080',
               paddingTop: 8,
             }}
           />

@@ -84,50 +84,73 @@ function formatInline(text: string): React.ReactNode[] {
 
 export function StreamingResponse({ content, isStreaming }: StreamingResponseProps) {
   return (
-    <div className="flex gap-3 mr-auto max-w-[85%]">
-      {/* AI Avatar */}
-      <div className="flex-shrink-0 flex items-start">
-        <div className="w-8 h-8 rounded-full bg-gold/15 border border-gold/20 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-gold">AI</span>
-        </div>
-      </div>
+    <>
+      <style jsx>{`
+        @keyframes scanLine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 0%; }
+          50% { background-position: 0% 100%; }
+        }
+      `}</style>
 
-      {/* Message bubble */}
-      <div>
-        <div className="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed font-body text-text">
-          {content ? (
-            <div className="space-y-0">
-              {formatContent(content)}
-              {/* Blinking cursor at end */}
-              {isStreaming && (
-                <span className="inline-block w-0.5 h-5 bg-gold animate-pulse ml-0.5 align-middle" />
-              )}
-            </div>
-          ) : isStreaming ? (
-            /* Loading dots when no content yet */
-            <div className="flex items-center gap-1.5 py-1">
-              <span
-                className="w-2 h-2 rounded-full bg-gold/60 animate-bounce"
-                style={{ animationDelay: '0ms' }}
-              />
-              <span
-                className="w-2 h-2 rounded-full bg-gold/60 animate-bounce"
-                style={{ animationDelay: '150ms' }}
-              />
-              <span
-                className="w-2 h-2 rounded-full bg-gold/60 animate-bounce"
-                style={{ animationDelay: '300ms' }}
-              />
-            </div>
-          ) : null}
+      <div className="w-full">
+        {/* AI label with processing indicator */}
+        <div className="flex items-center gap-2 mb-1.5 px-1">
+          <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+            RKV {content ? '' : '// Processing'}
+          </span>
+          {!content && (
+            <span className="font-mono text-[11px] text-gold animate-pulse">...</span>
+          )}
         </div>
 
-        {/* Timestamp placeholder */}
+        {/* Message body */}
+        <div className="relative">
+          {/* Animated gradient left border */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
+            style={{
+              background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+              backgroundSize: '100% 200%',
+              animation: 'gradientShift 3s ease infinite',
+            }}
+          />
+
+          <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+            {content ? (
+              <div className="space-y-0">
+                {formatContent(content)}
+                {/* Blinking cursor at end */}
+                {isStreaming && (
+                  <span className="inline-block w-0.5 h-5 bg-gold animate-pulse ml-0.5 align-middle" />
+                )}
+              </div>
+            ) : isStreaming ? (
+              /* Scanning progress bar */
+              <div className="space-y-2">
+                <div className="h-[2px] w-48 bg-[#161E2A] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
+                    style={{
+                      width: '40%',
+                      animation: 'scanLine 1.5s ease-in-out infinite',
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Timestamp */}
         {!isStreaming && content && (
-          <p className="text-xs text-muted mt-1.5 px-1">Just now</p>
+          <p className="font-mono text-[11px] text-muted-deep mt-1.5 px-5">Just now</p>
         )}
       </div>
-    </div>
+    </>
   );
 }
 

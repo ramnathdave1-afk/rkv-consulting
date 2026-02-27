@@ -27,10 +27,40 @@ export interface SkeletonGroupProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Base pulse style                                                   */
+/*  Scanning line animation (CSS-in-JS)                                */
 /* ------------------------------------------------------------------ */
 
-const pulseBase = 'animate-pulse bg-border/50 rounded';
+const scannerKeyframes = `
+@keyframes skeleton-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+`;
+
+const scannerStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  overflow: 'hidden',
+};
+
+const scanLineStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  background: 'linear-gradient(90deg, transparent 0%, rgba(5, 150, 105, 0.08) 40%, rgba(5, 150, 105, 0.15) 50%, rgba(5, 150, 105, 0.08) 60%, transparent 100%)',
+  animation: 'skeleton-scan 2s ease-in-out infinite',
+};
+
+/* ------------------------------------------------------------------ */
+/*  Base style                                                         */
+/* ------------------------------------------------------------------ */
+
+const skeletonBase = 'relative overflow-hidden rounded';
+const skeletonBg: React.CSSProperties = {
+  backgroundColor: 'rgba(13, 32, 64, 0.3)',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Variant defaults                                                   */
@@ -48,7 +78,7 @@ const variantDefaults: Record<
   card: {
     width: '100%',
     height: '160px',
-    className: 'rounded-xl',
+    className: 'rounded-lg',
   },
   circle: {
     width: '40px',
@@ -58,9 +88,24 @@ const variantDefaults: Record<
   chart: {
     width: '100%',
     height: '200px',
-    className: 'rounded-xl',
+    className: 'rounded-lg',
   },
 };
+
+/* ------------------------------------------------------------------ */
+/*  Scanner overlay component                                          */
+/* ------------------------------------------------------------------ */
+
+function ScanLine() {
+  return (
+    <>
+      <style>{scannerKeyframes}</style>
+      <div style={scannerStyle}>
+        <div style={scanLineStyle} />
+      </div>
+    </>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Skeleton                                                           */
@@ -75,6 +120,7 @@ function Skeleton({
   const defaults = variantDefaults[variant];
 
   const style: React.CSSProperties = {
+    ...skeletonBg,
     width: width ?? defaults.width,
     height: height ?? defaults.height,
   };
@@ -82,7 +128,7 @@ function Skeleton({
   if (variant === 'chart') {
     return (
       <div
-        className={cn(pulseBase, 'relative overflow-hidden', defaults.className, className)}
+        className={cn(skeletonBase, defaults.className, className)}
         style={style}
       >
         {/* Simulated chart bars */}
@@ -90,20 +136,23 @@ function Skeleton({
           {[65, 40, 80, 55, 70, 45, 90, 60].map((h, i) => (
             <div
               key={i}
-              className="bg-border/70 rounded-t flex-1"
-              style={{ height: `${h}%` }}
+              className="rounded-t flex-1"
+              style={{ height: `${h}%`, backgroundColor: 'rgba(13, 32, 64, 0.5)' }}
             />
           ))}
         </div>
+        <ScanLine />
       </div>
     );
   }
 
   return (
     <div
-      className={cn(pulseBase, defaults.className, className)}
+      className={cn(skeletonBase, defaults.className, className)}
       style={style}
-    />
+    >
+      <ScanLine />
+    </div>
   );
 }
 

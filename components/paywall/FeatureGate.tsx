@@ -126,17 +126,17 @@ export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
             <div
               className={cn(
                 'relative w-full max-w-md mx-auto',
-                'bg-card border border-gold/30 rounded-xl',
+                'glass border border-gold/30 rounded-xl',
                 'p-8 text-center',
-                'shadow-glow-lg',
+                'shadow-glow-lg rounded-lg',
               )}
             >
-              {/* Subtle gold glow behind the card */}
+              {/* Subtle cyan glow behind the card */}
               <div
                 className="absolute -inset-px rounded-xl opacity-20 blur-md pointer-events-none"
                 style={{
                   background:
-                    'radial-gradient(ellipse at center, rgba(201,168,76,0.25) 0%, transparent 70%)',
+                    'radial-gradient(ellipse at center, rgba(5,150,105,0.25) 0%, transparent 70%)',
                 }}
               />
 

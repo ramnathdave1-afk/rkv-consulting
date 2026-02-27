@@ -45,6 +45,9 @@ import { FeatureGate } from '@/components/paywall/FeatureGate'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { cn } from '@/lib/utils'
 import type { Property, Tenant, Transaction } from '@/types'
+import { ScheduleETab } from '@/components/accounting/ScheduleETab'
+import { DepreciationTab } from '@/components/accounting/DepreciationTab'
+import { Exchange1031Tab } from '@/components/accounting/Exchange1031Tab'
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -55,7 +58,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const INCOME_CATEGORIES = ['Rent', 'Late Fee', 'Application Fee', 'Laundry', 'Parking', 'Other']
 const EXPENSE_CATEGORIES = ['Mortgage', 'Property Tax', 'Insurance', 'Maintenance', 'Management', 'Utilities', 'Legal', 'Advertising', 'HOA', 'Other']
 
-const PIE_COLORS = ['#C9A84C', '#E8C97A', '#22C55E', '#3B82F6', '#A855F7', '#EF4444', '#F97316', '#EC4899', '#8B5CF6', '#14B8A6']
+const PIE_COLORS = ['#059669', '#0EA5E9', '#059669', '#3B82F6', '#A855F7', '#DC2626', '#F97316', '#EC4899', '#8B5CF6', '#14B8A6']
 
 const DATE_RANGES = [
   { label: 'This Month', value: 'month' },
@@ -309,7 +312,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
     <div className="bg-deep border border-border rounded-lg px-3 py-2 shadow-card">
       <p className="text-xs text-muted mb-1">{label}</p>
       {payload.map((entry, i) => (
-        <p key={i} className="text-sm font-semibold" style={{ color: entry.color }}>
+        <p key={i} className="text-sm font-semibold font-mono" style={{ color: entry.color }}>
           {entry.name}: {formatCurrency(entry.value)}
         </p>
       ))}
@@ -322,7 +325,7 @@ function PieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ n
   return (
     <div className="bg-deep border border-border rounded-lg px-3 py-2 shadow-card">
       <p className="text-xs text-muted">{payload[0].name}</p>
-      <p className="text-sm font-semibold text-white">{formatCurrency(payload[0].value)}</p>
+      <p className="text-sm font-semibold text-white font-mono">{formatCurrency(payload[0].value)}</p>
     </div>
   )
 }
@@ -1055,13 +1058,13 @@ function AccountingContent() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-6 animate-pulse">
+            <div key={i} className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="h-4 bg-border rounded w-24 mb-3" />
               <div className="h-8 bg-border rounded w-32" />
             </div>
           ))}
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 animate-pulse">
+        <div className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="h-64 bg-border/50 rounded-lg" />
         </div>
       </div>
@@ -1119,6 +1122,15 @@ function AccountingContent() {
           <TabsTrigger value="reports" icon={<FileText className="w-4 h-4" />}>
             Reports
           </TabsTrigger>
+          <TabsTrigger value="schedule_e" icon={<ClipboardList className="w-4 h-4" />}>
+            Schedule E
+          </TabsTrigger>
+          <TabsTrigger value="depreciation" icon={<Calculator className="w-4 h-4" />}>
+            Depreciation
+          </TabsTrigger>
+          <TabsTrigger value="exchange_1031" icon={<ArrowRightLeft className="w-4 h-4" />}>
+            1031 Exchange
+          </TabsTrigger>
         </TabsList>
 
         {/* ========================================================== */}
@@ -1129,33 +1141,33 @@ function AccountingContent() {
             {/* Key Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Revenue */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Revenue</span>
+                  <span className="label">Total Revenue</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green/10">
                     <TrendingUp className="h-4 w-4 text-green" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-green">{formatCurrency(ytdIncome)}</p>
+                <p className="text-2xl font-bold text-green font-mono">{formatCurrency(ytdIncome)}</p>
                 <p className="text-xs text-muted mt-1">Year to date</p>
               </div>
 
               {/* Total Expenses */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Expenses</span>
+                  <span className="label">Total Expenses</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red/10">
                     <TrendingDown className="h-4 w-4 text-red" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-red">{formatCurrency(ytdExpenses)}</p>
+                <p className="text-2xl font-bold text-red font-mono">{formatCurrency(ytdExpenses)}</p>
                 <p className="text-xs text-muted mt-1">Year to date</p>
               </div>
 
               {/* Net Income */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Net Income</span>
+                  <span className="label">Net Income</span>
                   <div className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-lg',
                     ytdProfit >= 0 ? 'bg-green/10' : 'bg-red/10',
@@ -1163,21 +1175,21 @@ function AccountingContent() {
                     <DollarSign className={cn('h-4 w-4', ytdProfit >= 0 ? 'text-green' : 'text-red')} />
                   </div>
                 </div>
-                <p className={cn('text-2xl font-bold', ytdProfit >= 0 ? 'text-green' : 'text-red')}>
+                <p className={cn('text-2xl font-bold font-mono', ytdProfit >= 0 ? 'text-green' : 'text-red')}>
                   {formatCurrency(ytdProfit)}
                 </p>
                 <p className="text-xs text-muted mt-1">Year to date</p>
               </div>
 
               {/* Effective Tax Rate */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Effective Tax Rate</span>
+                  <span className="label">Effective Tax Rate</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10">
                     <Percent className="h-4 w-4 text-gold" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gold">~{(TAX_RATE * 100).toFixed(0)}%</p>
+                <p className="text-2xl font-bold text-gold font-mono">~{(TAX_RATE * 100).toFixed(0)}%</p>
                 <p className="text-xs text-muted mt-1">Estimated rate</p>
               </div>
             </div>
@@ -1185,9 +1197,9 @@ function AccountingContent() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Income vs Expenses Bar Chart */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-semibold text-white">Monthly Income vs Expenses</h3>
+                  <h3 className="label">Monthly Income vs Expenses</h3>
                   <span className="text-xs text-muted">{now.getFullYear()}</span>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -1195,30 +1207,30 @@ function AccountingContent() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(30, 37, 48, 0.6)" vertical={false} />
                     <XAxis
                       dataKey="month"
-                      stroke="#6B7280"
-                      tick={{ fill: '#6B7280', fontSize: 11 }}
-                      axisLine={{ stroke: '#1E2530' }}
+                      stroke="#4A6080"
+                      tick={{ fill: '#4A6080', fontSize: 11 }}
+                      axisLine={{ stroke: '#161E2A' }}
                       tickLine={false}
                     />
                     <YAxis
-                      stroke="#6B7280"
-                      tick={{ fill: '#6B7280', fontSize: 11 }}
+                      stroke="#4A6080"
+                      tick={{ fill: '#4A6080', fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
                       tickFormatter={(val: number) => formatCurrencyShort(val)}
                       width={60}
                     />
                     <RechartsTooltip content={<ChartTooltip />} />
-                    <Bar dataKey="Income" fill="#22C55E" radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="Expenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Income" fill="#059669" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Expenses" fill="#DC2626" radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Expense Breakdown Donut */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-sm font-semibold text-white">Expense Categories</h3>
+                  <h3 className="label">Expense Categories</h3>
                   <span className="text-xs text-muted">Year to date</span>
                 </div>
                 {expenseBreakdown.length > 0 ? (
@@ -1250,7 +1262,7 @@ function AccountingContent() {
                             style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
                           />
                           <span className="text-xs text-muted truncate">{item.name}</span>
-                          <span className="text-xs text-white ml-auto">{formatCurrencyShort(item.value)}</span>
+                          <span className="text-xs text-white ml-auto font-mono">{formatCurrencyShort(item.value)}</span>
                         </div>
                       ))}
                     </div>
@@ -1264,37 +1276,37 @@ function AccountingContent() {
             </div>
 
             {/* YoY Comparison */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="font-display font-semibold text-lg text-white">Year-over-Year Comparison</h3>
+                <h3 className="label text-[11px]">Year-over-Year Comparison</h3>
                 <span className="text-xs text-muted">{now.getFullYear()} vs {now.getFullYear() - 1}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-deep border border-border rounded-lg p-4">
-                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Revenue</p>
-                  <p className="text-xl font-bold text-green">{formatCurrency(ytdIncome)}</p>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <p className="label mb-2">Revenue</p>
+                  <p className="text-xl font-bold text-green font-mono">{formatCurrency(ytdIncome)}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3 text-green" />
                     <span className="text-xs text-green">
                       +{((ytdIncome / priorYearIncome - 1) * 100).toFixed(1)}% vs prior year
                     </span>
                   </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearIncome)}</p>
+                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearIncome)}</span></p>
                 </div>
-                <div className="bg-deep border border-border rounded-lg p-4">
-                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Expenses</p>
-                  <p className="text-xl font-bold text-red">{formatCurrency(ytdExpenses)}</p>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <p className="label mb-2">Expenses</p>
+                  <p className="text-xl font-bold text-red font-mono">{formatCurrency(ytdExpenses)}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <TrendingUp className="w-3 h-3 text-red" />
                     <span className="text-xs text-red">
                       +{((ytdExpenses / priorYearExpenses - 1) * 100).toFixed(1)}% vs prior year
                     </span>
                   </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearExpenses)}</p>
+                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearExpenses)}</span></p>
                 </div>
-                <div className="bg-deep border border-border rounded-lg p-4">
-                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Net Income</p>
-                  <p className={cn('text-xl font-bold', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <p className="label mb-2">Net Income</p>
+                  <p className={cn('text-xl font-bold font-mono', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
                     {formatCurrency(ytdProfit)}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
@@ -1314,7 +1326,7 @@ function AccountingContent() {
                       </>
                     )}
                   </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearProfit)}</p>
+                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearProfit)}</span></p>
                 </div>
               </div>
             </div>
@@ -1327,7 +1339,7 @@ function AccountingContent() {
         <TabsContent value="transactions">
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="bg-card border border-border rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex flex-wrap items-center gap-3">
                 {/* Date range */}
                 <div className="flex bg-deep rounded-lg p-0.5">
@@ -1403,7 +1415,7 @@ function AccountingContent() {
             </div>
 
             {/* Transactions Table */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -1445,7 +1457,7 @@ function AccountingContent() {
                         const prop = properties.find((p) => p.id === tx.property_id)
                         return (
                           <tr key={tx.id} className="border-b border-border/50 hover:bg-white/[0.02] transition-colors">
-                            <td className="px-4 py-3 text-sm text-white whitespace-nowrap">
+                            <td className="px-4 py-3 text-sm text-white whitespace-nowrap font-mono">
                               {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </td>
                             <td className="px-4 py-3 text-sm text-muted truncate max-w-[200px]">
@@ -1456,7 +1468,7 @@ function AccountingContent() {
                               {prop?.address || 'General'}
                             </td>
                             <td className={cn(
-                              'px-4 py-3 text-sm font-semibold whitespace-nowrap',
+                              'px-4 py-3 text-sm font-semibold whitespace-nowrap font-mono',
                               tx.type === 'income' ? 'text-green' : 'text-red',
                             )}>
                               {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -1469,7 +1481,7 @@ function AccountingContent() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-purple-400 bg-purple-400/10 border border-purple-400/20 rounded-full px-2 py-0.5">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium font-mono text-purple-400 bg-purple-400/10 border border-purple-400/20 rounded-full px-2 py-0.5">
                                 <Sparkles className="w-3 h-3" />
                                 {tx.category}
                               </span>
@@ -1536,9 +1548,9 @@ function AccountingContent() {
         <TabsContent value="by_property">
           <div className="space-y-6">
             {/* Property Selector */}
-            <div className="bg-card border border-border rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex items-center gap-4">
-                <label className="text-sm text-muted font-medium whitespace-nowrap">Select Property:</label>
+                <label className="label whitespace-nowrap">Select Property:</label>
                 <select
                   value={selectedPropertyId}
                   onChange={(e) => setSelectedPropertyId(e.target.value)}
@@ -1555,23 +1567,23 @@ function AccountingContent() {
               <>
                 {/* Key Property Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Gross Income</p>
-                    <p className="text-2xl font-bold text-green">{formatCurrency(propertyMetrics.income)}</p>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <p className="label mb-2">Gross Income</p>
+                    <p className="text-2xl font-bold text-green font-mono">{formatCurrency(propertyMetrics.income)}</p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Total Expenses</p>
-                    <p className="text-2xl font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</p>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <p className="label mb-2">Total Expenses</p>
+                    <p className="text-2xl font-bold text-red font-mono">{formatCurrency(propertyMetrics.expenses)}</p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <p className="text-xs text-muted uppercase tracking-wider mb-2">NOI</p>
-                    <p className={cn('text-2xl font-bold', propertyMetrics.noi >= 0 ? 'text-gold' : 'text-red')}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <p className="label mb-2">NOI</p>
+                    <p className={cn('text-2xl font-bold font-mono', propertyMetrics.noi >= 0 ? 'text-gold' : 'text-red')}>
                       {formatCurrency(propertyMetrics.noi)}
                     </p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Cap Rate</p>
-                    <p className="text-2xl font-bold text-gold">{propertyMetrics.capRate.toFixed(2)}%</p>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <p className="label mb-2">Cap Rate</p>
+                    <p className="text-2xl font-bold text-gold font-mono">{propertyMetrics.capRate.toFixed(2)}%</p>
                     {propertyMetrics.property?.current_value && (
                       <p className="text-xs text-muted mt-1">
                         Value: {formatCurrency(propertyMetrics.property.current_value)}
@@ -1582,42 +1594,42 @@ function AccountingContent() {
 
                 {/* Income / Expense Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <h3 className="text-sm font-semibold text-white mb-4">Income Breakdown</h3>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <h3 className="label mb-4">Income Breakdown</h3>
                     <div className="space-y-3">
                       {propertyMetrics.incomeBreakdown.map((item) => (
                         <div key={item.category} className="flex items-center justify-between">
                           <span className="text-sm text-text">{item.category}</span>
-                          <span className="text-sm font-semibold text-green">{formatCurrency(item.amount)}</span>
+                          <span className="text-sm font-semibold text-green font-mono">{formatCurrency(item.amount)}</span>
                         </div>
                       ))}
                       <div className="border-t border-border pt-2 flex items-center justify-between">
                         <span className="text-sm font-semibold text-white">Total Income</span>
-                        <span className="text-sm font-bold text-green">{formatCurrency(propertyMetrics.income)}</span>
+                        <span className="text-sm font-bold text-green font-mono">{formatCurrency(propertyMetrics.income)}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6">
-                    <h3 className="text-sm font-semibold text-white mb-4">Expense Breakdown</h3>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <h3 className="label mb-4">Expense Breakdown</h3>
                     <div className="space-y-3">
                       {propertyMetrics.expenseBreakdown.map((item) => (
                         <div key={item.category} className="flex items-center justify-between">
                           <span className="text-sm text-text">{item.category}</span>
-                          <span className="text-sm font-semibold text-red">{formatCurrency(item.amount)}</span>
+                          <span className="text-sm font-semibold text-red font-mono">{formatCurrency(item.amount)}</span>
                         </div>
                       ))}
                       <div className="border-t border-border pt-2 flex items-center justify-between">
                         <span className="text-sm font-semibold text-white">Total Expenses</span>
-                        <span className="text-sm font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</span>
+                        <span className="text-sm font-bold text-red font-mono">{formatCurrency(propertyMetrics.expenses)}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Monthly Breakdown Table */}
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                   <div className="p-6 border-b border-border">
-                    <h3 className="font-display font-semibold text-lg text-white">Monthly Breakdown</h3>
+                    <h3 className="label text-[11px]">Monthly Breakdown</h3>
                     <p className="text-xs text-muted mt-1">
                       {propertyMetrics.property?.address || 'Selected Property'} - {now.getFullYear()}
                     </p>
@@ -1636,22 +1648,22 @@ function AccountingContent() {
                         {propertyMetrics.monthlyBreakdown.map((row) => (
                           <tr key={row.month} className="border-b border-border/50 hover:bg-white/[0.02]">
                             <td className="px-4 py-3 text-white">{row.month}</td>
-                            <td className="px-4 py-3 text-right text-green">
+                            <td className="px-4 py-3 text-right text-green font-mono">
                               {row.income > 0 ? formatCurrency(row.income) : '--'}
                             </td>
-                            <td className="px-4 py-3 text-right text-red">
+                            <td className="px-4 py-3 text-right text-red font-mono">
                               {row.expense > 0 ? formatCurrency(row.expense) : '--'}
                             </td>
-                            <td className={cn('px-4 py-3 text-right font-semibold', row.net >= 0 ? 'text-green' : 'text-red')}>
+                            <td className={cn('px-4 py-3 text-right font-semibold font-mono', row.net >= 0 ? 'text-green' : 'text-red')}>
                               {row.income > 0 || row.expense > 0 ? formatCurrency(row.net) : '--'}
                             </td>
                           </tr>
                         ))}
                         <tr className="bg-gold/[0.03]">
                           <td className="px-4 py-3 font-bold text-gold">Total</td>
-                          <td className="px-4 py-3 text-right font-bold text-green">{formatCurrency(propertyMetrics.income)}</td>
-                          <td className="px-4 py-3 text-right font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</td>
-                          <td className={cn('px-4 py-3 text-right font-bold', propertyMetrics.noi >= 0 ? 'text-green' : 'text-red')}>
+                          <td className="px-4 py-3 text-right font-bold text-green font-mono">{formatCurrency(propertyMetrics.income)}</td>
+                          <td className="px-4 py-3 text-right font-bold text-red font-mono">{formatCurrency(propertyMetrics.expenses)}</td>
+                          <td className={cn('px-4 py-3 text-right font-bold font-mono', propertyMetrics.noi >= 0 ? 'text-green' : 'text-red')}>
                             {formatCurrency(propertyMetrics.noi)}
                           </td>
                         </tr>
@@ -1670,10 +1682,10 @@ function AccountingContent() {
         <TabsContent value="tax_center">
           <div className="space-y-6">
             {/* Schedule E */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
-                  <h3 className="font-display font-semibold text-lg text-white">Schedule E (Form 1040)</h3>
+                  <h3 className="label text-[11px]">Schedule E (Form 1040)</h3>
                   <p className="text-xs text-muted mt-1">Supplemental Income and Loss - Rental Real Estate | {now.getFullYear()}</p>
                 </div>
                 <button
@@ -1692,20 +1704,20 @@ function AccountingContent() {
                     <p className="text-sm font-medium text-white">Line 3 - Rents Received</p>
                     <p className="text-xs text-muted">Gross rental income from all properties</p>
                   </div>
-                  <p className="text-lg font-bold text-green">{formatCurrency(scheduleEData.grossRentalIncome)}</p>
+                  <p className="text-lg font-bold text-green font-mono">{formatCurrency(scheduleEData.grossRentalIncome)}</p>
                 </div>
 
                 {/* Expense Lines */}
                 <div className="mt-4">
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Expenses</p>
+                  <p className="label mb-3">Expenses</p>
                   <div className="space-y-1">
                     {scheduleEData.lines.map((line) => (
                       <div key={line.line} className="flex items-center justify-between py-2 hover:bg-white/[0.02] px-2 rounded">
                         <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-muted w-10">Line {line.line}</span>
+                          <span className="text-[10px] text-muted w-10 font-mono">Line {line.line}</span>
                           <span className="text-sm text-text">{line.label}</span>
                         </div>
-                        <span className="text-sm font-medium text-white tabular-nums">
+                        <span className="text-sm font-medium text-white tabular-nums font-mono">
                           {line.amount > 0 ? formatCurrency(line.amount) : '--'}
                         </span>
                       </div>
@@ -1717,11 +1729,11 @@ function AccountingContent() {
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-red">Line 20 - Total Expenses</p>
-                    <p className="text-lg font-bold text-red">{formatCurrency(scheduleEData.totalExpenses)}</p>
+                    <p className="text-lg font-bold text-red font-mono">{formatCurrency(scheduleEData.totalExpenses)}</p>
                   </div>
                   <div className="flex items-center justify-between bg-gold/5 -mx-6 px-6 py-4 rounded-none">
                     <p className="text-sm font-bold text-gold">Line 21 - Net Rental Income (Loss)</p>
-                    <p className={cn('text-xl font-bold', scheduleEData.netIncome >= 0 ? 'text-gold' : 'text-red')}>
+                    <p className={cn('text-xl font-bold font-mono', scheduleEData.netIncome >= 0 ? 'text-gold' : 'text-red')}>
                       {formatCurrency(scheduleEData.netIncome)}
                     </p>
                   </div>
@@ -1730,9 +1742,9 @@ function AccountingContent() {
             </div>
 
             {/* Depreciation Tracker */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="p-6 border-b border-border">
-                <h3 className="font-display font-semibold text-lg text-white">Depreciation Tracker</h3>
+                <h3 className="label text-[11px]">Depreciation Tracker</h3>
                 <p className="text-xs text-muted mt-1">27.5-year straight-line schedule for residential rental properties</p>
               </div>
               <div className="overflow-x-auto">
@@ -1751,11 +1763,11 @@ function AccountingContent() {
                     {depreciationData.map((dep) => (
                       <tr key={dep.property.id} className="border-b border-border/50 hover:bg-white/[0.02]">
                         <td className="px-4 py-3 text-white truncate max-w-[200px]">{dep.property.address}</td>
-                        <td className="px-4 py-3 text-right text-text tabular-nums">{formatCurrency(dep.depreciableBasis)}</td>
-                        <td className="px-4 py-3 text-right text-gold font-medium tabular-nums">{formatCurrency(dep.annualDepreciation)}</td>
-                        <td className="px-4 py-3 text-right text-muted tabular-nums">{formatCurrency(dep.accumulatedDepreciation)}</td>
-                        <td className="px-4 py-3 text-right text-white tabular-nums">{formatCurrency(dep.remainingBasis)}</td>
-                        <td className="px-4 py-3 text-right text-muted tabular-nums">{dep.yearsRemaining.toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right text-text tabular-nums font-mono">{formatCurrency(dep.depreciableBasis)}</td>
+                        <td className="px-4 py-3 text-right text-gold font-medium tabular-nums font-mono">{formatCurrency(dep.annualDepreciation)}</td>
+                        <td className="px-4 py-3 text-right text-muted tabular-nums font-mono">{formatCurrency(dep.accumulatedDepreciation)}</td>
+                        <td className="px-4 py-3 text-right text-white tabular-nums font-mono">{formatCurrency(dep.remainingBasis)}</td>
+                        <td className="px-4 py-3 text-right text-muted tabular-nums font-mono">{dep.yearsRemaining.toFixed(1)}</td>
                       </tr>
                     ))}
                     {depreciationData.length === 0 && (
@@ -1770,16 +1782,16 @@ function AccountingContent() {
                     <tfoot>
                       <tr className="bg-gold/[0.03]">
                         <td className="px-4 py-3 font-bold text-gold">Total</td>
-                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums font-mono">
                           {formatCurrency(depreciationData.reduce((s, d) => s + d.depreciableBasis, 0))}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums font-mono">
                           {formatCurrency(depreciationData.reduce((s, d) => s + d.annualDepreciation, 0))}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold text-muted tabular-nums">
+                        <td className="px-4 py-3 text-right font-bold text-muted tabular-nums font-mono">
                           {formatCurrency(depreciationData.reduce((s, d) => s + d.accumulatedDepreciation, 0))}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums font-mono">
                           {formatCurrency(depreciationData.reduce((s, d) => s + d.remainingBasis, 0))}
                         </td>
                         <td className="px-4 py-3" />
@@ -1793,10 +1805,10 @@ function AccountingContent() {
             {/* Mileage Log + 1031 Exchange Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Mileage Log */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-display font-semibold text-base text-white">Mileage Log</h3>
+                    <h3 className="label text-[11px]">Mileage Log</h3>
                     <p className="text-xs text-muted mt-0.5">Track business miles for tax deduction</p>
                   </div>
                   <button
@@ -1817,10 +1829,10 @@ function AccountingContent() {
               </div>
 
               {/* 1031 Exchange Timer */}
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-display font-semibold text-base text-white">1031 Exchange Tracker</h3>
+                    <h3 className="label text-[11px]">1031 Exchange Tracker</h3>
                     <p className="text-xs text-muted mt-0.5">Like-kind exchange deadlines</p>
                   </div>
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
@@ -1829,19 +1841,19 @@ function AccountingContent() {
                   </span>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-deep border border-border rounded-lg p-4">
+                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-muted">45-Day Identification Period</span>
-                      <span className="text-xs font-semibold text-gold">-- days remaining</span>
+                      <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
                     </div>
                     <div className="w-full h-2 bg-border rounded-full overflow-hidden">
                       <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
                     </div>
                   </div>
-                  <div className="bg-deep border border-border rounded-lg p-4">
+                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-muted">180-Day Completion Deadline</span>
-                      <span className="text-xs font-semibold text-gold">-- days remaining</span>
+                      <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
                     </div>
                     <div className="w-full h-2 bg-border rounded-full overflow-hidden">
                       <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
@@ -1855,10 +1867,10 @@ function AccountingContent() {
             </div>
 
             {/* Quarterly Tax Estimator */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-display font-semibold text-base text-white">Quarterly Tax Estimator</h3>
+                  <h3 className="label text-[11px]">Quarterly Tax Estimator</h3>
                   <p className="text-xs text-muted mt-0.5">Estimated quarterly payments based on rental income</p>
                 </div>
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
@@ -1870,9 +1882,9 @@ function AccountingContent() {
                 {['Q1 (Apr 15)', 'Q2 (Jun 15)', 'Q3 (Sep 15)', 'Q4 (Jan 15)'].map((q, i) => {
                   const quarterlyEstimate = (ytdProfit * TAX_RATE) / 4
                   return (
-                    <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center">
-                      <p className="text-xs text-muted mb-2">{q}</p>
-                      <p className="text-lg font-bold text-gold">{formatCurrency(quarterlyEstimate > 0 ? quarterlyEstimate : 0)}</p>
+                    <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                      <p className="text-xs text-muted mb-2 font-mono">{q}</p>
+                      <p className="text-lg font-bold text-gold font-mono">{formatCurrency(quarterlyEstimate > 0 ? quarterlyEstimate : 0)}</p>
                       <div className="mt-2">
                         {i <= Math.floor(now.getMonth() / 3) ? (
                           <span className="inline-flex items-center gap-1 text-[10px] text-green">
@@ -1898,9 +1910,9 @@ function AccountingContent() {
         <TabsContent value="reports">
           <div className="space-y-6">
             {/* Date Range Selector */}
-            <div className="bg-card border border-border rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex items-center gap-4">
-                <label className="text-sm text-muted font-medium whitespace-nowrap">Report Period:</label>
+                <label className="label whitespace-nowrap">Report Period:</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
@@ -1924,7 +1936,7 @@ function AccountingContent() {
               {REPORT_CARDS.map((report) => {
                 const Icon = report.icon
                 return (
-                  <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group">
+                  <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
                     <div className="flex items-start gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 group-hover:bg-gold/15 transition-colors flex-shrink-0">
                         <Icon className="h-5 w-5 text-gold" />
@@ -1949,6 +1961,27 @@ function AccountingContent() {
               })}
             </div>
           </div>
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 6: SCHEDULE E                                          */}
+        {/* ========================================================== */}
+        <TabsContent value="schedule_e">
+          <ScheduleETab properties={properties} transactions={transactions} />
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 7: DEPRECIATION                                        */}
+        {/* ========================================================== */}
+        <TabsContent value="depreciation">
+          <DepreciationTab properties={properties} />
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 8: 1031 EXCHANGE                                       */}
+        {/* ========================================================== */}
+        <TabsContent value="exchange_1031">
+          <Exchange1031Tab />
         </TabsContent>
       </Tabs>
 

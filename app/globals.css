@@ -4,17 +4,22 @@
 
 /* ── CSS Variables ─────────────────────────────────────────────────── */
 :root {
-  --black: #080A0E;
-  --deep: #0D1117;
-  --card: #111620;
-  --border: #1E2530;
-  --gold: #C9A84C;
-  --gold-light: #E8C97A;
-  --white: #F0EDE8;
-  --muted: #6B7280;
-  --green: #22C55E;
-  --red: #EF4444;
-  --text: #BFC8D6;
+  --black: #080B0F;
+  --deep: #060910;
+  --card: #0C1018;
+  --tertiary: #0F1620;
+  --border: #161E2A;
+  --gold: #059669;
+  --gold-light: #0EA5E9;
+  --violet: #0EA5E9;
+  --warning: #D97706;
+  --white: #E2E8F0;
+  --muted: #4A6080;
+  --muted-deep: #1E2D40;
+  --green: #059669;
+  --red: #DC2626;
+  --text: #E2E8F0;
+  --grid: #0F1620;
 }
 
 /* ── Base Styles ───────────────────────────────────────────────────── */
@@ -23,73 +28,58 @@ html {
 }
 
 body {
-  background: #080A0E;
-  color: #F0EDE8;
-  font-family: "DM Sans", sans-serif;
+  background: #080B0F;
+  color: #E2E8F0;
+  font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle noise texture overlay */
-body::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}
-
 /* ── Scrollbar ─────────────────────────────────────────────────────── */
-/* Webkit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D1117;
+  background: #080B0F;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2530;
-  border-radius: 4px;
+  background: #1E2D40;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #C9A84C;
+  background: #059669;
 }
 
 /* Firefox */
 * {
-  scrollbar-color: #1E2530 #0D1117;
+  scrollbar-color: #1E2D40 #080B0F;
   scrollbar-width: thin;
 }
 
 /* ── Selection ─────────────────────────────────────────────────────── */
 ::selection {
-  background: #C9A84C;
-  color: #080A0E;
+  background: #059669;
+  color: #080B0F;
 }
 
 ::-moz-selection {
-  background: #C9A84C;
-  color: #080A0E;
+  background: #059669;
+  color: #080B0F;
 }
 
 /* ── Placeholder ───────────────────────────────────────────────────── */
 ::placeholder {
-  color: #6B7280;
+  color: #1E2D40;
+  font-family: "JetBrains Mono", monospace;
 }
 
 /* ── Focus Reset ───────────────────────────────────────────────────── */
 *:focus {
-  outline: 2px solid #C9A84C;
+  outline: 2px solid #059669;
   outline-offset: 2px;
 }
 
@@ -98,26 +88,79 @@ body::after {
 }
 
 *:focus-visible {
-  outline: 2px solid #C9A84C;
+  outline: 2px solid #059669;
   outline-offset: 2px;
 }
 
 /* ── Utility Classes ───────────────────────────────────────────────── */
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, #C9A84C 0%, #E8C97A 50%, #C9A84C 100%);
+    background: linear-gradient(135deg, #059669 0%, #0EA5E9 50%, #059669 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .card-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: border-color 0.15s ease;
   }
 
   .card-hover:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
-    border-color: #C9A84C;
+    border-color: #2A3A50;
+  }
+
+  /* Glass panel */
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(12, 16, 24, 0.95);
+    border: 1px solid #161E2A;
+  }
+
+  /* Clean card corners — replaces old hud-corners */
+  .hud-corners {
+    border-radius: 6px;
+  }
+
+  /* Hover border transition — replaces old glow-border */
+  .glow-border {
+    border: 1px solid #161E2A;
+    transition: border-color 0.15s ease;
+  }
+  .glow-border:hover {
+    border-color: #2A3A50;
+  }
+
+  /* Monospace data display */
+  .mono-data {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+  }
+
+  /* Label style — professional, not terminal */
+  .label {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: #4A6080;
+  }
+
+  /* Status dot — simple, no glow */
+  .pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* Subtle grid background for panels */
+  .blueprint-grid {
+    background-image:
+      linear-gradient(rgba(15, 22, 32, 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 22, 32, 0.4) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 }

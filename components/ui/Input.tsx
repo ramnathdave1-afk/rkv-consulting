@@ -14,15 +14,24 @@ import { cn } from '@/lib/utils';
 /* ------------------------------------------------------------------ */
 
 const baseInputStyles = [
-  'w-full bg-deep text-white font-body',
-  'border border-border rounded-lg',
-  'placeholder:text-muted/60',
+  'w-full bg-transparent text-white font-body',
+  'border rounded-lg',
+  'placeholder:font-body placeholder:text-muted-deep',
   'transition-all duration-200 ease-out',
-  'focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40',
+  'focus:outline-none focus:shadow-glow-sm',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ');
 
-const labelStyles = 'block text-sm text-muted font-body mb-1.5';
+const baseInputInlineStyles: React.CSSProperties = {
+  borderColor: '#161E2A',
+  backgroundColor: '#080B0F',
+};
+
+const focusInlineStyles = {
+  borderColor: 'rgba(5, 150, 105, 0.5)',
+};
+
+const labelStyles = 'label block text-[10px] uppercase tracking-wider font-body text-muted mb-1.5';
 const errorStyles = 'text-xs text-red mt-1.5 font-body';
 const helperStyles = 'text-xs text-muted mt-1.5 font-body';
 
@@ -68,6 +77,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               error && 'border-red focus:border-red focus:ring-red/40',
               className,
             )}
+            style={error ? { ...baseInputInlineStyles, borderColor: '#DC2626' } : baseInputInlineStyles}
+            onFocus={(e) => {
+              if (!error) {
+                e.currentTarget.style.borderColor = focusInlineStyles.borderColor;
+              }
+              props.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              if (!error) {
+                e.currentTarget.style.borderColor = '#161E2A';
+              }
+              props.onBlur?.(e);
+            }}
             aria-invalid={!!error}
             aria-describedby={
               error
@@ -128,6 +150,19 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             error && 'border-red focus:border-red focus:ring-red/40',
             className,
           )}
+          style={error ? { ...baseInputInlineStyles, borderColor: '#DC2626' } : baseInputInlineStyles}
+          onFocus={(e) => {
+            if (!error) {
+              e.currentTarget.style.borderColor = focusInlineStyles.borderColor;
+            }
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            if (!error) {
+              e.currentTarget.style.borderColor = '#161E2A';
+            }
+            props.onBlur?.(e);
+          }}
           aria-invalid={!!error}
           aria-describedby={
             error
@@ -202,6 +237,19 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               error && 'border-red focus:border-red focus:ring-red/40',
               className,
             )}
+            style={error ? { ...baseInputInlineStyles, borderColor: '#DC2626' } : baseInputInlineStyles}
+            onFocus={(e) => {
+              if (!error) {
+                e.currentTarget.style.borderColor = focusInlineStyles.borderColor;
+              }
+              props.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              if (!error) {
+                e.currentTarget.style.borderColor = '#161E2A';
+              }
+              props.onBlur?.(e);
+            }}
             aria-invalid={!!error}
             aria-describedby={
               error

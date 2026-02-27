@@ -51,8 +51,8 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
   if (Math.abs(diff) < 0.005) {
     return (
       <div className="flex items-center gap-1">
-        <Minus className="h-3 w-3 text-[#8891a0]" />
-        <span className="text-[11px] font-semibold text-[#8891a0] font-sans">
+        <Minus className="h-3 w-3 text-muted" />
+        <span className="text-[11px] font-semibold text-muted font-mono">
           Unchanged
         </span>
       </div>
@@ -61,14 +61,14 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
 
   // For mortgage rates: down is green (good for borrowers), up is red
   const isGood = diff < 0;
-  const color = isGood ? '#22c55e' : '#ef4444';
+  const color = isGood ? '#059669' : '#DC2626';
   const Icon = diff < 0 ? TrendingDown : TrendingUp;
   const sign = diff > 0 ? '+' : '';
 
   return (
     <div className="flex items-center gap-1">
       <Icon className="h-3 w-3" style={{ color }} />
-      <span className="text-[11px] font-semibold font-sans" style={{ color }}>
+      <span className="text-[11px] font-semibold font-mono" style={{ color }}>
         {sign}{absDiff.toFixed(2)}% WoW
       </span>
     </div>
@@ -81,15 +81,15 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
 
 function RateCard({ rate, accentColor }: { rate: RateData; accentColor: string }) {
   return (
-    <div className="flex-1 rounded-lg bg-[#0d1118] border border-[#1E2530] p-3.5 hover:border-[#C9A84C]/20 transition-colors">
-      <p className="text-[10px] text-[#8891a0] uppercase tracking-wider font-sans mb-1">
+    <div className="flex-1 rounded-lg p-3.5 rounded-lg hover:border-gold/20 transition-colors" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <p className="label text-muted mb-1" style={{ fontSize: '10px' }}>
         {rate.label}
       </p>
       <div className="flex items-baseline gap-1.5 mb-1.5">
-        <span className="text-2xl font-bold font-sans" style={{ color: accentColor }}>
+        <span className="text-2xl font-bold font-mono" style={{ color: accentColor }}>
           {rate.current.toFixed(2)}
         </span>
-        <span className="text-sm text-[#8891a0] font-sans">%</span>
+        <span className="text-sm text-muted font-mono">%</span>
       </div>
       <RateChange current={rate.current} weekAgo={rate.weekAgo} />
     </div>
@@ -121,24 +121,21 @@ export default function InterestRateTracker({
   }, [lastUpdated]);
 
   return (
-    <div className="rounded-xl bg-[#111620] border border-[#1E2530] overflow-hidden">
-      {/* Gold accent top border */}
-      <div className="h-[2px] bg-gradient-to-r from-[#C9A84C]/0 via-[#C9A84C]/60 to-[#C9A84C]/0" />
+    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      {/* Cyan accent top border */}
+      <div className="h-[2px] bg-gradient-to-r from-[#059669]/0 via-[#059669]/60 to-[#059669]/0" />
 
       <div className="p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider" style={{ fontFamily: 'Syne, sans-serif' }}>
-            Interest Rate Tracker
+          <h3 className="label text-gold">
+            INTEREST RATE TRACKER //
           </h3>
           {formattedDate && (
             <div className="flex items-center gap-1.5">
               {/* Pulsing green dot */}
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22c55e] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22c55e]" />
-              </span>
-              <div className="flex items-center gap-1 text-[10px] text-[#8891a0] font-sans">
+              <span className="pulse-dot" />
+              <div className="flex items-center gap-1 text-[10px] text-muted font-mono">
                 <Clock className="h-3 w-3" />
                 <span>Updated {formattedDate}</span>
               </div>
@@ -148,43 +145,44 @@ export default function InterestRateTracker({
 
         {/* Rate Cards */}
         <div className="flex gap-3 mb-5">
-          <RateCard rate={rates.mortgage30yr} accentColor="#C9A84C" />
-          <RateCard rate={rates.mortgage15yr} accentColor="#22c55e" />
-          <RateCard rate={rates.fedFunds} accentColor="#6366f1" />
+          <RateCard rate={rates.mortgage30yr} accentColor="#059669" />
+          <RateCard rate={rates.mortgage15yr} accentColor="#059669" />
+          <RateCard rate={rates.fedFunds} accentColor="#0EA5E9" />
         </div>
 
         {/* Historical Chart */}
         {history.length > 0 && (
-          <div className="rounded-lg bg-[#0d1118] border border-[#1E2530] p-4">
-            <h4 className="text-[10px] font-semibold text-[#8891a0] uppercase tracking-wider mb-3 font-sans">
-              2-Year Rate History
+          <div className="rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <h4 className="label text-muted mb-3" style={{ fontSize: '10px' }}>
+              2-YEAR RATE HISTORY
             </h4>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={history} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,37,48,0.6)" />
                 <XAxis
                   dataKey="date"
-                  stroke="#555"
+                  stroke="#1E2D40"
                   fontSize={9}
-                  fontFamily="DM Sans"
+                  fontFamily="JetBrains Mono, monospace"
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  stroke="#555"
+                  stroke="#1E2D40"
                   fontSize={9}
-                  fontFamily="DM Sans"
+                  fontFamily="JetBrains Mono, monospace"
                   tickLine={false}
                   tickFormatter={(v) => `${v}%`}
                   domain={['auto', 'auto']}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: 'rgba(17,22,32,0.96)',
-                    border: '1px solid #1E2530',
+                    background: 'rgba(4,8,16,0.96)',
+                    border: '1px solid #161E2A',
                     borderRadius: '10px',
-                    fontFamily: 'DM Sans',
+                    fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '11px',
+                    color: '#E2E8F0',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -199,7 +197,7 @@ export default function InterestRateTracker({
                 />
                 <Legend
                   iconType="line"
-                  wrapperStyle={{ fontSize: '10px', fontFamily: 'DM Sans', color: '#8891a0' }}
+                  wrapperStyle={{ fontSize: '10px', fontFamily: 'JetBrains Mono, monospace', color: '#4A6080' }}
                   formatter={(value) => {
                     const labels: Record<string, string> = {
                       mortgage30yr: '30yr Fixed',
@@ -212,7 +210,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="mortgage30yr"
-                  stroke="#C9A84C"
+                  stroke="#059669"
                   strokeWidth={2}
                   dot={false}
                   animationDuration={800}
@@ -220,7 +218,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="mortgage15yr"
-                  stroke="#22c55e"
+                  stroke="#059669"
                   strokeWidth={2}
                   dot={false}
                   animationDuration={800}
@@ -228,7 +226,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="fedFunds"
-                  stroke="#6366f1"
+                  stroke="#0EA5E9"
                   strokeWidth={1.5}
                   dot={false}
                   strokeDasharray="4 3"

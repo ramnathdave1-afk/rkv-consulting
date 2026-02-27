@@ -97,10 +97,10 @@ function buildAmortization(principal: number, annualRate: number, termYears: num
 function AmortTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-[#080A0E] border border-border rounded-lg px-3 py-2 shadow-card">
+    <div className="rounded-lg px-3 py-2 shadow-card" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
       <p className="text-xs text-muted mb-1">Year {label}</p>
       {payload.map((e, i) => (
-        <p key={i} className="text-xs" style={{ color: e.color }}>{e.name}: {fmtWhole(e.value)}</p>
+        <p key={i} className="text-xs font-mono" style={{ color: e.color }}>{e.name}: {fmtWhole(e.value)}</p>
       ))}
     </div>
   )
@@ -313,7 +313,7 @@ function FinancingHubContent() {
               <Landmark className="h-5 w-5 text-gold" />
             </div>
             <div>
-              <h2 className="font-display font-semibold text-base text-white">Current Mortgage Rates</h2>
+              <h2 className="label text-[11px]">Current Mortgage Rates</h2>
               <p className="text-xs text-muted">From FRED / Freddie Mac</p>
             </div>
           </div>
@@ -326,9 +326,9 @@ function FinancingHubContent() {
             { label: '15-Year Fixed', val: rates.fifteenYearFixed, prev: rates.lastWeek.fifteenYearFixed },
             { label: '5/1 ARM', val: rates.fiveOneArm, prev: rates.lastWeek.fiveOneArm },
           ].map(item => (
-            <div key={item.label} className="bg-[#080A0E] border border-border rounded-lg p-5 text-center">
-              <p className="text-xs font-medium text-muted uppercase tracking-wider mb-2">{item.label}</p>
-              <p className="text-3xl font-bold text-gold">
+            <div key={item.label} className="rounded-lg p-5 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <p className="label mb-2">{item.label}</p>
+              <p className="text-3xl font-bold text-gold font-mono">
                 {ratesLoading ? <span className="inline-block w-16 h-8 bg-border rounded animate-pulse" /> : `${item.val?.toFixed(2) ?? '--'}%`}
               </p>
               <div className="mt-2 h-4">{!ratesLoading && trend(item.val, item.prev)}</div>
@@ -346,7 +346,7 @@ function FinancingHubContent() {
             <Calculator className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <h2 className="font-display font-semibold text-base text-white">Mortgage Calculator</h2>
+            <h2 className="label text-[11px]">Mortgage Calculator</h2>
             <p className="text-xs text-muted">Estimate payments and total cost</p>
           </div>
         </div>
@@ -359,13 +359,13 @@ function FinancingHubContent() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm text-muted font-body">Down Payment</label>
-                <span className="text-sm font-semibold text-gold">{downPct}% ({fmtWhole(parseFloat(homePrice || '0') * downPct / 100)})</span>
+                <span className="text-sm font-semibold text-gold font-mono">{downPct}% ({fmtWhole(parseFloat(homePrice || '0') * downPct / 100)})</span>
               </div>
               <input
                 type="range" min={0} max={50} step={1} value={downPct}
                 onChange={e => setDownPct(parseInt(e.target.value))}
-                className="w-full h-2 bg-[#080A0E] rounded-lg appearance-none cursor-pointer accent-gold"
-                style={{ background: `linear-gradient(to right, #C9A84C 0%, #C9A84C ${downPct * 2}%, #1E2530 ${downPct * 2}%, #1E2530 100%)` }}
+                className="w-full h-2 bg-[#080B0F] rounded-lg appearance-none cursor-pointer accent-gold"
+                style={{ background: `linear-gradient(to right, #059669 0%, #059669 ${downPct * 2}%, #161E2A ${downPct * 2}%, #161E2A 100%)` }}
               />
               <div className="flex justify-between text-[10px] text-muted mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
             </div>
@@ -382,13 +382,13 @@ function FinancingHubContent() {
 
           {/* results */}
           <div className="space-y-5">
-            <div className="bg-[#080A0E] border border-gold/20 rounded-xl p-5">
-              <p className="text-xs text-muted uppercase tracking-wider mb-1">Monthly Payment (P&I)</p>
-              <p className="text-3xl font-bold text-gold">{fmt(calcResults.monthlyPI)}</p>
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <p className="label mb-1">Monthly Payment (P&I)</p>
+              <p className="text-3xl font-bold text-gold font-mono">{fmt(calcResults.monthlyPI)}</p>
               <div className="border-t border-border mt-3 pt-3 space-y-1.5">
-                <div className="flex justify-between text-sm"><span className="text-muted">With taxes + insurance (est.)</span><span className="text-white">{fmt(calcResults.totalMonthly)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted">Total Interest Over Life</span><span className="text-red">{fmtShort(calcResults.totalInterest)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted">Total Cost</span><span className="text-white">{fmtShort(calcResults.totalCost)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">With taxes + insurance (est.)</span><span className="text-white font-mono">{fmt(calcResults.totalMonthly)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Total Interest Over Life</span><span className="text-red font-mono">{fmtShort(calcResults.totalInterest)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Total Cost</span><span className="text-white font-mono">{fmtShort(calcResults.totalCost)}</span></div>
               </div>
             </div>
 
@@ -397,11 +397,11 @@ function FinancingHubContent() {
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={amortData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,37,48,0.6)" vertical={false} />
-                  <XAxis dataKey="year" stroke="#6B7280" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={{ stroke: '#1E2530' }} tickLine={false} />
-                  <YAxis stroke="#6B7280" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtShort(v)} width={55} />
+                  <XAxis dataKey="year" stroke="#4A6080" tick={{ fill: '#4A6080', fontSize: 10 }} axisLine={{ stroke: '#161E2A' }} tickLine={false} />
+                  <YAxis stroke="#4A6080" tick={{ fill: '#4A6080', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtShort(v)} width={55} />
                   <RechartsTooltip content={<AmortTooltip />} />
-                  <Area type="monotone" dataKey="principal" stackId="1" stroke="#C9A84C" fill="#C9A84C" fillOpacity={0.3} name="Principal" />
-                  <Area type="monotone" dataKey="interest" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.2} name="Interest" />
+                  <Area type="monotone" dataKey="principal" stackId="1" stroke="#059669" fill="#059669" fillOpacity={0.3} name="Principal" />
+                  <Area type="monotone" dataKey="interest" stackId="1" stroke="#DC2626" fill="#DC2626" fillOpacity={0.2} name="Interest" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -418,7 +418,7 @@ function FinancingHubContent() {
             <Building2 className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <h2 className="font-display font-semibold text-base text-white">My Loans</h2>
+            <h2 className="label text-[11px]">My Loans</h2>
             <p className="text-xs text-muted">{loansWithMortgage.length} active mortgages</p>
           </div>
         </div>
@@ -446,11 +446,11 @@ function FinancingHubContent() {
                   <p className="text-xs text-muted mt-0.5">{prop.city}, {prop.state} {prop.zip}</p>
 
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 mt-4 text-sm">
-                    <div><span className="text-muted text-xs">Original Amount</span><p className="text-white font-medium">{prop.purchase_price ? fmtWhole(prop.purchase_price) : '--'}</p></div>
-                    <div><span className="text-muted text-xs">Current Balance</span><p className="text-white font-medium">{prop.mortgage_balance ? fmtWhole(prop.mortgage_balance) : '--'}</p></div>
-                    <div><span className="text-muted text-xs">Rate</span><p className="text-gold font-medium">{prop.mortgage_rate ? `${prop.mortgage_rate}%` : '--'}</p></div>
-                    <div><span className="text-muted text-xs">Monthly Payment</span><p className="text-white font-medium">{prop.mortgage_payment ? fmt(prop.mortgage_payment) : '--'}</p></div>
-                    <div><span className="text-muted text-xs">Payoff Date (est.)</span><p className="text-white font-medium">{payoffEst}</p></div>
+                    <div><span className="text-muted text-xs">Original Amount</span><p className="text-white font-medium font-mono">{prop.purchase_price ? fmtWhole(prop.purchase_price) : '--'}</p></div>
+                    <div><span className="text-muted text-xs">Current Balance</span><p className="text-white font-medium font-mono">{prop.mortgage_balance ? fmtWhole(prop.mortgage_balance) : '--'}</p></div>
+                    <div><span className="text-muted text-xs">Rate</span><p className="text-gold font-medium font-mono">{prop.mortgage_rate ? `${prop.mortgage_rate}%` : '--'}</p></div>
+                    <div><span className="text-muted text-xs">Monthly Payment</span><p className="text-white font-medium font-mono">{prop.mortgage_payment ? fmt(prop.mortgage_payment) : '--'}</p></div>
+                    <div><span className="text-muted text-xs">Payoff Date (est.)</span><p className="text-white font-medium font-mono">{payoffEst}</p></div>
                     <div><span className="text-muted text-xs">Lender</span><p className="text-white font-medium">--</p></div>
                   </div>
 
@@ -459,9 +459,9 @@ function FinancingHubContent() {
                     <div className="mt-4">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-muted">LTV Ratio</span>
-                        <span className={cn('font-semibold', ltv > 80 ? 'text-red' : ltv > 60 ? 'text-gold' : 'text-green')}>{ltv.toFixed(1)}%</span>
+                        <span className={cn('font-semibold font-mono', ltv > 80 ? 'text-red' : ltv > 60 ? 'text-gold' : 'text-green')}>{ltv.toFixed(1)}%</span>
                       </div>
-                      <div className="h-2 bg-[#080A0E] rounded-full overflow-hidden">
+                      <div className="h-2 bg-[#080B0F] rounded-full overflow-hidden">
                         <div
                           className={cn('h-full rounded-full transition-all', ltv > 80 ? 'bg-red' : ltv > 60 ? 'bg-gold' : 'bg-green')}
                           style={{ width: `${Math.min(ltv, 100)}%` }}
@@ -475,12 +475,12 @@ function FinancingHubContent() {
 
             {/* Portfolio Debt Summary */}
             <Card variant="elevated" padding="md" className="border-gold/20">
-              <p className="font-display font-semibold text-sm text-gold mb-4">Total Portfolio Debt</p>
+              <p className="label mb-4">Total Portfolio Debt</p>
               <div className="space-y-3">
-                <div className="flex justify-between text-sm"><span className="text-muted">Outstanding Balance</span><span className="text-white font-bold">{fmtWhole(portfolioDebt.totalBalance)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted">Monthly Payments</span><span className="text-white font-bold">{fmt(portfolioDebt.totalPayment)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted">Portfolio Value</span><span className="text-white font-bold">{fmtWhole(portfolioDebt.totalValue)}</span></div>
-                <div className="border-t border-border pt-3 flex justify-between text-sm"><span className="text-muted">Total Equity</span><span className="text-green font-bold">{fmtWhole(portfolioDebt.totalEquity)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Outstanding Balance</span><span className="text-white font-bold font-mono">{fmtWhole(portfolioDebt.totalBalance)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Monthly Payments</span><span className="text-white font-bold font-mono">{fmt(portfolioDebt.totalPayment)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Portfolio Value</span><span className="text-white font-bold font-mono">{fmtWhole(portfolioDebt.totalValue)}</span></div>
+                <div className="border-t border-border pt-3 flex justify-between text-sm"><span className="text-muted">Total Equity</span><span className="text-green font-bold font-mono">{fmtWhole(portfolioDebt.totalEquity)}</span></div>
               </div>
             </Card>
           </div>
@@ -496,7 +496,7 @@ function FinancingHubContent() {
             <RefreshCw className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <h2 className="font-display font-semibold text-base text-white">Refinance Analyzer</h2>
+            <h2 className="label text-[11px]">Refinance Analyzer</h2>
             <p className="text-xs text-muted">Compare current vs. new loan terms</p>
           </div>
         </div>
@@ -513,49 +513,49 @@ function FinancingHubContent() {
         {selectedProp && refiResults ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Current */}
-            <div className="bg-[#080A0E] border border-border rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-muted" />Current Loan</h3>
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <h3 className="label mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-muted" />Current Loan</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted">Balance</span><span className="text-white">{fmtWhole(refiResults.balance)}</span></div>
-                <div className="flex justify-between"><span className="text-muted">Rate</span><span className="text-gold">{refiResults.currentRate}%</span></div>
-                <div className="flex justify-between"><span className="text-muted">Payment</span><span className="text-white">{fmt(refiResults.currentPayment)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Balance</span><span className="text-white font-mono">{fmtWhole(refiResults.balance)}</span></div>
+                <div className="flex justify-between"><span className="text-muted">Rate</span><span className="text-gold font-mono">{refiResults.currentRate}%</span></div>
+                <div className="flex justify-between"><span className="text-muted">Payment</span><span className="text-white font-mono">{fmt(refiResults.currentPayment)}</span></div>
               </div>
             </div>
 
             {/* New */}
-            <div className="bg-[#080A0E] border border-border rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold" />New Loan</h3>
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <h3 className="label mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold" />New Loan</h3>
               <div className="space-y-4">
                 <Input label="New Rate (%)" type="number" step="0.05" value={refiNewRate} onChange={e => setRefiNewRate(e.target.value)} />
                 <Select label="New Term" value={refiNewTerm} onChange={e => setRefiNewTerm(e.target.value)} options={[{ value: '15', label: '15 Years' }, { value: '20', label: '20 Years' }, { value: '30', label: '30 Years' }]} />
-                <div className="flex justify-between text-sm pt-1"><span className="text-muted">New Payment</span><span className="text-gold font-bold">{fmt(refiResults.newPayment)}</span></div>
+                <div className="flex justify-between text-sm pt-1"><span className="text-muted">New Payment</span><span className="text-gold font-bold font-mono">{fmt(refiResults.newPayment)}</span></div>
               </div>
             </div>
 
             {/* Results */}
-            <div className="bg-[#080A0E] border border-gold/20 rounded-xl p-5">
-              <h3 className="text-xs font-semibold text-gold uppercase tracking-wider mb-4">Analysis</h3>
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <h3 className="label mb-4">Analysis</h3>
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-muted">Monthly Savings</p>
-                  <p className={cn('text-2xl font-bold', refiResults.monthlySavings > 0 ? 'text-green' : 'text-red')}>
+                  <p className={cn('text-2xl font-bold font-mono', refiResults.monthlySavings > 0 ? 'text-green' : 'text-red')}>
                     {refiResults.monthlySavings > 0 ? '+' : ''}{fmt(refiResults.monthlySavings)}
                   </p>
                 </div>
                 <div className="border-t border-border pt-3">
                   <p className="text-xs text-muted">Total Interest Savings</p>
-                  <p className={cn('text-lg font-bold', refiResults.totalInterestSavings > 0 ? 'text-green' : 'text-red')}>
+                  <p className={cn('text-lg font-bold font-mono', refiResults.totalInterestSavings > 0 ? 'text-green' : 'text-red')}>
                     {refiResults.totalInterestSavings > 0 ? '+' : ''}{fmtShort(refiResults.totalInterestSavings)}
                   </p>
                 </div>
                 <div className="border-t border-border pt-3">
                   <p className="text-xs text-muted">Break-even Point</p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold text-white font-mono">
                     {refiResults.breakEvenMonths > 0 ? `${refiResults.breakEvenMonths} months` : 'N/A'}
                   </p>
-                  {refiResults.breakEvenMonths > 0 && <p className="text-[10px] text-muted">Est. closing costs: {fmtWhole(refiResults.closingCosts)}</p>}
+                  {refiResults.breakEvenMonths > 0 && <p className="text-[10px] text-muted font-mono">Est. closing costs: {fmtWhole(refiResults.closingCosts)}</p>}
                 </div>
-                <Button variant="secondary" fullWidth icon={<ArrowRight className="h-4 w-4" />}>Contact Lender</Button>
+                <Button variant="outline" fullWidth icon={<ArrowRight className="h-4 w-4" />}>Contact Lender</Button>
               </div>
             </div>
           </div>
@@ -573,7 +573,7 @@ function FinancingHubContent() {
             <DollarSign className="h-5 w-5 text-gold" />
           </div>
           <div>
-            <h2 className="font-display font-semibold text-base text-white">Pre-Qualification Estimator</h2>
+            <h2 className="label text-[11px]">Pre-Qualification Estimator</h2>
             <p className="text-xs text-muted">Estimate how much home you can afford</p>
           </div>
         </div>
@@ -598,21 +598,21 @@ function FinancingHubContent() {
           </div>
 
           <div className="space-y-5">
-            <div className="bg-[#080A0E] border border-gold/20 rounded-xl p-5">
-              <p className="text-xs text-muted uppercase tracking-wider mb-1">Estimated Max Purchase Price</p>
-              <p className="text-3xl font-bold text-gold">{fmtWhole(prequalResults.maxPurchase)}</p>
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <p className="label mb-1">Estimated Max Purchase Price</p>
+              <p className="text-3xl font-bold text-gold font-mono">{fmtWhole(prequalResults.maxPurchase)}</p>
               <div className="border-t border-border mt-3 pt-3 space-y-2">
-                <div className="flex justify-between text-sm"><span className="text-muted">Max Loan Amount</span><span className="text-white font-medium">{fmtWhole(prequalResults.maxLoan)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted">Estimated Monthly Payment</span><span className="text-white font-medium">{fmt(prequalResults.estimatedPayment)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Max Loan Amount</span><span className="text-white font-medium font-mono">{fmtWhole(prequalResults.maxLoan)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted">Estimated Monthly Payment</span><span className="text-white font-medium font-mono">{fmt(prequalResults.estimatedPayment)}</span></div>
               </div>
             </div>
 
             {/* DTI visualization */}
-            <div className="bg-[#080A0E] border border-border rounded-xl p-5">
+            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
               <div className="flex justify-between items-center mb-3">
                 <p className="text-xs font-medium text-muted">Debt-to-Income Ratio</p>
                 <span className={cn(
-                  'text-sm font-bold',
+                  'text-sm font-bold font-mono',
                   prequalResults.dtiRatio > 43 ? 'text-red' : prequalResults.dtiRatio > 36 ? 'text-gold' : 'text-green',
                 )}>
                   {prequalResults.dtiRatio.toFixed(1)}%
@@ -635,7 +635,7 @@ function FinancingHubContent() {
                 <span>43% (FHA)</span>
                 <span>50%</span>
               </div>
-              <p className="text-[10px] text-muted mt-2">
+              <p className="text-[10px] text-muted mt-2 font-mono">
                 Max allowed DTI for your credit: {prequalResults.maxDtiBack.toFixed(0)}%
               </p>
             </div>
