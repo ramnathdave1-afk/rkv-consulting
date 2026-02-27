@@ -11,10 +11,14 @@ import {
   AlertTriangle,
   Home,
   DollarSign,
-  FileText,
   Bot,
   ExternalLink,
   X,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  User,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -33,6 +37,7 @@ import type { Property, ScreeningResult } from '@/types';
 const MOCK_SCREENINGS: {
   id: string;
   applicantName: string;
+  applicantEmail: string;
   propertyAddress: string;
   date: string;
   status: 'pending' | 'complete' | 'expired';
@@ -41,6 +46,7 @@ const MOCK_SCREENINGS: {
   {
     id: 'scr-001',
     applicantName: 'Marcus Williams',
+    applicantEmail: 'marcus.w@email.com',
     propertyAddress: '1420 Oak Lane, Unit B',
     date: '2026-02-20',
     status: 'complete',
@@ -70,6 +76,7 @@ const MOCK_SCREENINGS: {
   {
     id: 'scr-002',
     applicantName: 'Jennifer Chen',
+    applicantEmail: 'jchen.design@email.com',
     propertyAddress: '835 Maple Drive',
     date: '2026-02-18',
     status: 'complete',
@@ -107,6 +114,7 @@ const MOCK_SCREENINGS: {
   {
     id: 'scr-003',
     applicantName: 'David Thompson',
+    applicantEmail: 'd.thompson@email.com',
     propertyAddress: '1420 Oak Lane, Unit A',
     date: '2026-02-15',
     status: 'complete',
@@ -146,6 +154,7 @@ const MOCK_SCREENINGS: {
   {
     id: 'scr-004',
     applicantName: 'Priya Patel',
+    applicantEmail: 'priya.p@email.com',
     propertyAddress: '835 Maple Drive',
     date: '2026-02-24',
     status: 'pending',
@@ -154,6 +163,7 @@ const MOCK_SCREENINGS: {
   {
     id: 'scr-005',
     applicantName: 'Robert Kim',
+    applicantEmail: 'r.kim@email.com',
     propertyAddress: '2100 Birch Court',
     date: '2026-01-10',
     status: 'expired',
@@ -180,10 +190,18 @@ function getScoreColor(score: number): string {
   return 'text-red';
 }
 
-function getScoreBgColor(score: number): string {
+function _getScoreBgColor(score: number): string {
   if (score >= 70) return 'bg-green/10 border-green/20';
   if (score >= 40) return 'bg-gold/10 border-gold/20';
   return 'bg-red/10 border-red/20';
+}
+
+function getScoreLabel(score: number): string {
+  if (score >= 80) return 'Excellent';
+  if (score >= 70) return 'Good';
+  if (score >= 50) return 'Fair';
+  if (score >= 30) return 'Below Average';
+  return 'Poor';
 }
 
 function getCreditBarColor(score: number | null): string {
@@ -196,24 +214,71 @@ function getCreditBarColor(score: number | null): string {
 
 function getCreditBarWidth(score: number | null): number {
   if (score === null) return 0;
-  // Scale from 300-850
   return Math.max(0, Math.min(100, ((score - 300) / (850 - 300)) * 100));
 }
 
 function getRecommendationBadge(rec: ScreeningResult['recommendation']): {
   label: string;
   variant: 'success' | 'warning' | 'danger';
+  color: string;
 } {
   switch (rec) {
     case 'approve':
-      return { label: 'Approved', variant: 'success' };
+      return { label: 'Approve', variant: 'success', color: 'green' };
     case 'approve_with_conditions':
-      return { label: 'Conditional', variant: 'warning' };
+      return { label: 'Conditional', variant: 'warning', color: 'gold' };
     case 'deny':
-      return { label: 'Declined', variant: 'danger' };
+      return { label: 'Decline', variant: 'danger', color: 'red' };
     default:
-      return { label: 'Unknown', variant: 'warning' };
+      return { label: 'Unknown', variant: 'warning', color: 'gold' };
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Score Ring Component                                               */
+/* ------------------------------------------------------------------ */
+
+function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (score / 100) * circumference;
+
+  const color = score >= 70 ? '#22c55e' : score >= 40 ? '#C9A84C' : '#ef4444';
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-border"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - progress}
+          strokeLinecap="round"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={cn('text-3xl font-bold font-display', getScoreColor(score))}>
+          {score}
+        </span>
+        <span className="text-[10px] text-muted">/ 100</span>
+      </div>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -227,10 +292,12 @@ function ScreeningContent() {
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
+  const [applicantEmail, setApplicantEmail] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [actionTaken, setActionTaken] = useState<Record<string, 'approved' | 'declined' | 'more_info'>>({});
 
-  /* ---- Fetch properties ------------------------------------------ */
+  /* ---- Fetch properties ---- */
 
   useEffect(() => {
     async function fetchProperties() {
@@ -246,7 +313,7 @@ function ScreeningContent() {
     fetchProperties();
   }, [supabase]);
 
-  /* ---- Generate application link --------------------------------- */
+  /* ---- Generate application link ---- */
 
   function handleGenerateLink() {
     const token = Math.random().toString(36).substring(2, 15);
@@ -259,7 +326,15 @@ function ScreeningContent() {
     setTimeout(() => setLinkCopied(false), 2000);
   }
 
-  /* ---- Status badge helper --------------------------------------- */
+  function handleResetModal() {
+    setSelectedProperty('');
+    setSelectedUnit('');
+    setApplicantEmail('');
+    setGeneratedLink('');
+    setLinkCopied(false);
+  }
+
+  /* ---- Status badge ---- */
 
   function statusBadge(status: 'pending' | 'complete' | 'expired') {
     switch (status) {
@@ -272,7 +347,22 @@ function ScreeningContent() {
     }
   }
 
+  /* ---- Action handlers ---- */
+
+  function handleApprove(id: string) {
+    setActionTaken((prev) => ({ ...prev, [id]: 'approved' }));
+  }
+
+  function handleDecline(id: string) {
+    setActionTaken((prev) => ({ ...prev, [id]: 'declined' }));
+  }
+
+  function handleRequestMoreInfo(id: string) {
+    setActionTaken((prev) => ({ ...prev, [id]: 'more_info' }));
+  }
+
   const result = selectedScreening?.result;
+  const screeningAction = selectedScreening ? actionTaken[selectedScreening.id] : undefined;
 
   return (
     <div className="space-y-6">
@@ -280,10 +370,16 @@ function ScreeningContent() {
       {/*  HEADER                                                       */}
       {/* ============================================================ */}
       <div className="flex items-center justify-between">
-        <h1 className="font-display font-bold text-2xl text-white">Tenant Screening</h1>
+        <div>
+          <h1 className="font-display font-bold text-2xl text-white">Tenant Screening</h1>
+          <p className="text-sm text-muted mt-1">Comprehensive background checks and credit screening for applicants</p>
+        </div>
         <Button
           icon={<Send className="w-4 h-4" />}
-          onClick={() => setSendModalOpen(true)}
+          onClick={() => {
+            handleResetModal();
+            setSendModalOpen(true);
+          }}
         >
           Send Application
         </Button>
@@ -307,10 +403,10 @@ function ScreeningContent() {
               <tr className="border-b border-border">
                 <th className="text-left px-5 py-3 text-xs text-muted font-medium">Applicant Name</th>
                 <th className="text-left px-5 py-3 text-xs text-muted font-medium">Property</th>
-                <th className="text-left px-5 py-3 text-xs text-muted font-medium">Date</th>
                 <th className="text-center px-5 py-3 text-xs text-muted font-medium">Status</th>
                 <th className="text-center px-5 py-3 text-xs text-muted font-medium">Score</th>
-                <th className="text-right px-5 py-3 text-xs text-muted font-medium">Action</th>
+                <th className="text-left px-5 py-3 text-xs text-muted font-medium">Date</th>
+                <th className="text-right px-5 py-3 text-xs text-muted font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -329,22 +425,33 @@ function ScreeningContent() {
                     )}
                   >
                     <td className="px-5 py-3">
-                      <span className="text-white font-medium">{screening.applicantName}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-card border border-border">
+                          <User className="h-3.5 w-3.5 text-muted" />
+                        </div>
+                        <div>
+                          <span className="text-white font-medium">{screening.applicantName}</span>
+                          <p className="text-[10px] text-muted">{screening.applicantEmail}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-3 text-muted">{screening.propertyAddress}</td>
-                    <td className="px-5 py-3 text-muted">{formatDate(screening.date)}</td>
                     <td className="px-5 py-3 text-center">
                       <Badge variant={sb.variant} size="sm">{sb.label}</Badge>
                     </td>
                     <td className="px-5 py-3 text-center">
                       {screening.result ? (
-                        <span className={cn('font-bold', getScoreColor(screening.result.overall_score))}>
-                          {screening.result.overall_score}
-                        </span>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className={cn('text-lg font-bold font-display', getScoreColor(screening.result.overall_score))}>
+                            {screening.result.overall_score}
+                          </span>
+                          <span className="text-[10px] text-muted">/100</span>
+                        </div>
                       ) : (
                         <span className="text-muted">--</span>
                       )}
                     </td>
+                    <td className="px-5 py-3 text-muted">{formatDate(screening.date)}</td>
                     <td className="px-5 py-3 text-right">
                       {screening.result ? (
                         <button
@@ -389,32 +496,35 @@ function ScreeningContent() {
           </div>
 
           {/* Score + Recommendation hero */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Overall Score */}
-            <Card className="flex flex-col items-center justify-center text-center py-6">
-              <p className="text-xs text-muted mb-3 uppercase tracking-wider">Overall Score</p>
-              <div
-                className={cn(
-                  'flex items-center justify-center w-24 h-24 rounded-full border-2',
-                  getScoreBgColor(result.overall_score),
-                )}
-              >
-                <span className={cn('text-4xl font-bold font-display', getScoreColor(result.overall_score))}>
-                  {result.overall_score}
-                </span>
-              </div>
-              <p className="text-xs text-muted mt-3">out of 100</p>
+            <Card className="flex flex-col items-center justify-center text-center py-8">
+              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold">Overall Score</p>
+              <ScoreRing score={result.overall_score} size={120} />
+              <p className="text-xs text-muted mt-3">{getScoreLabel(result.overall_score)}</p>
             </Card>
 
             {/* Recommendation */}
-            <Card className="flex flex-col items-center justify-center text-center py-6">
-              <p className="text-xs text-muted mb-3 uppercase tracking-wider">Recommendation</p>
+            <Card className="flex flex-col items-center justify-center text-center py-8">
+              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold">AI Recommendation</p>
               {(() => {
                 const rec = getRecommendationBadge(result.recommendation);
                 return (
-                  <Badge variant={rec.variant} size="md" className="text-base px-4 py-2">
-                    {rec.label}
-                  </Badge>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className={cn(
+                      'flex items-center justify-center w-16 h-16 rounded-full border-2',
+                      rec.variant === 'success' ? 'bg-green/10 border-green/20' :
+                      rec.variant === 'warning' ? 'bg-gold/10 border-gold/20' :
+                      'bg-red/10 border-red/20',
+                    )}>
+                      {rec.variant === 'success' && <CheckCircle className="h-8 w-8 text-green" />}
+                      {rec.variant === 'warning' && <AlertTriangle className="h-8 w-8 text-gold" />}
+                      {rec.variant === 'danger' && <XCircle className="h-8 w-8 text-red" />}
+                    </div>
+                    <Badge variant={rec.variant} size="md" className="text-sm px-4 py-1.5">
+                      {rec.label}
+                    </Badge>
+                  </div>
                 );
               })()}
               <p className="text-xs text-muted mt-3 capitalize">
@@ -428,7 +538,8 @@ function ScreeningContent() {
             </Card>
 
             {/* Quick stats */}
-            <Card className="py-6">
+            <Card className="py-8 px-6">
+              <p className="text-xs text-muted mb-4 uppercase tracking-wider font-semibold text-center">Key Metrics</p>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Credit Score</span>
@@ -442,18 +553,27 @@ function ScreeningContent() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Income-to-Rent</span>
-                  <span className="text-sm font-bold text-white">{result.income_to_rent_ratio}x</span>
+                  <span className={cn(
+                    'text-sm font-bold',
+                    (result.income_to_rent_ratio || 0) >= 3 ? 'text-green' : 'text-red',
+                  )}>
+                    {result.income_to_rent_ratio}x
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">Rental History</span>
                   <span className="text-sm font-bold text-white">{result.rental_history_years} years</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted">Employer</span>
+                  <span className="text-xs text-white text-right max-w-[160px] truncate">{result.employer || 'N/A'}</span>
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Detail cards grid */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Credit Score Card */}
             <Card
               header={
@@ -630,56 +750,9 @@ function ScreeningContent() {
               </div>
             </Card>
 
-            {/* Rental History */}
+            {/* AI Recommendation - full width */}
             <Card
-              header={
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gold" />
-                  <span className="font-display font-semibold text-sm text-white">Rental History</span>
-                </div>
-              }
-            >
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted">Years Renting</span>
-                  <span className="text-sm font-semibold text-white">{result.rental_history_years || 0} years</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted">Landlord References</span>
-                  <span className="text-sm font-semibold text-white">{result.prior_landlord_references}</span>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-border">
-                  <span className="text-xs text-muted">Previous Landlord Rating</span>
-                  <div className="flex items-center gap-1">
-                    {result.prior_landlord_references > 0 ? (
-                      <>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <svg
-                            key={star}
-                            className={cn(
-                              'h-3.5 w-3.5',
-                              star <= Math.min(result.prior_landlord_references + 2, 5)
-                                ? 'text-gold fill-gold'
-                                : 'text-border',
-                            )}
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted">No references</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* AI Recommendation */}
-            <Card
-              className="col-span-2"
+              className="md:col-span-2"
               header={
                 <div className="flex items-center gap-2">
                   <Bot className="h-4 w-4 text-gold" />
@@ -718,6 +791,50 @@ function ScreeningContent() {
                   </ul>
                 </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="mt-6 pt-4 border-t border-border">
+                {screeningAction ? (
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={screeningAction === 'approved' ? 'success' : screeningAction === 'declined' ? 'danger' : 'warning'}
+                      size="md"
+                      dot
+                    >
+                      {screeningAction === 'approved' && 'Application Approved'}
+                      {screeningAction === 'declined' && 'Application Declined'}
+                      {screeningAction === 'more_info' && 'More Information Requested'}
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      icon={<CheckCircle className="h-3.5 w-3.5" />}
+                      onClick={() => handleApprove(selectedScreening.id)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<HelpCircle className="h-3.5 w-3.5" />}
+                      onClick={() => handleRequestMoreInfo(selectedScreening.id)}
+                    >
+                      Request More Info
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={<XCircle className="h-3.5 w-3.5" />}
+                      onClick={() => handleDecline(selectedScreening.id)}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         </div>
@@ -733,7 +850,7 @@ function ScreeningContent() {
             description="Generate a unique application link for a prospective tenant. They will complete the form online."
           />
           <div className="px-6 py-4 space-y-5">
-            {/* Property + Unit selectors */}
+            {/* Property selector + applicant email */}
             <div className="grid grid-cols-2 gap-4">
               <Select
                 label="Property"
@@ -756,6 +873,15 @@ function ScreeningContent() {
                 onChange={(e) => setSelectedUnit(e.target.value)}
               />
             </div>
+
+            <Input
+              label="Applicant Email"
+              placeholder="applicant@email.com"
+              type="email"
+              value={applicantEmail}
+              onChange={(e) => setApplicantEmail(e.target.value)}
+              icon={<Mail className="h-4 w-4" />}
+            />
 
             {/* Generate button */}
             <Button

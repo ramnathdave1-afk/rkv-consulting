@@ -18,14 +18,16 @@ import {
   Receipt,
   FileText,
   Settings,
-  Bell,
   LogOut,
   Lock,
   ChevronRight,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
 import { createClient } from '@/lib/supabase/client';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 import type { FeatureKey } from '@/lib/stripe/plans';
 
 /* ------------------------------------------------------------------ */
@@ -125,11 +127,14 @@ export default function DashboardLayout({
 
   // User state
   const [user, setUser] = useState<{ email: string; full_name: string | null } | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [_unreadCount, setUnreadCount] = useState(0);
 
   // Dropdown state
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Mobile sidebar state
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Locked feature alert
   const [lockedAlert, setLockedAlert] = useState<string | null>(null);
@@ -174,6 +179,11 @@ export default function DashboardLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname]);
+
   // Clear locked alert after timeout
   useEffect(() => {
     if (lockedAlert) {
@@ -201,9 +211,23 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-black">
       {/* ============================================================ */}
+      {/*  MOBILE OVERLAY                                               */}
+      {/* ============================================================ */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[55] md:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* ============================================================ */}
       {/*  SIDEBAR                                                      */}
       {/* ============================================================ */}
-      <aside className="fixed left-0 top-0 w-60 h-screen bg-deep border-r border-border flex flex-col overflow-y-auto z-50">
+      <aside className={cn(
+        'fixed left-0 top-0 w-60 h-screen bg-deep border-r border-border flex flex-col overflow-y-auto z-[60] transition-transform duration-300',
+        'md:translate-x-0',
+        mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
+      )}>
         {/* Brand */}
         <div className="p-6">
           <h1 className="font-display font-bold text-xl text-white tracking-tight">
@@ -303,29 +327,27 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  TOP BAR                                                      */}
       {/* ============================================================ */}
-      <header className="fixed top-0 left-60 right-0 h-16 bg-deep/80 backdrop-blur-xl border-b border-border z-40 flex items-center justify-between px-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted">RKV</span>
-          <ChevronRight className="h-3.5 w-3.5 text-muted/50" />
-          <span className="text-white font-medium">{getBreadcrumb(pathname)}</span>
+      <header className="fixed top-0 left-0 md:left-60 right-0 h-14 md:h-16 bg-deep/80 backdrop-blur-xl border-b border-border z-40 flex items-center justify-between px-4 md:px-6">
+        {/* Left: hamburger (mobile) + breadcrumb */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen((prev) => !prev)}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+          >
+            {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted hidden sm:inline">RKV</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted/50 hidden sm:inline" />
+            <span className="text-white font-medium">{getBreadcrumb(pathname)}</span>
+          </div>
         </div>
 
         {/* Right: notification + avatar */}
         <div className="flex items-center gap-4">
-          {/* Notification bell */}
-          <button
-            type="button"
-            className="relative p-2 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
-            onClick={() => router.push('/notifications')}
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red text-[10px] font-bold text-white px-1">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </button>
+          {/* Notification Center */}
+          <NotificationCenter />
 
           {/* User avatar dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -403,9 +425,39 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  MAIN CONTENT                                                 */}
       {/* ============================================================ */}
-      <main className="ml-60 mt-16 min-h-screen bg-black p-8">
+      <main className="ml-0 md:ml-60 mt-14 md:mt-16 min-h-screen bg-black p-4 md:p-8 pb-24 md:pb-8">
         {children}
       </main>
+
+      {/* ============================================================ */}
+      {/*  MOBILE BOTTOM NAV                                            */}
+      {/* ============================================================ */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-deep/95 backdrop-blur-xl border-t border-border z-50 md:hidden flex items-center justify-around px-2">
+        {[
+          { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
+          { label: 'Properties', href: '/properties', icon: Building2 },
+          { label: 'Deals', href: '/deals', icon: Calculator },
+          { label: 'Tenants', href: '/tenants', icon: Users },
+          { label: 'Settings', href: '/settings', icon: Settings },
+        ].map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg min-w-[56px]',
+                'transition-colors duration-150',
+                isActive ? 'text-gold' : 'text-muted hover:text-white',
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

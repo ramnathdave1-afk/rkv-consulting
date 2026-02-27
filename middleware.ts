@@ -22,6 +22,7 @@ function isPublicPath(pathname: string): boolean {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/apply/') ||
     pathname.includes('.')
   ) {
     return true;

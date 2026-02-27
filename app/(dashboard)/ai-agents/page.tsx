@@ -5,43 +5,33 @@ import {
   Mail,
   Phone,
   MessageSquare,
-  Zap,
   Settings,
-  Check,
   Clock,
   Bot,
-  Shield,
-  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Play,
+  Edit,
+  Send,
+  Activity,
+  BarChart3,
+  CheckCircle,
+  XCircle,
+  Loader2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { FeatureGate } from '@/components/paywall/FeatureGate';
 import { useSubscription } from '@/hooks/useSubscription';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { formatDistanceToNow } from 'date-fns';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
-
-interface AgentConfig {
-  id: string;
-  key: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-  capabilities: string[];
-  stats: { label: string; value: string }[];
-  featureKey: 'emailAgents' | 'voiceAgents' | 'smsAgents';
-}
-
-interface AutomationRule {
-  id: string;
-  label: string;
-  description: string;
-  active: boolean;
-}
 
 interface AgentLogEntry {
   id: string;
@@ -49,122 +39,178 @@ interface AgentLogEntry {
   action: string;
   status: string;
   created_at: string;
+  details?: string;
 }
 
-interface AutopilotAction {
+interface EmailSequence {
   id: string;
-  action: string;
-  agent_type: string;
-  created_at: string;
-  approved: boolean | null;
+  name: string;
+  type: string;
+  description: string;
+  stepsCount: number;
+  active: boolean;
+  steps: { dayOffset: number; subject: string; preview: string }[];
+}
+
+interface SMSThread {
+  tenantId: string;
+  tenantName: string;
+  propertyAddress: string;
+  messages: SMSMsg[];
+  unreadCount: number;
+  autoResponse: boolean;
+}
+
+interface SMSMsg {
+  id: string;
+  direction: 'inbound' | 'outbound';
+  content: string;
+  sender: 'tenant' | 'agent' | 'investor';
+  timestamp: string;
+  status: 'sent' | 'delivered' | 'read' | 'failed';
 }
 
 /* ------------------------------------------------------------------ */
-/*  Agent configurations                                               */
+/*  Constants: Email Sequences                                         */
 /* ------------------------------------------------------------------ */
 
-const AGENTS: AgentConfig[] = [
+const EMAIL_SEQUENCES: EmailSequence[] = [
   {
-    id: 'email',
-    key: 'email_agent',
-    title: 'Automated Email Agent',
-    description:
-      'Handles rent reminders, lease renewals, maintenance updates, and tenant communications',
-    icon: Mail,
-    iconColor: 'text-blue-400',
-    iconBg: 'bg-blue-500/10',
-    capabilities: [
-      'Late rent sequences',
-      'Lease renewal notices',
-      'Maintenance updates',
-      'Welcome emails',
-    ],
-    stats: [
-      { label: 'Emails sent this month', value: '0' },
-      { label: 'Response rate', value: '0%' },
-    ],
-    featureKey: 'emailAgents',
-  },
-  {
-    id: 'voice',
-    key: 'voice_agent',
-    title: 'AI Voice Agent',
-    description:
-      'Makes and receives tenant calls for rent collection, dispute resolution, and inquiries',
-    icon: Phone,
-    iconColor: 'text-green',
-    iconBg: 'bg-green/10',
-    capabilities: [
-      'Late rent calls',
-      'Payment plan negotiation',
-      'Maintenance scheduling',
-      'General inquiries',
-    ],
-    stats: [
-      { label: 'Calls made', value: '0' },
-      { label: 'Minutes total', value: '0' },
-      { label: 'Collected', value: '$0' },
-    ],
-    featureKey: 'voiceAgents',
-  },
-  {
-    id: 'sms',
-    key: 'sms_agent',
-    title: 'AI SMS Agent',
-    description:
-      'Instant 24/7 text message responses to tenants',
-    icon: MessageSquare,
-    iconColor: 'text-purple-400',
-    iconBg: 'bg-purple-500/10',
-    capabilities: [
-      'Maintenance requests',
-      'Payment confirmations',
-      'Lease questions',
-      'Emergency routing',
-    ],
-    stats: [
-      { label: 'Messages sent', value: '0' },
-      { label: 'Avg response time', value: '0s' },
-    ],
-    featureKey: 'smsAgents',
-  },
-];
-
-const DEFAULT_RULES: AutomationRule[] = [
-  {
-    id: 'rule-1',
-    label: 'Send rent reminder 3 days before due',
-    description: 'Automated email reminder to tenants',
+    id: 'seq-rent',
+    name: 'Rent Reminder',
+    type: 'rent_reminder',
+    description: 'Automated sequence that reminds tenants when rent is approaching and follows up on late payments.',
+    stepsCount: 4,
     active: true,
+    steps: [
+      { dayOffset: -3, subject: 'Rent Due Reminder', preview: 'Hi {{tenant_name}}, your rent of {{rent_amount}} for {{property_address}} is due on {{due_date}}.' },
+      { dayOffset: 0, subject: 'Rent Due Today', preview: 'Hi {{tenant_name}}, just a reminder that your rent of {{rent_amount}} is due today.' },
+      { dayOffset: 3, subject: 'Late Rent Notice', preview: 'Hi {{tenant_name}}, your rent of {{rent_amount}} is now 3 days past due. A late fee of {{late_fee}} may apply.' },
+      { dayOffset: 7, subject: 'Final Late Rent Notice', preview: 'Hi {{tenant_name}}, your rent is now 7 days past due. Please contact us immediately to discuss payment arrangements.' },
+    ],
   },
   {
-    id: 'rule-2',
-    label: 'Call tenant if rent is 5 days late',
-    description: 'Voice agent initiates collection call',
+    id: 'seq-renewal',
+    name: 'Lease Renewal',
+    type: 'lease_renewal',
+    description: 'Multi-step sequence that notifies tenants of upcoming lease expirations and presents renewal options.',
+    stepsCount: 3,
     active: true,
+    steps: [
+      { dayOffset: -90, subject: 'Lease Renewal Notice', preview: 'Hi {{tenant_name}}, your lease at {{property_address}} expires on {{lease_end}}. We would like to offer you renewal options.' },
+      { dayOffset: -60, subject: 'Renewal Options Available', preview: 'Hi {{tenant_name}}, please review the attached renewal options for {{property_address}}. New rent: {{new_rent_amount}}/mo.' },
+      { dayOffset: -30, subject: 'Lease Renewal - Action Required', preview: 'Hi {{tenant_name}}, your lease expires in 30 days. Please sign your renewal or confirm your move-out date.' },
+    ],
   },
   {
-    id: 'rule-3',
-    label: 'Send lease renewal notice 90 days before expiry',
-    description: 'Email with renewal terms and options',
-    active: true,
+    id: 'seq-welcome',
+    name: 'Welcome Tenant',
+    type: 'welcome',
+    description: 'Onboarding sequence for new tenants with move-in details, property information, and important contacts.',
+    stepsCount: 3,
+    active: false,
+    steps: [
+      { dayOffset: 0, subject: 'Welcome to {{property_address}}!', preview: 'Hi {{tenant_name}}, welcome to your new home! Here is everything you need to know about move-in.' },
+      { dayOffset: 1, subject: 'Important Contacts & Emergency Info', preview: 'Hi {{tenant_name}}, here are your important contacts for maintenance, emergencies, and general inquiries.' },
+      { dayOffset: 7, subject: 'How is Everything Going?', preview: 'Hi {{tenant_name}}, just checking in after your first week. Is there anything you need help with?' },
+    ],
   },
   {
-    id: 'rule-4',
-    label: 'Auto-respond to maintenance requests',
-    description: 'SMS acknowledgment with estimated timeline',
+    id: 'seq-maintenance',
+    name: 'Maintenance Follow-up',
+    type: 'maintenance_followup',
+    description: 'Automated updates for tenants on maintenance request status, scheduling, and completion confirmation.',
+    stepsCount: 3,
     active: true,
+    steps: [
+      { dayOffset: 0, subject: 'Maintenance Request Received', preview: 'Hi {{tenant_name}}, we received your maintenance request: "{{request_title}}". A technician will be assigned shortly.' },
+      { dayOffset: 1, subject: 'Maintenance Scheduled', preview: 'Hi {{tenant_name}}, your maintenance visit for "{{request_title}}" is scheduled for {{scheduled_date}}.' },
+      { dayOffset: 0, subject: 'Maintenance Completed', preview: 'Hi {{tenant_name}}, the maintenance work for "{{request_title}}" has been completed. Please confirm everything is resolved.' },
+    ],
   },
   {
-    id: 'rule-5',
-    label: 'Escalate emergency maintenance to landlord',
-    description: 'Immediate SMS + call for urgent issues',
-    active: true,
+    id: 'seq-moveout',
+    name: 'Move-out Notice',
+    type: 'moveout',
+    description: 'Step-by-step guidance for tenants through the move-out process including inspection scheduling.',
+    stepsCount: 3,
+    active: false,
+    steps: [
+      { dayOffset: -30, subject: 'Move-out Checklist', preview: 'Hi {{tenant_name}}, since your lease at {{property_address}} ends on {{lease_end}}, here is your move-out checklist.' },
+      { dayOffset: -14, subject: 'Inspection Scheduling', preview: 'Hi {{tenant_name}}, please schedule your pre-move-out inspection. Available times: {{available_times}}.' },
+      { dayOffset: -3, subject: 'Final Move-out Reminder', preview: 'Hi {{tenant_name}}, your move-out date is in 3 days. Please ensure all items on the checklist are completed.' },
+    ],
+  },
+  {
+    id: 'seq-seasonal',
+    name: 'Seasonal Update',
+    type: 'seasonal',
+    description: 'Periodic newsletters with seasonal maintenance tips, community updates, and property announcements.',
+    stepsCount: 2,
+    active: false,
+    steps: [
+      { dayOffset: 0, subject: '{{season}} Property Update', preview: 'Hi {{tenant_name}}, here are some seasonal tips and updates for your property at {{property_address}}.' },
+      { dayOffset: 7, subject: 'Seasonal Maintenance Tips', preview: 'Hi {{tenant_name}}, prepare your home for {{season}} with these helpful maintenance tips.' },
+    ],
   },
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Toggle Switch component                                            */
+/*  Constants: Mock SMS threads                                        */
+/* ------------------------------------------------------------------ */
+
+const MOCK_SMS_THREADS: SMSThread[] = [
+  {
+    tenantId: 'tenant-1',
+    tenantName: 'Marcus Williams',
+    propertyAddress: '1420 Oak Lane, Unit B',
+    unreadCount: 2,
+    autoResponse: true,
+    messages: [
+      { id: 's1', direction: 'inbound', content: 'Hi, the kitchen sink is leaking again. Can someone come look at it?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), status: 'read' },
+      { id: 's2', direction: 'outbound', content: 'Hi Marcus, thanks for letting us know. I\'ve created a maintenance request for the kitchen sink leak. A plumber will contact you within 24 hours to schedule a visit.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 40).toISOString(), status: 'delivered' },
+      { id: 's3', direction: 'inbound', content: 'Great, thank you! Is there anything I should do in the meantime?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(), status: 'read' },
+      { id: 's4', direction: 'outbound', content: 'You can place a bucket under the leak and turn off the water valve under the sink if the leak is significant. The plumber will handle the rest.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), status: 'delivered' },
+    ],
+  },
+  {
+    tenantId: 'tenant-2',
+    tenantName: 'Jennifer Chen',
+    propertyAddress: '835 Maple Drive',
+    unreadCount: 0,
+    autoResponse: true,
+    messages: [
+      { id: 's5', direction: 'inbound', content: 'When is my rent due this month?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), status: 'read' },
+      { id: 's6', direction: 'outbound', content: 'Hi Jennifer, your rent of $1,600 is due on the 1st of each month. Your next payment is due March 1st.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3 + 30000).toISOString(), status: 'delivered' },
+    ],
+  },
+  {
+    tenantId: 'tenant-3',
+    tenantName: 'David Thompson',
+    propertyAddress: '1420 Oak Lane, Unit A',
+    unreadCount: 1,
+    autoResponse: false,
+    messages: [
+      { id: 's7', direction: 'inbound', content: 'I need to discuss my rent situation. Can we talk?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), status: 'read' },
+    ],
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Constants: Voice Settings                                          */
+/* ------------------------------------------------------------------ */
+
+const ELEVENLABS_VOICES = [
+  { value: 'rachel', label: 'Rachel - Professional Female' },
+  { value: 'adam', label: 'Adam - Professional Male' },
+  { value: 'sarah', label: 'Sarah - Friendly Female' },
+  { value: 'josh', label: 'Josh - Friendly Male' },
+  { value: 'bella', label: 'Bella - Warm Female' },
+  { value: 'custom', label: 'Custom Voice (Coming Soon)' },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Toggle Switch                                                      */
 /* ------------------------------------------------------------------ */
 
 function ToggleSwitch({
@@ -206,7 +252,7 @@ function ToggleSwitch({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Agent icon mapping for logs                                        */
+/*  Agent icon helper                                                  */
 /* ------------------------------------------------------------------ */
 
 function getAgentIcon(agentType: string) {
@@ -226,88 +272,93 @@ function getAgentIcon(agentType: string) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Variable highlighter                                               */
+/* ------------------------------------------------------------------ */
+
+function HighlightVariables({ text }: { text: string }) {
+  const parts = text.split(/({{[^}]+}})/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        /^{{[^}]+}}$/.test(part) ? (
+          <span key={i} className="text-gold font-semibold bg-gold/10 px-1 rounded">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page component                                                     */
 /* ------------------------------------------------------------------ */
 
 export default function AIAgentsPage() {
   const supabase = createClient();
-  const { hasFeature, planName } = useSubscription();
-  const isElite = planName === 'elite';
+  const { hasFeature: _hasFeature, planName } = useSubscription();
+  const _isElite = planName === 'elite';
 
   // State
-  const [agentStates, setAgentStates] = useState<Record<string, boolean>>({
-    email: false,
-    voice: false,
-    sms: false,
-  });
-  const [rules, setRules] = useState<AutomationRule[]>(DEFAULT_RULES);
-  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
   const [activityLogs, setActivityLogs] = useState<AgentLogEntry[]>([]);
-  const [autopilotActions, setAutopilotActions] = useState<AutopilotAction[]>([]);
-  const [agentStats, setAgentStats] = useState<Record<string, { label: string; value: string }[]>>({});
-  const [configOpen, setConfigOpen] = useState<string | null>(null);
+  const [expandedSequence, setExpandedSequence] = useState<string | null>(null);
+  const [sequences, setSequences] = useState(EMAIL_SEQUENCES);
+  const [selectedVoice, setSelectedVoice] = useState('rachel');
+  const [callScript, setCallScript] = useState(
+    'Hello {{tenant_name}}, this is an automated call from your property management team regarding your rent payment for {{property_address}}. Your rent of {{rent_amount}} was due on {{due_date}}. Please contact us at your earliest convenience to arrange payment. Press 1 to speak with a representative, or press 2 to set up a payment plan.'
+  );
+  const [businessHoursStart, setBusinessHoursStart] = useState('09:00');
+  const [businessHoursEnd, setBusinessHoursEnd] = useState('21:00');
+  const [maxCallsPerWeek, setMaxCallsPerWeek] = useState(10);
+  const [escalationThreshold, setEscalationThreshold] = useState(3);
+  const [smsThreads, setSmsThreads] = useState(MOCK_SMS_THREADS);
+  const [selectedThread, setSelectedThread] = useState<string | null>(MOCK_SMS_THREADS[0]?.tenantId || null);
+  const [smsInput, setSmsInput] = useState('');
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
+
+  // Stats
+  const [overviewStats, setOverviewStats] = useState({
+    emailsSent: 0,
+    callsMade: 0,
+    smsSent: 0,
+    tasksCompleted: 0,
+  });
 
   /* ---------------------------------------------------------------- */
-  /*  Fetch agent logs and stats                                       */
+  /*  Fetch data                                                       */
   /* ---------------------------------------------------------------- */
 
   const fetchData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Fetch recent agent logs
     const { data: logs } = await supabase
       .from('agent_logs')
       .select('id, agent_type, action, status, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(50);
 
     if (logs) {
       setActivityLogs(logs as AgentLogEntry[]);
 
-      // Compute stats from logs
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthLogs = logs.filter((l: AgentLogEntry) => new Date(l.created_at) >= monthStart);
 
-      const monthLogs = logs.filter(
-        (l: AgentLogEntry) => new Date(l.created_at) >= monthStart
-      );
+      const emailLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'email_agent' || l.agent_type === 'email');
+      const voiceLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'voice_agent' || l.agent_type === 'voice');
+      const smsLogs = monthLogs.filter((l: AgentLogEntry) => l.agent_type === 'sms_agent' || l.agent_type === 'sms');
+      const completedLogs = monthLogs.filter((l: AgentLogEntry) => l.status === 'success');
 
-      // Email stats
-      const emailLogs = monthLogs.filter(
-        (l: AgentLogEntry) => l.agent_type === 'email_agent' || l.agent_type === 'email'
-      );
-      const emailSent = emailLogs.length;
-      const emailSuccessful = emailLogs.filter((l: AgentLogEntry) => l.status === 'success').length;
-      const emailRate = emailSent > 0 ? Math.round((emailSuccessful / emailSent) * 100) : 0;
-
-      // Voice stats
-      const voiceLogs = monthLogs.filter(
-        (l: AgentLogEntry) => l.agent_type === 'voice_agent' || l.agent_type === 'voice'
-      );
-      const callsMade = voiceLogs.length;
-
-      // SMS stats
-      const smsLogs = monthLogs.filter(
-        (l: AgentLogEntry) => l.agent_type === 'sms_agent' || l.agent_type === 'sms'
-      );
-      const smsSent = smsLogs.length;
-
-      setAgentStats({
-        email: [
-          { label: 'Emails sent this month', value: emailSent.toString() },
-          { label: 'Response rate', value: `${emailRate}%` },
-        ],
-        voice: [
-          { label: 'Calls made', value: callsMade.toString() },
-          { label: 'Minutes total', value: `${callsMade * 3}` },
-          { label: 'Collected', value: `$${(callsMade * 150).toLocaleString()}` },
-        ],
-        sms: [
-          { label: 'Messages sent', value: smsSent.toString() },
-          { label: 'Avg response time', value: smsSent > 0 ? '< 30s' : '0s' },
-        ],
+      setOverviewStats({
+        emailsSent: emailLogs.length,
+        callsMade: voiceLogs.length,
+        smsSent: smsLogs.length,
+        tasksCompleted: completedLogs.length,
       });
     }
   }, [supabase]);
@@ -317,72 +368,46 @@ export default function AIAgentsPage() {
   }, [fetchData]);
 
   /* ---------------------------------------------------------------- */
-  /*  Agent toggle                                                     */
+  /*  Handlers                                                         */
   /* ---------------------------------------------------------------- */
 
-  function toggleAgent(agentId: string) {
-    setAgentStates((prev) => ({ ...prev, [agentId]: !prev[agentId] }));
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Automation rule toggle                                           */
-  /* ---------------------------------------------------------------- */
-
-  function toggleRule(ruleId: string) {
-    setRules((prev) =>
-      prev.map((r) => (r.id === ruleId ? { ...r, active: !r.active } : r))
+  function toggleSequence(id: string) {
+    setSequences((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s))
     );
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Autopilot actions                                                */
-  /* ---------------------------------------------------------------- */
+  function handleSendSMS() {
+    if (!smsInput.trim() || !selectedThread) return;
+    const newMsg: SMSMsg = {
+      id: `s-${Date.now()}`,
+      direction: 'outbound',
+      content: smsInput.trim(),
+      sender: 'investor',
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+    };
+    setSmsThreads((prev) =>
+      prev.map((t) =>
+        t.tenantId === selectedThread
+          ? { ...t, messages: [...t.messages, newMsg] }
+          : t
+      )
+    );
+    setSmsInput('');
+  }
 
-  function handleApproveAction(actionId: string) {
-    setAutopilotActions((prev) =>
-      prev.map((a) => (a.id === actionId ? { ...a, approved: true } : a))
+  function toggleAutoResponse(tenantId: string) {
+    setSmsThreads((prev) =>
+      prev.map((t) =>
+        t.tenantId === tenantId
+          ? { ...t, autoResponse: !t.autoResponse }
+          : t
+      )
     );
   }
 
-  function handleOverrideAction(actionId: string) {
-    setAutopilotActions((prev) =>
-      prev.map((a) => (a.id === actionId ? { ...a, approved: false } : a))
-    );
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Mock autopilot actions when enabled                              */
-  /* ---------------------------------------------------------------- */
-
-  useEffect(() => {
-    if (autopilotEnabled) {
-      setAutopilotActions([
-        {
-          id: 'ap-1',
-          action: 'Sent late rent reminder to John D. - Unit 3B',
-          agent_type: 'email',
-          created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          approved: null,
-        },
-        {
-          id: 'ap-2',
-          action: 'Scheduled maintenance call with Maria S. for Tuesday',
-          agent_type: 'voice',
-          created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          approved: null,
-        },
-        {
-          id: 'ap-3',
-          action: 'Responded to parking inquiry from Unit 7A tenant',
-          agent_type: 'sms',
-          created_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-          approved: true,
-        },
-      ]);
-    } else {
-      setAutopilotActions([]);
-    }
-  }, [autopilotEnabled]);
+  const activeThread = smsThreads.find((t) => t.tenantId === selectedThread);
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
@@ -390,10 +415,8 @@ export default function AIAgentsPage() {
 
   return (
     <FeatureGate feature="emailAgents">
-      <div className="space-y-8">
-        {/* ============================================================ */}
-        {/*  HEADER                                                       */}
-        {/* ============================================================ */}
+      <div className="space-y-6">
+        {/* Header */}
         <div>
           <h1 className="font-display font-bold text-2xl text-white">
             AI Agents
@@ -404,434 +427,618 @@ export default function AIAgentsPage() {
         </div>
 
         {/* ============================================================ */}
-        {/*  AGENT STATUS CARDS                                           */}
+        {/*  TABS                                                         */}
         {/* ============================================================ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {AGENTS.map((agent) => {
-            const Icon = agent.icon;
-            const enabled = agentStates[agent.id] ?? false;
-            const hasAccess = hasFeature(agent.featureKey);
-            const stats = agentStats[agent.id] || agent.stats;
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="overview" icon={<BarChart3 className="h-3.5 w-3.5" />}>
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="email" icon={<Mail className="h-3.5 w-3.5" />}>
+              Email
+            </TabsTrigger>
+            <TabsTrigger value="voice" icon={<Phone className="h-3.5 w-3.5" />}>
+              Voice
+            </TabsTrigger>
+            <TabsTrigger value="sms" icon={<MessageSquare className="h-3.5 w-3.5" />}>
+              SMS
+            </TabsTrigger>
+            <TabsTrigger value="activity" icon={<Activity className="h-3.5 w-3.5" />}>
+              Activity Log
+            </TabsTrigger>
+          </TabsList>
 
-            return (
-              <div
-                key={agent.id}
-                className={cn(
-                  'bg-card border border-border rounded-xl p-6',
-                  'transition-all duration-300',
-                  enabled && hasAccess && 'border-gold/20 shadow-glow-sm'
-                )}
+          {/* ========================================================== */}
+          {/*  TAB 1: OVERVIEW                                            */}
+          {/* ========================================================== */}
+          <TabsContent value="overview">
+            <div className="space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {[
+                  { label: 'Emails Sent', value: overviewStats.emailsSent, icon: Mail, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+                  { label: 'Calls Made', value: overviewStats.callsMade, icon: Phone, color: 'text-green', bg: 'bg-green/10' },
+                  { label: 'SMS Sent', value: overviewStats.smsSent, icon: MessageSquare, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                  { label: 'Tasks Completed', value: overviewStats.tasksCompleted, icon: CheckCircle, color: 'text-gold', bg: 'bg-gold/10' },
+                ].map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={stat.label}>
+                      <div className="flex items-center gap-4">
+                        <div className={cn('flex items-center justify-center w-12 h-12 rounded-xl', stat.bg)}>
+                          <Icon className={cn('h-6 w-6', stat.color)} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted uppercase tracking-wider font-semibold">{stat.label}</p>
+                          <p className="text-2xl font-bold text-white font-display tabular-nums">{stat.value}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Recent Activity Feed */}
+              <Card
+                header={
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted" />
+                    <span className="font-display font-semibold text-sm text-white">Recent Activity</span>
+                    <span className="ml-auto text-xs text-muted">This month</span>
+                  </div>
+                }
               >
-                {/* Header row */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'flex items-center justify-center w-10 h-10 rounded-lg',
-                        agent.iconBg
-                      )}
-                    >
-                      <Icon className={cn('h-5 w-5', agent.iconColor)} />
+                {activityLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-border/50 mb-3">
+                      <Bot className="h-6 w-6 text-muted" />
                     </div>
+                    <p className="text-sm text-muted">No agent activity yet</p>
+                    <p className="text-xs text-muted/60 mt-1">
+                      Configure your agents to start automating tasks
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                    {activityLogs.slice(0, 10).map((log) => {
+                      const agentInfo = getAgentIcon(log.agent_type);
+                      const AgentIcon = agentInfo.icon;
+                      return (
+                        <div
+                          key={log.id}
+                          className="flex items-start gap-3 px-3 py-3 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                          <div className={cn('flex h-8 w-8 items-center justify-center rounded-full flex-shrink-0', agentInfo.bg)}>
+                            <AgentIcon className={cn('h-4 w-4', agentInfo.color)} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white leading-snug">{log.action}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge
+                                variant={log.status === 'success' ? 'success' : log.status === 'error' ? 'danger' : 'warning'}
+                                size="sm"
+                              >
+                                {log.status}
+                              </Badge>
+                              <span className="text-[10px] text-muted">
+                                {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* ========================================================== */}
+          {/*  TAB 2: EMAIL                                               */}
+          {/* ========================================================== */}
+          <TabsContent value="email">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display font-semibold text-lg text-white">Email Sequences</h2>
+                  <p className="text-xs text-muted mt-0.5">Automated email workflows for tenant communications</p>
+                </div>
+                <Badge variant="default" size="md">
+                  {sequences.filter((s) => s.active).length} Active
+                </Badge>
+              </div>
+
+              {sequences.map((seq) => {
+                const isExpanded = expandedSequence === seq.id;
+
+                return (
+                  <Card key={seq.id} className={cn(seq.active && 'border-gold/20')}>
+                    {/* Sequence header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-500/10">
+                          <Mail className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-display font-semibold text-sm text-white">{seq.name}</h3>
+                          <p className="text-xs text-muted mt-0.5 truncate">{seq.description}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                        <Badge variant="info" size="sm">{seq.stepsCount} steps</Badge>
+                        <ToggleSwitch enabled={seq.active} onToggle={() => toggleSequence(seq.id)} size="sm" />
+                        <Button variant="ghost" size="sm" icon={<Edit className="h-3 w-3" />}>
+                          Edit Sequence
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedSequence(isExpanded ? null : seq.id)}
+                          className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
+                        >
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded steps */}
+                    {isExpanded && (
+                      <div className="mt-4 pt-4 border-t border-border space-y-3 animate-fade-up">
+                        <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">Sequence Steps</p>
+                        {seq.steps.map((step, idx) => (
+                          <div key={idx} className="flex items-start gap-3 pl-2">
+                            {/* Step indicator */}
+                            <div className="flex flex-col items-center">
+                              <div className="w-7 h-7 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center">
+                                <span className="text-[10px] font-bold text-gold">{idx + 1}</span>
+                              </div>
+                              {idx < seq.steps.length - 1 && (
+                                <div className="w-px h-8 bg-border mt-1" />
+                              )}
+                            </div>
+                            {/* Step content */}
+                            <div className="flex-1 min-w-0 pb-2">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-semibold text-white">{step.subject}</p>
+                                <Badge variant="info" size="sm">
+                                  {step.dayOffset === 0 ? 'Day 0' : step.dayOffset > 0 ? `Day +${step.dayOffset}` : `Day ${step.dayOffset}`}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted mt-1 leading-relaxed">
+                                <HighlightVariables text={step.preview} />
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+
+          {/* ========================================================== */}
+          {/*  TAB 3: VOICE                                               */}
+          {/* ========================================================== */}
+          <TabsContent value="voice">
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-display font-semibold text-lg text-white">Voice Agent Configuration</h2>
+                <p className="text-xs text-muted mt-0.5">Configure your AI voice agent for automated tenant calls</p>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Voice Selection */}
+                <Card
+                  header={
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-green" />
+                      <span className="font-display font-semibold text-sm text-white">Voice Settings</span>
+                    </div>
+                  }
+                >
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="font-display font-semibold text-sm text-white">
-                        {agent.title}
-                      </h3>
+                      <label className="text-xs text-muted font-medium mb-1.5 block">ElevenLabs Voice</label>
+                      <select
+                        value={selectedVoice}
+                        onChange={(e) => setSelectedVoice(e.target.value)}
+                        className="w-full h-10 px-3 pr-8 text-sm bg-deep border border-border rounded-lg text-white appearance-none outline-none focus:border-gold/30 transition-colors"
+                      >
+                        {ELEVENLABS_VOICES.map((v) => (
+                          <option key={v.value} value={v.value}>{v.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted font-medium mb-1.5 block">Call Script</label>
+                      <textarea
+                        value={callScript}
+                        onChange={(e) => setCallScript(e.target.value)}
+                        rows={6}
+                        className="w-full px-3 py-2.5 text-sm bg-deep border border-border rounded-lg text-white resize-y outline-none focus:border-gold/30 transition-colors min-h-[120px] font-body"
+                      />
+                      <p className="text-[10px] text-muted mt-1">
+                        Use <span className="text-gold font-semibold">{'{{variable_name}}'}</span> for dynamic content
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Play className="h-3.5 w-3.5" />}
+                    >
+                      Test Call
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Call Rules */}
+                <Card
+                  header={
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-gold" />
+                      <span className="font-display font-semibold text-sm text-white">Call Rules</span>
+                    </div>
+                  }
+                >
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-xs text-muted font-medium mb-1.5 block">Business Hours</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="time"
+                          value={businessHoursStart}
+                          onChange={(e) => setBusinessHoursStart(e.target.value)}
+                          className="h-10 px-3 rounded-lg bg-deep border border-border text-sm text-white outline-none focus:border-gold/30 transition-colors"
+                        />
+                        <span className="text-xs text-muted">to</span>
+                        <input
+                          type="time"
+                          value={businessHoursEnd}
+                          onChange={(e) => setBusinessHoursEnd(e.target.value)}
+                          className="h-10 px-3 rounded-lg bg-deep border border-border text-sm text-white outline-none focus:border-gold/30 transition-colors"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted mt-1">Calls will only be made during these hours</p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted font-medium mb-1.5 block">Max Calls Per Week</label>
+                      <input
+                        type="number"
+                        value={maxCallsPerWeek}
+                        onChange={(e) => setMaxCallsPerWeek(Number(e.target.value))}
+                        min={1}
+                        max={50}
+                        className="w-full h-10 px-3 text-sm bg-deep border border-border rounded-lg text-white outline-none focus:border-gold/30 transition-colors"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Per tenant. Prevents call fatigue.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted font-medium mb-1.5 block">Escalation Threshold</label>
+                      <input
+                        type="number"
+                        value={escalationThreshold}
+                        onChange={(e) => setEscalationThreshold(Number(e.target.value))}
+                        min={1}
+                        max={10}
+                        className="w-full h-10 px-3 text-sm bg-deep border border-border rounded-lg text-white outline-none focus:border-gold/30 transition-colors"
+                      />
+                      <p className="text-[10px] text-muted mt-1">Number of failed calls before escalating to you</p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <div>
+                        <p className="text-sm text-white">Require approval before calling</p>
+                        <p className="text-[10px] text-muted mt-0.5">You will be notified before each call is made</p>
+                      </div>
+                      <ToggleSwitch enabled={false} onToggle={() => {}} size="sm" />
                     </div>
                   </div>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
-                  {/* Status badge */}
-                  {hasAccess ? (
-                    <div
-                      className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold',
-                        enabled
-                          ? 'bg-green/10 text-green border border-green/20'
-                          : 'bg-muted/10 text-muted border border-border'
-                      )}
-                    >
-                      {enabled && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-                      )}
-                      {enabled ? 'Active' : 'Inactive'}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-muted/10 text-muted border border-border">
-                      Inactive
-                    </div>
-                  )}
-                </div>
+          {/* ========================================================== */}
+          {/*  TAB 4: SMS                                                 */}
+          {/* ========================================================== */}
+          <TabsContent value="sms">
+            <div className="space-y-4">
+              <div>
+                <h2 className="font-display font-semibold text-lg text-white">SMS Conversations</h2>
+                <p className="text-xs text-muted mt-0.5">View and manage tenant text message conversations</p>
+              </div>
 
-                {/* Description */}
-                <p className="text-xs text-muted leading-relaxed mb-4">
-                  {agent.description}
-                </p>
-
-                {/* Capabilities */}
-                <div className="mb-5">
-                  <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
-                    Capabilities
-                  </p>
-                  <div className="space-y-1.5">
-                    {agent.capabilities.map((cap, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Check className="h-3 w-3 text-gold flex-shrink-0" />
-                        <span className="text-xs text-text">{cap}</span>
-                      </div>
+              <div className="flex gap-4" style={{ height: '600px' }}>
+                {/* Thread list */}
+                <div className="w-72 flex-shrink-0 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+                  <div className="p-3 border-b border-border">
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider">Threads</p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {smsThreads.map((thread) => (
+                      <button
+                        key={thread.tenantId}
+                        type="button"
+                        onClick={() => setSelectedThread(thread.tenantId)}
+                        className={cn(
+                          'w-full flex items-start gap-3 px-4 py-3 text-left border-b border-border/50',
+                          'hover:bg-white/5 transition-colors',
+                          selectedThread === thread.tenantId && 'bg-gold/5 border-l-2 border-l-gold',
+                        )}
+                      >
+                        <div className="flex items-center justify-center w-9 h-9 rounded-full bg-purple-500/10 flex-shrink-0">
+                          <MessageSquare className="h-4 w-4 text-purple-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-white truncate">{thread.tenantName}</p>
+                            {thread.unreadCount > 0 && (
+                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold flex items-center justify-center text-[10px] font-bold text-black">
+                                {thread.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted truncate mt-0.5">{thread.propertyAddress}</p>
+                          {thread.messages.length > 0 && (
+                            <p className="text-xs text-muted/60 truncate mt-1">
+                              {thread.messages[thread.messages.length - 1].content}
+                            </p>
+                          )}
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="mb-5 grid grid-cols-2 gap-3">
-                  {stats.map((stat, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-deep/50 rounded-lg px-3 py-2"
-                    >
-                      <p className="text-[10px] text-muted leading-none mb-1">
-                        {stat.label}
-                      </p>
-                      <p className="text-sm font-semibold text-white tabular-nums">
-                        {stat.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div className="flex items-center gap-2">
-                    <ToggleSwitch
-                      enabled={enabled && hasAccess}
-                      onToggle={() => hasAccess && toggleAgent(agent.id)}
-                    />
-                    <span className="text-xs text-muted">
-                      {enabled && hasAccess ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setConfigOpen(configOpen === agent.id ? null : agent.id)
-                    }
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium',
-                      'border border-border text-muted',
-                      'hover:text-white hover:border-gold/20 hover:bg-gold/5',
-                      'transition-all duration-200',
-                    )}
-                  >
-                    <Settings className="h-3 w-3" />
-                    Configure
-                  </button>
-                </div>
-
-                {/* Expandable config panel */}
-                {configOpen === agent.id && (
-                  <div className="mt-4 pt-4 border-t border-border animate-fade-up">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                          Notification Email
-                        </label>
-                        <input
-                          type="email"
-                          placeholder="alerts@example.com"
-                          className="mt-1 w-full h-8 px-3 rounded-lg bg-deep border border-border text-sm text-white placeholder-muted/50 outline-none focus:border-gold/30 transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                          Operating Hours
-                        </label>
-                        <div className="mt-1 flex items-center gap-2">
-                          <input
-                            type="time"
-                            defaultValue="09:00"
-                            className="h-8 px-3 rounded-lg bg-deep border border-border text-sm text-white outline-none focus:border-gold/30 transition-colors"
-                          />
-                          <span className="text-xs text-muted">to</span>
-                          <input
-                            type="time"
-                            defaultValue="21:00"
-                            className="h-8 px-3 rounded-lg bg-deep border border-border text-sm text-white outline-none focus:border-gold/30 transition-colors"
-                          />
+                {/* Conversation panel */}
+                <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+                  {activeThread ? (
+                    <>
+                      {/* Thread header */}
+                      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{activeThread.tenantName}</p>
+                          <p className="text-[10px] text-muted">{activeThread.propertyAddress}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted">AI Auto-response</span>
+                            <ToggleSwitch
+                              enabled={activeThread.autoResponse}
+                              onToggle={() => toggleAutoResponse(activeThread.tenantId)}
+                              size="sm"
+                            />
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-text">
-                          Require approval before sending
-                        </span>
-                        <ToggleSwitch enabled={false} onToggle={() => {}} size="sm" />
+
+                      {/* Messages */}
+                      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                        {activeThread.messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={cn(
+                              'flex',
+                              msg.direction === 'outbound' ? 'justify-end' : 'justify-start',
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                'max-w-[75%] rounded-xl px-3.5 py-2.5',
+                                msg.direction === 'outbound'
+                                  ? msg.sender === 'agent'
+                                    ? 'bg-purple-500/20 border border-purple-500/30 text-white'
+                                    : 'bg-gold/20 border border-gold/30 text-white'
+                                  : 'bg-deep border border-border text-text',
+                              )}
+                            >
+                              {msg.sender === 'agent' && msg.direction === 'outbound' && (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Bot className="h-3 w-3 text-purple-400" />
+                                  <span className="text-[10px] font-semibold text-purple-400">AI Agent</span>
+                                </div>
+                              )}
+                              <p className="text-sm leading-relaxed">{msg.content}</p>
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="text-[10px] text-muted">
+                                  {new Date(msg.timestamp).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })}
+                                </span>
+                                {msg.direction === 'outbound' && (
+                                  <span className={cn(
+                                    'text-[10px]',
+                                    msg.status === 'delivered' || msg.status === 'read' ? 'text-green' : msg.status === 'failed' ? 'text-red' : 'text-muted',
+                                  )}>
+                                    {msg.status}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
+
+                      {/* Message input */}
+                      <div className="flex-shrink-0 border-t border-border px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={smsInput}
+                            onChange={(e) => setSmsInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSendSMS()}
+                            placeholder="Type a message..."
+                            className="flex-1 h-9 px-3 bg-deep border border-border rounded-lg text-sm text-white placeholder-muted/60 outline-none focus:border-gold/30 transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSendSMS}
+                            disabled={!smsInput.trim()}
+                            className={cn(
+                              'flex items-center justify-center w-9 h-9 rounded-lg transition-all',
+                              smsInput.trim()
+                                ? 'bg-gold text-black hover:brightness-110'
+                                : 'bg-border/50 text-muted/40 cursor-not-allowed',
+                            )}
+                          >
+                            <Send className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted text-sm">
+                      Select a conversation to view
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* ============================================================ */}
-        {/*  AUTOMATION RULES                                             */}
-        {/* ============================================================ */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-gold" />
-              <h3 className="font-display font-semibold text-sm text-white">
-                Active Automations
-              </h3>
             </div>
-            <span className="text-xs text-muted">
-              {rules.filter((r) => r.active).length} of {rules.length} active
-            </span>
-          </div>
+          </TabsContent>
 
-          <div className="space-y-1">
-            {rules.map((rule) => (
-              <div
-                key={rule.id}
-                className={cn(
-                  'flex items-center justify-between px-4 py-3 rounded-lg',
-                  'transition-colors duration-150',
-                  'hover:bg-white/5'
-                )}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div
-                    className={cn(
-                      'w-2 h-2 rounded-full flex-shrink-0',
-                      rule.active ? 'bg-green' : 'bg-muted/30'
-                    )}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm text-white truncate">{rule.label}</p>
-                    <p className="text-[10px] text-muted mt-0.5">
-                      {rule.description}
+          {/* ========================================================== */}
+          {/*  TAB 5: ACTIVITY LOG                                        */}
+          {/* ========================================================== */}
+          <TabsContent value="activity">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display font-semibold text-lg text-white">Activity Log</h2>
+                  <p className="text-xs text-muted mt-0.5">Unified feed of all agent actions</p>
+                </div>
+                <span className="text-xs text-muted">{activityLogs.length} total actions</span>
+              </div>
+
+              <Card padding="none">
+                {activityLogs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-border/50 mb-3">
+                      <Activity className="h-6 w-6 text-muted" />
+                    </div>
+                    <p className="text-sm text-muted">No agent activity recorded yet</p>
+                    <p className="text-xs text-muted/60 mt-1">
+                      Activity from all agents will appear here
                     </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="max-h-[600px] overflow-y-auto divide-y divide-border/50">
+                    {activityLogs.map((log) => {
+                      const agentInfo = getAgentIcon(log.agent_type);
+                      const AgentIcon = agentInfo.icon;
+                      const isExpanded = expandedLog === log.id;
 
-                <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                  <ToggleSwitch
-                    enabled={rule.active}
-                    onToggle={() => toggleRule(rule.id)}
-                    size="sm"
-                  />
-                  <button
-                    type="button"
-                    className="p-1.5 rounded-md text-muted hover:text-white hover:bg-white/5 transition-colors"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+                      return (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            'px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer',
+                            isExpanded && 'bg-white/[0.02]',
+                          )}
+                          onClick={() => setExpandedLog(isExpanded ? null : log.id)}
+                        >
+                          <div className="flex items-start gap-4">
+                            {/* Type badge with icon */}
+                            <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0', agentInfo.bg)}>
+                              <AgentIcon className={cn('h-5 w-5', agentInfo.color)} />
+                            </div>
 
-        {/* ============================================================ */}
-        {/*  AUTOPILOT MODE (Elite only)                                  */}
-        {/* ============================================================ */}
-        {isElite && (
-          <div
-            className={cn(
-              'bg-card border rounded-xl p-6',
-              'transition-all duration-300',
-              autopilotEnabled
-                ? 'border-gold shadow-glow'
-                : 'border-gold/30'
-            )}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gold/10 border border-gold/20">
-                  <Shield className="h-5 w-5 text-gold" />
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base text-white">
-                    Autopilot Mode
-                  </h3>
-                  <p className="text-xs text-muted mt-0.5">
-                    Let AI handle everything. You just approve decisions.
-                  </p>
-                </div>
-              </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm text-white leading-snug">{log.action}</p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    {/* Type badge */}
+                                    <Badge
+                                      variant={
+                                        log.agent_type.includes('email') ? 'info'
+                                          : log.agent_type.includes('voice') ? 'success'
+                                          : log.agent_type.includes('sms') ? 'warning'
+                                          : 'default'
+                                      }
+                                      size="sm"
+                                    >
+                                      {log.agent_type.replace('_agent', '')}
+                                    </Badge>
 
-              <ToggleSwitch
-                enabled={autopilotEnabled}
-                onToggle={() => setAutopilotEnabled(!autopilotEnabled)}
-                size="lg"
-              />
-            </div>
+                                    {/* Status badge */}
+                                    <Badge
+                                      variant={
+                                        log.status === 'success' ? 'success'
+                                          : log.status === 'error' ? 'danger'
+                                          : 'warning'
+                                      }
+                                      size="sm"
+                                      dot={log.status === 'pending'}
+                                    >
+                                      <span className="flex items-center gap-1">
+                                        {log.status === 'success' && <CheckCircle className="h-2.5 w-2.5" />}
+                                        {log.status === 'error' && <XCircle className="h-2.5 w-2.5" />}
+                                        {log.status === 'pending' && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+                                        {log.status}
+                                      </span>
+                                    </Badge>
+                                  </div>
+                                </div>
 
-            {autopilotEnabled && autopilotActions.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border space-y-2">
-                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
-                  Recent Autopilot Actions
-                </p>
-                {autopilotActions.map((action) => {
-                  const agentInfo = getAgentIcon(action.agent_type);
-                  const AgentIcon = agentInfo.icon;
+                                {/* Timestamp */}
+                                <time className="text-xs text-muted whitespace-nowrap flex-shrink-0">
+                                  {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                                </time>
+                              </div>
 
-                  return (
-                    <div
-                      key={action.id}
-                      className={cn(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg',
-                        'bg-deep/50 border border-border',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0',
-                          agentInfo.bg
-                        )}
-                      >
-                        <AgentIcon className={cn('h-4 w-4', agentInfo.color)} />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">
-                          {action.action}
-                        </p>
-                        <p className="text-[10px] text-muted mt-0.5">
-                          {formatDistanceToNow(new Date(action.created_at), {
-                            addSuffix: true,
-                          })}
-                        </p>
-                      </div>
-
-                      {action.approved === null ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleApproveAction(action.id)}
-                            className={cn(
-                              'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium',
-                              'bg-green/10 text-green border border-green/20',
-                              'hover:bg-green/20 transition-colors',
-                            )}
-                          >
-                            <Check className="h-3 w-3" />
-                            Approve
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOverrideAction(action.id)}
-                            className={cn(
-                              'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium',
-                              'bg-red/10 text-red border border-red/20',
-                              'hover:bg-red/20 transition-colors',
-                            )}
-                          >
-                            <AlertTriangle className="h-3 w-3" />
-                            Override
-                          </button>
+                              {/* Expanded detail panel */}
+                              {isExpanded && (
+                                <div className="mt-3 pt-3 border-t border-border animate-fade-up">
+                                  <div className="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                      <p className="text-muted font-medium">Agent Type</p>
+                                      <p className="text-white capitalize">{log.agent_type.replace('_', ' ')}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted font-medium">Status</p>
+                                      <p className="text-white capitalize">{log.status}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted font-medium">Timestamp</p>
+                                      <p className="text-white">
+                                        {new Date(log.created_at).toLocaleString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          year: 'numeric',
+                                          hour: 'numeric',
+                                          minute: '2-digit',
+                                          hour12: true,
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted font-medium">Action ID</p>
+                                      <p className="text-white font-mono text-[10px]">{log.id}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <span
-                          className={cn(
-                            'text-[10px] font-semibold px-2 py-1 rounded-full',
-                            action.approved
-                              ? 'bg-green/10 text-green'
-                              : 'bg-red/10 text-red'
-                          )}
-                        >
-                          {action.approved ? 'Approved' : 'Overridden'}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/*  RECENT ACTIVITY                                              */}
-        {/* ============================================================ */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted" />
-              <h3 className="font-display font-semibold text-sm text-white">
-                Recent Agent Activity
-              </h3>
-            </div>
-            <span className="text-xs text-muted">Last 20 actions</span>
-          </div>
-
-          {activityLogs.length === 0 ? (
-            /* Empty state */
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-border/50 mb-3">
-                <Bot className="h-6 w-6 text-muted" />
-              </div>
-              <p className="text-sm text-muted">No agent activity yet</p>
-              <p className="text-xs text-muted/60 mt-1">
-                Enable an agent above to start automating your property management
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-1 max-h-[400px] overflow-y-auto">
-              {activityLogs.map((log) => {
-                const agentInfo = getAgentIcon(log.agent_type);
-                const AgentIcon = agentInfo.icon;
-
-                return (
-                  <div
-                    key={log.id}
-                    className={cn(
-                      'flex items-start gap-3 px-3 py-3 rounded-lg',
-                      'transition-colors duration-150',
-                      'hover:bg-white/5'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-full flex-shrink-0',
-                        agentInfo.bg
-                      )}
-                    >
-                      <AgentIcon className={cn('h-4 w-4', agentInfo.color)} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white leading-snug">
-                        {log.action}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span
-                          className={cn(
-                            'text-[10px] font-semibold px-1.5 py-0.5 rounded-full',
-                            log.status === 'success'
-                              ? 'bg-green/10 text-green'
-                              : log.status === 'error'
-                              ? 'bg-red/10 text-red'
-                              : 'bg-gold/10 text-gold'
-                          )}
-                        >
-                          {log.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <time className="text-xs text-muted whitespace-nowrap flex-shrink-0">
-                      {formatDistanceToNow(new Date(log.created_at), {
-                        addSuffix: true,
-                      })}
-                    </time>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                )}
+              </Card>
             </div>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </FeatureGate>
   );

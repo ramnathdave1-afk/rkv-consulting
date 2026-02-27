@@ -17,6 +17,15 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  BarChart3,
+  Building2,
+  Calculator,
+  ClipboardList,
+  Percent,
+  Car,
+  ArrowRightLeft,
+  Clock,
+  Sparkles,
 } from 'lucide-react'
 import {
   BarChart,
@@ -33,6 +42,7 @@ import {
 import { useDropzone } from 'react-dropzone'
 import { createClient } from '@/lib/supabase/client'
 import { FeatureGate } from '@/components/paywall/FeatureGate'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { cn } from '@/lib/utils'
 import type { Property, Tenant, Transaction } from '@/types'
 
@@ -55,6 +65,29 @@ const DATE_RANGES = [
 ] as const
 
 const ITEMS_PER_PAGE = 25
+
+// IRS Schedule E category mapping
+const SCHEDULE_E_CATEGORIES: { label: string; line: string; mapFrom: string[] }[] = [
+  { label: 'Advertising', line: '5', mapFrom: ['Advertising'] },
+  { label: 'Auto and Travel', line: '6', mapFrom: [] },
+  { label: 'Cleaning and Maintenance', line: '7', mapFrom: ['Maintenance'] },
+  { label: 'Commissions', line: '8', mapFrom: ['Management'] },
+  { label: 'Insurance', line: '9', mapFrom: ['Insurance'] },
+  { label: 'Legal and Professional Fees', line: '10', mapFrom: ['Legal'] },
+  { label: 'Mortgage Interest', line: '12', mapFrom: ['Mortgage'] },
+  { label: 'Taxes', line: '16', mapFrom: ['Property Tax'] },
+  { label: 'Utilities', line: '17', mapFrom: ['Utilities'] },
+  { label: 'HOA / Other', line: '19', mapFrom: ['HOA', 'Other'] },
+]
+
+// Report definitions
+const REPORT_CARDS = [
+  { id: 'annual_summary', title: 'Annual Summary', description: 'Complete annual overview with income, expenses, and net profit across all properties', icon: FileText },
+  { id: 'property_pl', title: 'Property P&L', description: 'Profit & loss statement broken down by individual property', icon: Building2 },
+  { id: 'cash_flow', title: 'Cash Flow Statement', description: 'Detailed cash flow analysis showing operating, investing, and financing activities', icon: TrendingUp },
+  { id: 'rent_roll', title: 'Rent Roll', description: 'Current tenant roster with lease terms, rent amounts, and payment history', icon: ClipboardList },
+  { id: 'owner_statement', title: 'Owner Statement', description: 'Monthly owner statement with distributions, reserves, and management fees', icon: Receipt },
+]
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -240,7 +273,7 @@ function generateMockTransactions(properties: Property[], tenants: Tenant[]): Tr
       })
     }
 
-    // Management fees (10% of rent)
+    // Management fees (8% of rent)
     if (properties.length > 0) {
       const totalRent = properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0)
       if (totalRent > 0) {
@@ -602,10 +635,14 @@ function AccountingContent() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Filter state
-  const [dateRange, setDateRange] = useState<'month' | 'quarter' | 'year' | 'custom'>('month')
+  // Tab state
+  const [activeTab, setActiveTab] = useState('overview')
+
+  // Filter state (transactions tab)
+  const [dateRange, setDateRange] = useState<'month' | 'quarter' | 'year' | 'custom'>('year')
   const [propertyFilter, setPropertyFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'' | 'income' | 'expense'>('')
 
   // Sort state
   const [sortColumn, setSortColumn] = useState<'date' | 'property' | 'category' | 'type' | 'amount'>('date')
@@ -616,6 +653,15 @@ function AccountingContent() {
 
   // Modal
   const [showAddModal, setShowAddModal] = useState(false)
+
+  // By Property tab
+  const [selectedPropertyId, setSelectedPropertyId] = useState('')
+
+  // Reports tab
+  const [reportDateRange, setReportDateRange] = useState<{ start: string; end: string }>({
+    start: `${new Date().getFullYear()}-01-01`,
+    end: `${new Date().getFullYear()}-12-31`,
+  })
 
   /* ---------------------------------------------------------------- */
   /*  Data fetching                                                    */
@@ -648,6 +694,11 @@ function AccountingContent() {
       // Generate mock transactions based on actual properties
       const mockTx = generateMockTransactions(propsData, tenantsData)
       setTransactions(mockTx)
+
+      // Default selected property
+      if (propsData.length > 0) {
+        setSelectedPropertyId(propsData[0].id)
+      }
     } catch (err) {
       console.error('Accounting data fetch error:', err)
     } finally {
@@ -669,7 +720,7 @@ function AccountingContent() {
       case 'month': return getMonthRange(now)
       case 'quarter': return getQuarterRange(now)
       case 'year': return getYearRange(now)
-      case 'custom': return getYearRange(now) // fallback to year for custom
+      case 'custom': return getYearRange(now)
     }
   }, [dateRange])
 
@@ -683,6 +734,7 @@ function AccountingContent() {
       if (txDate < dateFilter.start || txDate > dateFilter.end) return false
       if (propertyFilter && tx.property_id !== propertyFilter) return false
       if (categoryFilter && tx.category !== categoryFilter) return false
+      if (typeFilter && tx.type !== typeFilter) return false
       return true
     })
 
@@ -713,7 +765,7 @@ function AccountingContent() {
     })
 
     return result
-  }, [transactions, dateFilter, propertyFilter, categoryFilter, sortColumn, sortDir, properties])
+  }, [transactions, dateFilter, propertyFilter, categoryFilter, typeFilter, sortColumn, sortDir, properties])
 
   // Paginated
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)
@@ -734,7 +786,7 @@ function AccountingContent() {
     .filter((tx) => tx.type === 'expense')
     .reduce((sum, tx) => sum + tx.amount, 0)
 
-  const netProfit = totalIncome - totalExpenses
+  const _netProfit = totalIncome - totalExpenses
 
   // YTD calculations
   const ytdRange = getYearRange(now)
@@ -745,6 +797,11 @@ function AccountingContent() {
   const ytdIncome = ytdTransactions.filter((tx) => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0)
   const ytdExpenses = ytdTransactions.filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0)
   const ytdProfit = ytdIncome - ytdExpenses
+
+  // Prior year comparison (mock: 90% of current)
+  const priorYearIncome = ytdIncome * 0.88
+  const priorYearExpenses = ytdExpenses * 0.92
+  const priorYearProfit = priorYearIncome - priorYearExpenses
 
   /* ---------------------------------------------------------------- */
   /*  Chart data                                                       */
@@ -775,33 +832,10 @@ function AccountingContent() {
   }, [filteredTransactions])
 
   /* ---------------------------------------------------------------- */
-  /*  Tax summary                                                      */
-  /* ---------------------------------------------------------------- */
-
-  const TAX_RATE = 0.30
-  const deductibleExpenses = ytdTransactions
-    .filter((tx) => tx.type === 'expense')
-    .reduce((sum, tx) => sum + tx.amount, 0)
-
-  const estimatedTaxSavings = deductibleExpenses * TAX_RATE
-
-  const deductibleByCategory = useMemo(() => {
-    const map = new Map<string, number>()
-    ytdTransactions
-      .filter((tx) => tx.type === 'expense')
-      .forEach((tx) => {
-        map.set(tx.category, (map.get(tx.category) || 0) + tx.amount)
-      })
-    return Array.from(map.entries())
-      .map(([category, amount]) => ({ category, amount }))
-      .sort((a, b) => b.amount - a.amount)
-  }, [ytdTransactions])
-
-  /* ---------------------------------------------------------------- */
   /*  P&L data                                                         */
   /* ---------------------------------------------------------------- */
 
-  const plData = useMemo(() => {
+  const _plData = useMemo(() => {
     const incomeByCategory: Record<string, number[]> = {}
     const expenseByCategory: Record<string, number[]> = {}
 
@@ -822,6 +856,138 @@ function AccountingContent() {
 
     return { incomeByCategory, expenseByCategory }
   }, [transactions])
+
+  /* ---------------------------------------------------------------- */
+  /*  Tax summary                                                      */
+  /* ---------------------------------------------------------------- */
+
+  const TAX_RATE = 0.30
+  const deductibleExpenses = ytdTransactions
+    .filter((tx) => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  const _estimatedTaxSavings = deductibleExpenses * TAX_RATE
+
+  const _deductibleByCategory = useMemo(() => {
+    const map = new Map<string, number>()
+    ytdTransactions
+      .filter((tx) => tx.type === 'expense')
+      .forEach((tx) => {
+        map.set(tx.category, (map.get(tx.category) || 0) + tx.amount)
+      })
+    return Array.from(map.entries())
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount)
+  }, [ytdTransactions])
+
+  /* ---------------------------------------------------------------- */
+  /*  By Property calculations                                         */
+  /* ---------------------------------------------------------------- */
+
+  const propertyMetrics = useMemo(() => {
+    if (!selectedPropertyId) return null
+
+    const propTx = transactions.filter((tx) => tx.property_id === selectedPropertyId)
+    const ytdPropTx = propTx.filter((tx) => {
+      const txDate = new Date(tx.date)
+      return txDate >= ytdRange.start && txDate <= ytdRange.end
+    })
+
+    const propIncome = ytdPropTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0)
+    const propExpenses = ytdPropTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0)
+    const propNOI = propIncome - propExpenses
+    const prop = properties.find((p) => p.id === selectedPropertyId)
+    const capRate = prop?.current_value && prop.current_value > 0 ? (propNOI / prop.current_value) * 100 : 0
+
+    // Monthly breakdown
+    const monthlyBreakdown = MONTHS.map((month, i) => {
+      const mTx = ytdPropTx.filter((tx) => new Date(tx.date).getMonth() === i)
+      const income = mTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0)
+      const expense = mTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0)
+      return { month, income, expense, net: income - expense }
+    })
+
+    // Income breakdown
+    const incomeBreakdown = new Map<string, number>()
+    ytdPropTx.filter((tx) => tx.type === 'income').forEach((tx) => {
+      incomeBreakdown.set(tx.category, (incomeBreakdown.get(tx.category) || 0) + tx.amount)
+    })
+
+    // Expense breakdown
+    const expBreakdown = new Map<string, number>()
+    ytdPropTx.filter((tx) => tx.type === 'expense').forEach((tx) => {
+      expBreakdown.set(tx.category, (expBreakdown.get(tx.category) || 0) + tx.amount)
+    })
+
+    return {
+      property: prop,
+      income: propIncome,
+      expenses: propExpenses,
+      noi: propNOI,
+      capRate,
+      monthlyBreakdown,
+      incomeBreakdown: Array.from(incomeBreakdown.entries()).map(([cat, amt]) => ({ category: cat, amount: amt })),
+      expenseBreakdown: Array.from(expBreakdown.entries()).map(([cat, amt]) => ({ category: cat, amount: amt })),
+    }
+  }, [selectedPropertyId, transactions, properties, ytdRange])
+
+  /* ---------------------------------------------------------------- */
+  /*  Schedule E data                                                   */
+  /* ---------------------------------------------------------------- */
+
+  const scheduleEData = useMemo(() => {
+    const grossRentalIncome = ytdTransactions
+      .filter((tx) => tx.type === 'income' && tx.category === 'Rent')
+      .reduce((s, tx) => s + tx.amount, 0)
+
+    const expenseMap = new Map<string, number>()
+    ytdTransactions.filter((tx) => tx.type === 'expense').forEach((tx) => {
+      expenseMap.set(tx.category, (expenseMap.get(tx.category) || 0) + tx.amount)
+    })
+
+    const lines = SCHEDULE_E_CATEGORIES.map((cat) => {
+      const amount = cat.mapFrom.reduce((s, key) => s + (expenseMap.get(key) || 0), 0)
+      return { ...cat, amount }
+    })
+
+    const totalExpensesScheduleE = lines.reduce((s, l) => s + l.amount, 0)
+
+    return {
+      grossRentalIncome,
+      lines,
+      totalExpenses: totalExpensesScheduleE,
+      netIncome: grossRentalIncome - totalExpensesScheduleE,
+    }
+  }, [ytdTransactions])
+
+  /* ---------------------------------------------------------------- */
+  /*  Depreciation data (placeholder)                                   */
+  /* ---------------------------------------------------------------- */
+
+  const depreciationData = useMemo(() => {
+    return properties.map((prop) => {
+      const purchasePrice = prop.purchase_price || 0
+      const landValue = purchasePrice * 0.2 // estimate 20% land
+      const depreciableBasis = purchasePrice - landValue
+      const annualDepreciation = depreciableBasis / 27.5
+      const purchaseDate = prop.purchase_date ? new Date(prop.purchase_date) : new Date()
+      const yearsHeld = Math.max(0, (now.getFullYear() - purchaseDate.getFullYear()))
+      const accumulatedDepreciation = Math.min(annualDepreciation * yearsHeld, depreciableBasis)
+      const remainingBasis = depreciableBasis - accumulatedDepreciation
+      const yearsRemaining = Math.max(0, 27.5 - yearsHeld)
+
+      return {
+        property: prop,
+        purchasePrice,
+        landValue,
+        depreciableBasis,
+        annualDepreciation,
+        accumulatedDepreciation,
+        remainingBasis,
+        yearsRemaining,
+      }
+    })
+  }, [properties])
 
   /* ---------------------------------------------------------------- */
   /*  Sort handler                                                     */
@@ -868,6 +1034,16 @@ function AccountingContent() {
     a.download = `accounting-export-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  function handleExportCPA() {
+    // Placeholder: generate CPA package
+    alert('CPA Package export coming soon. This will generate a comprehensive PDF with Schedule E, depreciation schedules, and supporting documentation.')
+  }
+
+  function handleGenerateReport(reportId: string) {
+    // Placeholder: generate report PDF
+    alert(`Generating ${reportId.replace(/_/g, ' ')} report... PDF generation coming soon.`)
   }
 
   /* ---------------------------------------------------------------- */
@@ -924,530 +1100,857 @@ function AccountingContent() {
       </div>
 
       {/* ============================================================ */}
-      {/*  Summary Cards                                                */}
+      {/*  Tabs                                                         */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Income */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Income</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green/10">
-              <TrendingUp className="h-4 w-4 text-green" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-green">{formatCurrency(totalIncome)}</p>
-          <p className="text-xs text-muted mt-1">
-            {dateRange === 'month' ? 'This month' : dateRange === 'quarter' ? 'This quarter' : 'This year'}
-          </p>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview" icon={<BarChart3 className="w-4 h-4" />}>
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="transactions" icon={<Receipt className="w-4 h-4" />}>
+            Transactions
+          </TabsTrigger>
+          <TabsTrigger value="by_property" icon={<Building2 className="w-4 h-4" />}>
+            By Property
+          </TabsTrigger>
+          <TabsTrigger value="tax_center" icon={<Calculator className="w-4 h-4" />}>
+            Tax Center
+          </TabsTrigger>
+          <TabsTrigger value="reports" icon={<FileText className="w-4 h-4" />}>
+            Reports
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Total Expenses */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Expenses</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red/10">
-              <TrendingDown className="h-4 w-4 text-red" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-red">{formatCurrency(totalExpenses)}</p>
-          <p className="text-xs text-muted mt-1">
-            {dateRange === 'month' ? 'This month' : dateRange === 'quarter' ? 'This quarter' : 'This year'}
-          </p>
-        </div>
-
-        {/* Net Profit */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted uppercase tracking-wider">Net Profit</span>
-            <div className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg',
-              netProfit >= 0 ? 'bg-green/10' : 'bg-red/10',
-            )}>
-              <DollarSign className={cn('h-4 w-4', netProfit >= 0 ? 'text-green' : 'text-red')} />
-            </div>
-          </div>
-          <p className={cn('text-2xl font-bold', netProfit >= 0 ? 'text-green' : 'text-red')}>
-            {formatCurrency(netProfit)}
-          </p>
-          <p className="text-xs text-muted mt-1">
-            {dateRange === 'month' ? 'This month' : dateRange === 'quarter' ? 'This quarter' : 'This year'}
-          </p>
-        </div>
-
-        {/* YTD Profit */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted uppercase tracking-wider">YTD Profit</span>
-            <div className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-lg',
-              ytdProfit >= 0 ? 'bg-gold/10' : 'bg-red/10',
-            )}>
-              <Receipt className={cn('h-4 w-4', ytdProfit >= 0 ? 'text-gold' : 'text-red')} />
-            </div>
-          </div>
-          <p className={cn('text-2xl font-bold', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
-            {formatCurrency(ytdProfit)}
-          </p>
-          <p className="text-xs text-muted mt-1">Year to date</p>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/*  Filter Bar                                                   */}
-      {/* ============================================================ */}
-      <div className="bg-card border border-border rounded-xl p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Date range */}
-          <div className="flex bg-deep rounded-lg p-0.5">
-            {DATE_RANGES.map((dr) => (
-              <button
-                key={dr.value}
-                type="button"
-                onClick={() => { setDateRange(dr.value); setCurrentPage(1) }}
-                className={cn(
-                  'px-3 py-1.5 rounded-md text-xs font-medium transition-all',
-                  dateRange === dr.value
-                    ? 'bg-gold/15 text-gold'
-                    : 'text-muted hover:text-white',
-                )}
-              >
-                {dr.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Property filter */}
-          <select
-            value={propertyFilter}
-            onChange={(e) => { setPropertyFilter(e.target.value); setCurrentPage(1) }}
-            className="h-8 rounded-lg bg-deep border border-border px-3 text-xs text-white focus:outline-none focus:border-gold/50 transition-colors"
-          >
-            <option value="">All Properties</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>{p.address}</option>
-            ))}
-          </select>
-
-          {/* Category filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1) }}
-            className="h-8 rounded-lg bg-deep border border-border px-3 text-xs text-white focus:outline-none focus:border-gold/50 transition-colors"
-          >
-            <option value="">All Categories</option>
-            <optgroup label="Income">
-              {INCOME_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-            <optgroup label="Expenses">
-              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-          </select>
-
-          {/* Result count */}
-          <span className="ml-auto text-xs text-muted">
-            {filteredTransactions.length} transactions
-          </span>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/*  Transactions Table                                           */}
-      {/* ============================================================ */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                {[
-                  { key: 'date' as const, label: 'Date' },
-                  { key: 'property' as const, label: 'Property' },
-                  { key: 'category' as const, label: 'Category' },
-                  { key: null, label: 'Description' },
-                  { key: 'type' as const, label: 'Type' },
-                  { key: 'amount' as const, label: 'Amount' },
-                  { key: null, label: 'Tax Ded.' },
-                  { key: null, label: 'Actions' },
-                ].map((col, i) => (
-                  <th
-                    key={i}
-                    className={cn(
-                      'px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted',
-                      col.key && 'cursor-pointer hover:text-white transition-colors select-none',
-                    )}
-                    onClick={col.key ? () => handleSort(col.key!) : undefined}
-                  >
-                    <div className="flex items-center gap-1">
-                      {col.label}
-                      {col.key && <SortIcon column={col.key} />}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted">
-                    No transactions found for the selected filters.
-                  </td>
-                </tr>
-              ) : (
-                paginatedTransactions.map((tx) => {
-                  const prop = properties.find((p) => p.id === tx.property_id)
-                  return (
-                    <tr key={tx.id} className="border-b border-border/50 hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3 text-sm text-white whitespace-nowrap">
-                        {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-text truncate max-w-[200px]">
-                        {prop?.address || 'General'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-text">{tx.category}</td>
-                      <td className="px-4 py-3 text-sm text-muted truncate max-w-[200px]">
-                        {tx.description || '--'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={cn(
-                          'text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase',
-                          tx.type === 'income'
-                            ? 'bg-green/15 text-green'
-                            : 'bg-red/15 text-red',
-                        )}>
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className={cn(
-                        'px-4 py-3 text-sm font-semibold whitespace-nowrap',
-                        tx.type === 'income' ? 'text-green' : 'text-red',
-                      )}>
-                        {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {tx.type === 'expense' ? (
-                          <CheckCircle2 className="h-4 w-4 text-green" />
-                        ) : (
-                          <Circle className="h-4 w-4 text-muted/30" />
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className="text-xs text-gold hover:text-gold-light transition-colors"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-            <p className="text-xs text-muted">
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const page = i + 1
-                return (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      'w-8 h-8 rounded-lg text-xs font-medium transition-all',
-                      page === currentPage
-                        ? 'bg-gold/15 text-gold'
-                        : 'text-muted hover:text-white hover:bg-white/5',
-                    )}
-                  >
-                    {page}
-                  </button>
-                )
-              })}
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ============================================================ */}
-      {/*  Charts Section                                               */}
-      {/* ============================================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Income vs Expenses Bar Chart */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white">Income vs Expenses</h3>
-            <span className="text-xs text-muted">Last 12 months</span>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(30, 37, 48, 0.6)" vertical={false} />
-              <XAxis
-                dataKey="month"
-                stroke="#6B7280"
-                tick={{ fill: '#6B7280', fontSize: 11 }}
-                axisLine={{ stroke: '#1E2530' }}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="#6B7280"
-                tick={{ fill: '#6B7280', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(val: number) => formatCurrencyShort(val)}
-                width={60}
-              />
-              <RechartsTooltip content={<ChartTooltip />} />
-              <Bar dataKey="Income" stackId="a" fill="#22C55E" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Expenses" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Expense Breakdown Donut */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white">Expense Breakdown</h3>
-            <span className="text-xs text-muted">By category</span>
-          </div>
-          {expenseBreakdown.length > 0 ? (
-            <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={expenseBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {expenseBreakdown.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip content={<PieTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="w-full grid grid-cols-2 gap-2 mt-2">
-                {expenseBreakdown.slice(0, 8).map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
-                    />
-                    <span className="text-xs text-muted truncate">{item.name}</span>
-                    <span className="text-xs text-white ml-auto">{formatCurrencyShort(item.value)}</span>
+        {/* ========================================================== */}
+        {/*  TAB 1: OVERVIEW                                            */}
+        {/* ========================================================== */}
+        <TabsContent value="overview">
+          <div className="space-y-6">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Revenue */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Revenue</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green/10">
+                    <TrendingUp className="h-4 w-4 text-green" />
                   </div>
-                ))}
+                </div>
+                <p className="text-2xl font-bold text-green">{formatCurrency(ytdIncome)}</p>
+                <p className="text-xs text-muted mt-1">Year to date</p>
+              </div>
+
+              {/* Total Expenses */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Total Expenses</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red/10">
+                    <TrendingDown className="h-4 w-4 text-red" />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-red">{formatCurrency(ytdExpenses)}</p>
+                <p className="text-xs text-muted mt-1">Year to date</p>
+              </div>
+
+              {/* Net Income */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Net Income</span>
+                  <div className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-lg',
+                    ytdProfit >= 0 ? 'bg-green/10' : 'bg-red/10',
+                  )}>
+                    <DollarSign className={cn('h-4 w-4', ytdProfit >= 0 ? 'text-green' : 'text-red')} />
+                  </div>
+                </div>
+                <p className={cn('text-2xl font-bold', ytdProfit >= 0 ? 'text-green' : 'text-red')}>
+                  {formatCurrency(ytdProfit)}
+                </p>
+                <p className="text-xs text-muted mt-1">Year to date</p>
+              </div>
+
+              {/* Effective Tax Rate */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Effective Tax Rate</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10">
+                    <Percent className="h-4 w-4 text-gold" />
+                  </div>
+                </div>
+                <p className="text-2xl font-bold text-gold">~{(TAX_RATE * 100).toFixed(0)}%</p>
+                <p className="text-xs text-muted mt-1">Estimated rate</p>
               </div>
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-[300px] text-sm text-muted">
-              No expense data available
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Income vs Expenses Bar Chart */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-semibold text-white">Monthly Income vs Expenses</h3>
+                  <span className="text-xs text-muted">{now.getFullYear()}</span>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={monthlyChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(30, 37, 48, 0.6)" vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#6B7280"
+                      tick={{ fill: '#6B7280', fontSize: 11 }}
+                      axisLine={{ stroke: '#1E2530' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      stroke="#6B7280"
+                      tick={{ fill: '#6B7280', fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(val: number) => formatCurrencyShort(val)}
+                      width={60}
+                    />
+                    <RechartsTooltip content={<ChartTooltip />} />
+                    <Bar dataKey="Income" fill="#22C55E" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Expenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Expense Breakdown Donut */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-semibold text-white">Expense Categories</h3>
+                  <span className="text-xs text-muted">Year to date</span>
+                </div>
+                {expenseBreakdown.length > 0 ? (
+                  <div className="flex flex-col items-center">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={expenseBreakdown}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={2}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {expenseBreakdown.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip content={<PieTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="w-full grid grid-cols-2 gap-2 mt-2">
+                      {expenseBreakdown.slice(0, 8).map((item, i) => (
+                        <div key={item.name} className="flex items-center gap-2">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+                          />
+                          <span className="text-xs text-muted truncate">{item.name}</span>
+                          <span className="text-xs text-white ml-auto">{formatCurrencyShort(item.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-sm text-muted">
+                    No expense data available
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* ============================================================ */}
-      {/*  Tax Summary Section                                          */}
-      {/* ============================================================ */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-display font-semibold text-lg text-white">Tax Summary</h3>
-          <button
-            type="button"
-            onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all"
-          >
-            <FileText className="h-3.5 w-3.5" />
-            Export Tax Report
-          </button>
-        </div>
+            {/* YoY Comparison */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-display font-semibold text-lg text-white">Year-over-Year Comparison</h3>
+                <span className="text-xs text-muted">{now.getFullYear()} vs {now.getFullYear() - 1}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-deep border border-border rounded-lg p-4">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Revenue</p>
+                  <p className="text-xl font-bold text-green">{formatCurrency(ytdIncome)}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3 text-green" />
+                    <span className="text-xs text-green">
+                      +{((ytdIncome / priorYearIncome - 1) * 100).toFixed(1)}% vs prior year
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearIncome)}</p>
+                </div>
+                <div className="bg-deep border border-border rounded-lg p-4">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Expenses</p>
+                  <p className="text-xl font-bold text-red">{formatCurrency(ytdExpenses)}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <TrendingUp className="w-3 h-3 text-red" />
+                    <span className="text-xs text-red">
+                      +{((ytdExpenses / priorYearExpenses - 1) * 100).toFixed(1)}% vs prior year
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearExpenses)}</p>
+                </div>
+                <div className="bg-deep border border-border rounded-lg p-4">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Net Income</p>
+                  <p className={cn('text-xl font-bold', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
+                    {formatCurrency(ytdProfit)}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {ytdProfit >= priorYearProfit ? (
+                      <>
+                        <TrendingUp className="w-3 h-3 text-green" />
+                        <span className="text-xs text-green">
+                          +{((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDown className="w-3 h-3 text-red" />
+                        <span className="text-xs text-red">
+                          {((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">Prior: {formatCurrency(priorYearProfit)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-deep border border-border rounded-lg p-4">
-            <p className="text-xs text-muted uppercase tracking-wider mb-1">Total Tax Deductible Expenses</p>
-            <p className="text-xl font-bold text-white">{formatCurrency(deductibleExpenses)}</p>
-          </div>
-          <div className="bg-deep border border-border rounded-lg p-4">
-            <p className="text-xs text-muted uppercase tracking-wider mb-1">Estimated Tax Savings</p>
-            <p className="text-xl font-bold text-green">{formatCurrency(estimatedTaxSavings)}</p>
-            <p className="text-[10px] text-muted mt-1">Based on 30% estimated rate</p>
-          </div>
-          <div className="bg-deep border border-border rounded-lg p-4">
-            <p className="text-xs text-muted uppercase tracking-wider mb-1">Deductible Categories</p>
-            <p className="text-xl font-bold text-gold">{deductibleByCategory.length}</p>
-          </div>
-        </div>
+        {/* ========================================================== */}
+        {/*  TAB 2: TRANSACTIONS                                        */}
+        {/* ========================================================== */}
+        <TabsContent value="transactions">
+          <div className="space-y-4">
+            {/* Filter Bar */}
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Date range */}
+                <div className="flex bg-deep rounded-lg p-0.5">
+                  {DATE_RANGES.map((dr) => (
+                    <button
+                      key={dr.value}
+                      type="button"
+                      onClick={() => { setDateRange(dr.value); setCurrentPage(1) }}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-xs font-medium transition-all',
+                        dateRange === dr.value
+                          ? 'bg-gold/15 text-gold'
+                          : 'text-muted hover:text-white',
+                      )}
+                    >
+                      {dr.label}
+                    </button>
+                  ))}
+                </div>
 
-        {/* Categories breakdown */}
-        <div className="space-y-2">
-          {deductibleByCategory.map((item) => {
-            const pct = deductibleExpenses > 0 ? (item.amount / deductibleExpenses) * 100 : 0
-            return (
-              <div key={item.category} className="flex items-center gap-3">
-                <span className="text-sm text-text w-32 flex-shrink-0">{item.category}</span>
-                <div className="flex-1 h-2 bg-deep rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gold/60 rounded-full transition-all"
-                    style={{ width: `${pct}%` }}
+                {/* Type filter */}
+                <select
+                  value={typeFilter}
+                  onChange={(e) => { setTypeFilter(e.target.value as '' | 'income' | 'expense'); setCurrentPage(1) }}
+                  className="h-8 rounded-lg bg-deep border border-border px-3 text-xs text-white focus:outline-none focus:border-gold/50 transition-colors"
+                >
+                  <option value="">All Types</option>
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+
+                {/* Property filter */}
+                <select
+                  value={propertyFilter}
+                  onChange={(e) => { setPropertyFilter(e.target.value); setCurrentPage(1) }}
+                  className="h-8 rounded-lg bg-deep border border-border px-3 text-xs text-white focus:outline-none focus:border-gold/50 transition-colors"
+                >
+                  <option value="">All Properties</option>
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>{p.address}</option>
+                  ))}
+                </select>
+
+                {/* Category filter */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1) }}
+                  className="h-8 rounded-lg bg-deep border border-border px-3 text-xs text-white focus:outline-none focus:border-gold/50 transition-colors"
+                >
+                  <option value="">All Categories</option>
+                  <optgroup label="Income">
+                    {INCOME_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </optgroup>
+                  <optgroup label="Expenses">
+                    {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </optgroup>
+                </select>
+
+                {/* Buttons */}
+                <div className="ml-auto flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted border border-border hover:border-gold/30 hover:text-white transition-all"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Bulk CSV Import
+                  </button>
+                  <span className="text-xs text-muted">
+                    {filteredTransactions.length} transactions
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions Table */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      {[
+                        { key: 'date' as const, label: 'Date' },
+                        { key: null, label: 'Description' },
+                        { key: 'category' as const, label: 'Category' },
+                        { key: 'property' as const, label: 'Property' },
+                        { key: 'amount' as const, label: 'Amount' },
+                        { key: null, label: 'Reconciled' },
+                        { key: null, label: 'AI Category' },
+                      ].map((col, i) => (
+                        <th
+                          key={i}
+                          className={cn(
+                            'px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted',
+                            col.key && 'cursor-pointer hover:text-white transition-colors select-none',
+                          )}
+                          onClick={col.key ? () => handleSort(col.key!) : undefined}
+                        >
+                          <div className="flex items-center gap-1">
+                            {col.label}
+                            {col.key && <SortIcon column={col.key} />}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted">
+                          No transactions found for the selected filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedTransactions.map((tx) => {
+                        const prop = properties.find((p) => p.id === tx.property_id)
+                        return (
+                          <tr key={tx.id} className="border-b border-border/50 hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-3 text-sm text-white whitespace-nowrap">
+                              {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-muted truncate max-w-[200px]">
+                              {tx.description || '--'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-text">{tx.category}</td>
+                            <td className="px-4 py-3 text-sm text-text truncate max-w-[200px]">
+                              {prop?.address || 'General'}
+                            </td>
+                            <td className={cn(
+                              'px-4 py-3 text-sm font-semibold whitespace-nowrap',
+                              tx.type === 'income' ? 'text-green' : 'text-red',
+                            )}>
+                              {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                            </td>
+                            <td className="px-4 py-3">
+                              {tx.type === 'expense' ? (
+                                <CheckCircle2 className="h-4 w-4 text-green" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-muted/30" />
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-purple-400 bg-purple-400/10 border border-purple-400/20 rounded-full px-2 py-0.5">
+                                <Sparkles className="w-3 h-3" />
+                                {tx.category}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                  <p className="text-xs text-muted">
+                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      const page = i + 1
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={cn(
+                            'w-8 h-8 rounded-lg text-xs font-medium transition-all',
+                            page === currentPage
+                              ? 'bg-gold/15 text-gold'
+                              : 'text-muted hover:text-white hover:bg-white/5',
+                          )}
+                        >
+                          {page}
+                        </button>
+                      )
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 3: BY PROPERTY                                         */}
+        {/* ========================================================== */}
+        <TabsContent value="by_property">
+          <div className="space-y-6">
+            {/* Property Selector */}
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <label className="text-sm text-muted font-medium whitespace-nowrap">Select Property:</label>
+                <select
+                  value={selectedPropertyId}
+                  onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  className="flex-1 h-10 rounded-lg bg-deep border border-border px-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
+                >
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>{p.address}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {propertyMetrics && (
+              <>
+                {/* Key Property Metrics */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Gross Income</p>
+                    <p className="text-2xl font-bold text-green">{formatCurrency(propertyMetrics.income)}</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Total Expenses</p>
+                    <p className="text-2xl font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <p className="text-xs text-muted uppercase tracking-wider mb-2">NOI</p>
+                    <p className={cn('text-2xl font-bold', propertyMetrics.noi >= 0 ? 'text-gold' : 'text-red')}>
+                      {formatCurrency(propertyMetrics.noi)}
+                    </p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <p className="text-xs text-muted uppercase tracking-wider mb-2">Cap Rate</p>
+                    <p className="text-2xl font-bold text-gold">{propertyMetrics.capRate.toFixed(2)}%</p>
+                    {propertyMetrics.property?.current_value && (
+                      <p className="text-xs text-muted mt-1">
+                        Value: {formatCurrency(propertyMetrics.property.current_value)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Income / Expense Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <h3 className="text-sm font-semibold text-white mb-4">Income Breakdown</h3>
+                    <div className="space-y-3">
+                      {propertyMetrics.incomeBreakdown.map((item) => (
+                        <div key={item.category} className="flex items-center justify-between">
+                          <span className="text-sm text-text">{item.category}</span>
+                          <span className="text-sm font-semibold text-green">{formatCurrency(item.amount)}</span>
+                        </div>
+                      ))}
+                      <div className="border-t border-border pt-2 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-white">Total Income</span>
+                        <span className="text-sm font-bold text-green">{formatCurrency(propertyMetrics.income)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <h3 className="text-sm font-semibold text-white mb-4">Expense Breakdown</h3>
+                    <div className="space-y-3">
+                      {propertyMetrics.expenseBreakdown.map((item) => (
+                        <div key={item.category} className="flex items-center justify-between">
+                          <span className="text-sm text-text">{item.category}</span>
+                          <span className="text-sm font-semibold text-red">{formatCurrency(item.amount)}</span>
+                        </div>
+                      ))}
+                      <div className="border-t border-border pt-2 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-white">Total Expenses</span>
+                        <span className="text-sm font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Monthly Breakdown Table */}
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                  <div className="p-6 border-b border-border">
+                    <h3 className="font-display font-semibold text-lg text-white">Monthly Breakdown</h3>
+                    <p className="text-xs text-muted mt-1">
+                      {propertyMetrics.property?.address || 'Selected Property'} - {now.getFullYear()}
+                    </p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">Month</th>
+                          <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Income</th>
+                          <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Expenses</th>
+                          <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Net</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {propertyMetrics.monthlyBreakdown.map((row) => (
+                          <tr key={row.month} className="border-b border-border/50 hover:bg-white/[0.02]">
+                            <td className="px-4 py-3 text-white">{row.month}</td>
+                            <td className="px-4 py-3 text-right text-green">
+                              {row.income > 0 ? formatCurrency(row.income) : '--'}
+                            </td>
+                            <td className="px-4 py-3 text-right text-red">
+                              {row.expense > 0 ? formatCurrency(row.expense) : '--'}
+                            </td>
+                            <td className={cn('px-4 py-3 text-right font-semibold', row.net >= 0 ? 'text-green' : 'text-red')}>
+                              {row.income > 0 || row.expense > 0 ? formatCurrency(row.net) : '--'}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-gold/[0.03]">
+                          <td className="px-4 py-3 font-bold text-gold">Total</td>
+                          <td className="px-4 py-3 text-right font-bold text-green">{formatCurrency(propertyMetrics.income)}</td>
+                          <td className="px-4 py-3 text-right font-bold text-red">{formatCurrency(propertyMetrics.expenses)}</td>
+                          <td className={cn('px-4 py-3 text-right font-bold', propertyMetrics.noi >= 0 ? 'text-green' : 'text-red')}>
+                            {formatCurrency(propertyMetrics.noi)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 4: TAX CENTER                                          */}
+        {/* ========================================================== */}
+        <TabsContent value="tax_center">
+          <div className="space-y-6">
+            {/* Schedule E */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-white">Schedule E (Form 1040)</h3>
+                  <p className="text-xs text-muted mt-1">Supplemental Income and Loss - Rental Real Estate | {now.getFullYear()}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleExportCPA}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Export CPA Package
+                </button>
+              </div>
+              <div className="p-6">
+                {/* Gross Rental Income */}
+                <div className="flex items-center justify-between py-3 border-b border-border">
+                  <div>
+                    <p className="text-sm font-medium text-white">Line 3 - Rents Received</p>
+                    <p className="text-xs text-muted">Gross rental income from all properties</p>
+                  </div>
+                  <p className="text-lg font-bold text-green">{formatCurrency(scheduleEData.grossRentalIncome)}</p>
+                </div>
+
+                {/* Expense Lines */}
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Expenses</p>
+                  <div className="space-y-1">
+                    {scheduleEData.lines.map((line) => (
+                      <div key={line.line} className="flex items-center justify-between py-2 hover:bg-white/[0.02] px-2 rounded">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-muted w-10">Line {line.line}</span>
+                          <span className="text-sm text-text">{line.label}</span>
+                        </div>
+                        <span className="text-sm font-medium text-white tabular-nums">
+                          {line.amount > 0 ? formatCurrency(line.amount) : '--'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Totals */}
+                <div className="mt-4 pt-4 border-t border-border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-red">Line 20 - Total Expenses</p>
+                    <p className="text-lg font-bold text-red">{formatCurrency(scheduleEData.totalExpenses)}</p>
+                  </div>
+                  <div className="flex items-center justify-between bg-gold/5 -mx-6 px-6 py-4 rounded-none">
+                    <p className="text-sm font-bold text-gold">Line 21 - Net Rental Income (Loss)</p>
+                    <p className={cn('text-xl font-bold', scheduleEData.netIncome >= 0 ? 'text-gold' : 'text-red')}>
+                      {formatCurrency(scheduleEData.netIncome)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Depreciation Tracker */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="p-6 border-b border-border">
+                <h3 className="font-display font-semibold text-lg text-white">Depreciation Tracker</h3>
+                <p className="text-xs text-muted mt-1">27.5-year straight-line schedule for residential rental properties</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">Property</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Basis</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Annual Deduction</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Accumulated</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Remaining</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted">Years Left</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {depreciationData.map((dep) => (
+                      <tr key={dep.property.id} className="border-b border-border/50 hover:bg-white/[0.02]">
+                        <td className="px-4 py-3 text-white truncate max-w-[200px]">{dep.property.address}</td>
+                        <td className="px-4 py-3 text-right text-text tabular-nums">{formatCurrency(dep.depreciableBasis)}</td>
+                        <td className="px-4 py-3 text-right text-gold font-medium tabular-nums">{formatCurrency(dep.annualDepreciation)}</td>
+                        <td className="px-4 py-3 text-right text-muted tabular-nums">{formatCurrency(dep.accumulatedDepreciation)}</td>
+                        <td className="px-4 py-3 text-right text-white tabular-nums">{formatCurrency(dep.remainingBasis)}</td>
+                        <td className="px-4 py-3 text-right text-muted tabular-nums">{dep.yearsRemaining.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                    {depreciationData.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted">
+                          Add properties with purchase prices to see depreciation schedules
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  {depreciationData.length > 0 && (
+                    <tfoot>
+                      <tr className="bg-gold/[0.03]">
+                        <td className="px-4 py-3 font-bold text-gold">Total</td>
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                          {formatCurrency(depreciationData.reduce((s, d) => s + d.depreciableBasis, 0))}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                          {formatCurrency(depreciationData.reduce((s, d) => s + d.annualDepreciation, 0))}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-muted tabular-nums">
+                          {formatCurrency(depreciationData.reduce((s, d) => s + d.accumulatedDepreciation, 0))}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-gold tabular-nums">
+                          {formatCurrency(depreciationData.reduce((s, d) => s + d.remainingBasis, 0))}
+                        </td>
+                        <td className="px-4 py-3" />
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+
+            {/* Mileage Log + 1031 Exchange Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mileage Log */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-display font-semibold text-base text-white">Mileage Log</h3>
+                    <p className="text-xs text-muted mt-0.5">Track business miles for tax deduction</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-gold text-black hover:brightness-110 transition-all"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Entry
+                  </button>
+                </div>
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                  <Car className="w-8 h-8 text-muted/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted">No mileage entries yet</p>
+                  <p className="text-xs text-muted/60 mt-1">
+                    IRS rate: $0.67/mile (2024). Log trips to properties for tax deductions.
+                  </p>
+                </div>
+              </div>
+
+              {/* 1031 Exchange Timer */}
+              <div className="bg-card border border-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-display font-semibold text-base text-white">1031 Exchange Tracker</h3>
+                    <p className="text-xs text-muted mt-0.5">Like-kind exchange deadlines</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
+                    <ArrowRightLeft className="w-3 h-3" />
+                    Placeholder
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-deep border border-border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted">45-Day Identification Period</span>
+                      <span className="text-xs font-semibold text-gold">-- days remaining</span>
+                    </div>
+                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
+                    </div>
+                  </div>
+                  <div className="bg-deep border border-border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-muted">180-Day Completion Deadline</span>
+                      <span className="text-xs font-semibold text-gold">-- days remaining</span>
+                    </div>
+                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted/60 text-center">
+                    Start a 1031 exchange when you sell a property to track deadlines
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quarterly Tax Estimator */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-display font-semibold text-base text-white">Quarterly Tax Estimator</h3>
+                  <p className="text-xs text-muted mt-0.5">Estimated quarterly payments based on rental income</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
+                  <Calculator className="w-3 h-3" />
+                  Placeholder
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                {['Q1 (Apr 15)', 'Q2 (Jun 15)', 'Q3 (Sep 15)', 'Q4 (Jan 15)'].map((q, i) => {
+                  const quarterlyEstimate = (ytdProfit * TAX_RATE) / 4
+                  return (
+                    <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center">
+                      <p className="text-xs text-muted mb-2">{q}</p>
+                      <p className="text-lg font-bold text-gold">{formatCurrency(quarterlyEstimate > 0 ? quarterlyEstimate : 0)}</p>
+                      <div className="mt-2">
+                        {i <= Math.floor(now.getMonth() / 3) ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-green">
+                            <CheckCircle2 className="w-3 h-3" /> Due
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted">
+                            <Clock className="w-3 h-3" /> Upcoming
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ========================================================== */}
+        {/*  TAB 5: REPORTS                                             */}
+        {/* ========================================================== */}
+        <TabsContent value="reports">
+          <div className="space-y-6">
+            {/* Date Range Selector */}
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <label className="text-sm text-muted font-medium whitespace-nowrap">Report Period:</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={reportDateRange.start}
+                    onChange={(e) => setReportDateRange((prev) => ({ ...prev, start: e.target.value }))}
+                    className="h-9 rounded-lg bg-deep border border-border px-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
+                  />
+                  <span className="text-xs text-muted">to</span>
+                  <input
+                    type="date"
+                    value={reportDateRange.end}
+                    onChange={(e) => setReportDateRange((prev) => ({ ...prev, end: e.target.value }))}
+                    className="h-9 rounded-lg bg-deep border border-border px-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
                   />
                 </div>
-                <span className="text-sm font-medium text-white w-24 text-right">{formatCurrency(item.amount)}</span>
               </div>
-            )
-          })}
-        </div>
-      </div>
+            </div>
 
-      {/* ============================================================ */}
-      {/*  Profit & Loss Statement                                      */}
-      {/* ============================================================ */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-border">
-          <h3 className="font-display font-semibold text-lg text-white">Profit & Loss Statement</h3>
-          <p className="text-xs text-muted mt-1">{now.getFullYear()} Year-to-Date</p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted sticky left-0 bg-card z-10">
-                  Category
-                </th>
-                {MONTHS.map((m) => (
-                  <th key={m} className="px-3 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted min-w-[80px]">
-                    {m}
-                  </th>
-                ))}
-                <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-gold min-w-[90px]">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Income header */}
-              <tr className="bg-green/[0.03]">
-                <td colSpan={14} className="px-4 py-2 text-xs font-semibold text-green uppercase tracking-wider">
-                  Income
-                </td>
-              </tr>
-              {Object.entries(plData.incomeByCategory)
-                .filter(([, values]) => values.some((v) => v > 0))
-                .map(([category, values]) => (
-                  <tr key={`inc-${category}`} className="border-b border-border/30 hover:bg-white/[0.01]">
-                    <td className="px-4 py-2 text-sm text-text sticky left-0 bg-card">{category}</td>
-                    {values.map((val, i) => (
-                      <td key={i} className="px-3 py-2 text-right text-sm text-white">
-                        {val > 0 ? formatCurrencyShort(val) : '--'}
-                      </td>
-                    ))}
-                    <td className="px-4 py-2 text-right text-sm font-semibold text-green">
-                      {formatCurrencyShort(values.reduce((s, v) => s + v, 0))}
-                    </td>
-                  </tr>
-                ))}
-              {/* Income total */}
-              <tr className="border-b border-border bg-green/[0.03]">
-                <td className="px-4 py-2 text-sm font-semibold text-green sticky left-0 bg-card">Total Income</td>
-                {MONTHS.map((_, i) => {
-                  const total = Object.values(plData.incomeByCategory).reduce((s, vals) => s + vals[i], 0)
-                  return (
-                    <td key={i} className="px-3 py-2 text-right text-sm font-semibold text-green">
-                      {total > 0 ? formatCurrencyShort(total) : '--'}
-                    </td>
-                  )
-                })}
-                <td className="px-4 py-2 text-right text-sm font-bold text-green">
-                  {formatCurrencyShort(ytdIncome)}
-                </td>
-              </tr>
-
-              {/* Expense header */}
-              <tr className="bg-red/[0.03]">
-                <td colSpan={14} className="px-4 py-2 text-xs font-semibold text-red uppercase tracking-wider">
-                  Expenses
-                </td>
-              </tr>
-              {Object.entries(plData.expenseByCategory)
-                .filter(([, values]) => values.some((v) => v > 0))
-                .map(([category, values]) => (
-                  <tr key={`exp-${category}`} className="border-b border-border/30 hover:bg-white/[0.01]">
-                    <td className="px-4 py-2 text-sm text-text sticky left-0 bg-card">{category}</td>
-                    {values.map((val, i) => (
-                      <td key={i} className="px-3 py-2 text-right text-sm text-white">
-                        {val > 0 ? formatCurrencyShort(val) : '--'}
-                      </td>
-                    ))}
-                    <td className="px-4 py-2 text-right text-sm font-semibold text-red">
-                      {formatCurrencyShort(values.reduce((s, v) => s + v, 0))}
-                    </td>
-                  </tr>
-                ))}
-              {/* Expense total */}
-              <tr className="border-b border-border bg-red/[0.03]">
-                <td className="px-4 py-2 text-sm font-semibold text-red sticky left-0 bg-card">Total Expenses</td>
-                {MONTHS.map((_, i) => {
-                  const total = Object.values(plData.expenseByCategory).reduce((s, vals) => s + vals[i], 0)
-                  return (
-                    <td key={i} className="px-3 py-2 text-right text-sm font-semibold text-red">
-                      {total > 0 ? formatCurrencyShort(total) : '--'}
-                    </td>
-                  )
-                })}
-                <td className="px-4 py-2 text-right text-sm font-bold text-red">
-                  {formatCurrencyShort(ytdExpenses)}
-                </td>
-              </tr>
-
-              {/* Net P&L */}
-              <tr className="bg-gold/[0.03]">
-                <td className="px-4 py-3 text-sm font-bold text-gold sticky left-0 bg-card">Net Profit / Loss</td>
-                {MONTHS.map((_, i) => {
-                  const income = Object.values(plData.incomeByCategory).reduce((s, vals) => s + vals[i], 0)
-                  const expense = Object.values(plData.expenseByCategory).reduce((s, vals) => s + vals[i], 0)
-                  const net = income - expense
-                  return (
-                    <td key={i} className={cn('px-3 py-3 text-right text-sm font-bold', net >= 0 ? 'text-green' : 'text-red')}>
-                      {income > 0 || expense > 0 ? formatCurrencyShort(net) : '--'}
-                    </td>
-                  )
-                })}
-                <td className={cn('px-4 py-3 text-right text-sm font-bold', ytdProfit >= 0 ? 'text-green' : 'text-red')}>
-                  {formatCurrencyShort(ytdProfit)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+            {/* Report Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {REPORT_CARDS.map((report) => {
+                const Icon = report.icon
+                return (
+                  <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 group-hover:bg-gold/15 transition-colors flex-shrink-0">
+                        <Icon className="h-5 w-5 text-gold" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-white font-display">{report.title}</h4>
+                        <p className="text-xs text-muted font-body mt-1 leading-relaxed">
+                          {report.description}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateReport(report.id)}
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all"
+                    >
+                      <FileText className="h-4 w-4" />
+                      Generate PDF
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* ============================================================ */}
       {/*  Add Transaction Modal                                        */}

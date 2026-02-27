@@ -32,6 +32,11 @@ import {
   Shield,
   Hammer,
   TreePine,
+  Search,
+  User,
+  MapPin,
+  Edit3,
+  UserPlus,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -58,7 +63,10 @@ type Category =
   | 'general'
   | 'exterior'
   | 'pest_control'
-  | 'safety';
+  | 'safety'
+  | 'structural'
+  | 'landscaping'
+  | 'other';
 
 interface MaintenanceRequest {
   id: string;
@@ -145,6 +153,9 @@ const CATEGORY_CONFIG: Record<Category, { label: string; icon: React.ElementType
   exterior: { label: 'Exterior', icon: TreePine },
   pest_control: { label: 'Pest Control', icon: Bug },
   safety: { label: 'Safety', icon: Shield },
+  structural: { label: 'Structural', icon: Hammer },
+  landscaping: { label: 'Landscaping', icon: TreePine },
+  other: { label: 'Other', icon: Wrench },
 };
 
 const CATEGORY_OPTIONS = Object.entries(CATEGORY_CONFIG).map(([value, { label }]) => ({
@@ -294,7 +305,7 @@ function KanbanCard({
   index: number;
   onClick: () => void;
 }) {
-  const catConfig = CATEGORY_CONFIG[request.category];
+  const catConfig = CATEGORY_CONFIG[request.category] || CATEGORY_CONFIG.general;
   const CatIcon = catConfig.icon;
   const days = daysOpen(request.created_at);
 
@@ -475,7 +486,7 @@ function ListView({
           <tbody>
             {requests.map((req) => {
               const days = daysOpen(req.created_at);
-              const catConfig = CATEGORY_CONFIG[req.category];
+              const catConfig = CATEGORY_CONFIG[req.category] || CATEGORY_CONFIG.general;
               const CatIcon = catConfig.icon;
 
               return (
@@ -537,14 +548,26 @@ function DetailPanel({
   onClose,
   onMarkComplete,
   onUpdateNotes,
+  onUpdateStatus,
+  onAssignContractor,
+  onAddCost,
 }: {
   request: MaintenanceRequest;
   onClose: () => void;
   onMarkComplete: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onUpdateStatus: (id: string, status: MaintenanceStatus) => void;
+  onAssignContractor: (id: string, name: string, phone: string) => void;
+  onAddCost: (id: string, cost: number) => void;
 }) {
   const [notes, setNotes] = useState(request.completion_notes || '');
-  const catConfig = CATEGORY_CONFIG[request.category];
+  const [showAssignForm, setShowAssignForm] = useState(false);
+  const [contractorName, setContractorName] = useState(request.contractor_name || '');
+  const [contractorPhone, setContractorPhone] = useState(request.contractor_phone || '');
+  const [showCostForm, setShowCostForm] = useState(false);
+  const [newCost, setNewCost] = useState('');
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const catConfig = CATEGORY_CONFIG[request.category] || CATEGORY_CONFIG.general;
   const CatIcon = catConfig.icon;
 
   /* Timeline */
@@ -558,18 +581,21 @@ function DetailPanel({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ x: 420, opacity: 0 }}
+        initial={{ x: 440, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        exit={{ x: 420, opacity: 0 }}
+        exit={{ x: 440, opacity: 0 }}
         transition={{ type: 'spring' as const, damping: 28, stiffness: 300 }}
-        className="fixed right-0 top-16 bottom-0 w-[400px] bg-deep border-l border-border z-40 overflow-y-auto shadow-card"
+        className="fixed right-0 top-16 bottom-0 w-[440px] bg-deep border-l border-border z-40 overflow-y-auto shadow-card"
       >
         {/* Header */}
         <div className="sticky top-0 bg-deep/95 backdrop-blur-sm border-b border-border px-6 py-4 flex items-start justify-between z-10">
           <div className="flex-1 mr-4">
-            <p className="text-xs text-muted font-body mb-1">
-              {request.property?.address || 'Unknown Property'}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="w-3 h-3 text-muted" />
+              <p className="text-xs text-muted font-body">
+                {request.property?.address || 'Unknown Property'}
+              </p>
+            </div>
             <h2 className="text-lg font-display font-semibold text-white leading-snug">
               {request.title}
             </h2>
@@ -601,24 +627,94 @@ function DetailPanel({
             </p>
           </div>
 
+          {/* Property Address */}
+          <div>
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Property</h4>
+            <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">
+                <MapPin className="w-4 h-4 text-gold" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white font-body">
+                  {request.property?.name || 'Property'}
+                </p>
+                <p className="text-xs text-muted">{request.property?.address || 'No address'}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Tenant info */}
           {request.tenant && (
             <div>
-              <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Tenant</h4>
+              <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Reported By</h4>
               <div className="bg-card border border-border rounded-lg p-3">
-                <p className="text-sm font-medium text-white font-body">
-                  {request.tenant.first_name} {request.tenant.last_name}
-                </p>
-                {request.tenant.unit && (
-                  <p className="text-xs text-muted mt-0.5">Unit {request.tenant.unit}</p>
-                )}
-                <p className="text-xs text-muted mt-0.5">{request.tenant.email}</p>
-                {request.tenant.phone && (
-                  <p className="text-xs text-muted mt-0.5">{request.tenant.phone}</p>
-                )}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-400/10 flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white font-body">
+                      {request.tenant.first_name} {request.tenant.last_name}
+                    </p>
+                    {request.tenant.unit && (
+                      <p className="text-xs text-muted mt-0.5">Unit {request.tenant.unit}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                  <p className="text-xs text-muted">{request.tenant.email}</p>
+                  {request.tenant.phone && (
+                    <p className="text-xs text-muted flex items-center gap-1.5">
+                      <Phone className="w-3 h-3" />
+                      {request.tenant.phone}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
+
+          {/* Cost Tracking */}
+          <div>
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Cost Tracking</h4>
+            <div className="bg-card border border-border rounded-lg p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] text-muted uppercase tracking-wider">Estimated</p>
+                  <p className="text-sm font-semibold text-white font-body mt-0.5">
+                    {request.estimated_cost != null ? `$${request.estimated_cost.toLocaleString()}` : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted uppercase tracking-wider">Actual</p>
+                  <p className={cn(
+                    'text-sm font-semibold font-body mt-0.5',
+                    request.actual_cost != null
+                      ? request.actual_cost > (request.estimated_cost || 0)
+                        ? 'text-red'
+                        : 'text-green'
+                      : 'text-white',
+                  )}>
+                    {request.actual_cost != null ? `$${request.actual_cost.toLocaleString()}` : '-'}
+                  </p>
+                </div>
+              </div>
+              {request.estimated_cost != null && request.actual_cost != null && (
+                <div className="mt-2 pt-2 border-t border-border/50">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted">Variance</span>
+                    <span className={cn(
+                      'font-semibold',
+                      request.actual_cost - request.estimated_cost > 0 ? 'text-red' : 'text-green',
+                    )}>
+                      {request.actual_cost - request.estimated_cost > 0 ? '+' : ''}
+                      ${(request.actual_cost - request.estimated_cost).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Status Timeline */}
           <div>
@@ -627,7 +723,7 @@ function DetailPanel({
               {/* Vertical line */}
               <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
               <div className="space-y-4">
-                {timelineSteps.map((step, _i) => (
+                {timelineSteps.map((step) => (
                   <div key={step.label} className="relative flex items-start gap-3">
                     {/* Dot */}
                     <div
@@ -655,9 +751,9 @@ function DetailPanel({
           </div>
 
           {/* Photo Gallery */}
-          {request.photos && request.photos.length > 0 && (
-            <div>
-              <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Photos</h4>
+          <div>
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Photos</h4>
+            {request.photos && request.photos.length > 0 ? (
               <div className="grid grid-cols-3 gap-2">
                 {request.photos.map((photo, i) => (
                   <div
@@ -672,48 +768,48 @@ function DetailPanel({
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <Camera className="w-6 h-6 text-muted/40 mx-auto mb-2" />
+                <p className="text-xs text-muted">No photos attached</p>
+                <p className="text-[10px] text-muted/60 mt-1">Photos will appear here when uploaded</p>
+              </div>
+            )}
+          </div>
 
           {/* Contractor Section */}
-          {request.contractor_name && (
-            <div>
-              <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Contractor</h4>
-              <div className="bg-card border border-border rounded-lg p-3">
-                <p className="text-sm font-medium text-white font-body">{request.contractor_name}</p>
-                {request.contractor_phone && (
-                  <p className="text-xs text-muted mt-1 flex items-center gap-1.5">
-                    <Phone className="w-3 h-3" />
-                    {request.contractor_phone}
-                  </p>
-                )}
-                {request.contractor_bid != null && (
-                  <p className="text-xs text-gold mt-1 flex items-center gap-1.5">
-                    <DollarSign className="w-3 h-3" />
-                    Bid: ${request.contractor_bid.toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Cost Tracking */}
           <div>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Cost Tracking</h4>
-            <div className="bg-card border border-border rounded-lg p-3 grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[10px] text-muted uppercase tracking-wider">Estimated</p>
-                <p className="text-sm font-semibold text-white font-body mt-0.5">
-                  {request.estimated_cost != null ? `$${request.estimated_cost.toLocaleString()}` : '-'}
-                </p>
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Contractor</h4>
+            {request.contractor_name ? (
+              <div className="bg-card border border-border rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green/10 flex items-center justify-center">
+                    <Wrench className="w-4 h-4 text-green" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white font-body">{request.contractor_name}</p>
+                    {request.contractor_phone && (
+                      <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
+                        <Phone className="w-3 h-3" />
+                        {request.contractor_phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {request.contractor_bid != null && (
+                  <div className="mt-2 pt-2 border-t border-border/50">
+                    <p className="text-xs text-gold flex items-center gap-1.5">
+                      <DollarSign className="w-3 h-3" />
+                      Bid: ${request.contractor_bid.toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
-              <div>
-                <p className="text-[10px] text-muted uppercase tracking-wider">Actual</p>
-                <p className="text-sm font-semibold text-white font-body mt-0.5">
-                  {request.actual_cost != null ? `$${request.actual_cost.toLocaleString()}` : '-'}
-                </p>
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-3 text-center">
+                <p className="text-xs text-muted mb-2">No contractor assigned</p>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Notes */}
@@ -735,17 +831,147 @@ function DetailPanel({
             />
           </div>
 
-          {/* Mark Complete */}
-          {request.status !== 'completed' && (
-            <Button
-              variant="primary"
-              fullWidth
-              icon={<CheckCircle2 className="w-4 h-4" />}
-              onClick={() => onMarkComplete(request.id)}
-            >
-              Mark Complete
-            </Button>
-          )}
+          {/* Action Buttons */}
+          <div className="space-y-2">
+            {/* Update Status */}
+            {request.status !== 'completed' && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowStatusMenu(!showStatusMenu)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-card border border-border text-white hover:border-gold/30 transition-all"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Update Status
+                  <ChevronDown className="w-3 h-3 ml-auto" />
+                </button>
+                {showStatusMenu && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-card z-20 overflow-hidden">
+                    {STATUS_COLUMNS.filter((c) => c.id !== request.status).map((col) => (
+                      <button
+                        key={col.id}
+                        onClick={() => {
+                          onUpdateStatus(request.id, col.id);
+                          setShowStatusMenu(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text hover:bg-white/5 transition-colors"
+                      >
+                        <span className={cn('w-2 h-2 rounded-full', col.dotColor)} />
+                        {col.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Assign Contractor */}
+            {!showAssignForm ? (
+              <button
+                onClick={() => setShowAssignForm(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-card border border-border text-white hover:border-gold/30 transition-all"
+              >
+                <UserPlus className="w-4 h-4" />
+                Assign Contractor
+              </button>
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-3 space-y-3">
+                <p className="text-xs font-semibold text-white">Assign Contractor</p>
+                <input
+                  type="text"
+                  value={contractorName}
+                  onChange={(e) => setContractorName(e.target.value)}
+                  placeholder="Contractor name"
+                  className="w-full h-9 rounded-lg bg-deep border border-border px-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
+                />
+                <input
+                  type="text"
+                  value={contractorPhone}
+                  onChange={(e) => setContractorPhone(e.target.value)}
+                  placeholder="Phone number"
+                  className="w-full h-9 rounded-lg bg-deep border border-border px-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowAssignForm(false)}
+                    className="flex-1 py-2 rounded-lg text-xs text-muted hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (contractorName.trim()) {
+                        onAssignContractor(request.id, contractorName, contractorPhone);
+                        setShowAssignForm(false);
+                      }
+                    }}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gold text-black hover:brightness-110 transition-all"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Add Cost */}
+            {!showCostForm ? (
+              <button
+                onClick={() => setShowCostForm(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-card border border-border text-white hover:border-gold/30 transition-all"
+              >
+                <DollarSign className="w-4 h-4" />
+                Add Cost
+              </button>
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-3 space-y-3">
+                <p className="text-xs font-semibold text-white">Actual Cost</p>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">$</span>
+                  <input
+                    type="number"
+                    value={newCost}
+                    onChange={(e) => setNewCost(e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className="w-full h-9 rounded-lg bg-deep border border-border pl-7 pr-3 text-sm text-white focus:outline-none focus:border-gold/50 transition-colors"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowCostForm(false)}
+                    className="flex-1 py-2 rounded-lg text-xs text-muted hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      const cost = parseFloat(newCost);
+                      if (!isNaN(cost) && cost >= 0) {
+                        onAddCost(request.id, cost);
+                        setShowCostForm(false);
+                        setNewCost('');
+                      }
+                    }}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gold text-black hover:brightness-110 transition-all"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Mark Complete */}
+            {request.status !== 'completed' && (
+              <Button
+                variant="primary"
+                fullWidth
+                icon={<CheckCircle2 className="w-4 h-4" />}
+                onClick={() => onMarkComplete(request.id)}
+              >
+                Mark Complete
+              </Button>
+            )}
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>
@@ -812,7 +1038,7 @@ function NewRequestModal({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.heic'] },
     maxFiles: 10,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024,
   });
 
   function removePhoto(index: number) {
@@ -1042,9 +1268,17 @@ function ContractorMatching() {
             Matched based on category, availability, and ratings
           </p>
         </div>
-        <Badge variant="info" size="sm">
-          Coming Soon
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant="info" size="sm">
+            Coming Soon
+          </Badge>
+          <button
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all"
+          >
+            <Search className="w-4 h-4" />
+            Find Contractors
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1316,6 +1550,96 @@ export default function MaintenancePage() {
       .eq('id', id);
   }
 
+  /* ---- Update status ---- */
+  async function handleUpdateStatus(id: string, status: MaintenanceStatus) {
+    const now = new Date().toISOString();
+    const updateData: Record<string, unknown> = { status };
+    if (status === 'assigned') updateData.assigned_at = now;
+    if (status === 'in_progress') updateData.started_at = now;
+    if (status === 'completed') updateData.completed_at = now;
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id ? { ...r, ...updateData } as MaintenanceRequest : r,
+      ),
+    );
+
+    // Update selected request in panel
+    setSelectedRequest((prev) =>
+      prev && prev.id === id ? { ...prev, ...updateData } as MaintenanceRequest : prev,
+    );
+
+    const { error } = await supabase
+      .from('maintenance_requests')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update status:', error);
+      fetchData();
+    }
+  }
+
+  /* ---- Assign contractor ---- */
+  async function handleAssignContractor(id: string, name: string, phone: string) {
+    const now = new Date().toISOString();
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? { ...r, contractor_name: name, contractor_phone: phone, status: r.status === 'open' ? 'assigned' : r.status, assigned_at: r.assigned_at || now } as MaintenanceRequest
+          : r,
+      ),
+    );
+
+    setSelectedRequest((prev) =>
+      prev && prev.id === id
+        ? { ...prev, contractor_name: name, contractor_phone: phone, status: prev.status === 'open' ? 'assigned' : prev.status, assigned_at: prev.assigned_at || now } as MaintenanceRequest
+        : prev,
+    );
+
+    const updateData: Record<string, unknown> = { contractor_name: name, contractor_phone: phone };
+    // Auto-advance to assigned if currently open
+    const req = requests.find((r) => r.id === id);
+    if (req && req.status === 'open') {
+      updateData.status = 'assigned';
+      updateData.assigned_at = now;
+    }
+
+    const { error } = await supabase
+      .from('maintenance_requests')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to assign contractor:', error);
+      fetchData();
+    }
+  }
+
+  /* ---- Add cost ---- */
+  async function handleAddCost(id: string, cost: number) {
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id ? { ...r, actual_cost: cost } : r,
+      ),
+    );
+
+    setSelectedRequest((prev) =>
+      prev && prev.id === id ? { ...prev, actual_cost: cost } : prev,
+    );
+
+    const { error } = await supabase
+      .from('maintenance_requests')
+      .update({ actual_cost: cost })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to add cost:', error);
+      fetchData();
+    }
+  }
+
   /* ---- Submit new request ---- */
   async function handleSubmitRequest(data: {
     property_id: string;
@@ -1555,6 +1879,9 @@ export default function MaintenancePage() {
               onClose={() => setSelectedRequest(null)}
               onMarkComplete={handleMarkComplete}
               onUpdateNotes={handleUpdateNotes}
+              onUpdateStatus={handleUpdateStatus}
+              onAssignContractor={handleAssignContractor}
+              onAddCost={handleAddCost}
             />
           </>
         )}

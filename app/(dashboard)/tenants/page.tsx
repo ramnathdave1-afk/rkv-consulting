@@ -6,12 +6,13 @@ import {
   Users,
   Plus,
   Phone,
-  MessageSquare,
+  Mail,
   Eye,
   AlertTriangle,
   Building2,
   Clock,
   TrendingUp,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -58,7 +59,7 @@ function getPaymentStatus(payment: RentPayment | null | undefined): {
     const now = new Date();
     const due = new Date(payment.due_date);
     const daysLate = Math.ceil((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-    return { label: `Late ${daysLate} days`, variant: 'danger', daysLate };
+    return { label: `Late ${daysLate}d`, variant: 'danger', daysLate };
   }
 
   if (payment.status === 'partial') {
@@ -70,12 +71,12 @@ function getPaymentStatus(payment: RentPayment | null | undefined): {
   const due = new Date(payment.due_date);
   const daysUntilDue = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   if (daysUntilDue < 0) {
-    return { label: `Late ${Math.abs(daysUntilDue)} days`, variant: 'danger', daysLate: Math.abs(daysUntilDue) };
+    return { label: `Late ${Math.abs(daysUntilDue)}d`, variant: 'danger', daysLate: Math.abs(daysUntilDue) };
   }
   if (daysUntilDue <= 5) {
     return { label: 'Due Soon', variant: 'warning' };
   }
-  return { label: 'Pending', variant: 'default' };
+  return { label: 'Pending', variant: 'warning' };
 }
 
 function getLeaseColor(daysRemaining: number | null): 'success' | 'warning' | 'danger' | 'default' {
@@ -111,7 +112,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'current', label: 'Current' },
   { key: 'late', label: 'Late on Rent' },
-  { key: 'expiring', label: 'Lease Expiring Soon' },
+  { key: 'expiring', label: 'Expiring Soon' },
   { key: 'vacant', label: 'Vacant Units' },
 ];
 
@@ -126,6 +127,7 @@ export default function TenantsPage() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
   const [runningSequence, setRunningSequence] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   /* ---- Fetch data ------------------------------------------------ */
 
@@ -192,30 +194,64 @@ export default function TenantsPage() {
     return ps.variant === 'danger';
   });
 
+  const overdueTotal = lateTenants.reduce((sum, t) => sum + (t.currentPayment?.amount || 0), 0);
+
   const paidThisMonth = tenants.filter((t) => t.currentPayment?.status === 'paid').length;
   const totalWithPayments = tenants.filter((t) => t.currentPayment).length;
   const collectionRate = totalWithPayments > 0 ? Math.round((paidThisMonth / totalWithPayments) * 100) : 100;
 
   const avgDaysToFill = 18; // Placeholder - would compute from vacancy history
 
-  /* ---- Filtered tenants ------------------------------------------ */
+  /* ---- Filtered + searched tenants ------------------------------- */
 
   const filteredTenants = tenants.filter((t) => {
+    // Apply filter
     switch (activeFilter) {
       case 'current':
-        return t.status === 'active';
+        if (t.status !== 'active') return false;
+        break;
       case 'late':
-        return getPaymentStatus(t.currentPayment).variant === 'danger';
+        if (getPaymentStatus(t.currentPayment).variant !== 'danger') return false;
+        break;
       case 'expiring': {
         const days = getDaysRemaining(t.lease_end);
-        return days !== null && days <= 90 && days > 0;
+        if (days === null || days > 60 || days <= 0) return false;
+        break;
       }
       case 'vacant':
-        return t.status === 'past' || t.status === 'pending';
+        if (t.status !== 'past' && t.status !== 'pending') return false;
+        break;
       default:
-        return true;
+        break;
     }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const fullName = `${t.first_name} ${t.last_name}`.toLowerCase();
+      const addr = t.property
+        ? `${t.property.address} ${t.property.city} ${t.property.state}`.toLowerCase()
+        : '';
+      if (!fullName.includes(q) && !addr.includes(q) && !(t.email || '').toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+
+    return true;
   });
+
+  /* ---- Filter counts --------------------------------------------- */
+
+  const filterCounts: Record<FilterKey, number> = {
+    all: tenants.length,
+    current: tenants.filter((t) => t.status === 'active').length,
+    late: lateTenants.length,
+    expiring: tenants.filter((t) => {
+      const d = getDaysRemaining(t.lease_end);
+      return d !== null && d <= 60 && d > 0;
+    }).length,
+    vacant: tenants.filter((t) => t.status === 'past' || t.status === 'pending').length,
+  };
 
   /* ---- Run collection sequence ----------------------------------- */
 
@@ -250,6 +286,7 @@ export default function TenantsPage() {
             <div key={i} className="bg-card border border-border rounded-xl p-5 h-24 animate-pulse" />
           ))}
         </div>
+        <div className="h-10 w-full bg-border/50 rounded-lg animate-pulse" />
         <div className="grid grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="bg-card border border-border rounded-xl p-6 h-64 animate-pulse" />
@@ -318,6 +355,7 @@ export default function TenantsPage() {
           <div>
             <p className="text-xs text-muted font-body">Total Tenants</p>
             <p className="text-xl font-bold text-white">{tenants.length}</p>
+            <p className="text-[10px] text-muted">{activeTenants.length} active</p>
           </div>
         </Card>
 
@@ -329,6 +367,7 @@ export default function TenantsPage() {
           <div>
             <p className="text-xs text-muted font-body">Occupancy Rate</p>
             <p className="text-xl font-bold text-white">{occupancyRate}%</p>
+            <p className="text-[10px] text-muted">{occupiedUnits}/{totalUnits} units</p>
           </div>
         </Card>
 
@@ -340,6 +379,7 @@ export default function TenantsPage() {
           <div>
             <p className="text-xs text-muted font-body">Avg Days to Fill</p>
             <p className="text-xl font-bold text-white">{avgDaysToFill}</p>
+            <p className="text-[10px] text-muted">vacancy turnaround</p>
           </div>
         </Card>
 
@@ -351,29 +391,9 @@ export default function TenantsPage() {
           <div>
             <p className="text-xs text-muted font-body">Collection Rate</p>
             <p className="text-xl font-bold text-white">{collectionRate}%</p>
+            <p className="text-[10px] text-muted">{paidThisMonth}/{totalWithPayments} paid this month</p>
           </div>
         </Card>
-      </div>
-
-      {/* ============================================================ */}
-      {/*  FILTER BAR                                                   */}
-      {/* ============================================================ */}
-      <div className="flex items-center gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setActiveFilter(f.key)}
-            className={cn(
-              'px-4 py-1.5 rounded-full text-sm font-medium font-body',
-              'transition-all duration-200 ease-out',
-              activeFilter === f.key
-                ? 'bg-gold text-black'
-                : 'bg-card border border-border text-muted hover:text-white hover:border-gold/30',
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
       </div>
 
       {/* ============================================================ */}
@@ -384,8 +404,11 @@ export default function TenantsPage() {
           <AlertTriangle className="h-5 w-5 text-red shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white">
-              {lateTenants.length} tenant{lateTenants.length > 1 ? 's are' : ' is'} late on rent.{' '}
-              <span className="text-muted font-normal">Run AI collection sequence?</span>
+              {lateTenants.length} payment{lateTenants.length > 1 ? 's' : ''} overdue totaling{' '}
+              <span className="text-red">{formatCurrency(overdueTotal)}</span>
+            </p>
+            <p className="text-xs text-muted mt-0.5">
+              Automated AI collection sequences can recover late payments via email, SMS, and voice.
             </p>
           </div>
           <Button
@@ -393,10 +416,59 @@ export default function TenantsPage() {
             loading={runningSequence}
             onClick={handleRunCollection}
           >
-            Run Collection Sequence
+            Run AI Collection Sequence
           </Button>
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/*  FILTER BAR + SEARCH                                          */}
+      {/* ============================================================ */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(f.key)}
+              className={cn(
+                'px-4 py-1.5 rounded-full text-sm font-medium font-body',
+                'transition-all duration-200 ease-out',
+                'inline-flex items-center gap-1.5',
+                activeFilter === f.key
+                  ? 'bg-gold text-black'
+                  : 'bg-card border border-border text-muted hover:text-white hover:border-gold/30',
+              )}
+            >
+              {f.label}
+              <span className={cn(
+                'text-[10px] px-1.5 py-0.5 rounded-full font-semibold',
+                activeFilter === f.key
+                  ? 'bg-black/20 text-black'
+                  : 'bg-border text-muted',
+              )}>
+                {filterCounts[f.key]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+          <input
+            type="text"
+            placeholder="Search tenants..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              'h-9 w-64 pl-9 pr-4 rounded-lg text-sm font-body',
+              'bg-card border border-border text-white placeholder:text-muted',
+              'focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/30',
+              'transition-all duration-200',
+            )}
+          />
+        </div>
+      </div>
 
       {/* ============================================================ */}
       {/*  TENANT CARDS GRID                                            */}
@@ -425,16 +497,25 @@ export default function TenantsPage() {
                   variant="interactive"
                   className="h-full"
                 >
-                  {/* Name + Address */}
-                  <div className="mb-4">
-                    <h3 className="font-display font-semibold text-base text-white">
-                      {tenant.first_name} {tenant.last_name}
-                    </h3>
-                    <p className="text-xs text-muted mt-0.5 truncate">
-                      {tenant.property?.address
-                        ? `${tenant.property.address}, ${tenant.property.city}, ${tenant.property.state}`
-                        : 'No property assigned'}
-                    </p>
+                  {/* Top row: name + payment status */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="min-w-0">
+                      <h3 className="font-display font-semibold text-base text-white">
+                        {tenant.first_name} {tenant.last_name}
+                      </h3>
+                      <p className="text-xs text-muted mt-0.5 truncate">
+                        {tenant.property?.address
+                          ? `${tenant.property.address}, ${tenant.property.city}, ${tenant.property.state}`
+                          : 'No property assigned'}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={paymentStatus.variant}
+                      size="sm"
+                      dot
+                    >
+                      {paymentStatus.label}
+                    </Badge>
                   </div>
 
                   {/* Monthly rent */}
@@ -443,16 +524,15 @@ export default function TenantsPage() {
                     <span className="text-xs text-muted font-normal ml-1">/mo</span>
                   </p>
 
-                  {/* Payment status + Lease end row */}
-                  <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <Badge
-                      variant={paymentStatus.variant}
-                      size="sm"
-                      dot
-                    >
-                      {paymentStatus.label}
-                    </Badge>
+                  {/* Lease dates */}
+                  <div className="flex items-center gap-4 text-xs text-muted mb-3">
+                    <span>
+                      Lease: {formatDate(tenant.lease_start)} - {formatDate(tenant.lease_end)}
+                    </span>
+                  </div>
 
+                  {/* Badges row */}
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
                     {daysRemaining !== null && (
                       <Badge variant={leaseColor} size="sm">
                         {daysRemaining > 0
@@ -471,17 +551,15 @@ export default function TenantsPage() {
                     )}
                   </div>
 
-                  {/* Lease end date */}
-                  <p className="text-xs text-muted mb-4">
-                    Lease ends {formatDate(tenant.lease_end)}
-                  </p>
-
                   {/* Quick action row */}
                   <div className="flex items-center gap-2 border-t border-border pt-3">
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        if (tenant.email) {
+                          window.location.href = `mailto:${tenant.email}`;
+                        }
                       }}
                       className={cn(
                         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium',
@@ -489,13 +567,16 @@ export default function TenantsPage() {
                         'transition-colors duration-150',
                       )}
                     >
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      Message
+                      <Mail className="h-3.5 w-3.5" />
+                      Email
                     </button>
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        if (tenant.phone) {
+                          window.location.href = `tel:${tenant.phone}`;
+                        }
                       }}
                       className={cn(
                         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium',
@@ -506,20 +587,18 @@ export default function TenantsPage() {
                       <Phone className="h-3.5 w-3.5" />
                       Call
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                    <Link
+                      href={`/tenants/${tenant.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className={cn(
                         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium',
-                        'text-muted hover:text-white hover:bg-white/5',
-                        'transition-colors duration-150',
+                        'text-gold hover:text-gold-light hover:bg-gold/5',
+                        'transition-colors duration-150 ml-auto',
                       )}
                     >
                       <Eye className="h-3.5 w-3.5" />
-                      View
-                    </button>
+                      View Details
+                    </Link>
                   </div>
                 </Card>
               </Link>

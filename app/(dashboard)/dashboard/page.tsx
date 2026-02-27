@@ -472,22 +472,58 @@ export default function DashboardPage() {
     setAiBriefLoading(true);
     setAiBrief('');
 
-    // Simulate streaming AI response
-    // TODO: Replace with actual API call to /api/ai/market-brief
-    const mockBrief =
-      'Based on your portfolio analysis, the current market conditions indicate steady growth across your properties. ' +
-      'Average cap rates in your markets have compressed by 15bps this quarter, suggesting strong demand. ' +
-      `Your portfolio of ${properties.length} properties is generating ${formatFullCurrency(monthlyCashFlow)}/mo in cash flow. ` +
-      'Key recommendation: Consider refinancing properties purchased before 2022 to lock in current rates. ' +
-      'The rental market in your primary markets shows 3-4% YoY rent growth, outpacing the national average of 2.1%.';
+    try {
+      const res = await fetch('/api/ai/market-brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          properties: properties.map((p) => ({
+            address: p.address,
+            property_type: p.property_type,
+            current_value: p.current_value,
+            monthly_rent: p.monthly_rent,
+            mortgage_balance: p.mortgage_balance,
+            purchase_price: p.purchase_price,
+          })),
+          metrics: {
+            totalPortfolioValue,
+            monthlyCashFlow,
+            totalEquity,
+            netROI: netROI.toFixed(1),
+            propertyCount: properties.length,
+          },
+        }),
+      });
 
-    // Simulate streaming effect
-    for (let i = 0; i <= mockBrief.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 8));
-      setAiBrief(mockBrief.slice(0, i));
+      if (!res.ok) throw new Error('Failed to generate brief');
+
+      // Stream the response
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let accumulated = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += decoder.decode(value, { stream: true });
+          setAiBrief(accumulated);
+        }
+      } else {
+        const data = await res.json();
+        setAiBrief(data.brief || data.content || 'Unable to generate brief.');
+      }
+    } catch {
+      // Fallback to local generation if API fails
+      const fallbackBrief =
+        `Based on your portfolio of ${properties.length} properties valued at ${formatFullCurrency(totalPortfolioValue)}, ` +
+        `you're generating ${formatFullCurrency(monthlyCashFlow)}/mo in cash flow with ${formatFullCurrency(totalEquity)} in total equity. ` +
+        `Your net ROI stands at ${netROI.toFixed(1)}%. ` +
+        'Consider reviewing properties with the lowest cap rates for potential rent increases or refinancing opportunities.';
+      setAiBrief(fallbackBrief);
+    } finally {
+      setAiBriefLoading(false);
     }
-
-    setAiBriefLoading(false);
   }
 
   /* ---------------------------------------------------------------- */

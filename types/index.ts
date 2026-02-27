@@ -481,3 +481,488 @@ export interface AIMessage {
   content: string;
   timestamp: string; // ISO 8601
 }
+
+// ============================================================================
+// Property Analyzer Types (ported from property-analyzer/lib/types.ts)
+// ============================================================================
+
+export interface PropertyAnalyzerInputs {
+  purchasePrice: number;
+  downPaymentPercent: number;
+  interestRate: number;
+  loanTermYears: number;
+  monthlyRent: number;
+  vacancyRate: number;
+  annualRentGrowth: number;
+  propertyTax: number;
+  insurance: number;
+  maintenance: number;
+  hoa: number;
+  propertyManagementPercent: number;
+  closingCostsPercent: number;
+  annualAppreciationRate: number;
+  annualExpenseGrowthRate: number;
+}
+
+export interface AnalyzerAmortizationRow {
+  month: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  balance: number;
+  totalPrincipalPaid: number;
+  totalInterestPaid: number;
+}
+
+export interface AnalyzerAnnualProjection {
+  year: number;
+  propertyValue: number;
+  loanBalance: number;
+  equity: number;
+  grossRent: number;
+  effectiveRent: number;
+  totalExpenses: number;
+  noi: number;
+  debtService: number;
+  cashFlow: number;
+  cashOnCash: number;
+  capRate: number;
+  cumulativeCashFlow: number;
+  totalReturn: number;
+  totalROI: number;
+  principalPaid: number;
+  interestPaid: number;
+  appreciation: number;
+}
+
+export interface AnalyzerMonthlyCashFlow {
+  month: number;
+  year: number;
+  grossRent: number;
+  vacancyLoss: number;
+  effectiveRent: number;
+  propertyTax: number;
+  insurance: number;
+  maintenance: number;
+  hoa: number;
+  managementFee: number;
+  totalExpenses: number;
+  noi: number;
+  mortgagePayment: number;
+  cashFlow: number;
+}
+
+export interface AnalyzerDealMetrics {
+  loanAmount: number;
+  downPayment: number;
+  closingCosts: number;
+  totalCashInvested: number;
+  monthlyMortgagePayment: number;
+  monthlyGrossRent: number;
+  monthlyEffectiveRent: number;
+  annualGrossRent: number;
+  annualEffectiveRent: number;
+  monthlyExpenses: number;
+  annualExpenses: number;
+  monthlyNOI: number;
+  annualNOI: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  capRate: number;
+  cashOnCash: number;
+  grossRentMultiplier: number;
+  dscr: number;
+  onePercentRule: boolean;
+  twoPercentRule: boolean;
+  onePercentRatio: number;
+  irr5Year: number;
+  irr10Year: number;
+  breakEvenMonths: number;
+  dealScore: number;
+  dealRating: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  amortizationSchedule: AnalyzerAmortizationRow[];
+  annualProjections: AnalyzerAnnualProjection[];
+  monthlyCashFlows: AnalyzerMonthlyCashFlow[];
+  totalInterestPaid: number;
+  totalPrincipalPaid10Year: number;
+  totalAppreciation10Year: number;
+  equityYear10: number;
+  propertyValueYear10: number;
+}
+
+export interface AnalyzerSensitivityResult {
+  scenario: string;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  cashOnCash: number;
+  capRate: number;
+  dscr: number;
+  dealScore: number;
+  change: number;
+}
+
+export interface AnalyzerCompareProperty {
+  name: string;
+  inputs: PropertyAnalyzerInputs;
+  metrics: AnalyzerDealMetrics;
+}
+
+// ============================================================================
+// Heat Map / Market Intelligence Types (ported from az-heatmap/lib/types.ts)
+// ============================================================================
+
+export type HeatMapMetricKey =
+  | 'medianPrice'
+  | 'pricePerSqft'
+  | 'daysOnMarket'
+  | 'activeInventory'
+  | 'monthsOfSupply'
+  | 'yoyChange'
+  | 'medianRent'
+  | 'populationGrowth';
+
+export type HeatMapPropertyType = 'all' | 'single_family' | 'condo' | 'townhouse' | 'multi_family';
+
+export interface HeatMapMonthlyTrend {
+  month: string;
+  medianPrice: number;
+  pricePerSqft: number;
+  daysOnMarket: number;
+  activeInventory: number;
+  medianRent: number;
+}
+
+export interface HeatMapCityMarketData {
+  id: string;
+  name: string;
+  state: string;
+  center: [number, number];
+  population: number;
+  medianHouseholdIncome: number;
+  populationGrowth: number;
+  investmentScore?: number;
+  byType: Record<HeatMapPropertyType, {
+    medianPrice: number;
+    pricePerSqft: number;
+    daysOnMarket: number;
+    activeInventory: number;
+    monthsOfSupply: number;
+    yoyChange: number;
+    medianRent: number;
+  }>;
+  trends: HeatMapMonthlyTrend[];
+  lastUpdated?: string;
+}
+
+export interface HeatMapMetricConfig {
+  key: HeatMapMetricKey;
+  label: string;
+  shortLabel: string;
+  format: (v: number) => string;
+  colorScale: 'price' | 'speed' | 'inventory' | 'diverging';
+  description: string;
+  unit: string;
+}
+
+// ============================================================================
+// Tax & Accounting Types
+// ============================================================================
+
+export interface TaxReportData {
+  propertyName: string;
+  propertyAddress?: string;
+  year: number;
+  grossIncome: number;
+  deductions: { label: string; amount: number; scheduleELine?: string }[];
+  totalDeductions: number;
+  netTaxableIncome: number;
+  depreciation?: {
+    depreciableBasis: number;
+    annualDepreciation: number;
+    accumulatedDepreciation: number;
+    remainingBasis: number;
+  };
+  capitalExpenses?: { description: string; amount: number }[];
+  comparison?: {
+    prevYear: number;
+    prevIncome: number;
+    prevDeductions: number;
+    prevNet: number;
+  };
+}
+
+export interface ScheduleEData {
+  propertyId: string;
+  propertyAddress: string;
+  year: number;
+  rentsReceived: number;
+  advertising: number;
+  autoAndTravel: number;
+  cleaning: number;
+  commissions: number;
+  insurance: number;
+  legal: number;
+  management: number;
+  mortgageInterest: number;
+  otherInterest: number;
+  repairs: number;
+  supplies: number;
+  taxes: number;
+  utilities: number;
+  depreciation: number;
+  other: number;
+  totalExpenses: number;
+  netIncome: number;
+}
+
+export interface DepreciationEntry {
+  propertyId: string;
+  propertyAddress: string;
+  purchasePrice: number;
+  landValue: number;
+  depreciableBasis: number;
+  depreciationStartDate: string;
+  annualDepreciation: number;
+  accumulatedDepreciation: number;
+  remainingBasis: number;
+  yearsRemaining: number;
+}
+
+export interface MileageLogEntry {
+  id: string;
+  date: string;
+  propertyId: string;
+  propertyAddress: string;
+  purpose: string;
+  miles: number;
+  deduction: number;
+}
+
+export interface Exchange1031 {
+  id: string;
+  soldPropertyId: string;
+  soldPropertyAddress: string;
+  saleDate: string;
+  salePrice: number;
+  identificationDeadline: string; // 45 days
+  closingDeadline: string; // 180 days
+  identifiedProperties: string[];
+  replacementPropertyId?: string;
+  status: 'identifying' | 'under_contract' | 'completed' | 'failed';
+}
+
+// ============================================================================
+// Agent & Automation Types
+// ============================================================================
+
+export interface AgentSequence {
+  id: string;
+  userId: string;
+  name: string;
+  type: 'rent_reminder' | 'lease_renewal' | 'welcome' | 'maintenance_followup' | 'moveout' | 'seasonal';
+  agentType: 'email' | 'voice' | 'sms';
+  enabled: boolean;
+  steps: AgentSequenceStep[];
+  createdAt: string;
+}
+
+export interface AgentSequenceStep {
+  dayOffset: number;
+  subject?: string;
+  template: string;
+  tone: 'friendly' | 'professional' | 'firm';
+  variables: string[];
+}
+
+export interface VoiceConfig {
+  voiceId: string;
+  voiceName: string;
+  speed: number;
+  tone: 'professional' | 'friendly' | 'firm';
+}
+
+export interface SMSThread {
+  tenantId: string;
+  tenantName: string;
+  propertyAddress: string;
+  messages: SMSMessage[];
+  unreadCount: number;
+  lastMessageAt: string;
+}
+
+export interface SMSMessage {
+  id: string;
+  direction: 'inbound' | 'outbound';
+  content: string;
+  sender: 'tenant' | 'agent' | 'investor';
+  timestamp: string;
+  status: 'sent' | 'delivered' | 'read' | 'failed';
+}
+
+// ============================================================================
+// Screening Application Types
+// ============================================================================
+
+export interface ScreeningApplication {
+  id: string;
+  token: string;
+  propertyId: string;
+  propertyAddress: string;
+  applicantName: string;
+  applicantEmail: string;
+  applicantPhone: string;
+  dateOfBirth?: string;
+  currentAddress?: string;
+  currentLandlord?: string;
+  currentLandlordPhone?: string;
+  employer?: string;
+  monthlyIncome?: number;
+  moveInDate?: string;
+  numberOfOccupants?: number;
+  pets?: boolean;
+  petDetails?: string;
+  consentBackgroundCheck: boolean;
+  consentCreditCheck: boolean;
+  status: 'pending' | 'submitted' | 'screening' | 'completed' | 'expired';
+  result?: ScreeningResult;
+  createdAt: string;
+  expiresAt: string;
+}
+
+// ============================================================================
+// Contractor & Maintenance Types
+// ============================================================================
+
+export interface ContractorMatch {
+  contractor: Contractor;
+  compositeScore: number;
+  qualityScore: number;
+  priceFairnessScore: number;
+  reliabilityScore: number;
+  responsivenessScore: number;
+  googleRating?: number;
+  googleReviewCount?: number;
+  priceRange: { min: number; max: number };
+  licenseVerified: boolean;
+  licenseExpiry?: string;
+  insuranceVerified: boolean;
+  insuranceExpiry?: string;
+  aiReviewSummary?: string;
+  pros: string[];
+  cons: string[];
+}
+
+export interface ContractorBid {
+  id: string;
+  maintenanceRequestId: string;
+  contractorId: string;
+  contractorName: string;
+  price: number;
+  timeline: string;
+  warranty?: string;
+  notes?: string;
+  status: 'requested' | 'submitted' | 'accepted' | 'rejected';
+  submittedAt?: string;
+}
+
+export interface PreventiveSchedule {
+  id: string;
+  propertyId: string;
+  taskType: 'hvac_service' | 'gutter_cleaning' | 'fire_detector' | 'water_heater' | 'roof_inspection' | 'pest_inspection';
+  frequency: 'monthly' | 'quarterly' | 'semi_annual' | 'annual';
+  lastCompleted?: string;
+  nextDue: string;
+  autoSchedule: boolean;
+  preferredContractorId?: string;
+}
+
+// ============================================================================
+// Financing & Exit Strategy Types
+// ============================================================================
+
+export interface LoanComparison {
+  type: 'conventional_30' | 'conventional_15' | 'dscr' | 'hard_money' | 'portfolio';
+  label: string;
+  rate: number;
+  monthlyPayment: number;
+  totalInterest: number;
+  downPaymentPercent: number;
+  requirements: string[];
+  pros: string[];
+  cons: string[];
+}
+
+export interface ExitStrategy {
+  scenario: 'sell_now' | 'hold_1yr' | 'hold_3yr' | 'hold_5yr' | '1031_exchange';
+  label: string;
+  estimatedSalePrice: number;
+  agentFees: number;
+  closingCosts: number;
+  depreciationRecapture: number;
+  capitalGainsTax: number;
+  netProceeds: number;
+  totalReturn: number;
+  annualizedReturn: number;
+}
+
+// ============================================================================
+// Insurance & Zoning Types
+// ============================================================================
+
+export interface InsurancePolicy {
+  id: string;
+  propertyId: string;
+  type: 'landlord' | 'umbrella' | 'flood' | 'earthquake';
+  provider: string;
+  policyNumber: string;
+  coverageAmount: number;
+  premium: number;
+  deductible: number;
+  expiryDate: string;
+  autoRenew: boolean;
+}
+
+export interface ZoningData {
+  zoningCode: string;
+  zoningDescription: string;
+  strAllowed: boolean | 'restricted';
+  strRestrictions?: string;
+  rentControlApplies: boolean;
+  rentControlDetails?: string;
+  aduAllowed: boolean;
+  aduRequirements?: string;
+  floodZone: string;
+  floodZoneRisk: 'minimal' | 'moderate' | 'high';
+  opportunityZone: boolean;
+  historicDistrict: boolean;
+  historicRestrictions?: string;
+  permitRequirements?: string[];
+}
+
+// ============================================================================
+// Referral & Onboarding Types
+// ============================================================================
+
+export interface ReferralInfo {
+  code: string;
+  link: string;
+  referredCount: number;
+  totalEarnings: number;
+  pendingEarnings: number;
+  referrals: {
+    email: string;
+    signupDate: string;
+    firstPaymentDate?: string;
+    creditEarned: number;
+  }[];
+}
+
+export interface OnboardingProgress {
+  currentStep: number;
+  investorType?: 'beginner' | 'intermediate' | 'experienced';
+  portfolioSize?: '0' | '1-5' | '6-20' | '20+';
+  primaryStrategy?: 'buy_and_hold' | 'flip' | 'brrrr' | 'str' | 'wholesale' | 'mixed';
+  firstPropertyAdded: boolean;
+  dataConnected: boolean;
+  completed: boolean;
+}

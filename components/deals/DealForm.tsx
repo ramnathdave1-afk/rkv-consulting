@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -13,7 +13,9 @@ import {
   Wrench,
   BarChart3,
   Calculator,
+  Sparkles,
 } from 'lucide-react';
+import { getGoogleMapsLoader } from '@/lib/apis/googlemaps';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -122,6 +124,97 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
   const [afterRepairValue, setAfterRepairValue] = useState('');
   const [annualAppreciation, setAnnualAppreciation] = useState('3.0');
   const [annualRentGrowth, setAnnualRentGrowth] = useState('2.0');
+  const [fetchingData, setFetchingData] = useState(false);
+
+  const addressInputRef = useRef<HTMLInputElement>(null);
+
+  /* -- Google Maps Places Autocomplete -------------------------------- */
+  useEffect(() => {
+    let autocomplete: google.maps.places.Autocomplete | null = null;
+
+    async function initAutocomplete() {
+      if (!addressInputRef.current) return;
+
+      try {
+        const loader = getGoogleMapsLoader();
+        // @ts-expect-error - Loader class is deprecated but still works
+        await (loader.load ? loader.load() : loader.importLibrary('places'));
+
+        autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' },
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete?.getPlace();
+          if (place?.formatted_address) {
+            setPropertyAddress(place.formatted_address);
+          }
+        });
+      } catch (err) {
+        console.error('[DealForm] Failed to initialize Google Maps autocomplete:', err);
+      }
+    }
+
+    initAutocomplete();
+
+    return () => {
+      if (autocomplete) {
+        google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, []);
+
+  /* -- Rentcast Auto-fill --------------------------------------------- */
+  const handleAutoFill = useCallback(async () => {
+    if (!propertyAddress.trim() || fetchingData) return;
+
+    setFetchingData(true);
+    try {
+      // Parse city and state from the address
+      const parts = propertyAddress.split(',').map((s) => s.trim());
+      const city = parts[1] || '';
+      const stateZip = parts[2] || '';
+      const state = stateZip.split(' ')[0] || '';
+
+      if (!city || !state) {
+        console.warn('[DealForm] Could not parse city/state from address');
+        return;
+      }
+
+      const res = await fetch(
+        `/api/market/live?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`
+      );
+
+      if (!res.ok) {
+        console.error('[DealForm] Auto-fill API returned', res.status);
+        return;
+      }
+
+      const data = await res.json();
+
+      // Populate form fields from response data if available
+      if (data.price) setAskingPrice(formatNumberInput(String(data.price)));
+      if (data.rent) setExpectedMonthlyRent(formatNumberInput(String(data.rent)));
+      if (data.propertyType) {
+        const typeMap: Record<string, string> = {
+          'Single Family': 'single-family',
+          'Multi-Family': 'multi-family',
+          'Condo': 'condo',
+          'Townhouse': 'townhouse',
+          'Commercial': 'commercial',
+        };
+        const mapped = typeMap[data.propertyType] || data.propertyType;
+        if (PROPERTY_TYPE_OPTIONS.some((o) => o.value === mapped)) {
+          setPropertyType(mapped);
+        }
+      }
+    } catch (err) {
+      console.error('[DealForm] Auto-fill fetch failed:', err);
+    } finally {
+      setFetchingData(false);
+    }
+  }, [propertyAddress, fetchingData]);
 
   const atLimit = usageCount >= usageLimit;
   const usagePct = usageLimit > 0 ? Math.min((usageCount / usageLimit) * 100, 100) : 0;
@@ -181,13 +274,28 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
         </p>
 
         <Input
+          ref={addressInputRef}
           label="Property Address"
           value={propertyAddress}
           onChange={(e) => setPropertyAddress(e.target.value)}
           placeholder="123 Main St, Phoenix, AZ 85001"
-          helperText="Google Maps autocomplete coming soon"
           icon={<MapPin className="w-4 h-4" />}
         />
+
+        <button
+          type="button"
+          disabled={!propertyAddress.trim() || fetchingData}
+          onClick={handleAutoFill}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body',
+            'bg-gold/10 border border-gold/20 text-gold',
+            'hover:bg-gold/20 transition-colors duration-200',
+            'disabled:opacity-40 disabled:cursor-not-allowed',
+          )}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          {fetchingData ? 'Fetching...' : 'Auto-fill with AI'}
+        </button>
 
         <div className="grid grid-cols-2 gap-3">
           <DollarInput
