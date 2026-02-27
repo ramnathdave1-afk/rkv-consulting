@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/deals/automatch",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
