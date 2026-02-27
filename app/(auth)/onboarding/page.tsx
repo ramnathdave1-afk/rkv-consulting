@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactConfetti from 'react-confetti';
 import { createClient } from '@/lib/supabase/client';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { getGoogleMapsLoader } from '@/lib/apis/googlemaps';
+import AddressAutocomplete, { type AddressData } from '@/components/ui/AddressAutocomplete';
 import {
-  MapPin,
   User,
   Zap,
   Check,
@@ -20,10 +19,8 @@ import {
   Sparkles,
   Building2,
   CalendarDays,
-  Shield,
   TrendingUp,
   FileText,
-  Bot,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -31,35 +28,6 @@ import {
 /* ------------------------------------------------------------------ */
 
 const TOTAL_STEPS = 5;
-
-const planFeatures: Record<string, { label: string; icon: React.ReactNode }[]> = {
-  basic: [
-    { label: 'Deal Analyzer (5/month)', icon: <TrendingUp className="w-4 h-4" /> },
-    { label: 'Up to 3 Properties', icon: <Building2 className="w-4 h-4" /> },
-    { label: 'Tenant Management', icon: <User className="w-4 h-4" /> },
-    { label: 'Document Storage', icon: <FileText className="w-4 h-4" /> },
-    { label: 'Investment Calendar', icon: <CalendarDays className="w-4 h-4" /> },
-  ],
-  pro: [
-    { label: 'Unlimited Deal Analysis', icon: <TrendingUp className="w-4 h-4" /> },
-    { label: 'Up to 20 Properties', icon: <Building2 className="w-4 h-4" /> },
-    { label: 'AI Assistant (200 msg/mo)', icon: <Bot className="w-4 h-4" /> },
-    { label: 'Market Intelligence + Alerts', icon: <Sparkles className="w-4 h-4" /> },
-    { label: 'Tenant Screening', icon: <Shield className="w-4 h-4" /> },
-    { label: 'Portfolio Analytics', icon: <TrendingUp className="w-4 h-4" /> },
-    { label: 'Full Document Vault', icon: <FileText className="w-4 h-4" /> },
-    { label: 'Accounting + Tax Tools', icon: <FileText className="w-4 h-4" /> },
-  ],
-  elite: [
-    { label: 'Everything in Pro', icon: <Check className="w-4 h-4" /> },
-    { label: 'Unlimited Properties', icon: <Building2 className="w-4 h-4" /> },
-    { label: 'Unlimited AI Queries', icon: <Bot className="w-4 h-4" /> },
-    { label: 'Email, Voice & SMS Agents', icon: <Mail className="w-4 h-4" /> },
-    { label: 'Autopilot Mode', icon: <Zap className="w-4 h-4" /> },
-    { label: 'Priority Support', icon: <Shield className="w-4 h-4" /> },
-    { label: 'White Label Reports', icon: <FileText className="w-4 h-4" /> },
-  ],
-};
 
 const PROPERTY_TYPE_OPTIONS = [
   { value: 'single_family', label: 'Single Family' },
@@ -74,21 +42,27 @@ const PROPERTY_TYPE_OPTIONS = [
 const AUTOMATION_CARDS = [
   {
     id: 'rent_collection',
-    label: 'Rent Collection',
-    description: 'Auto-send reminders on due dates, follow up on late payments via email + SMS.',
+    label: 'Rent Collection Autopilot',
+    description: 'Automatically sends reminders and follows up on late payments.',
     icon: <Mail className="w-5 h-5" />,
   },
   {
     id: 'lease_renewal',
-    label: 'Lease Renewal',
-    description: 'Send renewal notices 90/60/30 days before expiry. Never miss a renewal.',
+    label: 'Lease Renewal Automation',
+    description: 'Sends renewal notices 90/60/30 days before expiry.',
     icon: <CalendarDays className="w-5 h-5" />,
   },
   {
     id: 'maintenance_response',
     label: 'Maintenance Response',
-    description: 'Auto-acknowledge tenant maintenance requests and assign contractors.',
+    description: 'Acknowledges requests and keeps tenants updated automatically.',
     icon: <Building2 className="w-5 h-5" />,
+  },
+  {
+    id: 'new_tenant_welcome',
+    label: 'New Tenant Welcome',
+    description: 'Sends a welcome sequence and move-in checklist automatically.',
+    icon: <Sparkles className="w-5 h-5" />,
   },
 ];
 
@@ -130,13 +104,23 @@ export default function OnboardingPage() {
 
   // Step 1 — Welcome
   const [plan, setPlan] = useState('pro');
+  const [fullName, setFullName] = useState<string | null>(null);
 
   // Step 2 — Add Property
   const [propertyAddress, setPropertyAddress] = useState('');
+  const [propertyAddressData, setPropertyAddressData] = useState<AddressData | null>(null);
   const [propertyType, setPropertyType] = useState('single_family');
   const [purchasePrice, setPurchasePrice] = useState('');
   const [monthlyRent, setMonthlyRent] = useState('');
-  const addressRef = useRef<HTMLInputElement>(null);
+  const [autofillLoading, setAutofillLoading] = useState(false);
+  const [autofillSource, setAutofillSource] = useState<{ attom: boolean; rentcast: boolean }>({
+    attom: false,
+    rentcast: false,
+  });
+  const [flashFields, setFlashFields] = useState<{ purchasePrice: boolean; monthlyRent: boolean }>({
+    purchasePrice: false,
+    monthlyRent: false,
+  });
 
   // Step 3 — Add Tenant
   const [tenantFirst, setTenantFirst] = useState('');
@@ -146,7 +130,9 @@ export default function OnboardingPage() {
   const [tenantRent, setTenantRent] = useState('');
 
   // Step 4 — Automations
-  const [enabledAutomations, setEnabledAutomations] = useState<Set<string>>(new Set());
+  const [enabledAutomations, setEnabledAutomations] = useState<Set<string>>(
+    new Set(AUTOMATION_CARDS.map((a) => a.id))
+  );
 
   // Confetti
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -184,41 +170,18 @@ export default function OnboardingPage() {
         .in('status', ['active', 'trialing'])
         .single();
       if (sub?.plan) setPlan(sub.plan);
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      if (profile?.full_name) setFullName(profile.full_name);
     }
     fetchPlan();
   }, [supabase, router]);
 
-  // Google Maps Autocomplete for property address
-  useEffect(() => {
-    if (currentStep !== 2) return;
-    let autocomplete: google.maps.places.Autocomplete | null = null;
-
-    async function init() {
-      if (!addressRef.current) return;
-      try {
-        const loader = getGoogleMapsLoader();
-        // @ts-expect-error - Loader class fallback
-        await (loader.load ? loader.load() : loader.importLibrary('places'));
-        autocomplete = new google.maps.places.Autocomplete(addressRef.current, {
-          types: ['address'],
-          componentRestrictions: { country: 'us' },
-          fields: ['formatted_address', 'address_components'],
-        });
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete?.getPlace();
-          if (place?.formatted_address) setPropertyAddress(place.formatted_address);
-        });
-      } catch (err) {
-        console.error('[Onboarding] Google Maps autocomplete error:', err);
-      }
-    }
-
-    const timer = setTimeout(init, 300);
-    return () => {
-      clearTimeout(timer);
-      if (autocomplete) google.maps.event.clearInstanceListeners(autocomplete);
-    };
-  }, [currentStep]);
+  // Address autocomplete is handled by <AddressAutocomplete />
 
   // Save property
   const saveProperty = useCallback(async () => {
@@ -254,6 +217,55 @@ export default function OnboardingPage() {
     }
     setSavingProperty(false);
   }, [supabase, propertyAddress, propertyType, purchasePrice, monthlyRent]);
+
+  // Autofill property details after address select
+  useEffect(() => {
+    const address = propertyAddressData?.fullAddress;
+    if (!address) return;
+    let cancelled = false;
+
+    async function run() {
+      setAutofillLoading(true);
+      setAutofillSource({ attom: false, rentcast: false });
+      try {
+        const res = await fetch('/api/property/autofill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'Autofill failed');
+        if (cancelled) return;
+
+        const attomValue = data?.attom?.estimatedValue as number | null;
+        const rentValue = data?.rentcast?.estimatedRent as number | null;
+
+        if (typeof attomValue === 'number' && attomValue > 0) {
+          setPurchasePrice(attomValue.toLocaleString());
+          setFlashFields((p) => ({ ...p, purchasePrice: true }));
+          setTimeout(() => setFlashFields((p) => ({ ...p, purchasePrice: false })), 450);
+          setAutofillSource((p) => ({ ...p, attom: true }));
+        }
+
+        if (typeof rentValue === 'number' && rentValue > 0) {
+          setMonthlyRent(rentValue.toLocaleString());
+          setFlashFields((p) => ({ ...p, monthlyRent: true }));
+          setTimeout(() => setFlashFields((p) => ({ ...p, monthlyRent: false })), 450);
+          setAutofillSource((p) => ({ ...p, rentcast: true }));
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[Onboarding] Autofill failed', e);
+      } finally {
+        if (!cancelled) setAutofillLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [propertyAddressData]);
 
   // Save tenant
   const saveTenant = useCallback(async () => {
@@ -351,25 +363,48 @@ export default function OnboardingPage() {
     });
   }
 
-  /* ---- Progress bar ------------------------------------------------ */
-
-  const ProgressBar = () => (
-    <div className="flex gap-2 mb-10">
-      {Array.from({ length: TOTAL_STEPS }, (_, i) => {
-        const stepNum = i + 1;
-        return (
-          <div
-            key={i}
-            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-              stepNum <= currentStep ? 'bg-gold' : 'bg-border'
-            } ${stepNum === currentStep ? 'animate-pulse' : ''}`}
-          />
-        );
-      })}
-    </div>
-  );
-
   const stepLabels = ['Welcome', 'Add Property', 'Add Tenant', 'Automations', 'Ready'];
+
+  /* ---- Progress header -------------------------------------------- */
+
+  const ProgressHeader = () => {
+    const pct = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
+    return (
+      <div className="w-full mb-10">
+        <div className="h-1 rounded-full bg-border overflow-hidden">
+          <div className="h-full bg-gold transition-all duration-500" style={{ width: `${pct}%` }} />
+        </div>
+
+        <div className="mt-6 flex items-start justify-between">
+          {stepLabels.map((label, idx) => {
+            const stepNum = idx + 1;
+            const completed = stepNum < currentStep;
+            const current = stepNum === currentStep;
+            return (
+              <div key={label} className="flex-1 flex flex-col items-center">
+                <div
+                  className={[
+                    'w-8 h-8 rounded-full flex items-center justify-center',
+                    'transition-colors duration-200',
+                    completed
+                      ? 'bg-gold text-white border border-gold'
+                      : current
+                        ? 'bg-[var(--bg-primary)] text-gold border border-gold'
+                        : 'bg-[var(--bg-primary)] text-muted border border-border',
+                  ].join(' ')}
+                >
+                  {completed ? <Check className="w-4 h-4" /> : <span className="font-mono text-[12px]">{stepNum}</span>}
+                </div>
+                <div className="mt-2 text-[11px] font-body text-muted leading-tight text-center">
+                  {label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   /* ---- Render steps ------------------------------------------------ */
 
@@ -387,16 +422,25 @@ export default function OnboardingPage() {
             className="flex flex-col items-center text-center"
           >
             <AnimatedCheckmark />
-            <h2 className="font-display font-bold text-3xl text-white mt-6">
-              Welcome to RKV Consulting
+            <h2 className="font-display font-bold text-[32px] text-white mt-6">
+              {fullName ? `Welcome, ${fullName.split(' ')[0]}` : 'Welcome to RKV Consulting'}
             </h2>
             <p className="text-muted mt-2 font-body">
-              Your <span className="text-gold font-medium capitalize">{plan}</span> plan is active.
-              Here&apos;s what you unlocked:
+              <span className="inline-flex items-center gap-2 text-gold font-semibold text-[11px] uppercase tracking-[0.15em]">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                {plan.toUpperCase()}
+              </span>
+              <span className="text-muted"> &nbsp;— Here’s what you unlocked:</span>
             </p>
             <div className="mt-8 w-full max-w-sm text-left">
               <ul className="space-y-3">
-                {(planFeatures[plan] || planFeatures.pro).map((feature, i) => (
+                {[
+                  { label: 'AI Deal Analyzer', icon: <TrendingUp className="w-4 h-4" /> },
+                  { label: 'Portfolio Intelligence', icon: <Building2 className="w-4 h-4" /> },
+                  { label: 'AI Tenant Agents', icon: <Mail className="w-4 h-4" /> },
+                  { label: 'Market Intelligence', icon: <Sparkles className="w-4 h-4" /> },
+                  { label: 'Accounting & Tax Center', icon: <FileText className="w-4 h-4" /> },
+                ].map((feature, i) => (
                   <motion.li
                     key={feature.label}
                     initial={{ opacity: 0, x: -10 }}
@@ -441,14 +485,18 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mt-6 space-y-4">
-              <Input
-                ref={addressRef}
-                label="Property Address"
-                placeholder="Start typing an address..."
-                value={propertyAddress}
-                onChange={(e) => setPropertyAddress(e.target.value)}
-                icon={<MapPin className="w-4 h-4" />}
-              />
+              <div>
+                <label className="block font-body font-medium text-[12px] text-muted mb-1.5">
+                  Property Address
+                </label>
+                <AddressAutocomplete
+                  placeholder="Start typing an address..."
+                  onAddressSelect={(addr) => {
+                    setPropertyAddress(addr.fullAddress);
+                    setPropertyAddressData(addr);
+                  }}
+                />
+              </div>
 
               <Select
                 label="Property Type"
@@ -463,14 +511,34 @@ export default function OnboardingPage() {
                   placeholder="$250,000"
                   value={purchasePrice}
                   onChange={(e) => setPurchasePrice(e.target.value)}
+                  className={flashFields.purchasePrice ? 'ring-2 ring-[rgba(5,150,105,0.20)]' : undefined}
                 />
                 <Input
                   label="Monthly Rent"
                   placeholder="$2,000"
                   value={monthlyRent}
                   onChange={(e) => setMonthlyRent(e.target.value)}
+                  className={flashFields.monthlyRent ? 'ring-2 ring-[rgba(5,150,105,0.20)]' : undefined}
                 />
               </div>
+
+              {(autofillSource.attom || autofillSource.rentcast || autofillLoading) && (
+                <div className="flex items-center gap-3 text-[11px] font-body">
+                  {autofillLoading && <span className="text-muted">Filling details…</span>}
+                  {autofillSource.attom && (
+                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-[var(--bg-primary)] text-muted">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                      Powered by ATTOM
+                    </span>
+                  )}
+                  {autofillSource.rentcast && (
+                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full border border-border bg-[var(--bg-primary)] text-muted">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                      Rent data: Rentcast
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         );
@@ -681,7 +749,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
       {showConfetti && (
         <ReactConfetti
           width={windowSize.width}
@@ -689,15 +757,12 @@ export default function OnboardingPage() {
           recycle={false}
           numberOfPieces={300}
           gravity={0.12}
-          colors={['#059669', '#0EA5E9', '#059669', '#6366F1', '#E2E8F0']}
+          colors={['#059669', '#D97706', '#DC2626', '#E2E8F0']}
         />
       )}
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 max-w-2xl mx-auto w-full">
-        {/* Progress bar */}
-        <div className="w-full">
-          <ProgressBar />
-        </div>
+        <ProgressHeader />
 
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-6 self-start">

@@ -24,36 +24,37 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
-    'bg-gold/10 text-gold border border-gold/30',
-    'hover:bg-gold/20 hover:shadow-glow',
-    'active:bg-gold/25',
+    'bg-gold text-white',
+    'hover:bg-[#047857]',
+    'active:scale-[0.97]',
   ].join(' '),
+  // Back-compat alias used around the app
   solid: [
-    'bg-gold text-black font-semibold',
-    'hover:brightness-110 hover:shadow-glow',
-    'active:brightness-95',
-  ].join(' '),
-  ghost: [
-    'bg-transparent text-muted',
-    'hover:text-white hover:bg-white/5',
-    'active:bg-white/10',
+    'bg-gold text-white',
+    'hover:bg-[#047857]',
+    'active:scale-[0.97]',
   ].join(' '),
   outline: [
-    'bg-transparent border border-gold/30 text-gold',
-    'hover:bg-gold/10 hover:shadow-glow-sm',
-    'active:bg-gold/15',
+    'bg-transparent border border-gold text-gold',
+    'hover:bg-[rgba(5,150,105,0.06)]',
+    'active:scale-[0.97]',
+  ].join(' '),
+  ghost: [
+    'bg-transparent border border-border text-muted',
+    'hover:border-border-hover hover:text-white',
+    'active:scale-[0.97]',
   ].join(' '),
   danger: [
-    'bg-red/10 text-red border border-red/30',
-    'hover:bg-red/20 hover:shadow-[0_0_20px_rgba(220,38,38,0.25)]',
-    'active:bg-red/25',
+    'bg-[rgba(220,38,38,0.06)] border border-[rgba(220,38,38,0.25)] text-red',
+    'hover:bg-[rgba(220,38,38,0.10)]',
+    'active:scale-[0.97]',
   ].join(' '),
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5 rounded-lg',
-  md: 'h-10 px-4 text-sm gap-2 rounded-lg',
-  lg: 'h-12 px-6 text-base gap-2.5 rounded-lg',
+  sm: 'h-9 px-4 text-[13px] gap-2 rounded-[6px]',
+  md: 'h-10 px-5 text-[13px] gap-2 rounded-[6px]',
+  lg: 'h-11 px-6 text-[13px] gap-2.5 rounded-[6px]',
 };
 
 /* ------------------------------------------------------------------ */
@@ -114,10 +115,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           // Base
-          'inline-flex items-center justify-center font-body',
-          'transition-all duration-200 ease-out',
+          'inline-flex items-center justify-center font-body font-semibold',
+          'transition-all duration-150 ease-out',
           'select-none whitespace-nowrap',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)]',
           // Variant + size
           variantStyles[variant],
           sizeStyles[size],

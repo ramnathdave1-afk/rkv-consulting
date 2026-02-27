@@ -32,31 +32,32 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 /* ------------------------------------------------------------------ */
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-gold/10 text-gold border-gold/20',
-  success: 'bg-green/10 text-green border-green/20',
-  danger: 'bg-red/10 text-red border-red/20',
-  warning: 'bg-gold-light/10 text-gold-light border-gold-light/20',
-  info: 'bg-gold/10 text-gold border-gold/20',
-  violet: 'bg-[#0EA5E9]/10 text-[#0EA5E9] border-[#0EA5E9]/20',
-  muted: 'bg-muted/10 text-muted border-muted/20',
+  default: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
+  success: 'bg-[#05966915] text-[#059669] border-[#05966940]',
+  danger: 'bg-[#DC262615] text-[#DC2626] border-[#DC262640]',
+  warning: 'bg-[#D9770615] text-[#D97706] border-[#D9770640]',
+  info: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
+  violet: 'bg-[#0EA5E915] text-[#0EA5E9] border-[#0EA5E940]', // Premium
+  muted: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
   plan: '', // dynamically set
 };
 
-const dotColorMap: Record<BadgeVariant, string> = {
-  default: 'bg-gold',
-  success: 'bg-green',
-  danger: 'bg-red',
-  warning: 'bg-gold-light',
-  info: 'bg-gold',
-  violet: 'bg-[#0EA5E9]',
-  muted: 'bg-muted',
-  plan: 'bg-gold',
+const sizeStyles: Record<BadgeSize, string> = {
+  sm: 'px-2 py-0.5',
+  md: 'px-2.5 py-1',
 };
 
-const sizeStyles: Record<BadgeSize, string> = {
-  sm: 'px-2 py-0.5 text-[10px]',
-  md: 'px-2.5 py-1 text-[10px]',
-};
+function hexToRgba(hex: string, alpha: number) {
+  const raw = hex.replace('#', '').trim();
+  const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
+  const n = Number.parseInt(full, 16);
+  // eslint-disable-next-line no-restricted-syntax
+  if (Number.isNaN(n) || full.length !== 6) return hex;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Badge                                                              */
@@ -74,16 +75,16 @@ function Badge({
   const planStyle =
     variant === 'plan' && planColor
       ? {
-          backgroundColor: `${planColor}20`,
+          backgroundColor: hexToRgba(planColor, 0.08),
           color: planColor,
-          borderColor: `${planColor}33`,
+          borderColor: hexToRgba(planColor, 0.25),
         }
       : undefined;
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 font-body font-medium rounded border',
+        'inline-flex items-center gap-2 font-body font-semibold text-[11px] rounded-full border',
         'whitespace-nowrap select-none',
         variantStyles[variant],
         sizeStyles[size],
@@ -93,30 +94,23 @@ function Badge({
       {...props}
     >
       {dot && (
-        <span className="relative flex h-1.5 w-1.5">
-          <span
-            className={cn(
-              'absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping',
-              variant === 'plan' ? '' : dotColorMap[variant],
-            )}
-            style={
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{
+            background:
               variant === 'plan' && planColor
-                ? { backgroundColor: planColor }
-                : undefined
-            }
-          />
-          <span
-            className={cn(
-              'relative inline-flex rounded-full h-1.5 w-1.5',
-              variant === 'plan' ? '' : dotColorMap[variant],
-            )}
-            style={
-              variant === 'plan' && planColor
-                ? { backgroundColor: planColor }
-                : undefined
-            }
-          />
-        </span>
+                ? planColor
+                : variant === 'danger'
+                  ? '#DC2626'
+                  : variant === 'warning'
+                    ? '#D97706'
+                    : variant === 'violet'
+                      ? '#0EA5E9'
+                      : variant === 'success'
+                        ? '#059669'
+                        : '#64748B',
+          }}
+        />
       )}
       {children}
     </span>

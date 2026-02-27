@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getJobGrowth, getMedianIncome, getUnemploymentRate } from '@/lib/apis/bls'
 
+export const dynamic = 'force-dynamic';
+
 // ── In-memory cache (30 minutes — BLS data updates infrequently) ──────────
 
 interface CacheEntry {

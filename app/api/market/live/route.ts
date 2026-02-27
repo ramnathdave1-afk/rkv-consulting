@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { fetchMarketData } from '@/lib/apis/rentcast'
 import { fetchMortgageRate } from '@/lib/apis/fred'
 
+export const dynamic = 'force-dynamic';
+
 // ── In-memory cache (15 minutes) ────────────────────────────────────────────
 
 interface CacheEntry {

@@ -26,9 +26,6 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
 import MetricCard from '@/components/dashboard/MetricCard';
@@ -53,15 +50,6 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const PIE_COLORS = ['#059669', '#0EA5E9', '#059669', '#3B82F6', '#A855F7', '#DC2626', '#F97316'];
 
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  single_family: 'Single Family',
-  multi_family: 'Multi Family',
-  condo: 'Condo',
-  townhouse: 'Townhouse',
-  commercial: 'Commercial',
-  land: 'Land',
-  mixed_use: 'Mixed Use',
-};
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -92,19 +80,6 @@ function getDealStageLabel(stage: string): string {
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
-}
-
-function getStatusBadge(status: string): { bg: string; text: string } {
-  switch (status) {
-    case 'active':
-      return { bg: 'bg-green/15', text: 'text-green' };
-    case 'vacant':
-      return { bg: 'bg-red/15', text: 'text-red' };
-    case 'under_renovation':
-      return { bg: 'bg-gold/15', text: 'text-gold' };
-    default:
-      return { bg: 'bg-muted/15', text: 'text-muted' };
-  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -378,21 +353,7 @@ export default function DashboardPage() {
     };
   });
 
-  // Property breakdown by type
-  const propertyTypeMap = new Map<string, { count: number; totalValue: number }>();
-  properties.forEach((p) => {
-    const existing = propertyTypeMap.get(p.property_type) || { count: 0, totalValue: 0 };
-    propertyTypeMap.set(p.property_type, {
-      count: existing.count + 1,
-      totalValue: existing.totalValue + (p.current_value || 0),
-    });
-  });
-
-  const pieData = Array.from(propertyTypeMap.entries()).map(([type, data]) => ({
-    name: PROPERTY_TYPE_LABELS[type] || type,
-    value: data.totalValue,
-    count: data.count,
-  }));
+  // Property breakdown — used by horizontal bar chart (per-property values)
 
   // Sparkline data (last 6 months mock trend)
   // TODO: calculate from historical data
@@ -663,7 +624,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Property Breakdown */}
+        {/* Property Breakdown — Horizontal Bars */}
         <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
           <div className="flex items-center justify-between mb-5">
             <span className="label text-gold">Property Breakdown</span>
@@ -671,77 +632,41 @@ export default function DashboardPage() {
           </div>
           {loading ? (
             <Skeleton variant="chart" height="280px" />
-          ) : pieData.length > 0 ? (
-            <div className="flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {pieData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={PIE_COLORS[index % PIE_COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const d = payload[0].payload;
-                      return (
-                        <div className="bg-deep border border-border rounded-lg px-3 py-2 shadow-card">
-                          <p className="text-xs text-muted">{d.name}</p>
-                          <p className="text-sm font-semibold text-white">{formatFullCurrency(d.value)}</p>
-                          <p className="text-xs text-muted">{d.count} {d.count === 1 ? 'property' : 'properties'}</p>
-                        </div>
-                      );
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {/* Property list below chart */}
-              <div className="w-full mt-4 space-y-2 max-h-[160px] overflow-y-auto">
-                {properties.slice(0, 6).map((property, index) => {
-                  const statusInfo = getStatusBadge(property.status);
+          ) : properties.length > 0 ? (
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {(() => {
+                const totalValue = properties.reduce((s, p) => s + (p.current_value || 0), 0);
+                return properties.map((property, index) => {
+                  const value = property.current_value || 0;
+                  const pct = totalValue > 0 ? (value / totalValue) * 100 : 0;
                   return (
-                    <div
-                      key={property.id}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
-                        />
-                        <span className="text-sm text-white truncate">{property.address}</span>
+                    <div key={property.id} className="group">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-body text-[13px] text-white truncate max-w-[55%]">
+                          {property.address}
+                        </span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="font-mono text-[13px] font-semibold text-white">
+                            {formatFullCurrency(value)}
+                          </span>
+                          <span className="font-mono text-[11px] text-muted">
+                            {pct.toFixed(1)}%
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs text-muted">
-                          {property.monthly_rent ? formatFullCurrency(property.monthly_rent) + '/mo' : '--'}
-                        </span>
-                        <span
-                          className={cn(
-                            'text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize',
-                            statusInfo.bg,
-                            statusInfo.text,
-                          )}
-                        >
-                          {property.status.replace('_', ' ')}
-                        </span>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: '#161E2A' }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: `${pct}%`,
+                            background: `linear-gradient(90deg, #059669, ${PIE_COLORS[index % PIE_COLORS.length]})`,
+                          }}
+                        />
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                });
+              })()}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-[280px] text-center">

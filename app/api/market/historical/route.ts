@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import axios from 'axios'
 
+export const dynamic = 'force-dynamic';
+
 // ── In-memory cache (1 hour) ─────────────────────────────────────────────────
 
 interface CacheEntry {

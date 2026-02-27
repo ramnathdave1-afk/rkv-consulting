@@ -153,9 +153,8 @@ function ModalContent({
               className,
             )}
             style={{
-              background: '#0C1018',
-              border: '1px solid #161E2A',
-              boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(5, 150, 105, 0.05)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
             }}
             variants={contentVariants}
             initial="hidden"
@@ -169,9 +168,9 @@ function ModalContent({
                 <button
                   className={cn(
                     'absolute right-4 top-4 p-1.5 rounded-lg',
-                    'text-muted hover:text-white hover:bg-white/5',
+                    'text-muted hover:text-white hover:bg-[#05966908]',
                     'transition-colors duration-150',
-                    'focus:outline-none focus:ring-2 focus:ring-gold/40',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)]',
                   )}
                   aria-label="Close"
                 >

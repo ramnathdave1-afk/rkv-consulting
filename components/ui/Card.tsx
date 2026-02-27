@@ -23,23 +23,17 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const variantStyles: Record<CardVariant, string> = {
   default: '',
-  elevated: 'shadow-card',
-  interactive: [
-    'hover:scale-[1.01] hover:shadow-glow hover:border-gold/20',
-    'transition-all duration-300 ease-out cursor-pointer',
-  ].join(' '),
-  glass: [
-    'backdrop-blur-xl !border-white/5',
-    'shadow-card',
-  ].join(' '),
-  hud: 'rounded-lg',
+  elevated: '',
+  interactive: 'cursor-pointer',
+  glass: 'glass',
+  hud: '',
 };
 
 const paddingStyles: Record<CardPadding, string> = {
   none: 'p-0',
-  sm: 'p-3',
+  sm: 'p-4',
   md: 'p-5',
-  lg: 'p-7',
+  lg: 'p-6',
 };
 
 /* ------------------------------------------------------------------ */
@@ -64,15 +58,15 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-lg overflow-hidden glow-border',
+          'rounded-lg overflow-hidden glow-border card-hover',
           variantStyles[variant],
           // Only apply padding to the wrapper when there is no header/footer
           !header && !footer && paddingStyles[padding],
           className,
         )}
         style={{
-          background: '#0C1018',
-          border: '1px solid #161E2A',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border)',
           ...style,
         }}
         {...props}

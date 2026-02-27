@@ -176,20 +176,11 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
 
     setFetchingData(true);
     try {
-      // Parse city and state from the address
-      const parts = propertyAddress.split(',').map((s) => s.trim());
-      const city = parts[1] || '';
-      const stateZip = parts[2] || '';
-      const state = stateZip.split(' ')[0] || '';
-
-      if (!city || !state) {
-        console.warn('[DealForm] Could not parse city/state from address');
-        return;
-      }
-
-      const res = await fetch(
-        `/api/market/live?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`
-      );
+      const res = await fetch('/api/property/autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: propertyAddress }),
+      });
 
       if (!res.ok) {
         console.error('[DealForm] Auto-fill API returned', res.status);
@@ -198,12 +189,13 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
 
       const data = await res.json();
 
-      // Populate form fields from response data if available
-      if (data.price) setAskingPrice(formatNumberInput(String(data.price)));
-      if (data.rent) setExpectedMonthlyRent(formatNumberInput(String(data.rent)));
+      if (data.estimatedValue) setAskingPrice(formatNumberInput(String(Math.round(data.estimatedValue))));
+      if (data.afterRepairValue) setAfterRepairValue(formatNumberInput(String(Math.round(data.afterRepairValue))));
+      if (data.monthlyRent) setExpectedMonthlyRent(formatNumberInput(String(Math.round(data.monthlyRent))));
       if (data.propertyType) {
         const typeMap: Record<string, string> = {
           'Single Family': 'single-family',
+          'Residential': 'single-family',
           'Multi-Family': 'multi-family',
           'Condo': 'condo',
           'Townhouse': 'townhouse',

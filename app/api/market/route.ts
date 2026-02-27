@@ -4,6 +4,8 @@ import { fetchMarketData } from '@/lib/apis/rentcast'
 import { fetchMortgageRate, fetchUnemploymentRate } from '@/lib/apis/fred'
 import { PLANS, type PlanName } from '@/lib/stripe/plans'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = createClient()

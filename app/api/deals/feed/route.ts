@@ -5,6 +5,8 @@ import { searchListings } from '@/lib/apis/zillow'
 import { fetchPropertyValuation } from '@/lib/apis/attom'
 import type { FeedDeal, DealFeedSource } from '@/types'
 
+export const dynamic = 'force-dynamic';
+
 // ── GET /api/deals/feed ─────────────────────────────────────────────────────
 // Aggregates deals from multiple sources into a unified, filterable feed.
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1565,6 +1565,75 @@ function DealResults({ results, dealData }: DealResultsProps) {
 
   const scoreCol = scoreColor(results.aiScore);
 
+  const handleExportPDF = useCallback(async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    const doc = new jsPDF();
+
+    doc.setFillColor(8, 11, 15);
+    doc.rect(0, 0, 210, 297, 'F');
+
+    doc.setTextColor(226, 232, 240);
+    doc.setFontSize(20);
+    doc.text('RKV Consulting — Deal Analysis', 14, 22);
+
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+    doc.text(dealData.propertyAddress || 'Address not provided', 14, 30);
+    doc.text(`Generated ${new Date().toLocaleDateString()}`, 14, 36);
+
+    doc.setDrawColor(22, 30, 42);
+    doc.line(14, 40, 196, 40);
+
+    doc.setTextColor(5, 150, 105);
+    doc.setFontSize(14);
+    doc.text(`AI Score: ${results.aiScore}/100  •  ${results.aiRecommendation}`, 14, 50);
+
+    const metrics = [
+      ['Cap Rate', fmtPct(results.capRate)],
+      ['Cash on Cash Return', fmtPct(results.cashOnCash)],
+      ['Monthly Cash Flow', fmtFull$(results.monthlyCashFlow)],
+      ['Annual Cash Flow', fmtFull$(results.monthlyCashFlow * 12)],
+      ['GRM', results.grm.toFixed(2)],
+      ['DSCR', results.dscr.toFixed(2)],
+      ['Annual NOI', fmtFull$(results.annualNOI)],
+      ['Cash Required', fmtFull$(results.cashRequired)],
+      ['LTV', fmtPct(results.ltv)],
+      ['Loan Amount', fmtFull$(results.loanAmount)],
+      ['Monthly Mortgage', fmtFull$(results.monthlyMortgage)],
+    ];
+
+    autoTable(doc, {
+      startY: 56,
+      head: [['Metric', 'Value']],
+      body: metrics,
+      theme: 'grid',
+      headStyles: { fillColor: [17, 24, 39], textColor: [100, 116, 139], fontSize: 9 },
+      bodyStyles: { fillColor: [12, 16, 24], textColor: [226, 232, 240], fontSize: 10 },
+      alternateRowStyles: { fillColor: [8, 11, 15] },
+      styles: { lineColor: [22, 30, 42], lineWidth: 0.5, cellPadding: 4 },
+    });
+
+    if (results.redFlags.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const finalY = ((doc as any).lastAutoTable?.finalY as number) ?? 180;
+      doc.setTextColor(220, 38, 38);
+      doc.setFontSize(12);
+      doc.text('Red Flags', 14, finalY + 12);
+      doc.setFontSize(10);
+      doc.setTextColor(226, 232, 240);
+      results.redFlags.forEach((flag, i) => {
+        doc.text(`• ${flag}`, 16, finalY + 22 + i * 7);
+      });
+    }
+
+    doc.setTextColor(55, 65, 81);
+    doc.setFontSize(8);
+    doc.text('RKV Consulting — AI-Powered Real Estate Investment Platform', 14, 288);
+
+    doc.save(`RKV-Deal-Analysis-${(dealData.propertyAddress || 'report').replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+  }, [results, dealData]);
+
   return (
     <div className="space-y-6">
       {/* ------------------------------------------------------------ */}
@@ -1723,7 +1792,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
         <Button variant="primary" size="lg" icon={<Plus className="w-4 h-4" />}>
           Add to Pipeline
         </Button>
-        <Button variant="outline" size="lg" icon={<FileDown className="w-4 h-4" />}>
+        <Button variant="outline" size="lg" icon={<FileDown className="w-4 h-4" />} onClick={handleExportPDF}>
           Export PDF
         </Button>
       </div>

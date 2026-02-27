@@ -17,6 +17,7 @@ import {
   Phone,
   MessageSquare,
   Check,
+  X,
   Activity,
   PieChart,
   Star,
@@ -834,12 +835,44 @@ export default function MarketingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [agentActionIndex, setAgentActionIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<'features' | 'pricing' | 'about'>('features');
+
+  const heroStatsRef = useRef<HTMLDivElement>(null);
+  const heroStatsInView = useInView(heroStatsRef, { once: true, margin: '-80px' });
+  const heroHoursSaved = useCountUp(47, heroStatsInView, 1600, 0);
+  const heroTaxSavings = useCountUp(12400, heroStatsInView, 1800, 0);
+  const heroRetention = useCountUp(94, heroStatsInView, 1500, 0);
 
   /* -- Scroll listener for navbar ---------------------------------- */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* -- Active section highlight ------------------------------------ */
+  useEffect(() => {
+    const ids: Array<'features' | 'pricing' | 'about'> = ['features', 'pricing', 'about'];
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (els.length === 0) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
+        if (visible?.target?.id === 'features' || visible?.target?.id === 'pricing' || visible?.target?.id === 'about') {
+          setActiveSection(visible.target.id as 'features' | 'pricing' | 'about');
+        }
+      },
+      { threshold: [0.25, 0.4, 0.55] }
+    );
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
   }, []);
 
   /* -- Pain point cycling ------------------------------------------ */
@@ -886,7 +919,7 @@ export default function MarketingPage() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled
-            ? 'bg-[#080B0F]/90 backdrop-blur-xl border-b border-[#161E2A]/50'
+            ? 'bg-[#080B0Fcc] backdrop-blur-[20px] border-b border-border'
             : 'bg-transparent'
         }`}
       >
@@ -903,14 +936,23 @@ export default function MarketingPage() {
 
           {/* Center nav -- desktop */}
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'Pricing', 'About'].map((link) => (
+            {(['Features', 'Pricing', 'About'] as const).map((link) => (
               <button
                 key={link}
                 onClick={() => scrollTo(link.toLowerCase())}
-                className="text-[14px] text-muted hover:text-white transition-colors relative group font-body"
+                className={`text-[13px] font-body font-medium transition-colors relative group ${
+                  activeSection === link.toLowerCase()
+                    ? 'text-white'
+                    : 'text-muted hover:text-[#94A3B8]'
+                }`}
+                aria-current={activeSection === link.toLowerCase() ? 'page' : undefined}
               >
                 {link}
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full" />
+                <span
+                  className={`absolute -bottom-1 left-0 h-px bg-gold transition-all duration-300 ${
+                    activeSection === link.toLowerCase() ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}
+                />
               </button>
             ))}
           </div>
@@ -925,7 +967,7 @@ export default function MarketingPage() {
             </a>
             <a
               href="/signup"
-              className="bg-gold text-black text-[14px] font-body font-medium px-5 py-2 rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
+              className="bg-gold text-white text-[13px] font-body font-semibold px-5 py-2 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150"
             >
               Get Started
             </a>
@@ -937,41 +979,76 @@ export default function MarketingPage() {
             className="md:hidden flex flex-col gap-1.5 p-2"
             aria-label="Toggle menu"
           >
-            <span className={`block w-5 h-px bg-white transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
-            <span className={`block w-5 h-px bg-white transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-5 h-px bg-white transition-transform duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-5 h-px bg-[#E2E8F0] transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-5 h-px bg-[#E2E8F0] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-px bg-[#E2E8F0] transition-transform duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
           </button>
         </div>
 
         {/* Mobile menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-[#080B0F]/95 backdrop-blur-xl border-b border-[#161E2A] overflow-hidden"
-            >
-              <div className="px-6 py-4 space-y-3">
-                {['Features', 'Pricing', 'About'].map((link) => (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] bg-[rgba(8,11,15,0.75)] backdrop-blur-sm md:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'tween', duration: 0.22 }}
+                className="fixed top-0 right-0 bottom-0 z-[70] w-[min(360px,100%)] md:hidden bg-[#080B0F] border-l border-border"
+              >
+                <div className="h-16 px-6 flex items-center justify-between border-b border-border">
+                  <span className="font-display font-bold text-[15px] tracking-tight text-white">Menu</span>
                   <button
-                    key={link}
-                    onClick={() => scrollTo(link.toLowerCase())}
-                    className="block w-full text-left text-[14px] text-muted hover:text-white transition-colors font-body py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-9 h-9 rounded-[6px] border border-border text-muted hover:text-white hover:border-border-hover transition-colors"
+                    aria-label="Close menu"
                   >
-                    {link}
+                    <span className="sr-only">Close</span>
+                    <span className="block mx-auto w-4 h-4">
+                      <X className="w-4 h-4 mx-auto" />
+                    </span>
                   </button>
-                ))}
-                <div className="flex gap-3 pt-2">
-                  <a href="/login" className="text-[14px] text-muted hover:text-white transition-colors font-body py-2">
-                    Login
-                  </a>
-                  <a href="/signup" className="bg-gold text-black text-[14px] font-body font-medium px-5 py-2 rounded-lg">
-                    Get Started
-                  </a>
                 </div>
-              </div>
-            </motion.div>
+
+                <div className="px-6 py-6 space-y-2">
+                  {(['Features', 'Pricing', 'About'] as const).map((link) => (
+                    <button
+                      key={link}
+                      onClick={() => scrollTo(link.toLowerCase())}
+                      className={`w-full text-left px-4 py-3 rounded-[6px] border transition-colors font-body text-[13px] ${
+                        activeSection === link.toLowerCase()
+                          ? 'border-gold text-white bg-[#05966908]'
+                          : 'border-border text-muted hover:text-white hover:border-border-hover'
+                      }`}
+                    >
+                      {link}
+                    </button>
+                  ))}
+
+                  <div className="pt-4 grid grid-cols-1 gap-3">
+                    <a
+                      href="/login"
+                      className="w-full text-center px-5 py-2 rounded-[6px] border border-border text-muted hover:text-white hover:border-border-hover transition-colors font-body text-[13px] font-semibold"
+                    >
+                      Login
+                    </a>
+                    <a
+                      href="/signup"
+                      className="w-full text-center bg-gold text-white px-5 py-2 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 font-body text-[13px] font-semibold"
+                    >
+                      Get Started
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </nav>
@@ -980,6 +1057,15 @@ export default function MarketingPage() {
       {/* SECTION 2 -- HERO                                            */}
       {/* ============================================================ */}
       <section className="relative min-h-screen flex items-center justify-center text-center px-6 overflow-hidden">
+        {/* Animated grid background */}
+        <div
+          className="absolute inset-0 animated-grid opacity-[0.28] pointer-events-none"
+          style={{
+            maskImage: 'radial-gradient(ellipse at center 40%, black 0%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center 40%, black 0%, transparent 70%)',
+          }}
+        />
+
         {/* Subtle radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -996,8 +1082,8 @@ export default function MarketingPage() {
             transition={{ duration: 0.5 }}
             className="flex items-center justify-center gap-2 mb-10"
           >
-            <span className="pulse-dot bg-gold" />
-            <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            <span className="font-body font-medium text-[11px] text-gold uppercase tracking-[0.15em]">
               Live Platform · 14-Day Free Trial
             </span>
           </motion.div>
@@ -1012,7 +1098,7 @@ export default function MarketingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.5 }}
-                  className="text-lg md:text-xl text-muted font-body"
+                  className="text-[18px] md:text-[20px] text-muted font-body leading-[1.7]"
                 >
                   {painPoints[painIndex]}
                 </motion.p>
@@ -1022,7 +1108,7 @@ export default function MarketingPage() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
-                  className="text-lg md:text-xl text-gold font-body"
+                  className="text-[18px] md:text-[20px] text-gold font-body leading-[1.7]"
                 >
                   RKV Consulting eliminates all of it.
                 </motion.p>
@@ -1047,7 +1133,7 @@ export default function MarketingPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-muted font-body text-lg max-w-[560px] mx-auto mb-10"
+            className="text-muted font-body text-[18px] leading-[1.7] max-w-[680px] mx-auto mb-10"
           >
             AI-powered deal analysis, automated tenant management, and institutional-grade
             portfolio intelligence. Built for investors who refuse to settle.
@@ -1062,13 +1148,13 @@ export default function MarketingPage() {
           >
             <a
               href="/signup"
-              className="bg-gold text-black font-body font-medium px-8 py-3.5 rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300 text-sm"
+              className="bg-gold text-white font-body font-semibold text-[13px] px-6 py-3 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
             >
               Start Free Trial
             </a>
             <button
               onClick={() => scrollTo('features')}
-              className="border border-border text-white font-body font-medium px-8 py-3.5 rounded-lg hover:border-gold/50 transition-all duration-300 text-sm"
+              className="border border-gold text-gold font-body font-semibold text-[13px] px-6 py-3 rounded-[6px] hover:bg-[rgba(5,150,105,0.06)] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
             >
               Watch Demo
             </button>
@@ -1076,21 +1162,24 @@ export default function MarketingPage() {
 
           {/* Trust metrics */}
           <motion.div
+            ref={heroStatsRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-0"
           >
             {[
-              { value: '47:00', label: 'Hrs Saved Monthly' },
-              { value: '$12,400', label: 'Tax Savings Found' },
-              { value: '94%', label: 'Tenant Retention' },
+              { value: heroHoursSaved.toLocaleString(), label: 'Hrs Saved Monthly', prefix: '', suffix: '' },
+              { value: `$${Math.round(heroTaxSavings).toLocaleString()}`, label: 'Tax Savings Found', prefix: '', suffix: '' },
+              { value: `${Math.round(heroRetention)}%`, label: 'Tenant Retention', prefix: '', suffix: '' },
             ].map((stat, i) => (
               <div key={stat.label} className="flex items-center">
                 {i > 0 && <div className="hidden sm:block w-px h-10 bg-border mx-10" />}
                 <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-gold">{stat.value}</div>
-                  <div className="text-[10px] font-body uppercase tracking-wider text-muted mt-1">{stat.label}</div>
+                  <div className="text-2xl font-mono font-semibold text-white">{stat.value}</div>
+                  <div className="text-[11px] font-body font-medium uppercase tracking-[0.08em] text-muted mt-1">
+                    {stat.label}
+                  </div>
                 </div>
               </div>
             ))}
@@ -1101,8 +1190,13 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 3 -- PROBLEM STATEMENT                               */}
       {/* ============================================================ */}
-      <section className="py-24 md:py-32 px-6">
+      <section className="py-[120px] px-6">
         <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="text-[11px] font-body font-medium uppercase tracking-[0.15em] text-gold mb-3">
+              THE PROBLEM
+            </div>
+          </div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1135,8 +1229,13 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 4 -- SOLUTION OVERVIEW (Feature Showcase)            */}
       {/* ============================================================ */}
-      <section id="features" className="py-24 md:py-32 px-6">
+      <section id="features" className="py-[120px] px-6">
         <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-4">
+            <div className="text-[11px] font-body font-medium uppercase tracking-[0.15em] text-gold">
+              PORTFOLIO INTELLIGENCE
+            </div>
+          </div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1389,8 +1488,13 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 8 -- PRICING PREVIEW                                 */}
       {/* ============================================================ */}
-      <section id="pricing" className="py-24 md:py-32 px-6">
+      <section id="pricing" className="py-[120px] px-6">
         <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-4">
+            <div className="text-[11px] font-body font-medium uppercase tracking-[0.15em] text-gold">
+              PRICING
+            </div>
+          </div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1414,7 +1518,7 @@ export default function MarketingPage() {
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-black text-[10px] font-body font-medium px-4 py-1 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-white text-[10px] font-body font-semibold px-4 py-1 rounded-full uppercase tracking-wider">
                     {plan.badge}
                   </div>
                 )}
@@ -1437,8 +1541,8 @@ export default function MarketingPage() {
                   href="/pricing"
                   className={`block text-center py-3 rounded-lg text-sm font-body font-medium transition-all duration-300 ${
                     plan.badge
-                      ? 'bg-gold text-black shadow-glow hover:shadow-glow-lg'
-                      : 'border border-border text-white hover:border-gold/50'
+                      ? 'bg-gold text-white hover:bg-[#047857] active:scale-[0.97] transition-all duration-150'
+                      : 'border border-border text-white hover:border-border-hover active:scale-[0.97] transition-all duration-150'
                   }`}
                 >
                   Get Started
@@ -1472,16 +1576,21 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="glass border border-gold/20 rounded-xl p-8 relative"
+                className="bg-[#0C1018] border border-border border-t-2 border-t-gold rounded-lg p-8 relative"
               >
                 {/* Quotation mark */}
                 <svg
-                  className="absolute top-6 left-6 w-8 h-8 text-gold/20"
+                  className="absolute top-6 left-6 w-10 h-10 text-gold opacity-20"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                 </svg>
+                <div className="flex items-center gap-1 mt-1">
+                  {Array.from({ length: 5 }).map((_, idx) => (
+                    <Star key={idx} className="w-4 h-4 text-[#D97706] fill-[#D97706]" />
+                  ))}
+                </div>
                 <p className="text-white/90 font-body italic mb-6 mt-6 leading-relaxed">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
@@ -1520,23 +1629,26 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="overflow-x-auto"
+            className="overflow-auto max-h-[520px] rounded-lg border border-border"
           >
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="py-4 px-4 text-xs text-muted font-body uppercase tracking-wider">Feature</th>
-                  <th className="py-4 px-4 text-center">
+                <tr className="sticky top-0 z-10 border-b border-border bg-[#111827]">
+                  <th className="py-4 px-4 text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">
+                    Feature
+                  </th>
+                  <th className="py-4 px-4 text-center bg-[#05966912]">
                     <span className="text-gold font-display font-bold text-sm">RKV</span>
                   </th>
-                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Yardi</th>
-                  <th className="py-4 px-4 text-center text-xs text-muted font-body">AppFolio</th>
-                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Buildium</th>
-                  <th className="py-4 px-4 text-center text-xs text-muted font-body">Stessa</th>
+                  <th className="py-4 px-4 text-center text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">Yardi</th>
+                  <th className="py-4 px-4 text-center text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">AppFolio</th>
+                  <th className="py-4 px-4 text-center text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">Buildium</th>
+                  <th className="py-4 px-4 text-center text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">Stessa</th>
                 </tr>
               </thead>
               <tbody className="text-sm font-body">
                 {[
+                  { feature: 'Price', rkv: '$99/mo', yardi: '$300+/mo', appfolio: '$250+/mo', buildium: '$200+/mo', stessa: '$100+/mo' },
                   { feature: 'AI Deal Analysis', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
                   { feature: 'AI Tenant Communication', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
                   { feature: 'Voice & SMS Agents', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
@@ -1550,10 +1662,17 @@ export default function MarketingPage() {
                   { feature: 'Contractor Matching', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
                   { feature: 'Auto-Pilot Mode', rkv: true, yardi: false, appfolio: false, buildium: false, stessa: false },
                 ].map((row, i) => (
-                  <tr key={row.feature} className={i % 2 === 0 ? 'bg-white/[0.01]' : ''}>
+                  <tr
+                    key={row.feature}
+                    className={`border-b border-border transition-colors hover:bg-[#111827] ${
+                      i % 2 === 0 ? 'bg-[#0C1018]' : 'bg-[var(--bg-primary)]'
+                    }`}
+                  >
                     <td className="py-3 px-4 text-white/80">{row.feature}</td>
                     <td className="py-3 px-4 text-center">
-                      {row.rkv ? (
+                      {typeof row.rkv === 'string' ? (
+                        <span className="font-mono text-white">{row.rkv}</span>
+                      ) : row.rkv ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gold/15">
                           <svg className="w-3 h-3 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                         </span>
@@ -1561,8 +1680,10 @@ export default function MarketingPage() {
                     </td>
                     {[row.yardi, row.appfolio, row.buildium, row.stessa].map((has, j) => (
                       <td key={j} className="py-3 px-4 text-center">
-                        {has ? (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/5">
+                        {typeof has === 'string' ? (
+                          <span className="font-mono text-muted">{has}</span>
+                        ) : has ? (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#05966908] border border-border">
                             <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                           </span>
                         ) : <span className="text-muted-deep">—</span>}
@@ -1617,7 +1738,7 @@ export default function MarketingPage() {
           >
             <a
               href="/signup"
-              className="inline-block bg-gold text-black font-body font-medium px-10 py-4 rounded-lg text-lg shadow-glow hover:shadow-glow-lg transition-all duration-300 mb-4"
+              className="inline-block bg-gold text-white font-body font-semibold px-10 py-4 rounded-[6px] text-[13px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 mb-4"
             >
               Get Started Today &mdash; 14 Day Free Trial
             </a>
@@ -1652,13 +1773,17 @@ export default function MarketingPage() {
             <div>
               <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Product</h4>
               <ul className="space-y-2">
-                {['Features', 'Pricing', 'Demo'].map((link) => (
-                  <li key={link}>
+                {[
+                  { label: 'Features', href: '/#features' },
+                  { label: 'Pricing', href: '/pricing' },
+                  { label: 'Demo', href: '/#features' },
+                ].map((link) => (
+                  <li key={link.label}>
                     <a
-                      href={`/${link.toLowerCase()}`}
+                      href={link.href}
                       className="text-sm text-muted-deep hover:text-white transition-colors font-body"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}
@@ -1669,13 +1794,17 @@ export default function MarketingPage() {
             <div>
               <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Company</h4>
               <ul className="space-y-2">
-                {['About', 'Careers', 'Contact'].map((link) => (
-                  <li key={link}>
+                {[
+                  { label: 'About', href: '/#about' },
+                  { label: 'Careers', href: '/careers' },
+                  { label: 'Contact', href: '/contact' },
+                ].map((link) => (
+                  <li key={link.label}>
                     <a
-                      href={`/${link.toLowerCase()}`}
+                      href={link.href}
                       className="text-sm text-muted-deep hover:text-white transition-colors font-body"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}
@@ -1686,13 +1815,17 @@ export default function MarketingPage() {
             <div>
               <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Legal</h4>
               <ul className="space-y-2">
-                {['Privacy', 'Terms', 'Security'].map((link) => (
-                  <li key={link}>
+                {[
+                  { label: 'Privacy', href: '/privacy' },
+                  { label: 'Terms', href: '/terms' },
+                  { label: 'Security', href: '/security' },
+                ].map((link) => (
+                  <li key={link.label}>
                     <a
-                      href={`/${link.toLowerCase()}`}
+                      href={link.href}
                       className="text-sm text-muted-deep hover:text-white transition-colors font-body"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}

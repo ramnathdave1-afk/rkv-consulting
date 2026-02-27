@@ -64,7 +64,6 @@ function Tooltip({
           className={cn(
             'z-[100] px-3 py-1.5 rounded-lg',
             'font-body text-[11px]',
-            'shadow-glow-sm',
             'select-none',
             // Animation
             'data-[state=delayed-open]:animate-in',

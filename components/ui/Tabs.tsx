@@ -87,15 +87,15 @@ function TabsTrigger({
       value={value}
       disabled={disabled}
       className={cn(
-        'relative px-4 py-2.5 font-body text-[11px] uppercase tracking-wider font-medium',
-        'text-muted-deep whitespace-nowrap',
-        'transition-colors duration-200 ease-out',
-        'hover:text-muted',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-inset',
+        'relative px-4 py-2.5 font-body text-[11px] uppercase tracking-[0.08em] font-semibold',
+        'text-muted whitespace-nowrap',
+        'transition-colors duration-150 ease-out',
+        'hover:text-white',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)] focus-visible:ring-inset',
         'disabled:opacity-40 disabled:cursor-not-allowed',
         // Active state
-        'data-[state=active]:text-gold',
-        // Gold bottom border indicator
+        'data-[state=active]:text-white',
+        // Green bottom border indicator
         'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px]',
         'after:bg-transparent after:transition-colors after:duration-200',
         'data-[state=active]:after:bg-gold',
@@ -120,7 +120,7 @@ function TabsContent({ value, children, className }: TabsContentProps) {
       value={value}
       className={cn(
         'mt-4 outline-none',
-        'focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg',
+        'focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)] rounded-lg',
         // Entrance animation
         'data-[state=active]:animate-fade-up',
         className,

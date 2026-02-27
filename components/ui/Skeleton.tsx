@@ -49,7 +49,8 @@ const scanLineStyle: React.CSSProperties = {
   left: 0,
   width: '100%',
   height: '100%',
-  background: 'linear-gradient(90deg, transparent 0%, rgba(5, 150, 105, 0.08) 40%, rgba(5, 150, 105, 0.15) 50%, rgba(5, 150, 105, 0.08) 60%, transparent 100%)',
+  background:
+    'linear-gradient(90deg, transparent 0%, rgba(30, 45, 64, 0.35) 40%, rgba(30, 45, 64, 0.7) 50%, rgba(30, 45, 64, 0.35) 60%, transparent 100%)',
   animation: 'skeleton-scan 2s ease-in-out infinite',
 };
 
@@ -59,7 +60,7 @@ const scanLineStyle: React.CSSProperties = {
 
 const skeletonBase = 'relative overflow-hidden rounded';
 const skeletonBg: React.CSSProperties = {
-  backgroundColor: 'rgba(13, 32, 64, 0.3)',
+  backgroundColor: '#161E2A',
 };
 
 /* ------------------------------------------------------------------ */
@@ -137,7 +138,7 @@ function Skeleton({
             <div
               key={i}
               className="rounded-t flex-1"
-              style={{ height: `${h}%`, backgroundColor: 'rgba(13, 32, 64, 0.5)' }}
+              style={{ height: `${h}%`, backgroundColor: '#1E2D40' }}
             />
           ))}
         </div>

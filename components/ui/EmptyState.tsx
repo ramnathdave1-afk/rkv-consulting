@@ -2,6 +2,7 @@
 
 import React, { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -51,8 +52,8 @@ function EmptyState({
           className={cn(
             'flex items-center justify-center',
             'w-16 h-16 mb-5',
-            'bg-gold/10 text-gold',
-            'border border-gold/20',
+            'bg-[#05966912] text-gold',
+            'border border-[rgba(5,150,105,0.25)]',
             'rounded-lg',
           )}
         >
@@ -63,38 +64,32 @@ function EmptyState({
       )}
 
       {/* Title */}
-      <h3 className="font-display font-semibold text-lg text-white mb-2">
+      <h3 className="font-display font-semibold text-[18px] text-white mb-2">
         {title}
       </h3>
 
       {/* Description */}
       {description && (
-        <p className="text-sm text-muted font-body leading-relaxed mb-6 max-w-sm">
+        <p className="text-[14px] text-muted font-body leading-relaxed mb-6 max-w-sm">
           {description}
         </p>
       )}
 
-      {/* Action button -- outline cyan style */}
+      {/* Action button */}
       {action && (
-        <button
+        <Button
+          variant="outline"
           onClick={action.onClick}
-          className={cn(
-            'inline-flex items-center justify-center gap-2',
-            'h-10 px-5 rounded-lg text-sm font-medium font-body',
-            'bg-transparent text-gold border border-gold/30',
-            'hover:bg-gold/10 hover:shadow-glow-sm',
-            'active:bg-gold/15',
-            'transition-all duration-200 ease-out',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-          )}
+          icon={
+            action.icon ? (
+              <span className="shrink-0 flex items-center w-4 h-4 [&>svg]:w-full [&>svg]:h-full">
+                {action.icon}
+              </span>
+            ) : undefined
+          }
         >
-          {action.icon && (
-            <span className="shrink-0 flex items-center w-4 h-4 [&>svg]:w-full [&>svg]:h-full">
-              {action.icon}
-            </span>
-          )}
           {action.label}
-        </button>
+        </Button>
       )}
 
       {/* Custom content */}

@@ -12,11 +12,10 @@ const toastBaseStyle: React.CSSProperties = {
   background: '#0C1018',
   color: '#E2E8F0',
   border: '1px solid #161E2A',
-  borderRadius: '0.5rem',
+  borderRadius: '8px',
   padding: '12px 16px',
-  fontSize: '0.8125rem',
+  fontSize: '13px',
   fontFamily: 'var(--font-body), Inter, system-ui, sans-serif',
-  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 30px rgba(5, 150, 105, 0.03)',
 };
 
 /* ------------------------------------------------------------------ */
@@ -28,11 +27,13 @@ const customToast = {
     toast.success(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #059669',
+        background: '#059669',
+        borderColor: '#059669',
+        color: '#FFFFFF',
       },
       iconTheme: {
-        primary: '#059669',
-        secondary: '#0C1018',
+        primary: '#FFFFFF',
+        secondary: '#059669',
       },
       ...options,
     }),
@@ -41,11 +42,28 @@ const customToast = {
     toast.error(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #DC2626',
+        background: '#DC2626',
+        borderColor: '#DC2626',
+        color: '#FFFFFF',
       },
       iconTheme: {
-        primary: '#DC2626',
-        secondary: '#0C1018',
+        primary: '#FFFFFF',
+        secondary: '#DC2626',
+      },
+      ...options,
+    }),
+
+  warning: (message: string, options?: ToastOptions) =>
+    toast(message, {
+      style: {
+        ...toastBaseStyle,
+        background: '#D97706',
+        borderColor: '#D97706',
+        color: '#FFFFFF',
+      },
+      iconTheme: {
+        primary: '#FFFFFF',
+        secondary: '#D97706',
       },
       ...options,
     }),
@@ -54,7 +72,6 @@ const customToast = {
     toast(message, {
       style: {
         ...toastBaseStyle,
-        borderLeft: '3px solid #059669',
       },
       icon: (
         <svg
@@ -104,26 +121,30 @@ function Toaster({ className }: ToasterProps) {
           right: 24,
         }}
         toastOptions={{
-          duration: 4000,
+          duration: 3000,
           style: toastBaseStyle,
           success: {
             style: {
               ...toastBaseStyle,
-              borderLeft: '3px solid #059669',
+              background: '#059669',
+              borderColor: '#059669',
+              color: '#FFFFFF',
             },
             iconTheme: {
-              primary: '#059669',
-              secondary: '#0C1018',
+              primary: '#FFFFFF',
+              secondary: '#059669',
             },
           },
           error: {
             style: {
               ...toastBaseStyle,
-              borderLeft: '3px solid #DC2626',
+              background: '#DC2626',
+              borderColor: '#DC2626',
+              color: '#FFFFFF',
             },
             iconTheme: {
-              primary: '#DC2626',
-              secondary: '#0C1018',
+              primary: '#FFFFFF',
+              secondary: '#DC2626',
             },
           },
         }}

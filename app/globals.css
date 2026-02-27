@@ -4,22 +4,40 @@
 
 /* ── CSS Variables ─────────────────────────────────────────────────── */
 :root {
-  --black: #080B0F;
-  --deep: #060910;
-  --card: #0C1018;
-  --tertiary: #0F1620;
+  /* Final color system (no exceptions) */
+  --bg-primary: #080B0F;
+  --bg-secondary: #0C1018;
+  --bg-tertiary: #111827;
   --border: #161E2A;
-  --gold: #059669;
-  --gold-light: #0EA5E9;
-  --violet: #0EA5E9;
+  --border-hover: #2A3A50;
+  --accent-green: #059669;
+  --accent-green-hover: #047857;
+  --accent-blue: #0EA5E9;
+  --text-primary: #E2E8F0;
+  --text-secondary: #64748B;
+  --text-muted: #374151;
+  --success: #059669;
+  --danger: #DC2626;
   --warning: #D97706;
-  --white: #E2E8F0;
-  --muted: #4A6080;
-  --muted-deep: #1E2D40;
-  --green: #059669;
-  --red: #DC2626;
-  --text: #E2E8F0;
-  --grid: #0F1620;
+
+  /* App-specific */
+  --sidebar-bg: #060910;
+
+  /* Legacy aliases (mapped to final system) */
+  --black: var(--bg-primary);
+  --deep: var(--sidebar-bg);
+  --card: var(--bg-secondary);
+  --tertiary: var(--bg-tertiary);
+  --gold: var(--accent-green);
+  --gold-light: var(--accent-blue);
+  --violet: var(--accent-blue);
+  --white: var(--text-primary);
+  --muted: var(--text-secondary);
+  --muted-deep: var(--text-muted);
+  --green: var(--success);
+  --red: var(--danger);
+  --text: var(--text-primary);
+  --grid: var(--border);
 }
 
 /* ── Base Styles ───────────────────────────────────────────────────── */
@@ -28,9 +46,10 @@ html {
 }
 
 body {
-  background: #080B0F;
-  color: #E2E8F0;
-  font-family: "Inter", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body), Inter, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,45 +61,43 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #080B0F;
+  background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2D40;
+  background: var(--border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #059669;
+  background: var(--accent-green);
 }
 
 /* Firefox */
 * {
-  scrollbar-color: #1E2D40 #080B0F;
+  scrollbar-color: var(--border) var(--bg-primary);
   scrollbar-width: thin;
 }
 
 /* ── Selection ─────────────────────────────────────────────────────── */
 ::selection {
-  background: #059669;
-  color: #080B0F;
+  background: var(--accent-green);
+  color: var(--bg-primary);
 }
 
 ::-moz-selection {
-  background: #059669;
-  color: #080B0F;
+  background: var(--accent-green);
+  color: var(--bg-primary);
 }
 
 /* ── Placeholder ───────────────────────────────────────────────────── */
 ::placeholder {
-  color: #1E2D40;
-  font-family: "JetBrains Mono", monospace;
+  color: var(--text-muted);
 }
 
 /* ── Focus Reset ───────────────────────────────────────────────────── */
 *:focus {
-  outline: 2px solid #059669;
-  outline-offset: 2px;
+  outline: none;
 }
 
 *:focus:not(:focus-visible) {
@@ -88,63 +105,64 @@ body {
 }
 
 *:focus-visible {
-  outline: 2px solid #059669;
+  outline: 2px solid rgba(5, 150, 105, 0.2);
   outline-offset: 2px;
 }
 
 /* ── Utility Classes ───────────────────────────────────────────────── */
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, #059669 0%, #0EA5E9 50%, #059669 100%);
+    background: linear-gradient(
+      135deg,
+      var(--accent-green) 0%,
+      var(--accent-green-hover) 50%,
+      var(--accent-green) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .card-hover {
-    transition: border-color 0.15s ease;
+    transition: border-color 150ms ease;
   }
 
   .card-hover:hover {
-    border-color: #2A3A50;
+    border-color: var(--border-hover);
   }
 
   /* Glass panel */
   .glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    background: rgba(12, 16, 24, 0.95);
-    border: 1px solid #161E2A;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(8, 11, 15, 0.8);
+    border: 1px solid var(--border);
   }
 
-  /* Clean card corners — replaces old hud-corners */
-  .hud-corners {
-    border-radius: 6px;
-  }
-
-  /* Hover border transition — replaces old glow-border */
+  /* Hover border transition */
   .glow-border {
-    border: 1px solid #161E2A;
-    transition: border-color 0.15s ease;
+    border: 1px solid var(--border);
+    transition: border-color 150ms ease;
   }
   .glow-border:hover {
-    border-color: #2A3A50;
+    border-color: var(--border-hover);
   }
 
   /* Monospace data display */
   .mono-data {
-    font-family: "JetBrains Mono", monospace;
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
     font-weight: 600;
   }
 
-  /* Label style — professional, not terminal */
+  /* Label style */
   .label {
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-body), Inter, system-ui, sans-serif;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    font-size: 12px;
-    color: #4A6080;
+    font-size: 11px;
+    color: var(--text-secondary);
   }
 
   /* Status dot — simple, no glow */
@@ -159,26 +177,67 @@ body {
   /* Subtle grid background for panels */
   .blueprint-grid {
     background-image:
-      linear-gradient(rgba(15, 22, 32, 0.4) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 22, 32, 0.4) 1px, transparent 1px);
+      linear-gradient(rgba(22, 30, 42, 0.7) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22, 30, 42, 0.7) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+
+  @keyframes grid-drift {
+    0% {
+      background-position: 0 0, 0 0;
+    }
+    100% {
+      background-position: 120px 160px, 120px 160px;
+    }
+  }
+
+  .animated-grid {
+    background-image:
+      linear-gradient(rgba(22, 30, 42, 0.9) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22, 30, 42, 0.9) 1px, transparent 1px);
+    background-size: 48px 48px;
+    animation: grid-drift 22s linear infinite;
+  }
+
+  /* Typography helpers */
+  .page-title {
+    font-family: var(--font-display), ui-sans-serif, system-ui;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  .section-header {
+    font-family: var(--font-display), ui-sans-serif, system-ui;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.25;
+    color: var(--text-primary);
+  }
+
+  .body-text {
+    font-family: var(--font-body), ui-sans-serif, system-ui;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
   }
 }
 
 /* ── Google Places Autocomplete Dark Theme ────────────────────────── */
 .pac-container {
-  background: #0C1018 !important;
-  border: 1px solid #161E2A !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 8px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
   margin-top: 4px !important;
-  font-family: "Inter", sans-serif !important;
+  font-family: var(--font-body), Inter, system-ui, sans-serif !important;
   z-index: 9999 !important;
 }
 
 .pac-item {
-  background: #0C1018 !important;
-  border-top: 1px solid #161E2A !important;
+  background: var(--bg-secondary) !important;
+  border-top: 1px solid var(--border) !important;
   padding: 10px 14px !important;
   cursor: pointer !important;
   line-height: 1.4 !important;
@@ -191,22 +250,22 @@ body {
 
 .pac-item:hover,
 .pac-item-selected {
-  background: #0F1620 !important;
+  background: var(--bg-tertiary) !important;
 }
 
 .pac-item-query {
-  color: #E2E8F0 !important;
+  color: var(--text-primary) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
 }
 
 .pac-item span:not(.pac-item-query) {
-  color: #4A6080 !important;
+  color: var(--text-secondary) !important;
   font-size: 12px !important;
 }
 
 .pac-matched {
-  color: #059669 !important;
+  color: var(--accent-green) !important;
   font-weight: 600 !important;
 }
 
