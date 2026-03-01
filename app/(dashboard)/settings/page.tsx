@@ -282,6 +282,15 @@ function SettingsInner() {
     aiMessages: 0,
   });
 
+  // Integration status
+  const [integrationStatus, setIntegrationStatus] = useState({
+    plaid: false,
+    sendgrid: false,
+    twilio: false,
+    google_maps: false,
+    stripe: false,
+  });
+
   /* ---- Fetch profile data --------------------------------------- */
 
   const fetchProfile = useCallback(async () => {
@@ -350,6 +359,11 @@ function SettingsInner() {
 
   useEffect(() => {
     fetchProfile();
+    // Fetch integration status
+    fetch('/api/integrations/status')
+      .then((r) => r.json())
+      .then((data) => setIntegrationStatus(data))
+      .catch(() => {});
   }, [fetchProfile]);
 
   /* ---- Save profile --------------------------------------------- */
@@ -925,32 +939,32 @@ function SettingsInner() {
               <IntegrationCard
                 name="Plaid"
                 description="Connect your bank accounts for automatic transaction imports"
-                connected={false}
-                onAction={() => toast.info('Plaid integration coming soon')}
+                connected={integrationStatus.plaid}
+                onAction={() => toast.info(integrationStatus.plaid ? 'Plaid is connected' : 'Set PLAID_CLIENT_ID and PLAID_SECRET in environment variables')}
               />
               <IntegrationCard
                 name="Stripe"
                 description="Payment processing for rent collection"
-                connected={!!subscription?.stripe_subscription_id}
+                connected={integrationStatus.stripe || !!subscription?.stripe_subscription_id}
                 onAction={handleManageBilling}
               />
               <IntegrationCard
                 name="SendGrid"
                 description="Email delivery for notifications and AI agents"
-                connected={false}
-                onAction={() => toast.info('Configure SendGrid in environment variables')}
+                connected={integrationStatus.sendgrid}
+                onAction={() => toast.info(integrationStatus.sendgrid ? 'SendGrid is connected' : 'Set SENDGRID_API_KEY in environment variables')}
               />
               <IntegrationCard
                 name="Twilio"
                 description="SMS and voice calling for AI agents"
-                connected={false}
-                onAction={() => toast.info('Configure Twilio in environment variables')}
+                connected={integrationStatus.twilio}
+                onAction={() => toast.info(integrationStatus.twilio ? 'Twilio is connected' : 'Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in environment variables')}
               />
               <IntegrationCard
                 name="Google Maps"
                 description="Property mapping and location intelligence"
-                connected={false}
-                onAction={() => toast.info('Configure Google Maps in environment variables')}
+                connected={integrationStatus.google_maps}
+                onAction={() => toast.info(integrationStatus.google_maps ? 'Google Maps is connected' : 'Set GOOGLE_MAPS_API_KEY in environment variables')}
               />
             </div>
 

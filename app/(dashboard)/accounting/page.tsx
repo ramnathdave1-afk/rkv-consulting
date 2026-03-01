@@ -58,7 +58,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const INCOME_CATEGORIES = ['Rent', 'Late Fee', 'Application Fee', 'Laundry', 'Parking', 'Other']
 const EXPENSE_CATEGORIES = ['Mortgage', 'Property Tax', 'Insurance', 'Maintenance', 'Management', 'Utilities', 'Legal', 'Advertising', 'HOA', 'Other']
 
-const PIE_COLORS = ['#059669', '#0EA5E9', '#059669', '#3B82F6', '#A855F7', '#DC2626', '#F97316', '#EC4899', '#8B5CF6', '#14B8A6']
+const PIE_COLORS = ['#c9a84c', '#c9a84c', '#c9a84c', '#3B82F6', '#A855F7', '#DC2626', '#F97316', '#EC4899', '#8B5CF6', '#14B8A6']
 
 const DATE_RANGES = [
   { label: 'This Month', value: 'month' },
@@ -123,183 +123,6 @@ function getYearRange(date: Date): { start: Date; end: Date } {
   const start = new Date(date.getFullYear(), 0, 1)
   const end = new Date(date.getFullYear(), 11, 31)
   return { start, end }
-}
-
-/* ------------------------------------------------------------------ */
-/*  Mock Data Generation                                               */
-/* ------------------------------------------------------------------ */
-
-function generateMockTransactions(properties: Property[], tenants: Tenant[]): Transaction[] {
-  const transactions: Transaction[] = []
-  const now = new Date()
-  const year = now.getFullYear()
-
-  // Generate 12 months of transactions
-  for (let m = 0; m < 12; m++) {
-    const month = new Date(year, m, 1)
-
-    // Rent income per property
-    properties.forEach((prop) => {
-      if (prop.monthly_rent && prop.monthly_rent > 0) {
-        const propTenants = tenants.filter((t) => t.property_id === prop.id)
-        transactions.push({
-          id: `rent-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: propTenants[0]?.id || null,
-          type: 'income',
-          category: 'Rent',
-          amount: prop.monthly_rent,
-          description: `Monthly rent - ${prop.address}`,
-          date: new Date(year, m, 1).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'monthly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-
-      // Expense: Mortgage
-      if (prop.mortgage_payment && prop.mortgage_payment > 0) {
-        transactions.push({
-          id: `mortgage-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: null,
-          type: 'expense',
-          category: 'Mortgage',
-          amount: prop.mortgage_payment,
-          description: `Mortgage payment - ${prop.address}`,
-          date: new Date(year, m, 1).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'monthly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-
-      // Expense: Property Tax (quarterly)
-      if (prop.property_tax && prop.property_tax > 0 && m % 3 === 0) {
-        transactions.push({
-          id: `tax-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: null,
-          type: 'expense',
-          category: 'Property Tax',
-          amount: prop.property_tax / 4,
-          description: `Property tax Q${Math.floor(m / 3) + 1} - ${prop.address}`,
-          date: new Date(year, m, 15).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'quarterly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-
-      // Expense: Insurance (monthly portion)
-      if (prop.insurance && prop.insurance > 0) {
-        transactions.push({
-          id: `ins-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: null,
-          type: 'expense',
-          category: 'Insurance',
-          amount: prop.insurance / 12,
-          description: `Insurance - ${prop.address}`,
-          date: new Date(year, m, 5).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'monthly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-
-      // Random maintenance (30% chance each month)
-      if (Math.random() < 0.3) {
-        const cost = Math.round(150 + Math.random() * 800)
-        transactions.push({
-          id: `maint-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: null,
-          type: 'expense',
-          category: 'Maintenance',
-          amount: cost,
-          description: `Maintenance repair - ${prop.address}`,
-          date: new Date(year, m, 10 + Math.floor(Math.random() * 15)).toISOString().split('T')[0],
-          recurring: false,
-          recurring_frequency: null,
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-
-      // HOA fees
-      if (prop.hoa_fees && prop.hoa_fees > 0) {
-        transactions.push({
-          id: `hoa-${prop.id}-${m}`,
-          user_id: prop.user_id,
-          property_id: prop.id,
-          tenant_id: null,
-          type: 'expense',
-          category: 'HOA',
-          amount: prop.hoa_fees,
-          description: `HOA fee - ${prop.address}`,
-          date: new Date(year, m, 1).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'monthly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-    })
-
-    // Random late fees
-    if (Math.random() < 0.2 && properties.length > 0) {
-      const randomProp = properties[Math.floor(Math.random() * properties.length)]
-      transactions.push({
-        id: `late-${m}`,
-        user_id: randomProp.user_id,
-        property_id: randomProp.id,
-        tenant_id: null,
-        type: 'income',
-        category: 'Late Fee',
-        amount: 50 + Math.round(Math.random() * 100),
-        description: `Late fee collected - ${randomProp.address}`,
-        date: new Date(year, m, 8).toISOString().split('T')[0],
-        recurring: false,
-        recurring_frequency: null,
-        created_at: month.toISOString(),
-        updated_at: month.toISOString(),
-      })
-    }
-
-    // Management fees (8% of rent)
-    if (properties.length > 0) {
-      const totalRent = properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0)
-      if (totalRent > 0) {
-        transactions.push({
-          id: `mgmt-${m}`,
-          user_id: properties[0].user_id,
-          property_id: null,
-          tenant_id: null,
-          type: 'expense',
-          category: 'Management',
-          amount: Math.round(totalRent * 0.08),
-          description: 'Property management fee',
-          date: new Date(year, m, 28).toISOString().split('T')[0],
-          recurring: true,
-          recurring_frequency: 'monthly',
-          created_at: month.toISOString(),
-          updated_at: month.toISOString(),
-        })
-      }
-    }
-  }
-
-  return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
 /* ------------------------------------------------------------------ */
@@ -389,14 +212,17 @@ interface TransactionFormData {
 function AddTransactionModal({
   open,
   onClose,
+  onSaved,
   properties,
   tenants,
 }: {
   open: boolean
   onClose: () => void
+  onSaved: () => void
   properties: Property[]
   tenants: Tenant[]
 }) {
+  const supabase = createClient()
   const [form, setForm] = useState<TransactionFormData>({
     type: 'income',
     property_id: '',
@@ -424,9 +250,42 @@ function AddTransactionModal({
     }
   }, [form.type])
 
-  function handleSave() {
-    // TODO: Save to Supabase transactions table
-    onClose()
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    if (!form.category || !form.amount || !form.date) {
+      return
+    }
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase.from('transactions').insert({
+        user_id: user.id,
+        property_id: form.property_id || null,
+        tenant_id: form.tenant_id || null,
+        type: form.type,
+        category: form.category,
+        amount: parseFloat(form.amount),
+        description: form.description || null,
+        date: form.date,
+        tax_deductible: form.tax_deductible,
+        notes: form.notes || null,
+      })
+
+      if (error) {
+        console.error('Transaction save error:', error)
+        return
+      }
+
+      onSaved()
+      onClose()
+    } catch (err) {
+      console.error('Transaction save error:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (!open) return null
@@ -615,9 +474,10 @@ function AddTransactionModal({
           <button
             type="button"
             onClick={handleSave}
-            className="px-6 py-2 rounded-lg text-sm font-semibold bg-gold text-black hover:brightness-110 hover:shadow-glow transition-all"
+            disabled={saving}
+            className="px-6 py-2 rounded-lg text-sm font-semibold bg-gold text-black hover:brightness-110 hover:shadow-glow transition-all disabled:opacity-50"
           >
-            Save Transaction
+            {saving ? 'Saving...' : 'Save Transaction'}
           </button>
         </div>
       </div>
@@ -694,9 +554,13 @@ function AccountingContent() {
       setProperties(propsData)
       setTenants(tenantsData)
 
-      // Generate mock transactions based on actual properties
-      const mockTx = generateMockTransactions(propsData, tenantsData)
-      setTransactions(mockTx)
+      // Fetch real transactions from database
+      const { data: txData } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+      setTransactions((txData || []) as Transaction[])
 
       // Default selected property
       if (propsData.length > 0) {
@@ -1058,13 +922,13 @@ function AccountingContent() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div key={i} className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="h-4 bg-border rounded w-24 mb-3" />
               <div className="h-8 bg-border rounded w-32" />
             </div>
           ))}
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="bg-card border border-border rounded-xl p-6 animate-pulse rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="h-64 bg-border/50 rounded-lg" />
         </div>
       </div>
@@ -1141,7 +1005,7 @@ function AccountingContent() {
             {/* Key Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Total Revenue */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="label">Total Revenue</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green/10">
@@ -1153,7 +1017,7 @@ function AccountingContent() {
               </div>
 
               {/* Total Expenses */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="label">Total Expenses</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red/10">
@@ -1165,7 +1029,7 @@ function AccountingContent() {
               </div>
 
               {/* Net Income */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="label">Net Income</span>
                   <div className={cn(
@@ -1182,7 +1046,7 @@ function AccountingContent() {
               </div>
 
               {/* Effective Tax Rate */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="label">Effective Tax Rate</span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/10">
@@ -1197,7 +1061,7 @@ function AccountingContent() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Income vs Expenses Bar Chart */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="label">Monthly Income vs Expenses</h3>
                   <span className="text-xs text-muted">{now.getFullYear()}</span>
@@ -1209,7 +1073,7 @@ function AccountingContent() {
                       dataKey="month"
                       stroke="#4A6080"
                       tick={{ fill: '#4A6080', fontSize: 11 }}
-                      axisLine={{ stroke: '#161E2A' }}
+                      axisLine={{ stroke: '#1e1e1e' }}
                       tickLine={false}
                     />
                     <YAxis
@@ -1221,14 +1085,14 @@ function AccountingContent() {
                       width={60}
                     />
                     <RechartsTooltip content={<ChartTooltip />} />
-                    <Bar dataKey="Income" fill="#059669" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Income" fill="#c9a84c" radius={[2, 2, 0, 0]} />
                     <Bar dataKey="Expenses" fill="#DC2626" radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Expense Breakdown Donut */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="label">Expense Categories</h3>
                   <span className="text-xs text-muted">Year to date</span>
@@ -1276,13 +1140,13 @@ function AccountingContent() {
             </div>
 
             {/* YoY Comparison */}
-            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="label text-[11px]">Year-over-Year Comparison</h3>
                 <span className="text-xs text-muted">{now.getFullYear()} vs {now.getFullYear() - 1}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Revenue</p>
                   <p className="text-xl font-bold text-green font-mono">{formatCurrency(ytdIncome)}</p>
                   <div className="flex items-center gap-1 mt-1">
@@ -1293,7 +1157,7 @@ function AccountingContent() {
                   </div>
                   <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearIncome)}</span></p>
                 </div>
-                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Expenses</p>
                   <p className="text-xl font-bold text-red font-mono">{formatCurrency(ytdExpenses)}</p>
                   <div className="flex items-center gap-1 mt-1">
@@ -1304,7 +1168,7 @@ function AccountingContent() {
                   </div>
                   <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearExpenses)}</span></p>
                 </div>
-                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Net Income</p>
                   <p className={cn('text-xl font-bold font-mono', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
                     {formatCurrency(ytdProfit)}
@@ -1339,7 +1203,7 @@ function AccountingContent() {
         <TabsContent value="transactions">
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex flex-wrap items-center gap-3">
                 {/* Date range */}
                 <div className="flex bg-deep rounded-lg p-0.5">
@@ -1415,7 +1279,7 @@ function AccountingContent() {
             </div>
 
             {/* Transactions Table */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -1548,7 +1412,7 @@ function AccountingContent() {
         <TabsContent value="by_property">
           <div className="space-y-6">
             {/* Property Selector */}
-            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex items-center gap-4">
                 <label className="label whitespace-nowrap">Select Property:</label>
                 <select
@@ -1567,21 +1431,21 @@ function AccountingContent() {
               <>
                 {/* Key Property Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <p className="label mb-2">Gross Income</p>
                     <p className="text-2xl font-bold text-green font-mono">{formatCurrency(propertyMetrics.income)}</p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <p className="label mb-2">Total Expenses</p>
                     <p className="text-2xl font-bold text-red font-mono">{formatCurrency(propertyMetrics.expenses)}</p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <p className="label mb-2">NOI</p>
                     <p className={cn('text-2xl font-bold font-mono', propertyMetrics.noi >= 0 ? 'text-gold' : 'text-red')}>
                       {formatCurrency(propertyMetrics.noi)}
                     </p>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <p className="label mb-2">Cap Rate</p>
                     <p className="text-2xl font-bold text-gold font-mono">{propertyMetrics.capRate.toFixed(2)}%</p>
                     {propertyMetrics.property?.current_value && (
@@ -1594,7 +1458,7 @@ function AccountingContent() {
 
                 {/* Income / Expense Breakdown */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <h3 className="label mb-4">Income Breakdown</h3>
                     <div className="space-y-3">
                       {propertyMetrics.incomeBreakdown.map((item) => (
@@ -1609,7 +1473,7 @@ function AccountingContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <h3 className="label mb-4">Expense Breakdown</h3>
                     <div className="space-y-3">
                       {propertyMetrics.expenseBreakdown.map((item) => (
@@ -1627,7 +1491,7 @@ function AccountingContent() {
                 </div>
 
                 {/* Monthly Breakdown Table */}
-                <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <div className="p-6 border-b border-border">
                     <h3 className="label text-[11px]">Monthly Breakdown</h3>
                     <p className="text-xs text-muted mt-1">
@@ -1682,7 +1546,7 @@ function AccountingContent() {
         <TabsContent value="tax_center">
           <div className="space-y-6">
             {/* Schedule E */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
                   <h3 className="label text-[11px]">Schedule E (Form 1040)</h3>
@@ -1742,7 +1606,7 @@ function AccountingContent() {
             </div>
 
             {/* Depreciation Tracker */}
-            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="p-6 border-b border-border">
                 <h3 className="label text-[11px]">Depreciation Tracker</h3>
                 <p className="text-xs text-muted mt-1">27.5-year straight-line schedule for residential rental properties</p>
@@ -1805,7 +1669,7 @@ function AccountingContent() {
             {/* Mileage Log + 1031 Exchange Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Mileage Log */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="label text-[11px]">Mileage Log</h3>
@@ -1829,7 +1693,7 @@ function AccountingContent() {
               </div>
 
               {/* 1031 Exchange Timer */}
-              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="label text-[11px]">1031 Exchange Tracker</h3>
@@ -1841,7 +1705,7 @@ function AccountingContent() {
                   </span>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-muted">45-Day Identification Period</span>
                       <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
@@ -1850,7 +1714,7 @@ function AccountingContent() {
                       <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
                     </div>
                   </div>
-                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-muted">180-Day Completion Deadline</span>
                       <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
@@ -1867,7 +1731,7 @@ function AccountingContent() {
             </div>
 
             {/* Quarterly Tax Estimator */}
-            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="label text-[11px]">Quarterly Tax Estimator</h3>
@@ -1882,7 +1746,7 @@ function AccountingContent() {
                 {['Q1 (Apr 15)', 'Q2 (Jun 15)', 'Q3 (Sep 15)', 'Q4 (Jan 15)'].map((q, i) => {
                   const quarterlyEstimate = (ytdProfit * TAX_RATE) / 4
                   return (
-                    <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                    <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                       <p className="text-xs text-muted mb-2 font-mono">{q}</p>
                       <p className="text-lg font-bold text-gold font-mono">{formatCurrency(quarterlyEstimate > 0 ? quarterlyEstimate : 0)}</p>
                       <div className="mt-2">
@@ -1910,7 +1774,7 @@ function AccountingContent() {
         <TabsContent value="reports">
           <div className="space-y-6">
             {/* Date Range Selector */}
-            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="bg-card border border-border rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex items-center gap-4">
                 <label className="label whitespace-nowrap">Report Period:</label>
                 <div className="flex items-center gap-2">
@@ -1936,7 +1800,7 @@ function AccountingContent() {
               {REPORT_CARDS.map((report) => {
                 const Icon = report.icon
                 return (
-                  <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <div className="flex items-start gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 group-hover:bg-gold/15 transition-colors flex-shrink-0">
                         <Icon className="h-5 w-5 text-gold" />
@@ -1991,6 +1855,7 @@ function AccountingContent() {
       <AddTransactionModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
+        onSaved={fetchData}
         properties={properties}
         tenants={tenants}
       />

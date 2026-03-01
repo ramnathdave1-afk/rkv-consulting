@@ -155,6 +155,9 @@ export default function TenantsPage() {
   const [runningSequence, setRunningSequence] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Add Tenant modal
+  const [addTenantOpen, setAddTenantOpen] = useState(false);
+
   // Selection state for bulk actions
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -543,7 +546,7 @@ export default function TenantsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="font-display font-bold text-2xl text-white">Tenants</h1>
-          <Button icon={<Plus className="w-4 h-4" />} onClick={() => {}}>
+          <Button icon={<Plus className="w-4 h-4" />} onClick={() => setAddTenantOpen(true)}>
             Add Tenant
           </Button>
         </div>
@@ -551,7 +554,7 @@ export default function TenantsPage() {
           icon={<Users />}
           title="No tenants yet"
           description="Add your first tenant to start managing leases, collecting rent, and communicating with your renters."
-          action={{ label: 'Add your first tenant', onClick: () => {}, icon: <Plus /> }}
+          action={{ label: 'Add your first tenant', onClick: () => setAddTenantOpen(true), icon: <Plus /> }}
         />
       </div>
     );
@@ -566,7 +569,7 @@ export default function TenantsPage() {
       {/* ============================================================ */}
       <div className="flex items-center justify-between">
         <h1 className="font-display font-bold text-2xl text-white">Tenants</h1>
-        <Button icon={<Plus className="w-4 h-4" />} onClick={() => {}}>
+        <Button icon={<Plus className="w-4 h-4" />} onClick={() => setAddTenantOpen(true)}>
           Add Tenant
         </Button>
       </div>
@@ -575,7 +578,7 @@ export default function TenantsPage() {
       {/*  STATS ROW                                                    */}
       {/* ============================================================ */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Users className="h-5 w-5 text-gold" />
           </div>
@@ -586,7 +589,7 @@ export default function TenantsPage() {
           </div>
         </Card>
 
-        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <Building2 className="h-5 w-5 text-green" />
           </div>
@@ -597,7 +600,7 @@ export default function TenantsPage() {
           </div>
         </Card>
 
-        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Clock className="h-5 w-5 text-gold" />
           </div>
@@ -608,7 +611,7 @@ export default function TenantsPage() {
           </div>
         </Card>
 
-        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="rounded-lg flex items-center gap-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <TrendingUp className="h-5 w-5 text-green" />
           </div>
@@ -820,7 +823,7 @@ export default function TenantsPage() {
                   <Card
                     variant="interactive"
                     className={cn('h-full rounded-lg', isSelected && 'ring-1 ring-gold/40')}
-                    style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     {/* Top row: name + payment status */}
                     <div className="flex items-start justify-between mb-3 pl-5">
@@ -876,7 +879,7 @@ export default function TenantsPage() {
                     </div>
 
                     {/* Quick action row */}
-                    <div className="flex items-center gap-2 border-t border-border pt-3" style={{ borderColor: '#161E2A' }}>
+                    <div className="flex items-center gap-2 border-t border-border pt-3" style={{ borderColor: '#1e1e1e' }}>
                       <button
                         onClick={(e) => {
                           e.preventDefault();
@@ -1053,6 +1056,240 @@ export default function TenantsPage() {
           </Button>
         </ModalFooter>
       </Modal>
+
+      {/* ============================================================ */}
+      {/*  ADD TENANT MODAL                                             */}
+      {/* ============================================================ */}
+      <AddTenantModal
+        open={addTenantOpen}
+        onOpenChange={setAddTenantOpen}
+        onSaved={fetchData}
+        properties={properties}
+        supabase={supabase}
+      />
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Add Tenant Modal                                                   */
+/* ------------------------------------------------------------------ */
+
+function AddTenantModal({
+  open,
+  onOpenChange,
+  onSaved,
+  properties,
+  supabase,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSaved: () => void;
+  properties: Property[];
+  supabase: ReturnType<typeof createClient>;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    property_id: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    lease_start: '',
+    lease_end: '',
+    monthly_rent: '',
+    security_deposit: '',
+    notes: '',
+  });
+
+  function resetForm() {
+    setForm({
+      property_id: '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      lease_start: '',
+      lease_end: '',
+      monthly_rent: '',
+      security_deposit: '',
+      notes: '',
+    });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.property_id || !form.first_name) return;
+    setSaving(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from('tenants').insert({
+        user_id: user.id,
+        property_id: form.property_id,
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+        lease_start: form.lease_start || null,
+        lease_end: form.lease_end || null,
+        monthly_rent: form.monthly_rent ? parseFloat(form.monthly_rent) : 0,
+        security_deposit: form.security_deposit ? parseFloat(form.security_deposit) : null,
+        notes: form.notes.trim() || null,
+        status: 'active',
+      });
+
+      if (error) {
+        console.error('Add tenant error:', error);
+        return;
+      }
+
+      resetForm();
+      onOpenChange(false);
+      onSaved();
+    } catch (err) {
+      console.error('Add tenant error:', err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onOpenChange={onOpenChange}>
+      <ModalContent>
+        <ModalHeader title="Add Tenant" />
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Property */}
+          <div>
+            <label className="label mb-1 block">Property *</label>
+            <select
+              value={form.property_id}
+              onChange={(e) => setForm((p) => ({ ...p, property_id: e.target.value }))}
+              className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              required
+            >
+              <option value="">Select property</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.address}{p.city ? `, ${p.city}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Name */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label mb-1 block">First Name *</label>
+              <input
+                type="text"
+                value={form.first_name}
+                onChange={(e) => setForm((p) => ({ ...p, first_name: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+                required
+              />
+            </div>
+            <div>
+              <label className="label mb-1 block">Last Name</label>
+              <input
+                type="text"
+                value={form.last_name}
+                onChange={(e) => setForm((p) => ({ ...p, last_name: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label mb-1 block">Email</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+            <div>
+              <label className="label mb-1 block">Phone</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+          </div>
+
+          {/* Lease Dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label mb-1 block">Lease Start</label>
+              <input
+                type="date"
+                value={form.lease_start}
+                onChange={(e) => setForm((p) => ({ ...p, lease_start: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+            <div>
+              <label className="label mb-1 block">Lease End</label>
+              <input
+                type="date"
+                value={form.lease_end}
+                onChange={(e) => setForm((p) => ({ ...p, lease_end: e.target.value }))}
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+          </div>
+
+          {/* Financial */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label mb-1 block">Monthly Rent</label>
+              <input
+                type="number"
+                value={form.monthly_rent}
+                onChange={(e) => setForm((p) => ({ ...p, monthly_rent: e.target.value }))}
+                placeholder="0"
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+            <div>
+              <label className="label mb-1 block">Security Deposit</label>
+              <input
+                type="number"
+                value={form.security_deposit}
+                onChange={(e) => setForm((p) => ({ ...p, security_deposit: e.target.value }))}
+                placeholder="0"
+                className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="label mb-1 block">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+              rows={2}
+              className="w-full bg-deep border border-border rounded-lg px-3 py-2 text-sm text-white font-body focus:outline-none focus:border-gold/40 resize-none"
+            />
+          </div>
+        </form>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => { e.preventDefault(); handleSubmit(e as unknown as React.FormEvent); }} disabled={saving || !form.property_id || !form.first_name}>
+            {saving ? 'Saving...' : 'Add Tenant'}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

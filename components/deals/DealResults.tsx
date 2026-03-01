@@ -108,6 +108,7 @@ export interface AnalysisResults {
 export interface DealResultsProps {
   results: AnalysisResults;
   dealData: DealFormData;
+  onAddToPipeline?: () => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -130,8 +131,8 @@ function fmtPct(value: number): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 70) return '#059669';
-  if (score >= 40) return '#059669';
+  if (score >= 70) return '#c9a84c';
+  if (score >= 40) return '#c9a84c';
   return '#DC2626';
 }
 
@@ -139,7 +140,7 @@ function scoreColor(score: number): string {
 /*  Donut custom label (for the expense chart)                         */
 /* ------------------------------------------------------------------ */
 
-const EXPENSE_COLORS = ['#059669', '#DC2626', '#059669', '#4A6080', '#0EA5E9'];
+const EXPENSE_COLORS = ['#c9a84c', '#DC2626', '#c9a84c', '#4A6080', '#c9a84c'];
 
 /* ------------------------------------------------------------------ */
 /*  Tab 1: Dashboard                                                   */
@@ -392,12 +393,12 @@ function CashFlowTab({ results, dealData }: DealResultsProps) {
               </Pie>
               <ReTooltip
                 contentStyle={{
-                  backgroundColor: '#0C1018',
-                  border: '1px solid #161E2A',
+                  backgroundColor: '#111111',
+                  border: '1px solid #1e1e1e',
                   borderRadius: '8px',
                   fontFamily: "'JetBrains Mono', monospace",
                   fontSize: '12px',
-                  color: '#E2E8F0',
+                  color: '#f5f5f5',
                 }}
                 formatter={(value: number | undefined) => fmtFull$(value ?? 0)}
               />
@@ -879,7 +880,7 @@ function ShimmerBlock({ lines = 4, className }: { lines?: number; className?: st
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(90deg, transparent 0%, rgba(5,150,105,0.08) 40%, rgba(5,150,105,0.15) 50%, rgba(5,150,105,0.08) 60%, transparent 100%)',
+                'linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.08) 40%, rgba(201,168,76,0.15) 50%, rgba(201,168,76,0.08) 60%, transparent 100%)',
               animation: 'skeleton-scan 2s ease-in-out infinite',
             }}
           />
@@ -897,9 +898,9 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 const SECTION_COLORS: Record<string, string> = {
-  'Investment Summary': '#059669',
+  'Investment Summary': '#c9a84c',
   'Risk Factors': '#DC2626',
-  'Market Context': '#0EA5E9',
+  'Market Context': '#c9a84c',
   'Recommendation': '#D4A843',
 };
 
@@ -1555,7 +1556,7 @@ function ThirtyYearProjectionsTab({ results, dealData }: DealResultsProps) {
 /*  Main DealResults component                                         */
 /* ------------------------------------------------------------------ */
 
-function DealResults({ results, dealData }: DealResultsProps) {
+function DealResults({ results, dealData, onAddToPipeline }: DealResultsProps) {
   const recColor =
     results.aiRecommendation === 'BUY'
       ? 'bg-green/15 text-green border-green/20'
@@ -1578,14 +1579,14 @@ function DealResults({ results, dealData }: DealResultsProps) {
     doc.text('RKV Consulting — Deal Analysis', 14, 22);
 
     doc.setFontSize(11);
-    doc.setTextColor(100, 116, 139);
+    doc.setTextColor(136, 136, 136);
     doc.text(dealData.propertyAddress || 'Address not provided', 14, 30);
     doc.text(`Generated ${new Date().toLocaleDateString()}`, 14, 36);
 
     doc.setDrawColor(22, 30, 42);
     doc.line(14, 40, 196, 40);
 
-    doc.setTextColor(5, 150, 105);
+    doc.setTextColor(201, 168, 76);
     doc.setFontSize(14);
     doc.text(`AI Score: ${results.aiScore}/100  •  ${results.aiRecommendation}`, 14, 50);
 
@@ -1608,7 +1609,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
       head: [['Metric', 'Value']],
       body: metrics,
       theme: 'grid',
-      headStyles: { fillColor: [17, 24, 39], textColor: [100, 116, 139], fontSize: 9 },
+      headStyles: { fillColor: [17, 24, 39], textColor: [136, 136, 136], fontSize: 9 },
       bodyStyles: { fillColor: [12, 16, 24], textColor: [226, 232, 240], fontSize: 10 },
       alternateRowStyles: { fillColor: [8, 11, 15] },
       styles: { lineColor: [22, 30, 42], lineWidth: 0.5, cellPadding: 4 },
@@ -1627,7 +1628,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
       });
     }
 
-    doc.setTextColor(55, 65, 81);
+    doc.setTextColor(85, 85, 85);
     doc.setFontSize(8);
     doc.text('RKV Consulting — AI-Powered Real Estate Investment Platform', 14, 288);
 
@@ -1667,7 +1668,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
           <div className="relative w-20 h-20">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
               {/* Background ring */}
-              <circle cx="50" cy="50" r="42" fill="none" stroke="#161E2A" strokeWidth="6" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1e1e" strokeWidth="6" />
               {/* Score ring */}
               <circle
                 cx="50"
@@ -1789,7 +1790,7 @@ function DealResults({ results, dealData }: DealResultsProps) {
       {/*  Action buttons                                              */}
       {/* ------------------------------------------------------------ */}
       <div className="flex items-center gap-3 pt-2">
-        <Button variant="primary" size="lg" icon={<Plus className="w-4 h-4" />}>
+        <Button variant="primary" size="lg" icon={<Plus className="w-4 h-4" />} onClick={onAddToPipeline}>
           Add to Pipeline
         </Button>
         <Button variant="outline" size="lg" icon={<FileDown className="w-4 h-4" />} onClick={handleExportPDF}>

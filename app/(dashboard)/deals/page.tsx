@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { DealForm, type DealFormData } from '@/components/deals/DealForm';
 import { DealResults, type AnalysisResults, type AmortizationRow } from '@/components/deals/DealResults';
 import { Badge } from '@/components/ui/Badge';
@@ -559,30 +560,91 @@ interface SavedDeal {
 /* ================================================================== */
 
 export default function DealsPage() {
+  const supabase = createClient();
+
   /* ---- State ---------------------------------------------------- */
   const [isLoading, setIsLoading] = useState(false);
   const [currentDealData, setCurrentDealData] = useState<DealFormData | null>(null);
   const [currentResults, setCurrentResults] = useState<AnalysisResults | null>(null);
+  const [currentDealId, setCurrentDealId] = useState<string | null>(null);
   const [savedDeals, setSavedDeals] = useState<SavedDeal[]>([]);
   const usageCount = savedDeals.length;
   const usageLimit = 25; /* placeholder -- would come from subscription */
 
+  /* ---- Fetch saved deals from Supabase on mount ----------------- */
+  const fetchSavedDeals = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('deals')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (data) {
+      const mapped: SavedDeal[] = data
+        .filter((row: Record<string, unknown>) => row.analysis_data)
+        .map((row: Record<string, unknown>) => ({
+          id: row.id as string,
+          address: (row.address as string) || 'Untitled Deal',
+          aiScore: (row.ai_score as number) || 0,
+          status: (row.stage === 'lead' || row.stage === 'analyzing') ? 'pipeline' as const : 'analyzed' as const,
+          date: new Date(row.created_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          formData: (row.saved_inputs || row.analysis_data) as DealFormData,
+          results: row.analysis_data as AnalysisResults,
+        }));
+      setSavedDeals(mapped);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchSavedDeals();
+  }, [fetchSavedDeals]);
+
   /* ---- Analyze handler ------------------------------------------ */
   const handleAnalyze = useCallback(
-    (data: DealFormData) => {
+    async (data: DealFormData) => {
       setIsLoading(true);
       setCurrentDealData(data);
       setCurrentResults(null);
 
       /* Simulate a brief processing delay for UX */
-      setTimeout(() => {
-        const results = runAnalysis(data);
-        setCurrentResults(results);
-        setIsLoading(false);
+      await new Promise((r) => setTimeout(r, 1200));
 
-        /* Auto-save to local list */
+      const results = runAnalysis(data);
+      setCurrentResults(results);
+      setIsLoading(false);
+
+      /* Save to Supabase */
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: inserted } = await supabase.from('deals').insert({
+          user_id: user.id,
+          address: data.propertyAddress || 'Untitled Deal',
+          asking_price: data.askingPrice || null,
+          property_type: data.propertyType || null,
+          down_payment_pct: data.downPaymentPct || null,
+          interest_rate: data.interestRate || null,
+          loan_term: data.loanTerm || null,
+          monthly_rent_estimate: data.expectedMonthlyRent || null,
+          vacancy_rate: data.vacancyRate || null,
+          monthly_expenses: data.monthlyOperatingExpenses || null,
+          rehab_estimate: data.rehabEstimate || null,
+          arv: data.afterRepairValue || null,
+          analysis_data: results,
+          ai_recommendation: results.aiRecommendation,
+          ai_score: results.aiScore,
+          red_flags: results.redFlags || [],
+          saved_inputs: data,
+          stage: 'reviewing',
+        }).select().single();
+
+        const dealId = inserted?.id || Date.now().toString();
+        setCurrentDealId(dealId);
+
         const newDeal: SavedDeal = {
-          id: Date.now().toString(),
+          id: dealId,
           address: data.propertyAddress || 'Untitled Deal',
           aiScore: results.aiScore,
           status: 'analyzed',
@@ -590,17 +652,26 @@ export default function DealsPage() {
           formData: data,
           results,
         };
-
         setSavedDeals((prev) => [newDeal, ...prev]);
-      }, 1200);
+      }
     },
-    [],
+    [supabase],
   );
+
+  /* ---- Add to pipeline ------------------------------------------ */
+  const handleAddToPipeline = useCallback(async () => {
+    if (!currentDealId) return;
+    await supabase.from('deals').update({ stage: 'lead' }).eq('id', currentDealId);
+    setSavedDeals((prev) =>
+      prev.map((d) => d.id === currentDealId ? { ...d, status: 'pipeline' as const } : d),
+    );
+  }, [supabase, currentDealId]);
 
   /* ---- Load saved deal ------------------------------------------ */
   const handleLoadDeal = useCallback((deal: SavedDeal) => {
     setCurrentDealData(deal.formData);
     setCurrentResults(deal.results);
+    setCurrentDealId(deal.id);
   }, []);
 
   /* ---- Score color helper --------------------------------------- */
@@ -655,7 +726,7 @@ export default function DealsPage() {
                       'hover:border-gold/20 hover:shadow-glow-sm',
                       currentDealData?.propertyAddress === deal.address && 'border-gold/30 bg-gold/5',
                     )}
-                    style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -681,7 +752,7 @@ export default function DealsPage() {
                         size="sm"
                         className={cn(
                           'font-mono text-[10px]',
-                          deal.aiScore >= 70 && 'shadow-[0_0_8px_rgba(5,150,105,0.4)]',
+                          deal.aiScore >= 70 && 'shadow-[0_0_8px_rgba(201,168,76,0.4)]',
                           deal.aiScore >= 50 && deal.aiScore < 70 && 'shadow-[0_0_8px_rgba(217,119,6,0.4)]',
                           deal.aiScore < 50 && 'shadow-[0_0_8px_rgba(220,38,38,0.4)]',
                         )}
@@ -732,7 +803,7 @@ export default function DealsPage() {
             </div>
           ) : currentResults && currentDealData ? (
             /* Analysis results */
-            <DealResults results={currentResults} dealData={currentDealData} />
+            <DealResults results={currentResults} dealData={currentDealData} onAddToPipeline={handleAddToPipeline} />
           ) : (
             /* Empty state */
             <div className="flex flex-col items-center justify-center py-24 text-center">

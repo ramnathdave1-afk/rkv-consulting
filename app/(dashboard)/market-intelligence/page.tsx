@@ -51,51 +51,75 @@ const METRIC_TABS: { key: HeatMapMetricKey; label: string }[] = [
 const DEFAULT_TRACKED = ['Phoenix, AZ', 'Austin, TX', 'Nashville, TN', 'Tampa, FL', 'Raleigh, NC', 'Denver, CO']
 
 /* ------------------------------------------------------------------ */
-/*  Opportunity Alerts Data                                            */
+/*  Generate opportunity alerts from live data                         */
 /* ------------------------------------------------------------------ */
 
-const OPPORTUNITY_ALERTS = [
-  {
-    id: 'opp-1',
-    type: 'price_drop',
-    title: 'Price drop detected',
-    detail: '1234 Oak St, Phoenix, AZ reduced by 12% ($45,000)',
-    severity: 'high',
-    timestamp: '2 hours ago',
-  },
-  {
-    id: 'opp-2',
-    type: 'below_market',
-    title: 'Below market rent',
-    detail: '85281 zip avg rent up 8%, your property at 4567 Maple Ave unchanged',
-    severity: 'medium',
-    timestamp: '6 hours ago',
-  },
-  {
-    id: 'opp-3',
-    type: 'new_listing',
-    title: 'New listing matches criteria',
-    detail: '789 Pine Dr, Austin, TX - 3bd/2ba, $325,000 - Cap rate est. 7.2%',
-    severity: 'low',
-    timestamp: '1 day ago',
-  },
-  {
-    id: 'opp-4',
-    type: 'price_drop',
-    title: 'Price drop detected',
-    detail: '5678 Elm Blvd, Nashville, TN reduced by 8% ($28,000)',
-    severity: 'medium',
-    timestamp: '1 day ago',
-  },
-  {
-    id: 'opp-5',
-    type: 'new_listing',
-    title: 'New listing matches criteria',
-    detail: '321 Cedar Ln, Tampa, FL - 4bd/3ba, $410,000 - Cap rate est. 6.8%',
-    severity: 'low',
-    timestamp: '2 days ago',
-  },
-]
+interface OpportunityAlert {
+  id: string
+  type: string
+  title: string
+  detail: string
+  severity: string
+  timestamp: string
+}
+
+function generateAlertsFromLiveData(
+  trackedMarkets: string[],
+  liveDataMap: Record<string, any>
+): OpportunityAlert[] {
+  const alerts: OpportunityAlert[] = []
+  let idx = 0
+
+  for (const market of trackedMarkets) {
+    const data = liveDataMap[market]
+    if (!data) continue
+
+    const sales = data.sales || data.sale || {}
+    const rental = data.rental || data.rent || {}
+
+    // Price drop: negative YoY price change
+    const priceChangeYoY = sales.priceChangeYoY ?? sales.medianPriceChangeYoY
+    if (priceChangeYoY != null && priceChangeYoY < 0) {
+      const pctDrop = Math.abs(priceChangeYoY).toFixed(1)
+      alerts.push({
+        id: `opp-${++idx}`,
+        type: 'price_drop',
+        title: 'Price drop detected',
+        detail: `${market} median sale price down ${pctDrop}% year-over-year`,
+        severity: Math.abs(priceChangeYoY) > 5 ? 'high' : 'medium',
+        timestamp: 'Recent',
+      })
+    }
+
+    // Rent growth opportunity
+    const rentChangeYoY = rental.rentChangeYoY ?? rental.medianRentChangeYoY
+    if (rentChangeYoY != null && rentChangeYoY > 5) {
+      alerts.push({
+        id: `opp-${++idx}`,
+        type: 'below_market',
+        title: 'Strong rent growth',
+        detail: `${market} rent up ${rentChangeYoY.toFixed(1)}% YoY — check if your rents are keeping pace`,
+        severity: rentChangeYoY > 10 ? 'high' : 'medium',
+        timestamp: 'Recent',
+      })
+    }
+
+    // High vacancy opportunity
+    const vacancy = sales.vacancyRate ?? rental.vacancyRate
+    if (vacancy != null && vacancy > 8) {
+      alerts.push({
+        id: `opp-${++idx}`,
+        type: 'new_listing',
+        title: 'High vacancy detected',
+        detail: `${market} vacancy at ${vacancy.toFixed(1)}% — potential buying opportunity`,
+        severity: vacancy > 12 ? 'high' : 'low',
+        timestamp: 'Recent',
+      })
+    }
+  }
+
+  return alerts
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers — build HeatMapCityMarketData from MAJOR_METROS + live    */
@@ -435,6 +459,15 @@ function MarketIntelligenceContent() {
   }, [trackedMarkets])
 
   /* ---------------------------------------------------------------- */
+  /*  Computed opportunity alerts                                       */
+  /* ---------------------------------------------------------------- */
+
+  const opportunityAlerts = useMemo(
+    () => generateAlertsFromLiveData(trackedMarkets, liveDataMap),
+    [trackedMarkets, liveDataMap]
+  )
+
+  /* ---------------------------------------------------------------- */
   /*  Handlers                                                         */
   /* ---------------------------------------------------------------- */
 
@@ -491,30 +524,30 @@ function MarketIntelligenceContent() {
       <div className="space-y-6">
         {/* Header skeleton */}
         <div className="flex items-center justify-between">
-          <div className="h-8 bg-[#161E2A] rounded-lg w-56 animate-pulse" />
-          <div className="h-10 bg-[#161E2A] rounded-lg w-32 animate-pulse" />
+          <div className="h-8 bg-[#1e1e1e] rounded-lg w-56 animate-pulse" />
+          <div className="h-10 bg-[#1e1e1e] rounded-lg w-32 animate-pulse" />
         </div>
         {/* Chips skeleton */}
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-8 bg-[#161E2A] rounded-full w-28 animate-pulse" />
+            <div key={i} className="h-8 bg-[#1e1e1e] rounded-full w-28 animate-pulse" />
           ))}
         </div>
         {/* Metric tabs skeleton */}
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="h-9 bg-[#161E2A] rounded-full w-24 animate-pulse" />
+            <div key={i} className="h-9 bg-[#1e1e1e] rounded-full w-24 animate-pulse" />
           ))}
         </div>
         {/* Map skeleton */}
-        <div className="h-[520px] bg-[#0C1018] border border-[#161E2A] rounded-xl animate-pulse" />
+        <div className="h-[520px] bg-[#111111] border border-[#1e1e1e] rounded-xl animate-pulse" />
         {/* Cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 animate-pulse">
-              <div className="h-5 bg-[#161E2A] rounded w-32 mb-4" />
-              <div className="h-4 bg-[#161E2A] rounded w-24 mb-2" />
-              <div className="h-4 bg-[#161E2A] rounded w-20" />
+            <div key={i} className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 animate-pulse">
+              <div className="h-5 bg-[#1e1e1e] rounded w-32 mb-4" />
+              <div className="h-4 bg-[#1e1e1e] rounded w-24 mb-2" />
+              <div className="h-4 bg-[#1e1e1e] rounded w-20" />
             </div>
           ))}
         </div>
@@ -625,7 +658,7 @@ function MarketIntelligenceContent() {
               className={cn(
                 'rounded-full px-4 py-2 text-xs font-semibold transition-all border font-body uppercase tracking-wider',
                 isActive
-                  ? 'bg-gold text-card border-gold shadow-[0_0_12px_rgba(5,150,105,0.2)]'
+                  ? 'bg-gold text-card border-gold shadow-[0_0_12px_rgba(201,168,76,0.2)]'
                   : 'bg-card text-muted border-border hover:border-gold/30 hover:text-white'
               )}
             >
@@ -730,9 +763,9 @@ function MarketIntelligenceContent() {
       {/* ============================================================ */}
       {/*  Opportunity Alerts                                           */}
       {/* ============================================================ */}
-      <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         {/* Cyan accent top border */}
-        <div className="h-[2px] bg-gradient-to-r from-[#059669]/0 via-[#059669]/60 to-[#059669]/0" />
+        <div className="h-[2px] bg-gradient-to-r from-[#c9a84c]/0 via-[#c9a84c]/60 to-[#c9a84c]/0" />
 
         <div className="p-5">
           <div className="flex items-center justify-between mb-5">
@@ -741,7 +774,7 @@ function MarketIntelligenceContent() {
                 OPPORTUNITY ALERTS //
               </h3>
               <span className="text-[10px] font-mono font-semibold bg-gold/10 text-gold border border-gold/20 rounded-full px-2 py-0.5">
-                {OPPORTUNITY_ALERTS.length} new
+                {opportunityAlerts.length} new
               </span>
             </div>
             <button
@@ -754,7 +787,12 @@ function MarketIntelligenceContent() {
           </div>
 
           <div className="space-y-3">
-            {OPPORTUNITY_ALERTS.map((opp) => {
+            {opportunityAlerts.length === 0 && (
+              <p className="text-sm text-muted text-center py-6">
+                No alerts right now. Alerts are generated from your tracked markets when price drops, rent growth, or vacancy changes are detected.
+              </p>
+            )}
+            {opportunityAlerts.map((opp) => {
               const severityColors: Record<string, { bg: string; icon: string; border: string; leftBorder: string }> = {
                 high: { bg: 'bg-red/10', icon: 'text-red', border: 'border-red/20', leftBorder: 'border-l-2 border-l-red' },
                 medium: { bg: 'bg-[#F59E0B]/10', icon: 'text-[#F59E0B]', border: 'border-[#F59E0B]/20', leftBorder: 'border-l-2 border-l-[#F59E0B]' },

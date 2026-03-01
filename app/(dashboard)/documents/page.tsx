@@ -273,17 +273,33 @@ export default function DocumentsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Insert document record (file upload requires Supabase Storage bucket)
       const tags = uploadTags
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
 
+      // Upload file to Supabase Storage
+      const ext = uploadFile.name.split('.').pop() || 'bin';
+      const filePath = `${user.id}/${Date.now()}-${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}.${ext}`;
+
+      let fileUrl: string | null = null;
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, uploadFile, { contentType: uploadFile.type, upsert: false });
+
+      if (storageError) {
+        console.warn('Storage upload failed (bucket may not exist):', storageError.message);
+        // Continue without file URL — record still saved
+      } else {
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+        fileUrl = urlData?.publicUrl || null;
+      }
+
       const { error } = await supabase.from('documents').insert({
         user_id: user.id,
         name: uploadName || uploadFile.name,
         type: uploadType,
-        file_url: null, // Requires Supabase Storage bucket configuration
+        file_url: fileUrl,
         file_size: uploadFile.size,
         mime_type: uploadFile.type,
         property_id: uploadProperty || null,
@@ -544,7 +560,7 @@ export default function DocumentsPage() {
       {/*  STATS ROW                                                    */}
       {/* ============================================================ */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <FileText className="h-5 w-5 text-gold" />
           </div>
@@ -554,7 +570,7 @@ export default function DocumentsPage() {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 shrink-0">
             <Clock className="h-5 w-5 text-gold" />
           </div>
@@ -564,7 +580,7 @@ export default function DocumentsPage() {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red/10 shrink-0">
             <PenLine className="h-5 w-5 text-red" />
           </div>
@@ -574,7 +590,7 @@ export default function DocumentsPage() {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <Card className="flex items-center gap-4 rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green/10 shrink-0">
             <HardDrive className="h-5 w-5 text-green" />
           </div>
@@ -624,7 +640,7 @@ export default function DocumentsPage() {
                   'hover:border-gold/20 hover:shadow-glow-sm',
                   'transition-all duration-200',
                 )}
-                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 {/* File icon + type */}
                 <div className="flex items-start justify-between mb-3">
@@ -691,7 +707,7 @@ export default function DocumentsPage() {
                   <button
                     onClick={() => {
                       if (doc.file_url) window.open(doc.file_url, '_blank');
-                      else toast.info('File storage requires Supabase Storage bucket configuration');
+                      else toast.info('File not available — upload may have failed or storage is not configured');
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-white hover:bg-white/5 transition-colors"
                   >
@@ -706,7 +722,7 @@ export default function DocumentsPage() {
                         a.download = doc.name;
                         a.click();
                       } else {
-                        toast.info('File storage requires Supabase Storage bucket configuration');
+                        toast.info('File not available — upload may have failed or storage is not configured');
                       }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-white hover:bg-white/5 transition-colors"
@@ -730,7 +746,7 @@ export default function DocumentsPage() {
         /* ============================================================ */
         /*  TABLE VIEW                                                   */
         /* ============================================================ */
-        <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="bg-card border border-border rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -826,7 +842,7 @@ export default function DocumentsPage() {
                           <button
                             onClick={() => {
                               if (doc.file_url) window.open(doc.file_url, '_blank');
-                              else toast.info('File storage requires Supabase Storage bucket configuration');
+                              else toast.info('File not available — upload may have failed or storage is not configured');
                             }}
                             className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
                           >
@@ -840,7 +856,7 @@ export default function DocumentsPage() {
                                 a.download = doc.name;
                                 a.click();
                               } else {
-                                toast.info('File storage requires Supabase Storage bucket configuration');
+                                toast.info('File not available — upload may have failed or storage is not configured');
                               }
                             }}
                             className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors"
@@ -885,7 +901,7 @@ export default function DocumentsPage() {
                   'transition-colors duration-200',
                   isDragActive
                     ? 'border-gold bg-gold/5'
-                    : 'border-[#161E2A] hover:border-gold/50 hover:bg-white/[0.02]',
+                    : 'border-[#1e1e1e] hover:border-gold/50 hover:bg-white/[0.02]',
                 )}
               >
                 <input {...getInputProps()} />
@@ -984,7 +1000,7 @@ export default function DocumentsPage() {
                 />
 
                 <p className="text-xs text-muted/70 italic">
-                  Note: File storage requires Supabase Storage bucket configuration
+                  Files are uploaded to Supabase Storage. Max file size depends on your plan.
                 </p>
               </>
             )}

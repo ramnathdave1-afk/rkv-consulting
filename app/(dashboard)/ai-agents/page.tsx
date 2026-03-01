@@ -155,46 +155,6 @@ const EMAIL_SEQUENCES: EmailSequence[] = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Constants: Mock SMS threads                                        */
-/* ------------------------------------------------------------------ */
-
-const MOCK_SMS_THREADS: SMSThread[] = [
-  {
-    tenantId: 'tenant-1',
-    tenantName: 'Marcus Williams',
-    propertyAddress: '1420 Oak Lane, Unit B',
-    unreadCount: 2,
-    autoResponse: true,
-    messages: [
-      { id: 's1', direction: 'inbound', content: 'Hi, the kitchen sink is leaking again. Can someone come look at it?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), status: 'read' },
-      { id: 's2', direction: 'outbound', content: 'Hi Marcus, thanks for letting us know. I\'ve created a maintenance request for the kitchen sink leak. A plumber will contact you within 24 hours to schedule a visit.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 40).toISOString(), status: 'delivered' },
-      { id: 's3', direction: 'inbound', content: 'Great, thank you! Is there anything I should do in the meantime?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(), status: 'read' },
-      { id: 's4', direction: 'outbound', content: 'You can place a bucket under the leak and turn off the water valve under the sink if the leak is significant. The plumber will handle the rest.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), status: 'delivered' },
-    ],
-  },
-  {
-    tenantId: 'tenant-2',
-    tenantName: 'Jennifer Chen',
-    propertyAddress: '835 Maple Drive',
-    unreadCount: 0,
-    autoResponse: true,
-    messages: [
-      { id: 's5', direction: 'inbound', content: 'When is my rent due this month?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), status: 'read' },
-      { id: 's6', direction: 'outbound', content: 'Hi Jennifer, your rent of $1,600 is due on the 1st of each month. Your next payment is due March 1st.', sender: 'agent', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3 + 30000).toISOString(), status: 'delivered' },
-    ],
-  },
-  {
-    tenantId: 'tenant-3',
-    tenantName: 'David Thompson',
-    propertyAddress: '1420 Oak Lane, Unit A',
-    unreadCount: 1,
-    autoResponse: false,
-    messages: [
-      { id: 's7', direction: 'inbound', content: 'I need to discuss my rent situation. Can we talk?', sender: 'tenant', timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), status: 'read' },
-    ],
-  },
-];
 
 /* ------------------------------------------------------------------ */
 /*  Constants: Voice Settings                                          */
@@ -314,8 +274,8 @@ export default function AIAgentsPage() {
   const [businessHoursEnd, setBusinessHoursEnd] = useState('21:00');
   const [maxCallsPerWeek, setMaxCallsPerWeek] = useState(10);
   const [escalationThreshold, setEscalationThreshold] = useState(3);
-  const [smsThreads, setSmsThreads] = useState(MOCK_SMS_THREADS);
-  const [selectedThread, setSelectedThread] = useState<string | null>(MOCK_SMS_THREADS[0]?.tenantId || null);
+  const [smsThreads, setSmsThreads] = useState<SMSThread[]>([]);
+  const [selectedThread, setSelectedThread] = useState<string | null>(null);
   const [smsInput, setSmsInput] = useState('');
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
 
@@ -422,19 +382,41 @@ export default function AIAgentsPage() {
       }
     }
 
-    // Fetch saved sequence states
+    // Fetch saved sequence states — seed defaults on first visit
     const { data: savedSequences } = await supabase
       .from('agent_sequences')
-      .select('type, enabled')
+      .select('id, type, enabled')
       .eq('user_id', user.id);
 
-    if (savedSequences) {
+    if (savedSequences && savedSequences.length > 0) {
       setSequences((prev) =>
         prev.map((seq) => {
           const saved = savedSequences.find((s: Record<string, unknown>) => s.type === seq.type);
-          return saved ? { ...seq, active: saved.enabled as boolean } : seq;
+          return saved ? { ...seq, id: saved.id as string, active: saved.enabled as boolean } : seq;
         })
       );
+    } else {
+      // Seed default sequences for new user
+      const defaults = EMAIL_SEQUENCES.map((seq) => ({
+        user_id: user.id,
+        name: seq.name,
+        type: seq.type,
+        agent_type: 'email',
+        enabled: seq.active,
+        steps: seq.steps,
+      }));
+      const { data: seeded } = await supabase
+        .from('agent_sequences')
+        .insert(defaults)
+        .select('id, type, enabled');
+      if (seeded) {
+        setSequences((prev) =>
+          prev.map((seq) => {
+            const s = seeded.find((r: Record<string, unknown>) => r.type === seq.type);
+            return s ? { ...seq, id: s.id as string, active: s.enabled as boolean } : seq;
+          })
+        );
+      }
     }
   }, [supabase]);
 
@@ -460,21 +442,27 @@ export default function AIAgentsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Upsert the sequence state
-      await supabase
-        .from('agent_sequences')
-        .upsert(
-          {
-            id: id.startsWith('seq-') ? undefined : id,
-            user_id: user.id,
-            name: seq.name,
-            type: seq.type,
-            agent_type: 'email',
-            enabled: newActive,
-            steps: seq.steps,
-          },
-          { onConflict: 'id' }
-        );
+      // Use DB id if available, otherwise upsert by type
+      if (!id.startsWith('seq-')) {
+        await supabase
+          .from('agent_sequences')
+          .update({ enabled: newActive })
+          .eq('id', id);
+      } else {
+        await supabase
+          .from('agent_sequences')
+          .upsert(
+            {
+              user_id: user.id,
+              name: seq.name,
+              type: seq.type,
+              agent_type: 'email',
+              enabled: newActive,
+              steps: seq.steps,
+            },
+            { onConflict: 'user_id,type' }
+          );
+      }
     } catch (err) {
       console.error('Failed to persist sequence toggle:', err);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   DollarSign,
   FileText,
@@ -26,6 +26,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
@@ -73,6 +74,21 @@ interface ActivityEntry {
   affected: string;
   property: string;
   status: 'success' | 'pending' | 'failed';
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
+function formatTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -323,8 +339,8 @@ function AutomationCard({
     <div
       className="rounded-lg overflow-hidden glow-border transition-all duration-300"
       style={{
-        background: '#0C1018',
-        border: `1px solid ${automation.enabled ? 'rgba(5, 150, 105, 0.25)' : '#161E2A'}`,
+        background: '#111111',
+        border: `1px solid ${automation.enabled ? 'rgba(201, 168, 76, 0.25)' : '#1e1e1e'}`,
       }}
     >
       <div className="p-5">
@@ -363,7 +379,7 @@ function AutomationCard({
         </div>
 
         {/* Bottom row: saves + last triggered + expand */}
-        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: '1px solid #161E2A' }}>
+        <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: '1px solid #1e1e1e' }}>
           <div className="flex items-center gap-4">
             <span className="text-gold text-xs font-mono">
               Saves {automation.saves} hrs/month
@@ -396,7 +412,7 @@ function AutomationCard({
       {automation.expanded && automation.timeline && (
         <div
           className="px-5 pb-5 animate-fade-up"
-          style={{ borderTop: '1px solid #161E2A' }}
+          style={{ borderTop: '1px solid #1e1e1e' }}
         >
           <div className="pt-4">
             <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-3">
@@ -439,8 +455,8 @@ function WorkflowTemplateCard({
     <div
       className="rounded-lg p-4 transition-all duration-200 hover:border-gold/20 group"
       style={{
-        background: '#0C1018',
-        border: '1px solid #161E2A',
+        background: '#111111',
+        border: '1px solid #1e1e1e',
       }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -591,9 +607,9 @@ function WorkflowBuilderModal({
               onChange={(e) => setWorkflowName(e.target.value)}
               placeholder="e.g. Late Rent Escalation"
               className="w-full h-10 px-3 text-sm bg-transparent text-white font-body border rounded-lg placeholder:text-muted-deep transition-all duration-200 focus:outline-none focus:shadow-glow-sm"
-              style={{ borderColor: '#161E2A', backgroundColor: '#080B0F' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(5, 150, 105, 0.5)'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = '#161E2A'; }}
+              style={{ borderColor: '#1e1e1e', backgroundColor: '#080808' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201, 168, 76, 0.5)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = '#1e1e1e'; }}
             />
           </div>
 
@@ -602,7 +618,7 @@ function WorkflowBuilderModal({
             {/* TRIGGER */}
             <div
               className="rounded-lg p-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex items-center justify-center w-6 h-6 rounded bg-gold/10">
@@ -633,7 +649,7 @@ function WorkflowBuilderModal({
             {/* CONDITIONS */}
             <div
               className="rounded-lg p-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex items-center justify-center w-6 h-6 rounded bg-gold-light/10">
@@ -671,7 +687,7 @@ function WorkflowBuilderModal({
             {/* ACTIONS */}
             <div
               className="rounded-lg p-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex items-center justify-center w-6 h-6 rounded bg-green/10">
@@ -694,7 +710,7 @@ function WorkflowBuilderModal({
                         value={action.type}
                         onChange={(e) => updateAction(action.id, e.target.value)}
                         className="w-full h-9 px-3 text-sm bg-transparent text-white font-body border rounded-lg appearance-none transition-all duration-200 focus:outline-none focus:shadow-glow-sm"
-                        style={{ borderColor: '#161E2A', backgroundColor: '#080B0F' }}
+                        style={{ borderColor: '#1e1e1e', backgroundColor: '#080808' }}
                       >
                         {ACTION_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -760,11 +776,89 @@ function StatusIcon({ status }: { status: ActivityEntry['status'] }) {
 /* ------------------------------------------------------------------ */
 
 export default function AutomationCenterPage() {
+  const supabase = createClient();
   const [automations, setAutomations] = useState<Automation[]>(INITIAL_AUTOMATIONS);
   const [customWorkflows, setCustomWorkflows] = useState<CustomWorkflow[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityEntry[]>(INITIAL_ACTIVITY);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<typeof WORKFLOW_TEMPLATES[number] | null>(null);
   const [activityFilter, setActivityFilter] = useState('all');
+
+  /* ---- Load persisted state from Supabase ---- */
+  useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load automation toggle states
+      const { data: configs } = await supabase
+        .from('automation_configs')
+        .select('automation_id, enabled')
+        .eq('user_id', user.id);
+
+      if (configs && configs.length > 0) {
+        setAutomations((prev) =>
+          prev.map((a) => {
+            const saved = configs.find((c: Record<string, unknown>) => c.automation_id === a.id);
+            return saved ? { ...a, enabled: saved.enabled as boolean } : a;
+          })
+        );
+      } else {
+        // Seed defaults on first visit
+        const defaults = INITIAL_AUTOMATIONS.map((a) => ({
+          user_id: user.id,
+          automation_id: a.id,
+          enabled: a.enabled,
+        }));
+        await supabase.from('automation_configs').insert(defaults);
+      }
+
+      // Load custom workflows
+      const { data: workflows } = await supabase
+        .from('custom_workflows')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (workflows && workflows.length > 0) {
+        setCustomWorkflows(
+          workflows.map((w: Record<string, unknown>) => ({
+            id: w.id as string,
+            name: w.name as string,
+            trigger: w.trigger_type as string,
+            conditions: (w.conditions as { label: string; enabled: boolean }[]) || [],
+            actions: (w.actions as WorkflowAction[]) || [],
+            enabled: w.enabled as boolean,
+            createdAt: formatTime(w.created_at as string),
+          }))
+        );
+      }
+
+      // Load activity logs
+      const { data: logs } = await supabase
+        .from('automation_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (logs && logs.length > 0) {
+        setActivityLog(
+          logs.map((l: Record<string, unknown>) => ({
+            id: l.id as string,
+            time: formatTime(l.created_at as string),
+            automation: (l.automation_name as string) || 'Automation',
+            automationId: (l.automation_id as string) || '',
+            action: (l.action as string) || '',
+            affected: (l.affected as string) || '',
+            property: (l.property as string) || '',
+            status: (l.status as string as ActivityEntry['status']) || 'success',
+          }))
+        );
+      }
+    }
+    loadData();
+  }, [supabase]);
 
   /* ---- Computed stats ---- */
   const activeCount = useMemo(
@@ -777,22 +871,29 @@ export default function AutomationCenterPage() {
   );
 
   /* ---- Handlers ---- */
-  const toggleAutomation = useCallback((id: string) => {
+  const toggleAutomation = useCallback(async (id: string) => {
+    const automation = automations.find((a) => a.id === id);
+    if (!automation) return;
+    const next = !automation.enabled;
+
     setAutomations((prev) =>
       prev.map((a) => {
         if (a.id !== id) return a;
-        const next = !a.enabled;
-        toast.success(
-          `${a.name} ${next ? 'enabled' : 'paused'}`,
-        );
-        return {
-          ...a,
-          enabled: next,
-          lastTriggered: next ? a.lastTriggered : null,
-        };
+        toast.success(`${a.name} ${next ? 'enabled' : 'paused'}`);
+        return { ...a, enabled: next, lastTriggered: next ? a.lastTriggered : null };
       }),
     );
-  }, []);
+
+    // Persist to DB
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('automation_configs')
+        .update({ enabled: next })
+        .eq('user_id', user.id)
+        .eq('automation_id', id);
+    }
+  }, [automations, supabase]);
 
   const toggleExpand = useCallback((id: string) => {
     setAutomations((prev) =>
@@ -812,32 +913,52 @@ export default function AutomationCenterPage() {
     setBuilderOpen(true);
   }, []);
 
-  const saveWorkflow = useCallback((workflow: CustomWorkflow) => {
+  const saveWorkflow = useCallback(async (workflow: CustomWorkflow) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('custom_workflows')
+        .insert({
+          user_id: user.id,
+          name: workflow.name,
+          trigger_type: workflow.trigger,
+          conditions: workflow.conditions,
+          actions: workflow.actions,
+          enabled: workflow.enabled,
+        })
+        .select('id')
+        .single();
+      if (data) workflow.id = data.id;
+    }
     setCustomWorkflows((prev) => [...prev, workflow]);
     toast.success(`Workflow "${workflow.name}" saved and enabled`);
-  }, []);
+  }, [supabase]);
 
-  const toggleWorkflow = useCallback((id: string) => {
+  const toggleWorkflow = useCallback(async (id: string) => {
+    const wf = customWorkflows.find((w) => w.id === id);
+    if (!wf) return;
+    const next = !wf.enabled;
     setCustomWorkflows((prev) =>
       prev.map((w) => {
         if (w.id !== id) return w;
-        const next = !w.enabled;
         toast.success(`${w.name} ${next ? 'enabled' : 'paused'}`);
         return { ...w, enabled: next };
       }),
     );
-  }, []);
+    await supabase.from('custom_workflows').update({ enabled: next }).eq('id', id);
+  }, [customWorkflows, supabase]);
 
-  const removeWorkflow = useCallback((id: string) => {
+  const removeWorkflow = useCallback(async (id: string) => {
     setCustomWorkflows((prev) => prev.filter((w) => w.id !== id));
     toast.info('Workflow removed');
-  }, []);
+    await supabase.from('custom_workflows').delete().eq('id', id);
+  }, [supabase]);
 
   /* ---- Filtered activity ---- */
   const filteredActivity = useMemo(() => {
-    if (activityFilter === 'all') return INITIAL_ACTIVITY;
-    return INITIAL_ACTIVITY.filter((a) => a.automationId === activityFilter);
-  }, [activityFilter]);
+    if (activityFilter === 'all') return activityLog;
+    return activityLog.filter((a) => a.automationId === activityFilter);
+  }, [activityFilter, activityLog]);
 
   /* ---- Filter options ---- */
   const activityFilterOptions = useMemo(
@@ -869,8 +990,8 @@ export default function AutomationCenterPage() {
         <div
           className="mt-5 rounded-lg p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6"
           style={{
-            background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%)',
-            border: '1px solid rgba(5, 150, 105, 0.2)',
+            background: 'linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.03) 100%)',
+            border: '1px solid rgba(201, 168, 76, 0.2)',
           }}
         >
           <div className="flex items-center gap-3">
@@ -971,8 +1092,8 @@ export default function AutomationCenterPage() {
                   key={workflow.id}
                   className="flex items-center justify-between gap-4 rounded-lg p-4"
                   style={{
-                    background: '#0C1018',
-                    border: `1px solid ${workflow.enabled ? 'rgba(5, 150, 105, 0.25)' : '#161E2A'}`,
+                    background: '#111111',
+                    border: `1px solid ${workflow.enabled ? 'rgba(201, 168, 76, 0.25)' : '#1e1e1e'}`,
                   }}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1054,14 +1175,14 @@ export default function AutomationCenterPage() {
         <div
           className="rounded-lg overflow-hidden"
           style={{
-            background: '#0C1018',
-            border: '1px solid #161E2A',
+            background: '#111111',
+            border: '1px solid #1e1e1e',
           }}
         >
           {/* Table header */}
           <div
             className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase tracking-wider font-body text-muted"
-            style={{ borderBottom: '1px solid #161E2A', background: '#0A0E15' }}
+            style={{ borderBottom: '1px solid #1e1e1e', background: '#0A0E15' }}
           >
             <div className="col-span-2">Time</div>
             <div className="col-span-2">Automation</div>
@@ -1072,7 +1193,7 @@ export default function AutomationCenterPage() {
           </div>
 
           {/* Table rows */}
-          <div className="divide-y" style={{ borderColor: '#161E2A' }}>
+          <div className="divide-y" style={{ borderColor: '#1e1e1e' }}>
             {filteredActivity.map((entry, i) => (
               <div
                 key={entry.id}
