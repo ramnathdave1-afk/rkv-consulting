@@ -20,6 +20,7 @@ export async function GET() {
     fred: !!process.env.FRED_API_KEY,
     rapidapi: !!process.env.RAPIDAPI_KEY,
     rapidapi_zillow_host: !!process.env.RAPIDAPI_ZILLOW_HOST,
+    rapidapi_zillow_agent: !!process.env.RAPIDAPI_ZILLOW_AGENT,
     bls: !!process.env.BLS_API_KEY,
     elevenlabs: !!process.env.ELEVENLABS_API_KEY,
     cron_secret: !!process.env.CRON_SECRET,

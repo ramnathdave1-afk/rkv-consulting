@@ -95,9 +95,11 @@ function extractResults(data: any): ZillowListing[] {
     data?.listings ??
     data?.data?.results ??
     data?.data?.props ??
+    data?.data?.listings ??
+    data?.data ??
     []
-  const arr = Array.isArray(raw) ? raw : raw?.result ?? []
-  return arr.map(normalizeListing).filter((r: ZillowListing) => r.zpid && r.address)
+  const arr = Array.isArray(raw) ? raw : raw?.result ?? raw?.listings ?? []
+  return arr.map(normalizeListing).filter((r: ZillowListing) => r.address || (r.city && r.state))
 }
 
 // ── API Functions ────────────────────────────────────────────────────────────
@@ -116,12 +118,32 @@ export async function searchListings(params: {
   sort?: string
   page?: number
 }): Promise<ZillowSearchResult | null> {
-  if (!process.env.RAPIDAPI_KEY) {
-    console.warn('[Zillow] RAPIDAPI_KEY not configured, skipping')
-    return null
-  }
+  try {
+    if (!process.env.RAPIDAPI_KEY) {
+      console.warn('[Zillow] RAPIDAPI_KEY not configured, skipping')
+      return null
+    }
 
-  const client = getZillowClient()
+    const client = getZillowClient()
+    const agentScreenName = process.env.RAPIDAPI_ZILLOW_AGENT
+
+    // 0) If this API only supports agent listings (zillow-real-estate-api), try that first
+    if (agentScreenName) {
+      try {
+        const r = await client.get(`/v1/agents/${encodeURIComponent(agentScreenName)}/listings`, {
+          params: { include_team: 'true', type: params.status === 'ForRent' ? 'rent' : 'sale', page: params.page || 1 },
+        })
+        const results = extractResults(r.data)
+        if (results.length > 0) {
+          return {
+            totalResultCount: r.data?.totalCount ?? r.data?.totalResultCount ?? results.length,
+            results,
+          }
+        }
+      } catch {
+        // ignore, fall through to location-based tries
+      }
+    }
 
   // 1) Try /v1/ listing search (zillow-real-estate-api.p.rapidapi.com)
   try {
@@ -228,6 +250,9 @@ export async function searchListings(params: {
   }
 
   return { totalResultCount: 0, results: [] }
+  } catch (_err) {
+    return { totalResultCount: 0, results: [] }
+  }
 }
 
 /**

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import {
   BarChart3,
   DollarSign,
@@ -75,18 +76,14 @@ function deriveTitle(content: string): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Quick Action prompts (8 total)                                     */
+/*  Quick Action prompts (ATLAS: 4 outlined pills, hide after first message) */
 /* ------------------------------------------------------------------ */
 
 const QUICK_ACTIONS = [
-  { icon: BarChart3, label: 'Analyze my portfolio', prompt: 'Analyze my portfolio performance and give me key insights on cash flow, equity growth, and areas for improvement.' },
-  { icon: DollarSign, label: 'Review rent prices', prompt: 'Review the current rent prices across my properties and suggest adjustments based on market conditions.' },
-  { icon: TrendingUp, label: 'Find investment opportunities', prompt: 'Based on my portfolio and current market conditions, identify the best investment opportunities for me.' },
-  { icon: Calculator, label: 'Optimize tax strategy', prompt: 'Review my portfolio and suggest tax optimization strategies including depreciation, 1031 exchanges, and deductions.' },
-  { icon: FileText, label: 'Draft tenant notice', prompt: 'Help me draft a professional tenant notice. What type of notice do you need? (Late rent, lease violation, move-out, etc.)' },
-  { icon: Wrench, label: 'Maintenance cost analysis', prompt: 'Analyze my maintenance costs across all properties and identify trends, high-cost items, and cost-saving opportunities.' },
-  { icon: LineChart, label: 'Market trend report', prompt: 'Generate a market trend report for the areas where I own properties, including pricing trends, rent growth, and demand indicators.' },
-  { icon: RefreshCw, label: 'Lease renewal advice', prompt: 'Review my upcoming lease renewals and advise on rent adjustments, renewal terms, and retention strategies.' },
+  { icon: BarChart3, label: 'Market Analysis', prompt: 'Run a market analysis for my target markets. Include cap rates, rent growth, absorption, and supply pipeline.' },
+  { icon: Calculator, label: 'Deal Underwriting', prompt: 'Underwrite this deal: provide DSCR, cash-on-cash, IRR scenarios, and risk-adjusted return.' },
+  { icon: DollarSign, label: 'Cash Flow Model', prompt: 'Build a 10-year cash flow model with base, upside, and downside scenarios. Include debt service and capex reserves.' },
+  { icon: TrendingUp, label: 'Opportunity Scan', prompt: 'Scan for opportunities matching my criteria. Prioritize by risk-adjusted return and market momentum.' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -415,20 +412,18 @@ function ChatBubble({
     return (
       <div className="flex justify-end group">
         <div className="max-w-[75%]">
-          {/* User label */}
           <div className="flex items-center justify-end gap-2 mb-1.5 px-1">
-            <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
-            <span className="font-body text-[11px] text-gold uppercase tracking-wider">
+            <span className="font-mono text-[11px] text-white/40">{formattedTime}</span>
+            <span className="font-body text-[11px] text-[#00B4D8] uppercase tracking-wider">
               {userInitials}
             </span>
           </div>
-          {/* User message */}
           <div className="relative">
             <div
-              className="px-4 py-3 text-sm leading-relaxed font-body text-[#f5f5f5] rounded-lg"
+              className="px-4 py-3 text-sm leading-relaxed font-body text-white rounded sharp-lg"
               style={{
-                background: 'rgba(201,168,76,0.07)',
-                border: '1px solid rgba(201,168,76,0.25)',
+                background: 'rgba(0,180,216,0.12)',
+                border: '1px solid rgba(0,180,216,0.35)',
               }}
             >
               {/* Copy button */}
@@ -438,12 +433,12 @@ function ChatBubble({
                 className={cn(
                   'absolute -top-2 left-0 opacity-0 group-hover:opacity-100',
                   'transition-opacity duration-150',
-                  'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
-                  'hover:border-gold/20 text-muted hover:text-gold',
+                  'p-1.5 rounded sharp bg-[#12121A] border border-white/[0.08]',
+                  'hover:border-[#00B4D8]/30 text-white/60 hover:text-[#00B4D8]',
                 )}
                 title="Copy message"
               >
-                {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+                {copied ? <Check className="h-3 w-3 text-[#52B788]" /> : <Copy className="h-3 w-3" />}
               </button>
               <p>{content}</p>
             </div>
@@ -453,41 +448,34 @@ function ChatBubble({
     );
   }
 
-  // Assistant message
+  // ATLAS message: left-aligned, dark card, "A" avatar
   return (
     <div className="group w-full">
-      {/* AI label */}
       <div className="flex items-center gap-2 mb-1.5 px-1">
-        <span className="font-body text-[11px] text-gold uppercase tracking-wider">
-          RKV
+        <span className="w-5 h-5 rounded flex items-center justify-center bg-[#00B4D8]/20 border border-[#00B4D8]/40 text-[#00B4D8] font-mono text-[10px] font-bold">
+          A
         </span>
-        <span className="font-mono text-[11px] text-muted-deep">{formattedTime}</span>
+        <span className="font-body text-[11px] text-[#00B4D8] uppercase tracking-wider">
+          ATLAS
+        </span>
+        <span className="font-mono text-[11px] text-white/40">{formattedTime}</span>
       </div>
-      {/* AI message */}
-      <div className="relative">
-        {/* Animated gradient left border */}
+      <div className="relative pl-1">
         <div
-          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
-          style={{
-            background: 'linear-gradient(180deg, #c9a84c 0%, #b8943f 50%, #c9a84c 100%)',
-            backgroundSize: '100% 200%',
-            animation: 'gradientShift 3s ease infinite',
-          }}
-        />
-        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
-          {/* Copy button */}
+          className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-white"
+        >
           <button
             type="button"
             onClick={handleCopy}
             className={cn(
               'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
-              'hover:border-gold/20 text-muted hover:text-gold',
+              'p-1.5 rounded sharp bg-[#1A1A24] border border-white/[0.08]',
+              'hover:border-[#00B4D8]/30 text-white/60 hover:text-[#00B4D8]',
             )}
             title="Copy message"
           >
-            {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 text-[#52B788]" /> : <Copy className="h-3 w-3" />}
           </button>
           <div className="space-y-0">{renderMarkdown(content)}</div>
         </div>
@@ -505,44 +493,33 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
 
   return (
     <div className="w-full">
-      {/* AI label */}
       <div className="flex items-center gap-2 mb-1.5 px-1">
-        <span className="font-body text-[11px] text-gold uppercase tracking-wider">
-          RKV {content ? '' : '// Processing'}
+        <span className="w-5 h-5 rounded flex items-center justify-center bg-[#00B4D8]/20 border border-[#00B4D8]/40 text-[#00B4D8] font-mono text-[10px] font-bold">
+          A
         </span>
+        <span className="font-body text-[11px] text-[#00B4D8] uppercase tracking-wider">
+          ATLAS
+        </span>
+        {isStreaming && !content && (
+          <span className="font-mono text-[11px] text-white/40">Processing...</span>
+        )}
       </div>
-      {/* Message body */}
-      <div className="relative">
-        {/* Animated gradient left border */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
-          style={{
-            background: 'linear-gradient(180deg, #c9a84c 0%, #b8943f 50%, #c9a84c 100%)',
-            backgroundSize: '100% 200%',
-            animation: 'gradientShift 3s ease infinite',
-          }}
-        />
-        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
+      <div className="relative pl-1">
+        <div className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-white">
           {content ? (
             <div className="space-y-0">
               {renderMarkdown(animatedContent)}
               {isStreaming && (
-                <span className="inline-block w-0.5 h-5 bg-gold animate-pulse ml-0.5 align-middle" />
+                <span className="inline-block w-0.5 h-5 bg-[#00B4D8] animate-pulse ml-0.5 align-middle" />
               )}
             </div>
           ) : isStreaming ? (
-            /* TextShimmer loading indicator while waiting for response */
-            <TextShimmer
-              className="font-mono text-sm [--base-color:#888888] [--base-gradient-color:#c9a84c] dark:[--base-color:#888888] dark:[--base-gradient-color:#c9a84c]"
-              duration={1.5}
-            >
-              Analyzing your portfolio...
-            </TextShimmer>
+            <p className="font-mono text-sm text-white/50">Processing...</p>
           ) : null}
         </div>
       </div>
       {!isStreaming && content && (
-        <p className="text-xs text-muted mt-1.5 px-5 font-mono">Just now</p>
+        <p className="text-xs text-white/40 mt-1.5 px-5 font-mono">Just now</p>
       )}
     </div>
   );
@@ -1012,15 +989,11 @@ GUIDELINES:
     const isNewConversation = !convId;
 
     try {
-      const systemPrompt = await buildSystemPrompt();
-
-      const apiMessages = [
-        { role: 'system' as const, content: systemPrompt },
-        ...updatedMessages.map((m) => ({
+      // Use ATLAS system prompt from API (default); only send user/assistant messages
+      const apiMessages = updatedMessages.map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
-        })),
-      ];
+        }));
 
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
@@ -1195,57 +1168,58 @@ GUIDELINES:
         {/* ============================================================ */}
         {/*  TOP BAR - HEADER                                            */}
         {/* ============================================================ */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-[#1e1e1e] bg-[#111111]">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-white/[0.08] bg-[#111118]">
           <div className="flex items-center gap-3">
-            {/* Sidebar toggle */}
+            <Link
+              href="/dashboard"
+              className="p-1.5 rounded sharp text-white/60 hover:text-white hover:bg-white/5 transition-colors font-body text-[11px] uppercase tracking-wider"
+            >
+              Back
+            </Link>
             <button
               type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 rounded-lg text-muted hover:text-gold hover:bg-gold/5 transition-colors"
+              className="p-1.5 rounded sharp text-white/60 hover:text-[#00B4D8] hover:bg-[#00B4D8]/5 transition-colors"
             >
               {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
             </button>
 
-            <div>
-              <h2 className="font-display font-bold text-xl text-[#f5f5f5] leading-none">
-                RKV Intelligence
-              </h2>
-              <p className="font-body text-[11px] text-gold mt-0.5">
-                {portfolioContext.properties.length} Properties // {portfolioContext.tenants.length} Tenants // {Array.from(new Set(portfolioContext.properties.map((p: any) => p.city).filter(Boolean))).length} Markets
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="font-body font-semibold text-[13px] text-white uppercase tracking-wider">
+                ATLAS
+              </span>
+              <span className="font-mono text-[10px] text-white/40">v7.4</span>
             </div>
+
+            <div className="flex items-center gap-2">
+              <span className={cn('w-1.5 h-1.5 rounded-full', isStreaming ? 'bg-[#E63946]' : 'bg-[#52B788]')} />
+              <span className="font-body text-[10px] text-white/60 uppercase tracking-wider">
+                {isStreaming ? 'Processing' : 'Online'}
+              </span>
+            </div>
+
+            <p className="font-mono text-[10px] text-white/40">
+              {messages.length} queries this session
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Model badge */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md border border-[#1e1e1e] bg-[#111111]">
-              <span className="font-body text-[10px] text-muted uppercase tracking-wider">Claude Sonnet</span>
-              <div className="flex items-center gap-1.5">
-                <span className="pulse-dot" />
-                <span className="font-body text-[10px] text-green">Active</span>
-              </div>
+            <p className="font-mono text-[10px] text-white/40">
+              Data loaded: {portfolioContext.properties.length} props, {portfolioContext.tenants.length} tenants
+            </p>
+            <div className="flex items-center gap-2 px-3 py-1 rounded sharp border border-white/[0.08] bg-[#12121A]">
+              <span className="font-body text-[10px] text-white/40 uppercase tracking-wider">Confidence</span>
+              <span className="font-mono text-[10px] text-[#00B4D8] tabular-nums">94%</span>
             </div>
-
-            {/* Usage meter */}
             <div className="flex items-center gap-2">
-              <div className="w-20 h-1.5 bg-[#1e1e1e] rounded-full overflow-hidden">
+              <div className="w-16 h-1.5 bg-white/10 rounded overflow-hidden">
                 <div
-                  className={cn(
-                    'h-full rounded-full transition-all duration-500',
-                    usageCount / usageLimit > 0.9
-                      ? 'bg-[#DC2626]'
-                      : usageCount / usageLimit > 0.7
-                      ? 'bg-gold'
-                      : 'bg-[#c9a84c]'
-                  )}
+                  className={cn('h-full rounded transition-all', usageCount / usageLimit > 0.9 ? 'bg-[#C1121F]' : 'bg-[#00B4D8]')}
                   style={{ width: `${Math.min((usageCount / usageLimit) * 100, 100)}%` }}
                 />
               </div>
-              <span className="font-mono text-[10px] text-muted tabular-nums">
+              <span className="font-mono text-[10px] text-white/40 tabular-nums">
                 {usageCount}/{usageLimit === 9999 ? 'UNL' : usageLimit}
-              </span>
-              <span className="font-body text-[10px] text-muted-deep">
-                ({usagePlanLabel})
               </span>
             </div>
           </div>
@@ -1378,38 +1352,20 @@ GUIDELINES:
               {isEmpty ? (
                 /* ---- Empty state ---- */
                 <div className="flex flex-col items-center justify-center h-full max-w-xl mx-auto text-center">
-                  {/* Hexagonal shape with rotating border concept */}
-                  <div className="relative w-24 h-24 mb-6">
-                    {/* Rotating hex outline */}
-                    <div
-                      className="absolute inset-0 flex items-center justify-center"
-                      style={{ animation: 'hexRotate 20s linear infinite' }}
-                    >
-                      <div
-                        className="w-20 h-20"
-                        style={{
-                          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                          border: '1px solid rgba(201,168,76,0.3)',
-                          background: 'rgba(201,168,76,0.05)',
-                        }}
-                      />
-                    </div>
-                    {/* Center icon */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Zap className="h-8 w-8 text-gold" />
-                    </div>
+                  <div className="w-14 h-14 rounded flex items-center justify-center bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-mono text-2xl font-bold mb-6">
+                    A
                   </div>
 
-                  <h2 className="font-display font-bold text-xl text-[#f5f5f5] mb-2">
-                    How can I help?
+                  <h2 className="font-body font-semibold text-lg text-white mb-2 uppercase tracking-wider">
+                    ATLAS
                   </h2>
-                  <p className="font-body text-[11px] text-muted-deep mb-8 leading-relaxed max-w-sm">
-                    Real-time AI analysis powered by your portfolio data, market conditions, and financial metrics.
+                  <p className="font-body text-[11px] text-white/50 mb-8 leading-relaxed max-w-sm">
+                    Institutional-grade real estate analysis. Ask for market analysis, deal underwriting, or opportunity scan.
                   </p>
 
-                  {/* Suggested prompts in 2x2 grid with left cyan border */}
-                  <div className="grid grid-cols-2 gap-3 w-full">
-                    {QUICK_ACTIONS.slice(0, 4).map((action, idx) => {
+                  {/* Quick actions: 4 outlined pills (hide after first message is handled by isEmpty) */}
+                  <div className="flex flex-wrap justify-center gap-2 w-full">
+                    {QUICK_ACTIONS.map((action, idx) => {
                       const Icon = action.icon;
                       return (
                         <button
@@ -1417,21 +1373,13 @@ GUIDELINES:
                           type="button"
                           onClick={() => handleSendMessage(action.prompt)}
                           className={cn(
-                            'flex items-start gap-3 p-3.5 rounded-md text-left',
-                            'bg-transparent',
-                            'border-l-2 border-gold/30 border-t border-r border-b border-t-[#1e1e1e] border-r-[#1e1e1e] border-b-[#1e1e1e]',
-                            'hover:border-l-gold hover:bg-gold/5',
-                            'hover:shadow-[0_0_20px_rgba(201,168,76,0.08)]',
-                            'transition-all duration-200 group/prompt',
+                            'flex items-center gap-2 px-4 py-2 rounded sharp border border-white/[0.12]',
+                            'text-[12px] font-body text-white/70 hover:text-white hover:border-[#00B4D8]/50 hover:bg-[#00B4D8]/5',
+                            'transition-colors duration-150',
                           )}
-                          style={{ animation: `fadeInUp 0.4s ease ${idx * 0.1}s both` }}
                         >
-                          <div className="flex-shrink-0 w-7 h-7 rounded-md bg-gold/10 border border-gold/20 flex items-center justify-center group-hover/prompt:bg-gold/20 transition-colors">
-                            <Icon className="h-3.5 w-3.5 text-gold" />
-                          </div>
-                          <span className="text-[12px] text-muted group-hover/prompt:text-[#f5f5f5] transition-colors leading-snug font-body">
-                            {action.label}
-                          </span>
+                          <Icon className="h-3.5 w-3.5 text-[#00B4D8]" strokeWidth={1.5} />
+                          {action.label}
                         </button>
                       );
                     })}
@@ -1466,13 +1414,8 @@ GUIDELINES:
             <div className="flex-shrink-0 border-t border-[#1e1e1e] bg-[#111111] px-2 sm:px-6 py-0">
               <div className="max-w-3xl mx-auto">
                 {isStreaming ? (
-                  <div className="flex items-center justify-center py-5">
-                    <TextShimmer
-                      className="font-mono text-sm [--base-color:#888888] [--base-gradient-color:#c9a84c] dark:[--base-color:#888888] dark:[--base-gradient-color:#c9a84c]"
-                      duration={1.5}
-                    >
-                      RKV Intelligence is thinking...
-                    </TextShimmer>
+                  <div className="flex items-center justify-center gap-2 py-5">
+                    <span className="font-mono text-sm text-white/50">Processing...</span>
                   </div>
                 ) : (
                   <AIInputWithSuggestions
@@ -1484,8 +1427,8 @@ GUIDELINES:
                   />
                 )}
 
-                <p className="font-body text-[10px] text-muted-deep text-center pb-2">
-                  AI responses may contain inaccuracies. Verify critical data independently.
+                <p className="font-mono text-[10px] text-white/40 text-center pb-2">
+                  ATLAS v7.4 — Adaptive Intelligence — Every query improves the model
                 </p>
               </div>
             </div>

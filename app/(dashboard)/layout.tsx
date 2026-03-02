@@ -222,7 +222,7 @@ export default function DashboardLayout({
         'fixed left-0 top-0 w-[260px] h-screen flex flex-col overflow-y-auto z-[60] transition-transform duration-300',
         'md:translate-x-0',
         mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      )} style={{ background: '#050505', borderRight: '1px solid #1e1e1e' }}>
+      )} style={{ background: '#0A0A0F', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
 
         {/* Brand */}
         <div className="p-5 pb-4">
@@ -241,8 +241,8 @@ export default function DashboardLayout({
 
           {/* Plan badge */}
           <div className="mt-2 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold" />
-            <span className="font-body text-[11px] text-gold font-semibold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+            <span className="font-body text-[11px] text-[#52B788] font-semibold uppercase tracking-wider">
               {subLoading ? '...' : plan.name.toUpperCase()}
             </span>
           </div>
@@ -259,7 +259,7 @@ export default function DashboardLayout({
                 </span>
                 <div className="flex-1 h-px bg-border/30" />
                 {group.badge && (
-                  <span className="font-body text-[9px] font-semibold text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5">
+                  <span className="font-body text-[9px] font-semibold text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 rounded sharp px-1.5 py-0.5">
                     {group.badge}
                   </span>
                 )}
@@ -298,14 +298,14 @@ export default function DashboardLayout({
                         'flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-body font-medium',
                         'transition-all duration-150',
                         isActive
-                          ? 'text-white bg-[rgba(201,168,76,0.05)] border-l-2 border-gold'
-                          : 'text-muted hover:text-[#94A3B8]',
+                          ? 'text-white bg-[rgba(0,180,216,0.08)] border-l-2 border-[#00B4D8]'
+                          : 'text-white/60 hover:text-white/90',
                       )}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
                       <span className="flex-1">{item.label}</span>
                       {item.badge && (
-                        <span className="font-body text-[9px] font-semibold text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5">
+                        <span className="font-body text-[9px] font-semibold text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 rounded sharp px-1.5 py-0.5">
                           {item.badge}
                         </span>
                       )}
@@ -320,7 +320,7 @@ export default function DashboardLayout({
         {/* Bottom — User info */}
         <div className="p-4 border-t border-border/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full border border-gold flex items-center justify-center text-[12px] font-body font-semibold text-gold">
+            <div className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-[12px] font-body font-semibold text-white">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
@@ -336,37 +336,40 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  TOP BAR                                                      */}
       {/* ============================================================ */}
-      <header className="fixed top-0 left-0 md:left-[260px] right-0 h-[52px] z-40 flex items-center justify-between px-4 md:px-5" style={{ background: '#080808', borderBottom: '1px solid #1e1e1e' }}>
+      <header className="fixed top-0 left-0 md:left-[260px] right-0 h-[52px] z-40 flex items-center justify-between px-4 md:px-5 backdrop-blur-md" style={{ background: 'rgba(10,10,15,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         {/* Left: hamburger (mobile) + breadcrumb */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileSidebarOpen((prev) => !prev)}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded text-muted hover:text-white hover:bg-[rgba(201,168,76,0.05)] transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded text-white/60 hover:text-white transition-colors"
           >
             {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <div className="flex items-center gap-2 text-[13px]">
-            <span className="text-muted-deep hidden sm:inline font-body">RKV</span>
-            <span className="text-border hidden sm:inline">/</span>
-            <span className="text-white font-body font-medium">{getBreadcrumb(pathname)}</span>
+          <div className="flex items-center gap-2 text-[13px] font-body">
+            <span className="text-white/40 hidden sm:inline">RKV</span>
+            <span className="text-white/20 hidden sm:inline">/</span>
+            <span className="text-white font-medium">{getBreadcrumb(pathname)}</span>
           </div>
         </div>
 
-        {/* Center: status indicators */}
-        <div className="hidden md:flex items-center gap-5">
-          <div className="font-body text-[11px] text-muted whitespace-nowrap">
-            Markets <span className="text-gold mx-1">●</span> Live
-            <span className="mx-3 text-muted-deep"> </span>
-            AI <span className="text-gold mx-1">●</span> Ready
-            <span className="mx-3 text-muted-deep"> </span>
-            Data <span className="text-gold mx-1">●</span> Updated
-          </div>
+        {/* Center: ATLAS engine status */}
+        <div className="hidden md:flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+          <span className="font-body text-[11px] text-white/60 uppercase tracking-wider">ATLAS Active</span>
         </div>
 
-        {/* Right: search, notification, avatar */}
-        <div className="flex items-center gap-3">
-          <button className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-muted hover:text-gold transition-colors">
+        {/* Right: ATLAS AI button, notification, avatar */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/ai-assistant"
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#00B4D8]/50 text-[#00B4D8] font-body text-[12px] font-medium uppercase tracking-wider hover:bg-[#00B4D8]/10 transition-colors"
+          >
+            <Bot className="h-3.5 w-3.5" strokeWidth={1.5} />
+            ATLAS AI
+          </Link>
+
+          <button className="hidden sm:flex items-center justify-center w-8 h-8 rounded text-white/60 hover:text-[#00B4D8] transition-colors">
             <Search className="h-4 w-4" strokeWidth={1.5} />
           </button>
 
@@ -378,23 +381,23 @@ export default function DashboardLayout({
               onClick={() => setDropdownOpen((prev) => !prev)}
               className={cn(
                 'flex items-center justify-center w-9 h-9 rounded-full',
-                'border border-gold text-gold font-body text-[12px] font-semibold',
-                'hover:bg-[rgba(201,168,76,0.05)] transition-colors cursor-pointer',
+                'border border-white/20 text-white font-body text-[12px] font-semibold',
+                'hover:bg-white/5 transition-colors cursor-pointer',
               )}
             >
               {initials}
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-12 w-60 rounded-lg overflow-hidden animate-fade-up" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
-                <div className="p-3 border-b border-border/50">
+              <div className="absolute right-0 top-12 w-60 rounded overflow-hidden animate-fade-up" style={{ background: '#12121A', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="p-3 border-b border-white/[0.08]">
                   <p className="text-[13px] font-medium text-white truncate">
                     {user?.full_name || 'User'}
                   </p>
-                  <p className="font-body text-[11px] text-muted truncate mt-0.5">
+                  <p className="font-body text-[11px] text-white/60 truncate mt-0.5">
                     {user?.email}
                   </p>
-                  <span className="inline-flex items-center gap-1 mt-1.5 font-body text-[10px] font-medium text-gold bg-gold/8 border border-gold/20 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 mt-1.5 font-body text-[10px] font-medium text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 rounded sharp px-1.5 py-0.5 uppercase tracking-wider">
                     {plan.name} Access
                   </span>
                 </div>
@@ -427,14 +430,14 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {lockedAlert && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] animate-fade-up">
-          <div className="flex items-center gap-3 rounded-lg px-5 py-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
-            <Lock className="h-4 w-4 text-gold flex-shrink-0" />
+          <div className="flex items-center gap-3 rounded sharp-lg px-5 py-3 border border-white/[0.08]" style={{ background: '#12121A' }}>
+            <Lock className="h-4 w-4 text-[#00B4D8] flex-shrink-0" />
             <p className="text-sm text-white font-body">
-              <span className="font-semibold text-gold">{lockedAlert}</span> requires an upgrade.
+              <span className="font-semibold text-[#00B4D8]">{lockedAlert}</span> requires an upgrade.
             </p>
             <Link
               href="/settings?tab=billing"
-              className="font-body text-[11px] font-semibold text-gold hover:text-gold-light transition-colors whitespace-nowrap uppercase tracking-wider"
+              className="font-body text-[11px] font-semibold text-[#00B4D8] hover:text-[#48CAE4] transition-colors whitespace-nowrap uppercase tracking-wider"
               onClick={() => setLockedAlert(null)}
             >
               Upgrade
@@ -455,7 +458,7 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  MOBILE BOTTOM NAV                                            */}
       {/* ============================================================ */}
-      <nav className="fixed bottom-0 left-0 right-0 h-14 z-50 md:hidden flex items-center justify-around px-2" style={{ background: 'rgba(8, 8, 8, 0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #1e1e1e' }}>
+      <nav className="fixed bottom-0 left-0 right-0 h-14 z-50 md:hidden flex items-center justify-around px-2 backdrop-blur-md" style={{ background: 'rgba(10,10,15,0.95)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         {[
           { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Portfolio', href: '/properties', icon: Building2 },
@@ -472,7 +475,7 @@ export default function DashboardLayout({
               className={cn(
                 'flex flex-col items-center gap-0.5 px-3 py-1.5 min-w-[52px]',
                 'transition-colors duration-150',
-                isActive ? 'text-gold' : 'text-muted-deep hover:text-muted',
+                isActive ? 'text-[#00B4D8]' : 'text-white/40 hover:text-white/70',
               )}
             >
               <Icon className="h-5 w-5" strokeWidth={1.5} />

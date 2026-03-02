@@ -8,6 +8,7 @@ import {
   Wrench,
   FileText,
   TrendingDown,
+  TrendingUp,
   Search,
   LayoutDashboard,
   Hammer,
@@ -829,12 +830,6 @@ export default function MarketingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'features' | 'pricing' | 'about'>('features');
 
-  const heroStatsRef = useRef<HTMLDivElement>(null);
-  const heroStatsInView = useInView(heroStatsRef, { once: true, margin: '-80px' });
-  const heroHoursSaved = useCountUp(47, heroStatsInView, 1600, 0);
-  const heroTaxSavings = useCountUp(12400, heroStatsInView, 1800, 0);
-  const heroRetention = useCountUp(94, heroStatsInView, 1500, 0);
-
   /* -- Scroll listener for navbar ---------------------------------- */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -887,64 +882,57 @@ export default function MarketingPage() {
   const ActivePreview = featurePreviews[activeFeature];
 
   return (
-    <div className="min-h-screen bg-[#080808] font-body text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0A0A0F] font-body text-white overflow-x-hidden">
       {/* ============================================================ */}
-      {/* SECTION 1 -- NAVBAR                                          */}
+      {/* SECTION 1 -- NAVBAR (Design system: flat, sharp)             */}
       {/* ============================================================ */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-opacity duration-200 ${
           scrolled
-            ? 'bg-[#080808cc] backdrop-blur-[20px] border-b border-[#1e1e1e]'
+            ? 'bg-[#0A0A0F]/95 backdrop-blur-md border-b border-white/[0.08]'
             : 'bg-transparent'
         }`}
       >
-        <div className="relative max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-2.5 group">
-            <div className="w-7 h-7 rounded-md bg-gold/20 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-sm bg-gold" />
-            </div>
-            <span className="font-display font-bold text-[15px] tracking-tight text-gold">
-              RKV CONSULTING
+        <div className="relative max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+          {/* Logo — clean wordmark */}
+          <a href="/" className="flex items-center gap-2 group">
+            <span className="font-body font-bold text-[13px] uppercase tracking-[0.2em] text-white">
+              RKV
             </span>
+            <span className="text-white/40 font-body text-[11px] uppercase tracking-[0.2em]">CONSULTING</span>
           </a>
 
-          {/* Center nav -- desktop */}
+          {/* Center nav */}
           <div className="hidden md:flex items-center gap-8">
             {(['Features', 'Pricing', 'About'] as const).map((link) => (
               <button
                 key={link}
                 onClick={() => scrollTo(link.toLowerCase())}
-                className={`text-[13px] font-body font-medium transition-colors relative group ${
+                className={`text-[12px] font-body font-medium uppercase tracking-wider transition-colors ${
                   activeSection === link.toLowerCase()
                     ? 'text-white'
-                    : 'text-muted hover:text-[#94A3B8]'
+                    : 'text-white/60 hover:text-white/90'
                 }`}
                 aria-current={activeSection === link.toLowerCase() ? 'page' : undefined}
               >
                 {link}
-                <span
-                  className={`absolute -bottom-1 left-0 h-px bg-gold transition-all duration-300 ${
-                    activeSection === link.toLowerCase() ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`}
-                />
               </button>
             ))}
           </div>
 
-          {/* Right side */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Right: Log in + primary CTA */}
+          <div className="hidden md:flex items-center gap-3">
             <a
               href="/login"
-              className="text-[14px] text-muted hover:text-white transition-colors font-body border border-transparent hover:border-border px-4 py-1.5 rounded-lg"
+              className="text-[12px] text-white/60 hover:text-white transition-colors font-body uppercase tracking-wider"
             >
-              Login
+              Log in
             </a>
             <a
               href="/signup"
-              className="bg-[#c9a84c] text-black text-[13px] font-body font-semibold px-5 py-2 rounded-[6px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150"
+              className="bg-[#00B4D8] text-[#0A0A0F] text-[12px] font-body font-semibold px-5 py-2 rounded sharp hover:bg-[#0096C7] transition-colors uppercase tracking-wider"
             >
-              Get Started
+              Access Dashboard
             </a>
           </div>
 
@@ -1029,93 +1017,120 @@ export default function MarketingPage() {
       </nav>
 
       {/* ============================================================ */}
-      {/* SECTION 2 -- HERO                                            */}
+      {/* SECTION 2 -- HERO (Design system: institutional, ATLAS)       */}
       {/* ============================================================ */}
-      <section className="relative min-h-screen flex items-center px-6 overflow-hidden pt-32">
-        <div className="relative z-10 max-w-5xl mx-auto w-full">
-          {/* Uppercase label */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-2 mb-8"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] animate-pulse" />
-            <span className="font-body font-medium text-[11px] text-[#c9a84c] uppercase tracking-[0.2em]">
-              Portfolio Intelligence Platform
-            </span>
-          </motion.div>
+      <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 pt-20 pb-16 bg-[#0A0A0F]">
+        <div className="max-w-4xl mx-auto w-full text-center">
+          {/* Logo / wordmark */}
+          <p className="font-body text-[11px] uppercase tracking-[0.25em] text-white/40 mb-8">
+            RKV CONSULTING
+          </p>
 
-          {/* Main serif headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-display leading-[1.1] mb-8 text-white"
-          >
-            Your Real Estate
-            <br />
-            Portfolio, on
-            <br />
-            <span className="text-[#c9a84c]">Autopilot.</span>
-          </motion.h1>
+          {/* Headline */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-body font-semibold leading-tight text-white mb-4 tracking-tight">
+            Institutional-grade intelligence for individual investors.
+          </h1>
 
-          {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-[#888] font-body text-lg leading-[1.7] max-w-[600px] mb-10"
-          >
-            AI-powered deal analysis, automated tenant management, and institutional-grade
-            portfolio intelligence. Built for investors who refuse to settle.
-          </motion.p>
+          {/* Subhead — ATLAS + data */}
+          <p className="text-white/60 font-body text-base md:text-lg max-w-2xl mx-auto mb-10">
+            Powered by ATLAS: real-time analysis across thousands of markets and billions of data points.
+          </p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-start gap-4 mb-20"
-          >
+          {/* CTAs: Access Dashboard (primary blue), Talk to ATLAS (outlined red) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
             <a
               href="/signup"
-              className="bg-[#c9a84c] text-black font-body font-semibold text-[13px] px-8 py-3.5 rounded-[6px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+              className="w-full sm:w-auto bg-[#00B4D8] text-[#0A0A0F] font-body font-semibold text-[13px] px-6 py-2.5 rounded sharp hover:bg-[#0096C7] transition-colors uppercase tracking-wider"
             >
-              Start Free Trial
+              Access Dashboard
             </a>
-            <button
-              onClick={() => scrollTo('features')}
-              className="border border-[#333] text-[#888] font-body font-semibold text-[13px] px-8 py-3.5 rounded-[6px] hover:border-[#c9a84c] hover:text-white active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+            <a
+              href="/ai-assistant"
+              className="w-full sm:w-auto border border-[#C1121F] text-[#E63946] font-body font-medium text-[13px] px-6 py-2.5 rounded sharp hover:bg-[#C1121F]/10 transition-colors uppercase tracking-wider"
             >
-              Learn More
-            </button>
-          </motion.div>
+              Talk to ATLAS
+            </a>
+          </div>
 
-          {/* Trust metrics */}
-          <motion.div
-            ref={heroStatsRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.9 }}
-            className="flex flex-col sm:flex-row items-start gap-8 sm:gap-0"
-          >
+          {/* Terminal-style status (markets tracked, data points, model accuracy) */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-6 md:gap-10 py-3 px-5 rounded sharp border border-white/[0.08] bg-[#111118]">
+            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
+              Markets <span className="text-[#00B4D8] font-semibold">2,847</span>
+            </span>
+            <span className="text-white/30">|</span>
+            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
+              Data points <span className="text-[#00B4D8] font-semibold">12.4B</span>
+            </span>
+            <span className="text-white/30">|</span>
+            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
+              Model accuracy <span className="text-[#52B788] font-semibold">94.2%</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* VALUE PROPOSITION — 3 cards                                  */}
+      {/* ============================================================ */}
+      <section id="features" className="py-20 px-6 border-t border-white/[0.08] bg-[#0A0A0F]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { value: heroHoursSaved.toLocaleString(), label: 'Hrs Saved Monthly' },
-              { value: `$${Math.round(heroTaxSavings).toLocaleString()}`, label: 'Tax Savings Found' },
-              { value: `${Math.round(heroRetention)}%`, label: 'Tenant Retention' },
-            ].map((stat, i) => (
-              <div key={stat.label} className="flex items-center">
-                {i > 0 && <div className="hidden sm:block w-px h-10 bg-[#1e1e1e] mx-10" />}
-                <div>
-                  <div className="text-2xl font-mono font-semibold text-white">{stat.value}</div>
-                  <div className="text-[11px] font-body font-medium uppercase tracking-[0.08em] text-[#555] mt-1">
-                    {stat.label}
-                  </div>
-                </div>
+              {
+                icon: Globe,
+                title: 'Market Intelligence',
+                desc: 'Real-time analysis across thousands of markets. Rent trends, cap rates, and supply pipeline updated continuously.',
+              },
+              {
+                icon: Calculator,
+                title: 'Deal Analysis',
+                desc: 'Institutional-grade underwriting frameworks. Cap rate, DSCR, cash-on-cash, and scenario analysis in one place.',
+              },
+              {
+                icon: TrendingUp,
+                title: 'Predictive Modeling',
+                desc: 'Forward-looking projections with confidence intervals. ATLAS models factor in macro conditions and local dynamics.',
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] p-6 transition-colors hover:border-white/[0.12]"
+              >
+                <card.icon className="w-5 h-5 text-[#00B4D8] mb-4" strokeWidth={1.5} />
+                <h3 className="font-body font-semibold text-[13px] uppercase tracking-wider text-white mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-[13px] text-white/60 font-body leading-relaxed">
+                  {card.desc}
+                </p>
               </div>
             ))}
-          </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* SOCIAL PROOF — key stats (monospace, large numbers)           */}
+      {/* ============================================================ */}
+      <section className="py-16 px-6 border-t border-white/[0.08] bg-[#111118]">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: '2,847', label: 'Markets tracked' },
+              { value: '41M', label: 'Transactions analyzed' },
+              { value: '+18.3%', label: 'Avg. portfolio IRR improvement' },
+              { value: '94.2%', label: 'Model accuracy' },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
+                  {stat.value}
+                </p>
+                <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -1417,6 +1432,38 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
+      {/* PRODUCT CTA (Speakeasy-style)                                */}
+      {/* ============================================================ */}
+      <section className="py-24 md:py-32 px-6 bg-[#0a0a0a]">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-display font-bold mb-4 text-white"
+          >
+            Deal analysis your team will trust.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-[#94a3b8] font-body text-lg mb-10"
+          >
+            Upload an address and get production-ready projections in seconds. Cap rate, cash-on-cash, IRR, and risk scoring—all in one place.
+          </motion.p>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+            <a
+              href="/signup"
+              className="inline-block bg-[#c9a84c] text-black font-body font-semibold px-8 py-3 rounded-lg hover:bg-[#b8943f] transition-all"
+            >
+              Launch App
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/* SECTION 8 -- PRICING PREVIEW                                 */}
       {/* ============================================================ */}
       <section id="pricing" className="py-[120px] px-6">
@@ -1485,7 +1532,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 9 -- TESTIMONIALS                                    */}
+      {/* SECTION 9 -- TESTIMONIALS (Speakeasy-style)                  */}
       {/* ============================================================ */}
       <section className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -1494,36 +1541,89 @@ export default function MarketingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-4 text-white"
           >
             Trusted by serious investors.
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-[#94a3b8] font-body text-center mb-16"
+          >
+            The biggest portfolios, the sharpest operators.
+          </motion.p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, i) => (
               <motion.div
                 key={testimonial.author}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="bg-[#111111] border border-[#1e1e1e] rounded-lg p-8 relative"
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-[#0d0d0d] border border-[#1e1e1e] rounded-xl p-8 hover:border-[#2a2a2a] transition-colors"
               >
-                <svg
-                  className="absolute top-6 left-6 w-10 h-10 text-[#c9a84c] opacity-15"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-                <p className="text-white/90 font-body italic mb-6 mt-6 leading-relaxed">
+                <p className="text-white/95 font-body text-[15px] leading-relaxed mb-6">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
-                <div>
-                  <div className="font-body font-bold text-sm text-white">{testimonial.author}</div>
-                  <div className="text-[10px] font-body uppercase tracking-wider text-muted">{testimonial.units}</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#c9a84c]/20 flex items-center justify-center text-[#c9a84c] font-display font-bold text-sm">
+                    {testimonial.author.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-body font-semibold text-sm text-white">{testimonial.author}</div>
+                    <div className="text-[11px] font-body uppercase tracking-wider text-[#64748b]">{testimonial.units}</div>
+                  </div>
                 </div>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* CASE STUDIES (Speakeasy-style)                                */}
+      {/* ============================================================ */}
+      <section className="py-24 md:py-32 px-6 bg-[#050505]/50">
+        <div className="max-w-6xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-display font-bold text-center mb-4 text-white"
+          >
+            The biggest portfolios, the sharpest operators.
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-[#94a3b8] font-body text-center mb-16"
+          >
+            And everyone in between.
+          </motion.p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { num: '01', title: 'From 18% to 4% vacancy in 60 days', desc: 'AI agents filled units while the owner was on vacation. Portfolio operations ran on autopilot.', tag: '31 units' },
+              { num: '02', title: '$23K in missed deductions found', desc: 'The accounting center caught what the CPA missed. One investor paid for the platform 10x over.', tag: '8 units' },
+              { num: '03', title: '3 hours of Monday follow-ups → zero', desc: 'Rent collection and tenant communication fully automated. The VA had nothing left to do.', tag: '14 units' },
+            ].map((study, i) => (
+              <motion.a
+                key={study.num}
+                href="/#features"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="block rounded-xl border border-[#1e1e1e] bg-[#0d0d0d] p-6 hover:border-[#333] transition-colors text-left"
+              >
+                <span className="text-[10px] font-body uppercase tracking-wider text-[#c9a84c]">{study.num}</span>
+                <h3 className="font-display font-bold text-lg text-white mt-2 mb-2">{study.title}</h3>
+                <p className="text-sm text-[#94a3b8] font-body leading-relaxed">{study.desc}</p>
+                <p className="text-[11px] font-body uppercase tracking-wider text-[#555] mt-4">{study.tag}</p>
+              </motion.a>
             ))}
           </div>
         </div>
@@ -1677,92 +1777,15 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 11 -- FOOTER                                         */}
       {/* ============================================================ */}
-      <footer id="about" className="bg-[#050505] border-t border-[#1e1e1e] py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-6 h-6 rounded-md bg-gold/20 flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-gold" />
-                </div>
-                <span className="font-display font-bold text-[15px] text-gold">RKV CONSULTING</span>
-              </div>
-              <p className="text-sm text-muted-deep font-body leading-relaxed">
-                The intelligent operating system for serious real estate investors. AI-powered.
-                Institutional-grade.
-              </p>
-            </div>
-
-            {/* Product */}
-            <div>
-              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Product</h4>
-              <ul className="space-y-2">
-                {[
-                  { label: 'Features', href: '/#features' },
-                  { label: 'Pricing', href: '/pricing' },
-                  { label: 'Demo', href: '/#features' },
-                ].map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Company</h4>
-              <ul className="space-y-2">
-                {[
-                  { label: 'About', href: '/#about' },
-                  { label: 'Careers', href: '/careers' },
-                  { label: 'Contact', href: '/contact' },
-                ].map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="text-[10px] font-body uppercase tracking-wider text-muted mb-4">Legal</h4>
-              <ul className="space-y-2">
-                {[
-                  { label: 'Privacy', href: '/privacy' },
-                  { label: 'Terms', href: '/terms' },
-                  { label: 'Security', href: '/security' },
-                ].map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-muted-deep hover:text-white transition-colors font-body"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="border-t border-border pt-8 text-center">
-            <p className="text-[10px] font-body uppercase tracking-wider text-muted-deep">
-              &copy; 2025 RKV Consulting. Built for serious investors.
-            </p>
+      <footer id="about" className="bg-[#0A0A0F] border-t border-white/[0.08] py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="font-body text-[11px] uppercase tracking-wider text-white/40">
+            &copy; RKV Consulting
+          </p>
+          <div className="flex items-center gap-6">
+            <a href="/privacy" className="font-body text-[11px] text-white/40 hover:text-white/60 transition-colors uppercase tracking-wider">Privacy</a>
+            <a href="/terms" className="font-body text-[11px] text-white/40 hover:text-white/60 transition-colors uppercase tracking-wider">Terms</a>
+            <a href="/contact" className="font-body text-[11px] text-white/40 hover:text-white/60 transition-colors uppercase tracking-wider">Contact</a>
           </div>
         </div>
       </footer>
