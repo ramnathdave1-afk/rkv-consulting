@@ -1,12 +1,19 @@
 import axios, { AxiosError } from 'axios'
 
-const rapidApiClient = axios.create({
-  baseURL: 'https://zillow-com1.p.rapidapi.com',
-  headers: {
-    'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || '',
-    'X-RapidAPI-Host': 'zillow-com1.p.rapidapi.com',
-  },
-})
+// Works with "Zillow Real Estate API" by Collector or any RapidAPI Zillow API.
+// Set RAPIDAPI_KEY. Optionally set RAPIDAPI_ZILLOW_HOST to match the API's X-RapidAPI-Host.
+const ZILLOW_HOST =
+  process.env.RAPIDAPI_ZILLOW_HOST || 'zillow-real-estate-api-by-collector.p.rapidapi.com'
+
+function getZillowClient() {
+  return axios.create({
+    baseURL: `https://${ZILLOW_HOST}`,
+    headers: {
+      'X-RapidAPI-Key': process.env.RAPIDAPI_KEY || '',
+      'X-RapidAPI-Host': ZILLOW_HOST,
+    },
+  })
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,7 +45,7 @@ export interface ZillowSearchResult {
   results: ZillowListing[]
 }
 
-// ── Helper ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function handleError(error: unknown, context: string): null {
   if (error instanceof AxiosError) {
@@ -53,10 +60,51 @@ function handleError(error: unknown, context: string): null {
   return null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeListing(p: any): ZillowListing {
+  return {
+    zpid: String(p.zpid ?? p.zillowId ?? p.id ?? ''),
+    address: p.address ?? p.streetAddress ?? p.line ?? '',
+    city: p.city ?? '',
+    state: p.state ?? '',
+    zipcode: p.zipcode ?? p.zipCode ?? p.postalCode ?? '',
+    price: Number(p.price ?? p.listPrice ?? p.amount ?? 0),
+    bedrooms: Number(p.bedrooms ?? p.beds ?? 0),
+    bathrooms: Number(p.bathrooms ?? p.baths ?? 0),
+    livingArea: Number(p.livingArea ?? p.sqft ?? p.squareFootage ?? 0),
+    lotAreaValue: p.lotAreaValue ?? p.lotSize ?? null,
+    yearBuilt: p.yearBuilt ?? p.yearBuilt ?? null,
+    homeType: p.homeType ?? p.propertyType ?? p.type ?? 'unknown',
+    imgSrc: p.imgSrc ?? p.imageUrl ?? p.photo ?? p.img ?? null,
+    daysOnZillow: Number(p.daysOnZillow ?? p.daysOnMarket ?? 0),
+    latitude: Number(p.latitude ?? p.lat ?? 0),
+    longitude: Number(p.longitude ?? p.lng ?? p.lon ?? 0),
+    rentZestimate: p.rentZestimate ?? p.rentEstimate ?? null,
+    zestimate: p.zestimate ?? p.estimatedValue ?? null,
+    listingStatus: p.listingStatus ?? 'FOR_SALE',
+    priceReduction: p.priceReduction ?? null,
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractResults(data: any): ZillowListing[] {
+  const raw =
+    data?.props ??
+    data?.results ??
+    data?.searchResults ??
+    data?.listings ??
+    data?.data?.results ??
+    data?.data?.props ??
+    []
+  const arr = Array.isArray(raw) ? raw : raw?.result ?? []
+  return arr.map(normalizeListing).filter((r: ZillowListing) => r.zpid && r.address)
+}
+
 // ── API Functions ────────────────────────────────────────────────────────────
 
 /**
- * Search Zillow listings for a given location with filters.
+ * Search Zillow listings for a location. Tries propertyExtendedSearch first,
+ * then getSearchResults-style endpoints so it works with Collector and others.
  */
 export async function searchListings(params: {
   location: string
@@ -73,8 +121,11 @@ export async function searchListings(params: {
     return null
   }
 
+  const client = getZillowClient()
+
+  // 1) Try propertyExtendedSearch (zillow-com1 style)
   try {
-    const response = await rapidApiClient.get('/propertyExtendedSearch', {
+    const r = await client.get('/propertyExtendedSearch', {
       params: {
         location: params.location,
         status_type: params.status || 'ForSale',
@@ -86,41 +137,55 @@ export async function searchListings(params: {
         page: params.page || 1,
       },
     })
+    const results = extractResults(r.data)
+    if (results.length > 0) {
+      return {
+        totalResultCount: r.data?.totalResultCount ?? results.length,
+        results,
+      }
+    }
+  } catch (err) {
+    const status = err instanceof AxiosError ? err.response?.status : 0
+    if (status !== 404 && status !== 501) {
+      return handleError(err, 'searchListings (propertyExtendedSearch)')
+    }
+  }
 
-    const data = response.data
-    if (!data?.props) return { totalResultCount: 0, results: [] }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: ZillowListing[] = (data.props || []).map((p: any) => ({
-      zpid: String(p.zpid),
-      address: p.address || p.streetAddress || '',
-      city: p.city || '',
-      state: p.state || '',
-      zipcode: p.zipcode || '',
-      price: p.price || 0,
-      bedrooms: p.bedrooms || 0,
-      bathrooms: p.bathrooms || 0,
-      livingArea: p.livingArea || 0,
-      lotAreaValue: p.lotAreaValue || null,
-      yearBuilt: p.yearBuilt || null,
-      homeType: p.homeType || 'unknown',
-      imgSrc: p.imgSrc || null,
-      daysOnZillow: p.daysOnZillow || 0,
-      latitude: p.latitude || 0,
-      longitude: p.longitude || 0,
-      rentZestimate: p.rentZestimate || null,
-      zestimate: p.zestimate || null,
-      listingStatus: p.listingStatus || 'FOR_SALE',
-      priceReduction: p.priceReduction || null,
-    }))
-
+  // 2) Try getSearchResults / search with citystatezip (Collector-style)
+  try {
+    const r = await client.get('/getSearchResults', {
+      params: {
+        citystatezip: params.location,
+        output: 'json',
+      },
+    })
+    const results = extractResults(r.data)
     return {
-      totalResultCount: data.totalResultCount || results.length,
+      totalResultCount: results.length,
       results,
     }
-  } catch (error) {
-    return handleError(error, 'searchListings')
+  } catch {
+    // ignore
   }
+
+  try {
+    const r = await client.get('/search', {
+      params: {
+        location: params.location,
+        status: params.status || 'ForSale',
+        output: 'json',
+      },
+    })
+    const results = extractResults(r.data)
+    return {
+      totalResultCount: results.length,
+      results,
+    }
+  } catch {
+    // ignore
+  }
+
+  return { totalResultCount: 0, results: [] }
 }
 
 /**
@@ -129,12 +194,15 @@ export async function searchListings(params: {
 export async function getPropertyDetails(zpid: string): Promise<Record<string, unknown> | null> {
   if (!process.env.RAPIDAPI_KEY) return null
 
-  try {
-    const response = await rapidApiClient.get('/property', {
-      params: { zpid },
-    })
-    return response.data
-  } catch (error) {
-    return handleError(error, 'getPropertyDetails')
+  const client = getZillowClient()
+
+  for (const path of ['/property', '/getPropertyDetails', '/propertyDetails']) {
+    try {
+      const response = await client.get(path, { params: { zpid } })
+      if (response.data) return response.data
+    } catch {
+      // try next
+    }
   }
+  return null
 }
