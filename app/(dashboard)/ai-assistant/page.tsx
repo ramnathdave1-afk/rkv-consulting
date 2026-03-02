@@ -160,12 +160,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
       <div key={`table-${startIdx}`} className="overflow-x-auto my-3">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="border-b border-gold/20">
+            <tr className="border-b border-[#00B4D8]/30">
               {headerRow.map((cell, ci) => (
                 <th
                   key={ci}
                   className={cn(
-                    'px-3 py-2 text-xs font-semibold text-gold whitespace-nowrap',
+                    'px-3 py-2 text-[11px] font-mono font-semibold text-[#48CAE4] whitespace-nowrap uppercase tracking-wider',
                     tableAlignments[ci] === 'center' ? 'text-center' : tableAlignments[ci] === 'right' ? 'text-right' : 'text-left',
                   )}
                 >
@@ -176,12 +176,12 @@ function renderMarkdown(text: string): React.ReactNode[] {
           </thead>
           <tbody>
             {dataRows.map((row, ri) => (
-              <tr key={ri} className="border-b border-border/50">
+              <tr key={ri} className="border-b border-white/[0.06]">
                 {row.map((cell, ci) => (
                   <td
                     key={ci}
                     className={cn(
-                      'px-3 py-2 text-text',
+                      'px-3 py-2 text-white/90 font-mono text-[12px]',
                       tableAlignments[ci] === 'center' ? 'text-center' : tableAlignments[ci] === 'right' ? 'text-right' : 'text-left',
                     )}
                   >
@@ -210,14 +210,14 @@ function renderMarkdown(text: string): React.ReactNode[] {
       } else {
         inCodeBlock = false;
         elements.push(
-          <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-border">
+          <div key={`code-${i}`} className="my-3 rounded-sm overflow-hidden border border-white/[0.08]">
             {codeLang && (
-              <div className="px-3 py-1.5 bg-[#111111]/80 border-b border-border text-[10px] text-muted uppercase tracking-wider font-mono">
+              <div className="px-3 py-1.5 bg-[#0A0A0F] border-b border-white/[0.06] text-[10px] text-[#48CAE4] uppercase tracking-wider font-mono">
                 {codeLang}
               </div>
             )}
-            <pre className="px-4 py-3 bg-[#111111]/50 overflow-x-auto">
-              <code className="text-xs text-gold-light font-mono leading-relaxed">
+            <pre className="px-4 py-3 bg-[#0A0A0F] border border-white/[0.06] overflow-x-auto font-mono">
+              <code className="text-[12px] text-[#48CAE4] leading-relaxed">
                 {codeLines.join('\n')}
               </code>
             </pre>
@@ -261,22 +261,22 @@ function renderMarkdown(text: string): React.ReactNode[] {
       flushTable(i);
     }
 
-    // Headers
+    // Headers (mono for high-tech ATLAS look)
     if (line.startsWith('### ')) {
       elements.push(
-        <h3 key={i} className="text-sm font-display font-bold text-white mt-4 mb-1.5">
+        <h3 key={i} className="text-xs font-mono font-semibold text-[#48CAE4] mt-4 mb-1.5 uppercase tracking-wider">
           {formatInline(line.slice(4))}
         </h3>
       );
     } else if (line.startsWith('## ')) {
       elements.push(
-        <h2 key={i} className="text-base font-display font-bold text-white mt-4 mb-2">
+        <h2 key={i} className="text-sm font-mono font-semibold text-[#48CAE4] mt-4 mb-2 uppercase tracking-wider">
           {formatInline(line.slice(3))}
         </h2>
       );
     } else if (line.startsWith('# ')) {
       elements.push(
-        <h1 key={i} className="text-lg font-display font-bold text-white mt-4 mb-2">
+        <h1 key={i} className="text-base font-mono font-semibold text-white mt-4 mb-2 tracking-tight">
           {formatInline(line.slice(2))}
         </h1>
       );
@@ -286,8 +286,8 @@ function renderMarkdown(text: string): React.ReactNode[] {
       const indent = line.length - line.trimStart().length;
       const bulletText = line.trimStart().slice(2);
       elements.push(
-        <div key={i} className="flex items-start gap-2 my-0.5" style={{ marginLeft: `${Math.min(indent, 6) * 8 + 8}px` }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-gold mt-1.5 flex-shrink-0" />
+        <div key={i} className="flex items-start gap-2 my-0.5 font-mono" style={{ marginLeft: `${Math.min(indent, 6) * 8 + 8}px` }}>
+          <span className="text-[#00B4D8]/80 mt-1.5 flex-shrink-0">&#62;</span>
           <span>{formatInline(bulletText)}</span>
         </div>
       );
@@ -297,8 +297,8 @@ function renderMarkdown(text: string): React.ReactNode[] {
       const match = line.trimStart().match(/^(\d+)\.\s(.*)$/);
       if (match) {
         elements.push(
-          <div key={i} className="flex items-start gap-2.5 ml-2 my-0.5">
-            <span className="text-gold font-semibold text-xs mt-0.5 w-5 text-right flex-shrink-0">{match[1]}.</span>
+          <div key={i} className="flex items-start gap-2.5 ml-2 my-0.5 font-mono">
+            <span className="text-[#48CAE4] font-semibold text-[11px] mt-0.5 w-5 text-right flex-shrink-0 tabular-nums">{match[1]}.</span>
             <span>{formatInline(match[2])}</span>
           </div>
         );
@@ -306,7 +306,7 @@ function renderMarkdown(text: string): React.ReactNode[] {
     }
     // Horizontal rule
     else if (/^---+$/.test(line.trim())) {
-      elements.push(<hr key={i} className="border-border my-3" />);
+      elements.push(<hr key={i} className="border-white/[0.08] my-3" />);
     }
     // Empty line
     else if (line.trim() === '') {
@@ -342,7 +342,7 @@ function formatInline(text: string): React.ReactNode[] {
     }
     if (match[2]) {
       parts.push(
-        <strong key={match.index} className="font-semibold text-white">
+        <strong key={match.index} className="font-semibold text-[#48CAE4]">
           {match[2]}
         </strong>
       );
@@ -350,7 +350,7 @@ function formatInline(text: string): React.ReactNode[] {
       parts.push(
         <code
           key={match.index}
-          className="px-1.5 py-0.5 rounded bg-white/5 text-gold-light text-[0.85em] font-mono"
+          className="px-1.5 py-0.5 rounded-sm bg-[#00B4D8]/10 border border-[#00B4D8]/20 text-[#48CAE4] text-[0.85em] font-mono"
         >
           {match[3]}
         </code>
@@ -444,36 +444,36 @@ function ChatBubble({
     );
   }
 
-  // ATLAS message: left-aligned, dark card, "A" avatar
+  // ATLAS message: high-tech monospace, terminal-style left accent
   return (
     <div className="group w-full">
       <div className="flex items-center gap-2 mb-1.5 px-1">
-        <span className="w-5 h-5 rounded flex items-center justify-center bg-[#00B4D8]/20 border border-[#00B4D8]/40 text-[#00B4D8] font-mono text-[10px] font-bold">
+        <span className="w-5 h-5 rounded-sm flex items-center justify-center bg-[#00B4D8]/15 border border-[#00B4D8]/50 text-[#48CAE4] font-mono text-[10px] font-bold tracking-wider">
           A
         </span>
-        <span className="font-body text-[11px] text-[#00B4D8] uppercase tracking-wider">
+        <span className="font-mono text-[10px] text-[#48CAE4] uppercase tracking-[0.2em]">
           ATLAS
         </span>
-        <span className="font-mono text-[11px] text-white/40">{formattedTime}</span>
+        <span className="font-mono text-[10px] text-white/30 tabular-nums">{formattedTime}</span>
       </div>
-      <div className="relative pl-1">
+      <div className="relative">
         <div
-          className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-white"
+          className="atlas-bubble font-mono text-[13px] leading-[1.7] tracking-tight text-white/95 rounded-sm border border-white/[0.06] bg-[#08080C] pl-5 pr-4 py-3.5 border-l-2 border-l-[#00B4D8]/70"
         >
           <button
             type="button"
             onClick={handleCopy}
             className={cn(
-              'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
+              'absolute top-2 right-2 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded sharp bg-[#1A1A24] border border-white/[0.08]',
-              'hover:border-[#00B4D8]/30 text-white/60 hover:text-[#00B4D8]',
+              'p-1.5 rounded-sm bg-[#0A0A0F] border border-white/[0.08]',
+              'hover:border-[#00B4D8]/40 text-white/50 hover:text-[#48CAE4] font-mono text-[10px]',
             )}
             title="Copy message"
           >
             {copied ? <Check className="h-3 w-3 text-[#52B788]" /> : <Copy className="h-3 w-3" />}
           </button>
-          <div className="space-y-0">{renderMarkdown(content)}</div>
+          <div className="space-y-0 pr-8">{renderMarkdown(content)}</div>
         </div>
       </div>
     </div>
@@ -490,32 +490,32 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 mb-1.5 px-1">
-        <span className="w-5 h-5 rounded flex items-center justify-center bg-[#00B4D8]/20 border border-[#00B4D8]/40 text-[#00B4D8] font-mono text-[10px] font-bold">
+        <span className="w-5 h-5 rounded-sm flex items-center justify-center bg-[#00B4D8]/15 border border-[#00B4D8]/50 text-[#48CAE4] font-mono text-[10px] font-bold tracking-wider">
           A
         </span>
-        <span className="font-body text-[11px] text-[#00B4D8] uppercase tracking-wider">
+        <span className="font-mono text-[10px] text-[#48CAE4] uppercase tracking-[0.2em]">
           ATLAS
         </span>
         {isStreaming && !content && (
-          <span className="font-mono text-[11px] text-white/40">Processing...</span>
+          <span className="font-mono text-[10px] text-white/40 tracking-wider">PROCESSING</span>
         )}
       </div>
-      <div className="relative pl-1">
-        <div className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-white">
+      <div className="relative">
+        <div className="atlas-bubble font-mono text-[13px] leading-[1.7] tracking-tight text-white/95 rounded-sm border border-white/[0.06] bg-[#08080C] pl-5 pr-4 py-3.5 border-l-2 border-l-[#00B4D8]/70">
           {content ? (
-            <div className="space-y-0">
+            <div className="space-y-0 pr-8">
               {renderMarkdown(animatedContent)}
               {isStreaming && (
-                <span className="inline-block w-0.5 h-5 bg-[#00B4D8] animate-pulse ml-0.5 align-middle" />
+                <span className="inline-block w-0.5 h-4 bg-[#48CAE4] animate-pulse ml-0.5 align-middle" />
               )}
             </div>
           ) : isStreaming ? (
-            <p className="font-mono text-sm text-white/50">Processing...</p>
+            <p className="font-mono text-[12px] text-white/40 tracking-wide">Processing...</p>
           ) : null}
         </div>
       </div>
       {!isStreaming && content && (
-        <p className="text-xs text-white/40 mt-1.5 px-5 font-mono">Just now</p>
+        <p className="font-mono text-[10px] text-white/30 mt-1.5 pl-5 tabular-nums">Just now</p>
       )}
     </div>
   );
@@ -1160,7 +1160,7 @@ GUIDELINES:
         }
       `}</style>
 
-      <div className="-m-8 flex flex-col bg-[#080808]" style={{ height: 'calc(100vh - 4rem)' }}>
+      <div className="-m-8 flex flex-col bg-[#050508]" style={{ height: 'calc(100vh - 4rem)', backgroundImage: 'linear-gradient(rgba(0,180,216,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.02) 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
         {/* ============================================================ */}
         {/*  TOP BAR - HEADER                                            */}
         {/* ============================================================ */}
@@ -1343,19 +1343,19 @@ GUIDELINES:
           {/* ========================================================== */}
           <div className="flex-1 flex flex-col min-w-0 bg-[#080808]">
 
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            {/* Messages area — high-tech viewport */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-[#06060A]/50">
               {isEmpty ? (
                 /* ---- Empty state ---- */
                 <div className="flex flex-col items-center justify-center h-full max-w-xl mx-auto text-center">
-                  <div className="w-14 h-14 rounded flex items-center justify-center bg-[#00B4D8]/10 border border-[#00B4D8]/30 text-[#00B4D8] font-mono text-2xl font-bold mb-6">
+                  <div className="w-14 h-14 rounded-sm flex items-center justify-center bg-[#00B4D8]/10 border border-[#00B4D8]/40 text-[#48CAE4] font-mono text-2xl font-bold tracking-widest mb-6">
                     A
                   </div>
 
-                  <h2 className="font-body font-semibold text-lg text-white mb-2 uppercase tracking-wider">
+                  <h2 className="font-mono font-semibold text-sm text-[#48CAE4] mb-2 uppercase tracking-[0.25em]">
                     ATLAS
                   </h2>
-                  <p className="font-body text-[11px] text-white/50 mb-8 leading-relaxed max-w-sm">
+                  <p className="font-mono text-[12px] text-white/50 mb-8 leading-relaxed max-w-sm tracking-tight">
                     Institutional-grade real estate analysis. Ask for market analysis, deal underwriting, or opportunity scan.
                   </p>
 
@@ -1369,9 +1369,9 @@ GUIDELINES:
                           type="button"
                           onClick={() => handleSendMessage(action.prompt)}
                           className={cn(
-                            'flex items-center gap-2 px-4 py-2 rounded sharp border border-white/[0.12]',
-                            'text-[12px] font-body text-white/70 hover:text-white hover:border-[#00B4D8]/50 hover:bg-[#00B4D8]/5',
-                            'transition-colors duration-150',
+                            'flex items-center gap-2 px-4 py-2 rounded-sm border border-white/[0.1]',
+                            'text-[12px] font-mono text-white/70 hover:text-[#48CAE4] hover:border-[#00B4D8]/40 hover:bg-[#00B4D8]/5',
+                            'transition-colors duration-150 tracking-tight',
                           )}
                         >
                           <Icon className="h-3.5 w-3.5 text-[#00B4D8]" strokeWidth={1.5} />
@@ -1407,7 +1407,7 @@ GUIDELINES:
             </div>
 
             {/* ---- Input area ---- */}
-            <div className="flex-shrink-0 border-t border-[#1e1e1e] bg-[#111111] px-2 sm:px-6 py-0">
+            <div className="flex-shrink-0 border-t border-white/[0.06] bg-[#08080C] px-2 sm:px-6 py-0">
               <div className="max-w-3xl mx-auto">
                 {isStreaming ? (
                   <div className="flex items-center justify-center gap-2 py-5">
@@ -1423,8 +1423,8 @@ GUIDELINES:
                   />
                 )}
 
-                <p className="font-mono text-[10px] text-white/40 text-center pb-2">
-                  ATLAS v7.4 — Adaptive Intelligence — Every query improves the model
+                <p className="font-mono text-[10px] text-white/30 text-center pb-2 tracking-wider">
+                  ATLAS v7.4  //  ADAPTIVE INTELLIGENCE  //  EVERY QUERY IMPROVES THE MODEL
                 </p>
               </div>
             </div>
