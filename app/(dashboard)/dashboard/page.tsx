@@ -18,16 +18,13 @@ import {
   CalendarDays,
   ChevronRight,
 } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
+
+const PortfolioChart = dynamic(() => import('@/components/dashboard/PortfolioChart'), {
+  ssr: false,
+  loading: () => <div className="h-[280px] rounded-lg bg-border/20 animate-pulse" />,
+});
 import MetricCard from '@/components/dashboard/MetricCard';
 import AlertBanner, { type Alert } from '@/components/dashboard/AlertBanner';
 import ActivityFeed, { type Activity } from '@/components/dashboard/ActivityFeed';
@@ -66,7 +63,12 @@ function formatCurrency(value: number): string {
 }
 
 function formatFullCurrency(value: number): string {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 }
 
 function getDealScoreColor(score: number): string {
@@ -80,20 +82,6 @@ function getDealStageLabel(stage: string): string {
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
-}
-
-/* ------------------------------------------------------------------ */
-/*  Custom tooltip for Recharts                                        */
-/* ------------------------------------------------------------------ */
-
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="glass rounded-lg px-3 py-2 shadow-card" style={{ background: '#111111', border: '1px solid rgba(201, 168, 76, 0.2)' }}>
-      <p className="font-mono text-[10px] text-muted">{label}</p>
-      <p className="font-mono text-sm font-semibold text-gold">{formatFullCurrency(payload[0].value)}</p>
-    </div>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -596,44 +584,7 @@ export default function DashboardPage() {
           {loading ? (
             <Skeleton variant="chart" height="280px" />
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={cashFlowChartData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(30, 37, 48, 0.6)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  stroke="#4A6080"
-                  tick={{ fill: '#4A6080', fontSize: 12 }}
-                  axisLine={{ stroke: '#1e1e1e' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#4A6080"
-                  tick={{ fill: '#4A6080', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val: number) => formatCurrency(val)}
-                  width={70}
-                />
-                <RechartsTooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="cashFlow"
-                  stroke="#c9a84c"
-                  strokeWidth={2.5}
-                  dot={false}
-                  activeDot={{
-                    r: 5,
-                    fill: '#c9a84c',
-                    stroke: '#111111',
-                    strokeWidth: 2,
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <PortfolioChart data={cashFlowChartData} />
           )}
         </div>
 

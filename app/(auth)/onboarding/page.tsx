@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactConfetti from 'react-confetti';
+import dynamic from 'next/dynamic';
+
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 import { createClient } from '@/lib/supabase/client';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -75,13 +77,13 @@ function AnimatedCheckmark() {
     <svg className="w-16 h-16" viewBox="0 0 52 52">
       <motion.circle
         cx="26" cy="26" r="24"
-        fill="none" stroke="#059669" strokeWidth="2"
+        fill="none" stroke="#c9a84c" strokeWidth="2"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       />
       <motion.path
-        fill="none" stroke="#059669" strokeWidth="3"
+        fill="none" stroke="#c9a84c" strokeWidth="3"
         strokeLinecap="round" strokeLinejoin="round"
         d="M14 27l7.8 7.8L38 17"
         initial={{ pathLength: 0 }}
@@ -511,14 +513,14 @@ export default function OnboardingPage() {
                   placeholder="$250,000"
                   value={purchasePrice}
                   onChange={(e) => setPurchasePrice(e.target.value)}
-                  className={flashFields.purchasePrice ? 'ring-2 ring-[rgba(5,150,105,0.20)]' : undefined}
+                  className={flashFields.purchasePrice ? 'ring-2 ring-[rgba(201,168,76,0.20)]' : undefined}
                 />
                 <Input
                   label="Monthly Rent"
                   placeholder="$2,000"
                   value={monthlyRent}
                   onChange={(e) => setMonthlyRent(e.target.value)}
-                  className={flashFields.monthlyRent ? 'ring-2 ring-[rgba(5,150,105,0.20)]' : undefined}
+                  className={flashFields.monthlyRent ? 'ring-2 ring-[rgba(201,168,76,0.20)]' : undefined}
                 />
               </div>
 
@@ -757,7 +759,7 @@ export default function OnboardingPage() {
           recycle={false}
           numberOfPieces={300}
           gravity={0.12}
-          colors={['#059669', '#D97706', '#DC2626', '#E2E8F0']}
+          colors={['#c9a84c', '#D97706', '#DC2626', '#f5f5f5']}
         />
       )}
 

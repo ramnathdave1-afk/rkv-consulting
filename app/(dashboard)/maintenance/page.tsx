@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import {
   DragDropContext,
   Droppable,
@@ -229,7 +230,7 @@ function StatCard({
   iconBg: string;
 }) {
   return (
-    <Card className="rounded-lg flex items-center gap-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <Card className="rounded-lg flex items-center gap-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <div className={cn('flex items-center justify-center w-11 h-11 rounded-xl', iconBg)}>
         <Icon className="w-5 h-5" />
       </div>
@@ -322,7 +323,7 @@ function KanbanCard({
             'hover:border-gold/20 hover:shadow-glow-sm transition-all duration-200',
             snapshot.isDragging && 'shadow-glow border-gold/30 rotate-1 scale-[1.02]',
           )}
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           {/* Property address */}
           <p className="text-xs text-muted font-body truncate mb-1">
@@ -384,7 +385,7 @@ function KanbanColumn({
   onCardClick: (req: MaintenanceRequest) => void;
 }) {
   return (
-    <div className={cn('rounded-xl p-4 min-w-[280px] flex flex-col border-t-2', column.borderColor)} style={{ background: '#0C1018' }}>
+    <div className={cn('rounded-xl p-4 min-w-[280px] flex flex-col border-t-2', column.borderColor)} style={{ background: '#111111' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -453,7 +454,7 @@ function ListView({
   ];
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -587,10 +588,10 @@ function DetailPanel({
         exit={{ x: 440, opacity: 0 }}
         transition={{ type: 'spring' as const, damping: 28, stiffness: 300 }}
         className="fixed right-0 top-16 bottom-0 w-[440px] z-40 overflow-y-auto shadow-card"
-        style={{ background: '#0C1018', borderLeft: '1px solid #161E2A' }}
+        style={{ background: '#111111', borderLeft: '1px solid #1e1e1e' }}
       >
         {/* Header */}
-        <div className="sticky top-0 backdrop-blur-sm px-6 py-4 flex items-start justify-between z-10" style={{ background: 'rgba(4,8,16,0.95)', borderBottom: '1px solid #161E2A' }}>
+        <div className="sticky top-0 backdrop-blur-sm px-6 py-4 flex items-start justify-between z-10" style={{ background: 'rgba(4,8,16,0.95)', borderBottom: '1px solid #1e1e1e' }}>
           <div className="flex-1 mr-4">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-3 h-3 text-muted" />
@@ -632,7 +633,7 @@ function DetailPanel({
           {/* Property Address */}
           <div>
             <h4 className="label mb-2">Property</h4>
-            <div className="rounded-lg rounded-lg p-3 flex items-center gap-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg rounded-lg p-3 flex items-center gap-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">
                 <MapPin className="w-4 h-4 text-gold" />
               </div>
@@ -649,7 +650,7 @@ function DetailPanel({
           {request.tenant && (
             <div>
               <h4 className="label mb-2">Reported By</h4>
-              <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-lg rounded-lg p-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-400/10 flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-400" />
@@ -679,7 +680,7 @@ function DetailPanel({
           {/* Cost Tracking */}
           <div>
             <h4 className="label mb-2">Cost Tracking</h4>
-            <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg rounded-lg p-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="label">Estimated</p>
@@ -762,10 +763,12 @@ function DetailPanel({
                     key={i}
                     className="relative aspect-square rounded-lg overflow-hidden bg-card border border-border group"
                   >
-                    <img
+                    <Image
                       src={photo}
                       alt={`Maintenance photo ${i + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      fill
+                      sizes="120px"
+                      className="object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                   </div>
                 ))}
@@ -783,7 +786,7 @@ function DetailPanel({
           <div>
             <h4 className="label mb-2">Contractor</h4>
             {request.contractor_name ? (
-              <div className="rounded-lg rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-lg rounded-lg p-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-green/10 flex items-center justify-center">
                     <Wrench className="w-4 h-4 text-green" />
@@ -808,7 +811,7 @@ function DetailPanel({
                 )}
               </div>
             ) : (
-              <div className="rounded-lg p-3 text-center" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-lg p-3 text-center" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="text-xs text-muted mb-2">No contractor assigned</p>
               </div>
             )}
@@ -1393,7 +1396,7 @@ function ContractorMatching({
 
       {/* No request selected */}
       {!selectedRequest && (
-        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <MapPin className="w-8 h-8 text-muted-deep mx-auto mb-3" />
           <p className="font-mono text-sm text-muted-deep">SELECT A MAINTENANCE REQUEST</p>
           <p className="font-mono text-[11px] text-muted-deep mt-1">
@@ -1406,7 +1409,7 @@ function ContractorMatching({
       {selectedRequest && loading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div key={i} className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="space-y-3">
                 <div className="h-4 w-32 rounded bg-border/30 relative overflow-hidden">
                   <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gold/5 to-transparent" />
@@ -1428,7 +1431,7 @@ function ContractorMatching({
 
       {/* No location available */}
       {selectedRequest && !loading && !activeLocation && !geoHook.error && (
-        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <MapPin className="w-8 h-8 text-gold/40 mx-auto mb-3" />
           <p className="font-mono text-sm text-muted">LOCATION REQUIRED</p>
           <p className="font-mono text-[11px] text-muted-deep mt-1 mb-4">
@@ -1447,14 +1450,14 @@ function ContractorMatching({
 
       {/* Error */}
       {selectedRequest && !loading && matchError && (
-        <div className="rounded-lg p-6 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-6 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <p className="font-mono text-sm text-red">{matchError}</p>
         </div>
       )}
 
       {/* Empty results */}
       {selectedRequest && !loading && !matchError && activeLocation && contractors.length === 0 && (
-        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <Search className="w-8 h-8 text-muted-deep mx-auto mb-3" />
           <p className="font-mono text-sm text-muted-deep">NO CONTRACTORS FOUND</p>
           <p className="font-mono text-[11px] text-muted-deep mt-1">
@@ -1485,7 +1488,7 @@ function ContractorMatching({
               <div
                 key={contractor.id}
                 className="rounded-lg p-5 transition-all duration-300 hover:shadow-glow-sm"
-                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 <div className="space-y-3">
                   {/* Name & trade */}
@@ -1507,7 +1510,7 @@ function ContractorMatching({
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${Math.min(100, score * 10)}%`,
-                          background: score >= 7 ? '#059669' : score >= 5 ? '#FFB800' : '#DC2626',
+                          background: score >= 7 ? '#c9a84c' : score >= 5 ? '#FFB800' : '#DC2626',
                         }}
                       />
                     </div>
@@ -1675,7 +1678,7 @@ function PreventiveScheduler({ properties }: { properties: Property[] }) {
       </div>
 
       {properties.map((prop) => (
-        <div key={prop.id} className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div key={prop.id} className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <button
             onClick={() => setExpanded(expanded === prop.id ? null : prop.id)}
             className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors"

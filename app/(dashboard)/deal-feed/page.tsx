@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -89,9 +90,9 @@ const SORT_OPTIONS = [
 
 const SOURCE_BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   wholesale: { bg: 'bg-[#D97706]/20', text: 'text-[#D97706]', label: 'WHOLESALE' },
-  mls: { bg: 'bg-[#0EA5E9]/20', text: 'text-[#0EA5E9]', label: 'MLS' },
+  mls: { bg: 'bg-[#c9a84c]/20', text: 'text-[#c9a84c]', label: 'MLS' },
   foreclosure: { bg: 'bg-[#DC2626]/20', text: 'text-[#DC2626]', label: 'FORECLOSURE' },
-  fsbo: { bg: 'bg-[#059669]/20', text: 'text-[#059669]', label: 'FSBO' },
+  fsbo: { bg: 'bg-[#c9a84c]/20', text: 'text-[#c9a84c]', label: 'FSBO' },
   auction: { bg: 'bg-[#8B5CF6]/20', text: 'text-[#8B5CF6]', label: 'AUCTION' },
 };
 
@@ -143,10 +144,10 @@ function getScoreColor(score: number | null): {
     };
   }
   return {
-    bg: 'bg-[#059669]/15',
-    text: 'text-[#059669]',
-    border: 'border-[#059669]/30',
-    glow: 'shadow-[0_0_12px_rgba(5,150,105,0.3)]',
+    bg: 'bg-[#c9a84c]/15',
+    text: 'text-[#c9a84c]',
+    border: 'border-[#c9a84c]/30',
+    glow: 'shadow-[0_0_12px_rgba(201,168,76,0.3)]',
   };
 }
 
@@ -309,8 +310,8 @@ function BuyBoxConfig({
     <div
       className="rounded-lg overflow-hidden transition-all duration-300"
       style={{
-        background: '#0C1018',
-        border: '1px solid rgba(5, 150, 105, 0.3)',
+        background: '#111111',
+        border: '1px solid rgba(201, 168, 76, 0.3)',
       }}
     >
       {/* Header */}
@@ -321,7 +322,7 @@ function BuyBoxConfig({
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(5, 150, 105, 0.1)' }}
+            style={{ background: 'rgba(201, 168, 76, 0.1)' }}
           >
             <Target className="w-4.5 h-4.5 text-gold" />
           </div>
@@ -352,7 +353,7 @@ function BuyBoxConfig({
 
       {/* Collapsible content */}
       {isOpen && (
-        <div className="px-5 pb-5 space-y-4" style={{ borderTop: '1px solid #161E2A' }}>
+        <div className="px-5 pb-5 space-y-4" style={{ borderTop: '1px solid #1e1e1e' }}>
           <div className="pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Input
               label="Target Markets"
@@ -435,7 +436,7 @@ function DealCard({
       {matchesBuyBox && (
         <div
           className="px-3 py-1.5 flex items-center gap-1.5"
-          style={{ background: 'rgba(5, 150, 105, 0.12)', borderBottom: '1px solid rgba(5, 150, 105, 0.2)' }}
+          style={{ background: 'rgba(201, 168, 76, 0.12)', borderBottom: '1px solid rgba(201, 168, 76, 0.2)' }}
         >
           <CheckCircle2 className="w-3 h-3 text-gold" />
           <span className="text-[10px] font-mono font-semibold text-gold uppercase tracking-wider">
@@ -445,12 +446,14 @@ function DealCard({
       )}
 
       {/* Image Area */}
-      <div className="relative h-[200px] overflow-hidden" style={{ background: '#080B0F' }}>
+      <div className="relative h-[200px] overflow-hidden" style={{ background: '#080808' }}>
         {deal.image_url ? (
-          <img
+          <Image
             src={deal.image_url}
             alt={deal.address}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -560,7 +563,7 @@ function DealCard({
       {/* Card Footer */}
       <div
         className="px-4 py-3 flex items-center gap-2"
-        style={{ borderTop: '1px solid #161E2A' }}
+        style={{ borderTop: '1px solid #1e1e1e' }}
       >
         <Button
           variant="outline"
@@ -636,9 +639,9 @@ function QuickAnalysisModal({
     { color: string; bg: string; border: string; icon: React.ReactNode; label: string }
   > = {
     buy: {
-      color: 'text-[#059669]',
-      bg: 'bg-[#059669]/10',
-      border: 'border-[#059669]/30',
+      color: 'text-[#c9a84c]',
+      bg: 'bg-[#c9a84c]/10',
+      border: 'border-[#c9a84c]/30',
       icon: <CheckCircle2 className="w-5 h-5" />,
       label: 'BUY',
     },
@@ -727,7 +730,7 @@ function QuickAnalysisModal({
               <div
                 key={metric.label}
                 className="rounded-lg p-3"
-                style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
               >
                 <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">
                   {metric.label}
@@ -766,7 +769,7 @@ function QuickAnalysisModal({
             {analyzing ? (
               <div
                 className="rounded-lg p-6 flex flex-col items-center gap-3"
-                style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
               >
                 <Loader2 className="w-6 h-6 text-gold animate-spin" />
                 <p className="text-sm text-muted font-body">Analyzing deal metrics...</p>
@@ -807,7 +810,7 @@ function QuickAnalysisModal({
                 {/* Reasoning */}
                 <div
                   className="rounded-lg p-4"
-                  style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                  style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
                 >
                   <p className="text-xs text-white/80 font-body leading-relaxed whitespace-pre-line">
                     {analysisResult.reasoning}
@@ -817,7 +820,7 @@ function QuickAnalysisModal({
             ) : (
               <div
                 className="rounded-lg p-4"
-                style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
               >
                 <p className="text-xs text-muted font-body">
                   Analysis will begin automatically...
@@ -1304,7 +1307,7 @@ export default function DealFeedPage() {
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid rgba(5, 150, 105, 0.2)' }}
+                style={{ background: 'rgba(201, 168, 76, 0.1)', border: '1px solid rgba(201, 168, 76, 0.2)' }}
               >
                 <LayoutGrid className="w-5 h-5 text-gold" />
               </div>
@@ -1464,7 +1467,7 @@ export default function DealFeedPage() {
 
           {/* Active filter count */}
           {hasActiveFilters && (
-            <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid #161E2A' }}>
+            <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid #1e1e1e' }}>
               <SlidersHorizontal className="w-3 h-3 text-muted" />
               <span className="text-[10px] font-mono text-muted">
                 {filteredDeals.length} deal{filteredDeals.length !== 1 ? 's' : ''} matching

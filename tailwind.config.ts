@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -12,29 +13,28 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["Space Grotesk", "sans-serif"],
+        display: ["DM Serif Display", "serif"],
         body: ["Inter", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
-        /* Final palette */
-        black: "#080B0F",
-        deep: "#060910",
-        card: "#0C1018",
-        tertiary: "#111827",
-        border: "#161E2A",
-        "border-hover": "#2A3A50",
-        gold: "#059669",
-        "gold-light": "#0EA5E9",
-        violet: "#0EA5E9",
+        black: "#080808",
+        deep: "#050505",
+        card: "#111111",
+        tertiary: "#1a1a1a",
+        border: "#1e1e1e",
+        "border-hover": "#333333",
+        gold: "#c9a84c",
+        "gold-light": "#d4b85e",
+        violet: "#c9a84c",
         warning: "#D97706",
-        white: "#E2E8F0",
-        muted: "#64748B",
-        "muted-deep": "#374151",
-        green: "#059669",
+        white: "#f5f5f5",
+        muted: "#888888",
+        "muted-deep": "#555555",
+        green: "#c9a84c",
         red: "#DC2626",
-        text: "#E2E8F0",
-        grid: "#161E2A",
+        text: "#f5f5f5",
+        grid: "#1e1e1e",
       },
       borderRadius: {
         "2xl": "1rem",
@@ -70,9 +70,35 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateX(20px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
         shimmer: {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
+        },
+        "background-gradient": {
+          "0%, 100%": {
+            transform: "translate(0, 0)",
+            animationDelay: "var(--background-gradient-delay, 0s)",
+          },
+          "20%": {
+            transform:
+              "translate(calc(100% * var(--tx-1, 1)), calc(100% * var(--ty-1, 1)))",
+          },
+          "40%": {
+            transform:
+              "translate(calc(100% * var(--tx-2, -1)), calc(100% * var(--ty-2, 1)))",
+          },
+          "60%": {
+            transform:
+              "translate(calc(100% * var(--tx-3, 1)), calc(100% * var(--ty-3, -1)))",
+          },
+          "80%": {
+            transform:
+              "translate(calc(100% * var(--tx-4, -1)), calc(100% * var(--ty-4, -1)))",
+          },
         },
       },
       animation: {
@@ -83,7 +109,10 @@ const config: Config = {
         slideDown: "slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)",
         slideUp: "slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)",
         "slide-in-right": "slide-in-right 0.3s ease-out forwards",
+        "fade-in": "fade-in 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
+        "background-gradient":
+          "background-gradient var(--background-gradient-speed, 15s) cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite",
       },
     },
   },
