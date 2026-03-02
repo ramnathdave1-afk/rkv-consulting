@@ -8,9 +8,7 @@ import {
   TrendingUp,
   Calculator,
   FileText,
-  Wrench,
   LineChart,
-  RefreshCw,
   Plus,
   MessageSquare,
   Trash2,
@@ -23,13 +21,11 @@ import {
   Users,
   Globe2,
   ChevronRight,
-  Zap,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { FeatureGate } from '@/components/paywall/FeatureGate';
 import { useSubscription } from '@/hooks/useSubscription';
-import { TextShimmer } from '@/components/ui/text-shimmer';
 import { useAnimatedText } from '@/components/ui/animated-text';
 import { AIInputWithSuggestions } from '@/components/ui/ai-input-with-suggestions';
 
@@ -722,7 +718,7 @@ export default function AIAssistantPage() {
     pro: '200/mo',
     elite: 'Unlimited',
   };
-  const usagePlanLabel = usageLabelMap[planName] || '200/mo';
+  const _usagePlanLabel = usageLabelMap[planName] || '200/mo';
 
   /* ---------------------------------------------------------------- */
   /*  Fetch user and conversations on mount                            */
@@ -894,7 +890,7 @@ export default function AIAssistantPage() {
   /*  Build system prompt with user context                            */
   /* ---------------------------------------------------------------- */
 
-  async function buildSystemPrompt(): Promise<string> {
+  async function _buildSystemPrompt(): Promise<string> {
     if (!userId) return 'You are a helpful real estate investment assistant.';
 
     const [propertiesRes, dealsRes, tenantsRes, maintenanceRes] = await Promise.all([
