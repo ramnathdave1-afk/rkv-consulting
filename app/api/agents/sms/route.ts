@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { tenantId, message, automated } = body
+    const { tenantId, message, automated: _automated } = body
 
     if (!tenantId) {
       return NextResponse.json(
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     // Fetch tenant phone number from Supabase
     const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
-      .select('id, name, phone')
+      .select('id, first_name, last_name, phone, property_id')
       .eq('id', tenantId)
       .single()
 
@@ -61,15 +61,12 @@ export async function POST(req: NextRequest) {
       await supabase.from('agent_logs').insert({
         user_id: user.id,
         agent_type: 'sms',
-        action: 'send_sms',
+        tenant_id: tenantId,
+        property_id: tenant.property_id || null,
+        trigger_event: 'sms_sent',
+        content: message,
+        outcome: 'Failed to send',
         status: 'failed',
-        metadata: {
-          tenant_id: tenantId,
-          tenant_name: tenant.name,
-          automated: automated || false,
-          error: 'Twilio API call failed',
-        },
-        created_at: new Date().toISOString(),
       })
 
       return NextResponse.json(
@@ -82,17 +79,12 @@ export async function POST(req: NextRequest) {
     await supabase.from('agent_logs').insert({
       user_id: user.id,
       agent_type: 'sms',
-      action: 'send_sms',
-      status: 'success',
-      metadata: {
-        tenant_id: tenantId,
-        tenant_name: tenant.name,
-        message_sid: smsResult.sid,
-        to: smsResult.to,
-        from: smsResult.from,
-        automated: automated || false,
-      },
-      created_at: new Date().toISOString(),
+      tenant_id: tenantId,
+      property_id: tenant.property_id || null,
+      trigger_event: 'sms_sent',
+      content: message,
+      outcome: `Delivered to ${tenant.phone}`,
+      status: 'sent',
     })
 
     return NextResponse.json({

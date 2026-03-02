@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
               type: n.type,
               title: n.title,
               message: n.message,
-              metadata: n.data,
+              data: n.data,
               read: n.read,
             }))
           )

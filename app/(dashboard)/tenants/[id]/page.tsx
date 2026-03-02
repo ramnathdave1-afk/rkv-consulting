@@ -274,7 +274,8 @@ export default function TenantDetailPage() {
       user_id: user.id,
       tenant_id: tenant.id,
       property_id: tenant.property_id,
-      amount: parseFloat(manualPayment.amount),
+      amount_due: parseFloat(manualPayment.amount),
+      amount_paid: parseFloat(manualPayment.amount),
       due_date: manualPayment.date,
       paid_date: manualPayment.date,
       status: 'paid',
@@ -370,12 +371,12 @@ export default function TenantDetailPage() {
         : { label: 'Past', variant: 'default' as const };
 
   // Payment summary
-  const totalPaid = payments.filter((p) => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
-  const totalDue = payments.reduce((s, p) => s + p.amount, 0);
+  const totalPaid = payments.filter((p) => p.status === 'paid').reduce((s, p) => s + p.amount_paid, 0);
+  const totalDue = payments.reduce((s, p) => s + p.amount_due, 0);
   const outstandingBalance = totalDue - totalPaid;
   const onTimePaid = payments.filter((p) => p.status === 'paid' && p.paid_date && p.paid_date <= p.due_date).length;
   const onTimeRate = payments.length > 0 ? Math.round((onTimePaid / payments.length) * 100) : 100;
-  const totalLateFees = payments.reduce((s, p) => s + (p.late_fee || 0), 0);
+  const totalLateFees = payments.reduce((s, p) => s + (p.late_fee_charged || 0), 0);
   const latePayments = payments.filter((p) => p.status === 'late' || (p.status === 'pending' && new Date(p.due_date) < new Date()));
 
   // Screening data
@@ -494,7 +495,7 @@ export default function TenantDetailPage() {
             {/* Contact Info */}
             <Card
               className="rounded-lg"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               header={
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gold" />
@@ -535,7 +536,7 @@ export default function TenantDetailPage() {
             {/* Emergency Contact */}
             <Card
               className="rounded-lg"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               header={
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-gold" />
@@ -553,7 +554,7 @@ export default function TenantDetailPage() {
             {/* Property Assignment */}
             <Card
               className="rounded-lg"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               header={
                 <div className="flex items-center gap-2">
                   <Home className="h-4 w-4 text-gold" />
@@ -578,7 +579,7 @@ export default function TenantDetailPage() {
             {/* Screening Score */}
             <Card
               className="rounded-lg"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               header={
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-gold" />
@@ -663,7 +664,7 @@ export default function TenantDetailPage() {
             {/* Lease Timeline */}
             <Card
               className="rounded-lg"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               header={
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -735,7 +736,7 @@ export default function TenantDetailPage() {
             <div className="grid grid-cols-2 gap-6">
               <Card
                 className="rounded-lg"
-                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                 header={
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-gold" />
@@ -763,7 +764,7 @@ export default function TenantDetailPage() {
               {/* Lease document + actions */}
               <Card
                 className="rounded-lg"
-                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                 header={
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-gold" />
@@ -839,27 +840,27 @@ export default function TenantDetailPage() {
           <div className="space-y-6">
             {/* Payment summary row */}
             <div className="grid grid-cols-5 gap-4">
-              <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="label mb-1">Total Paid</p>
                 <p className="text-lg font-bold font-mono text-green">{formatCurrency(totalPaid)}</p>
               </Card>
-              <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="label mb-1">Total Due</p>
                 <p className="text-lg font-bold font-mono text-white">{formatCurrency(totalDue)}</p>
               </Card>
-              <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="label mb-1">Outstanding</p>
                 <p className={cn('text-lg font-bold font-mono', outstandingBalance > 0 ? 'text-red' : 'text-green')}>
                   {formatCurrency(outstandingBalance)}
                 </p>
               </Card>
-              <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="label mb-1">Late Fees</p>
                 <p className={cn('text-lg font-bold font-mono', totalLateFees > 0 ? 'text-red' : 'text-muted')}>
                   {formatCurrency(totalLateFees)}
                 </p>
               </Card>
-              <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <p className="label mb-1">On-Time Rate</p>
                 <p className={cn(
                   'text-lg font-bold font-mono',
@@ -877,7 +878,7 @@ export default function TenantDetailPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-white">
                     {latePayments.length} overdue payment{latePayments.length > 1 ? 's' : ''} totaling{' '}
-                    <span className="text-red font-mono">{formatCurrency(latePayments.reduce((s, p) => s + p.amount, 0))}</span>
+                    <span className="text-red font-mono">{formatCurrency(latePayments.reduce((s, p) => s + p.amount_due, 0))}</span>
                   </p>
                 </div>
               </div>
@@ -945,15 +946,15 @@ export default function TenantDetailPage() {
                             <td className="px-5 py-3 text-white font-mono font-medium">{monthLabel}</td>
                             <td className="px-5 py-3 text-white font-mono">{formatDate(payment.due_date)}</td>
                             <td className="px-5 py-3 text-white font-mono">{formatDate(payment.paid_date)}</td>
-                            <td className="px-5 py-3 text-right text-white font-mono">{formatCurrency(payment.amount)}</td>
+                            <td className="px-5 py-3 text-right text-white font-mono">{formatCurrency(payment.amount_due)}</td>
                             <td className="px-5 py-3 text-right text-white font-mono">
                               {payment.status === 'paid' || payment.status === 'partial'
-                                ? formatCurrency(payment.amount)
+                                ? formatCurrency(payment.amount_paid)
                                 : '--'}
                             </td>
                             <td className="px-5 py-3 text-right">
-                              {payment.late_fee ? (
-                                <span className="text-red font-medium font-mono">{formatCurrency(payment.late_fee)}</span>
+                              {payment.late_fee_charged ? (
+                                <span className="text-red font-medium font-mono">{formatCurrency(payment.late_fee_charged)}</span>
                               ) : (
                                 <span className="text-muted font-mono">--</span>
                               )}
@@ -1048,23 +1049,23 @@ export default function TenantDetailPage() {
             {/* Communication summary */}
             {agentLogs.length > 0 && (
               <div className="grid grid-cols-4 gap-4">
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Total Interactions</p>
                   <p className="text-lg font-bold font-mono text-white">{agentLogs.length}</p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Emails</p>
                   <p className="text-lg font-bold font-mono text-white">
                     {agentLogs.filter((l) => l.action?.toLowerCase().includes('email')).length}
                   </p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Calls</p>
                   <p className="text-lg font-bold font-mono text-white">
                     {agentLogs.filter((l) => l.action?.toLowerCase().includes('call') || l.action?.toLowerCase().includes('voice')).length}
                   </p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">SMS</p>
                   <p className="text-lg font-bold font-mono text-white">
                     {agentLogs.filter((l) => l.action?.toLowerCase().includes('sms')).length}
@@ -1185,23 +1186,23 @@ export default function TenantDetailPage() {
             {/* Maintenance summary */}
             {maintenanceRequests.length > 0 && (
               <div className="grid grid-cols-4 gap-4">
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Total Requests</p>
                   <p className="text-lg font-bold font-mono text-white">{maintenanceRequests.length}</p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Open</p>
                   <p className="text-lg font-bold font-mono text-red">
                     {maintenanceRequests.filter((r) => r.status === 'open' || r.status === 'in_progress').length}
                   </p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Completed</p>
                   <p className="text-lg font-bold font-mono text-green">
                     {maintenanceRequests.filter((r) => r.status === 'completed').length}
                   </p>
                 </Card>
-                <Card className="text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                <Card className="text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-1">Total Cost</p>
                   <p className="text-lg font-bold font-mono text-gold">
                     {formatCurrency(maintenanceRequests.reduce((s, r) => s + (r.actual_cost || r.estimated_cost || 0), 0))}

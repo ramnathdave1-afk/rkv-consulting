@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
     const { data: unresolvedMaintenance } = await supabaseAdmin
       .from('maintenance_requests')
       .select('*, tenants(*), properties(*)')
-      .in('status', ['pending', 'in_progress'])
+      .in('status', ['open', 'in_progress'])
       .lte('created_at', fortyEightHoursAgo);
 
     if (unresolvedMaintenance) {

@@ -7,6 +7,10 @@ import { makeCall } from '@/lib/apis/twilio'
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      return NextResponse.json({ error: 'Twilio credentials not configured' }, { status: 503 })
+    }
+
     const supabase = createClient()
     const {
       data: { user },

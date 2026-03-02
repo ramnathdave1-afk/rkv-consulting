@@ -246,7 +246,7 @@ export default function TenantsPage() {
     return ps.variant === 'danger';
   });
 
-  const overdueTotal = lateTenants.reduce((sum, t) => sum + (t.currentPayment?.amount || t.monthly_rent || 0), 0);
+  const overdueTotal = lateTenants.reduce((sum, t) => sum + (t.currentPayment?.amount_due || t.monthly_rent || 0), 0);
 
   const paidThisMonth = tenants.filter((t) => t.currentPayment?.status === 'paid').length;
   const totalWithPayments = tenants.filter((t) => t.currentPayment).length;

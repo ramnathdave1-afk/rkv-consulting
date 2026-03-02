@@ -53,10 +53,10 @@ interface Property {
   monthly_rent: number | null;
   mortgage_balance: number | null;
   mortgage_rate: number | null;
-  monthly_mortgage_payment: number | null;
+  mortgage_payment: number | null;
   mortgage_lender: string | null;
   insurance_annual: number | null;
-  property_tax_annual: number | null;
+  tax_annual: number | null;
   hoa_monthly: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -95,9 +95,9 @@ function fmtPct(n: number | null | undefined): string {
 }
 
 function calcMonthlyExpenses(p: Property): number {
-  const mortgage = p.monthly_mortgage_payment || 0;
+  const mortgage = p.mortgage_payment || 0;
   const insurance = (p.insurance_annual || 0) / 12;
-  const tax = (p.property_tax_annual || 0) / 12;
+  const tax = (p.tax_annual || 0) / 12;
   const hoa = p.hoa_monthly || 0;
   return mortgage + insurance + tax + hoa;
 }
@@ -108,7 +108,7 @@ function calcCashFlow(p: Property): number {
 
 function calcCapRate(p: Property): number | null {
   if (!p.current_value || p.current_value === 0) return null;
-  const annualNoi = ((p.monthly_rent || 0) * 12) - ((calcMonthlyExpenses(p) - (p.monthly_mortgage_payment || 0)) * 12);
+  const annualNoi = ((p.monthly_rent || 0) * 12) - ((calcMonthlyExpenses(p) - (p.mortgage_payment || 0)) * 12);
   return (annualNoi / p.current_value) * 100;
 }
 
@@ -160,10 +160,10 @@ const DEFAULT_FORM = {
   monthly_rent: '',
   mortgage_balance: '',
   mortgage_rate: '',
-  monthly_mortgage_payment: '',
+  mortgage_payment: '',
   mortgage_lender: '',
   insurance_annual: '',
-  property_tax_annual: '',
+  tax_annual: '',
   hoa_monthly: '',
   bedrooms: '',
   bathrooms: '',
@@ -224,10 +224,10 @@ function AddPropertyModal({
       monthly_rent: form.monthly_rent ? parseFloat(form.monthly_rent) : null,
       mortgage_balance: form.mortgage_balance ? parseFloat(form.mortgage_balance) : null,
       mortgage_rate: form.mortgage_rate ? parseFloat(form.mortgage_rate) : null,
-      monthly_mortgage_payment: form.monthly_mortgage_payment ? parseFloat(form.monthly_mortgage_payment) : null,
+      mortgage_payment: form.mortgage_payment ? parseFloat(form.mortgage_payment) : null,
       mortgage_lender: form.mortgage_lender.trim() || null,
       insurance_annual: form.insurance_annual ? parseFloat(form.insurance_annual) : null,
-      property_tax_annual: form.property_tax_annual ? parseFloat(form.property_tax_annual) : null,
+      tax_annual: form.tax_annual ? parseFloat(form.tax_annual) : null,
       hoa_monthly: form.hoa_monthly ? parseFloat(form.hoa_monthly) : null,
       bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
       bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
@@ -321,7 +321,7 @@ function AddPropertyModal({
               <div className="grid grid-cols-3 gap-4">
                 <Input label="Mortgage Balance" type="number" value={form.mortgage_balance} onChange={(e) => set('mortgage_balance', e.target.value)} placeholder="0" />
                 <Input label="Mortgage Rate (%)" type="number" step="0.01" value={form.mortgage_rate} onChange={(e) => set('mortgage_rate', e.target.value)} placeholder="0.00" />
-                <Input label="Monthly Payment" type="number" value={form.monthly_mortgage_payment} onChange={(e) => set('monthly_mortgage_payment', e.target.value)} placeholder="0" />
+                <Input label="Monthly Payment" type="number" value={form.mortgage_payment} onChange={(e) => set('mortgage_payment', e.target.value)} placeholder="0" />
               </div>
               <div className="mt-3">
                 <Input label="Lender" value={form.mortgage_lender} onChange={(e) => set('mortgage_lender', e.target.value)} placeholder="e.g. Chase Bank" />
@@ -333,7 +333,7 @@ function AddPropertyModal({
               <p className="label mb-3">Operating Expenses</p>
               <div className="grid grid-cols-3 gap-4">
                 <Input label="Insurance (Annual)" type="number" value={form.insurance_annual} onChange={(e) => set('insurance_annual', e.target.value)} placeholder="0" />
-                <Input label="Property Tax (Annual)" type="number" value={form.property_tax_annual} onChange={(e) => set('property_tax_annual', e.target.value)} placeholder="0" />
+                <Input label="Property Tax (Annual)" type="number" value={form.tax_annual} onChange={(e) => set('tax_annual', e.target.value)} placeholder="0" />
                 <Input label="HOA (Monthly)" type="number" value={form.hoa_monthly} onChange={(e) => set('hoa_monthly', e.target.value)} placeholder="0" />
               </div>
             </div>
@@ -411,9 +411,9 @@ function BulkImportModal({
     { value: 'monthly_rent', label: 'Monthly Rent' },
     { value: 'mortgage_balance', label: 'Mortgage Balance' },
     { value: 'mortgage_rate', label: 'Mortgage Rate' },
-    { value: 'monthly_mortgage_payment', label: 'Monthly Payment' },
+    { value: 'mortgage_payment', label: 'Monthly Payment' },
     { value: 'insurance_annual', label: 'Insurance (Annual)' },
-    { value: 'property_tax_annual', label: 'Property Tax (Annual)' },
+    { value: 'tax_annual', label: 'Property Tax (Annual)' },
     { value: 'hoa_monthly', label: 'HOA (Monthly)' },
     { value: 'bedrooms', label: 'Bedrooms' },
     { value: 'bathrooms', label: 'Bathrooms' },
@@ -871,7 +871,7 @@ function PortfolioSummary({
               'rounded-xl p-4',
               'hover:border-gold/30 hover:shadow-glow-sm transition-all duration-200',
             )}
-            style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+            style={{ background: '#111111', border: '1px solid #1e1e1e' }}
           >
             <div className="flex items-center gap-2 mb-2">
               <Icon className="h-4 w-4 text-muted" />
@@ -915,7 +915,7 @@ function PropertyCard({
           'hover:border-gold/30 hover:shadow-glow-sm',
           'transition-all duration-200 cursor-pointer group',
         )}
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
@@ -1042,7 +1042,7 @@ function PropertyListView({
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-deep">
@@ -1136,16 +1136,16 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
         center: { lat: 39.5, lng: -98.35 },
         zoom: 4,
         styles: [
-          { elementType: 'geometry', stylers: [{ color: '#0C1018' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#0C1018' }] },
+          { elementType: 'geometry', stylers: [{ color: '#111111' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#111111' }] },
           { elementType: 'labels.text.fill', stylers: [{ color: '#4A6080' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#161E2A' }] },
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#080B0F' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e1e1e' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#080808' }] },
           { featureType: 'poi', stylers: [{ visibility: 'off' }] },
         ],
         disableDefaultUI: true,
         zoomControl: true,
-        backgroundColor: '#080B0F',
+        backgroundColor: '#080808',
       });
 
       mapInstanceRef.current = map;
@@ -1165,7 +1165,7 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
             hasMarkers = true;
 
             const cashFlow = calcCashFlow(prop);
-            const pinColor = cashFlow >= 0 ? '#059669' : '#DC2626';
+            const pinColor = cashFlow >= 0 ? '#c9a84c' : '#DC2626';
 
             const marker = new google.maps.Marker({
               map,
@@ -1201,7 +1201,7 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
 
   if (!apiKey) {
     return (
-      <div className="rounded-xl p-8" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="rounded-xl p-8" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         <div className="relative h-[500px] rounded-lg overflow-hidden bg-deep">
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <MapPin className="h-12 w-12 text-gold/40 mb-4" />
@@ -1216,7 +1216,7 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <div className="relative h-[600px]">
         <div ref={mapRef} className="w-full h-full" />
         {!mapLoaded && (
@@ -1226,7 +1226,7 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
         )}
 
         {selectedProperty && (
-          <div className="absolute top-4 right-4 w-72 rounded-xl p-4 z-10" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="absolute top-4 right-4 w-72 rounded-xl p-4 z-10" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">{selectedProperty.address}</p>

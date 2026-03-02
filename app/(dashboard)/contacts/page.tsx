@@ -97,7 +97,7 @@ interface Contact {
   preferredContactMethod: PreferredContactMethod;
   metadata: ContactMetadata;
   dealsCount: number;
-  deals: { address: string; stage: string }[];
+  deals: { address: string; status: string }[];
   createdAt: string;
 }
 
@@ -121,12 +121,12 @@ const CONTACT_TYPE_CONFIG: Record<
 > = {
   private_lender: {
     label: 'Private Lender',
-    color: '#0EA5E9',
+    color: '#c9a84c',
     icon: <Landmark className="w-4 h-4" />,
   },
   real_estate_agent: {
     label: 'Real Estate Agent',
-    color: '#059669',
+    color: '#c9a84c',
     icon: <Home className="w-4 h-4" />,
   },
   contractor: {
@@ -156,7 +156,7 @@ const CONTACT_TYPE_CONFIG: Record<
   },
   partner_jv: {
     label: 'Partner/JV',
-    color: '#059669',
+    color: '#c9a84c',
     icon: <Handshake className="w-4 h-4" />,
   },
   other: {
@@ -213,8 +213,8 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 4,
     deals: [
-      { address: '892 Pacific Heights Blvd', stage: 'Closed' },
-      { address: '1240 Marina Dr', stage: 'Under Contract' },
+      { address: '892 Pacific Heights Blvd', status: 'Closed' },
+      { address: '1240 Marina Dr', status: 'Under Contract' },
     ],
     createdAt: '2025-03-10',
   },
@@ -236,8 +236,8 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 3,
     deals: [
-      { address: '456 Elm Ave, Scottsdale', stage: 'Closed' },
-      { address: '789 Camelback Rd', stage: 'Due Diligence' },
+      { address: '456 Elm Ave, Scottsdale', status: 'Closed' },
+      { address: '789 Camelback Rd', status: 'Due Diligence' },
     ],
     createdAt: '2025-05-18',
   },
@@ -260,8 +260,8 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 6,
     deals: [
-      { address: '123 Oak St Rehab', stage: 'In Progress' },
-      { address: '456 Elm Ave Renovation', stage: 'Completed' },
+      { address: '123 Oak St Rehab', status: 'In Progress' },
+      { address: '456 Elm Ave Renovation', status: 'Completed' },
     ],
     createdAt: '2025-01-15',
   },
@@ -284,7 +284,7 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 2,
     deals: [
-      { address: '1800 Westheimer Rd, Houston', stage: 'Under Contract' },
+      { address: '1800 Westheimer Rd, Houston', status: 'Under Contract' },
     ],
     createdAt: '2025-07-20',
   },
@@ -303,8 +303,8 @@ const MOCK_CONTACTS: Contact[] = [
     metadata: {},
     dealsCount: 5,
     deals: [
-      { address: '45 Wall St Entity Setup', stage: 'Completed' },
-      { address: '1031 Exchange — Portfolio', stage: 'Active' },
+      { address: '45 Wall St Entity Setup', status: 'Completed' },
+      { address: '1031 Exchange — Portfolio', status: 'Active' },
     ],
     createdAt: '2024-11-02',
   },
@@ -340,8 +340,8 @@ const MOCK_CONTACTS: Contact[] = [
     metadata: {},
     dealsCount: 3,
     deals: [
-      { address: '1200 Peachtree NE — 12 units', stage: 'Active' },
-      { address: '890 Piedmont Ave — 8 units', stage: 'Active' },
+      { address: '1200 Peachtree NE — 12 units', status: 'Active' },
+      { address: '890 Piedmont Ave — 8 units', status: 'Active' },
     ],
     createdAt: '2025-04-22',
   },
@@ -360,8 +360,8 @@ const MOCK_CONTACTS: Contact[] = [
     metadata: {},
     dealsCount: 2,
     deals: [
-      { address: 'Sunset Palms — 48 units', stage: 'Under Contract' },
-      { address: 'Harbor View — 96 units', stage: 'Closed' },
+      { address: 'Sunset Palms — 48 units', status: 'Under Contract' },
+      { address: 'Harbor View — 96 units', status: 'Closed' },
     ],
     createdAt: '2025-06-01',
   },
@@ -385,7 +385,7 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 3,
     deals: [
-      { address: '3400 Newport Beach', stage: 'Closed' },
+      { address: '3400 Newport Beach', status: 'Closed' },
     ],
     createdAt: '2025-08-10',
   },
@@ -407,7 +407,7 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 1,
     deals: [
-      { address: '2100 S Lamar Blvd, Austin', stage: 'Prospecting' },
+      { address: '2100 S Lamar Blvd, Austin', status: 'Prospecting' },
     ],
     createdAt: '2025-09-15',
   },
@@ -430,7 +430,7 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 4,
     deals: [
-      { address: '123 Oak St — Electrical', stage: 'Completed' },
+      { address: '123 Oak St — Electrical', status: 'Completed' },
     ],
     createdAt: '2025-03-28',
   },
@@ -453,7 +453,7 @@ const MOCK_CONTACTS: Contact[] = [
     },
     dealsCount: 1,
     deals: [
-      { address: '5600 Boulder Hwy, Henderson', stage: 'Expired' },
+      { address: '5600 Boulder Hwy, Henderson', status: 'Expired' },
     ],
     createdAt: '2025-10-01',
   },
@@ -489,7 +489,7 @@ const MOCK_CONTACTS: Contact[] = [
     metadata: {},
     dealsCount: 1,
     deals: [
-      { address: 'Brooklyn Heights — 24 units', stage: 'Due Diligence' },
+      { address: 'Brooklyn Heights — 24 units', status: 'Due Diligence' },
     ],
     createdAt: '2025-11-15',
   },
@@ -508,7 +508,7 @@ const MOCK_CONTACTS: Contact[] = [
     metadata: {},
     dealsCount: 2,
     deals: [
-      { address: '400 Alamo Plaza — 6 units', stage: 'Active' },
+      { address: '400 Alamo Plaza — 6 units', status: 'Active' },
     ],
     createdAt: '2025-08-20',
   },
@@ -551,7 +551,7 @@ function daysAgoColor(dateStr: string): string {
   const d = daysSince(dateStr);
   if (d > 30) return '#DC2626';
   if (d >= 14) return '#D97706';
-  return '#059669';
+  return '#c9a84c';
 }
 
 function getInitials(name: string): string {
@@ -599,7 +599,7 @@ function getRelationshipSuggestion(contact: Contact): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 8) return '#059669';
+  if (score >= 8) return '#c9a84c';
   if (score >= 5) return '#D97706';
   return '#DC2626';
 }
@@ -623,9 +623,9 @@ function StatsBar({ contacts }: { contacts: Contact[] }) {
   }, [contacts]);
 
   const statCards = [
-    { label: 'Total Contacts', value: stats.total, color: '#059669', icon: <Users className="w-4 h-4" /> },
-    { label: 'Private Lenders', value: stats.lenders, color: '#0EA5E9', icon: <Landmark className="w-4 h-4" /> },
-    { label: 'Agents', value: stats.agents, color: '#059669', icon: <Home className="w-4 h-4" /> },
+    { label: 'Total Contacts', value: stats.total, color: '#c9a84c', icon: <Users className="w-4 h-4" /> },
+    { label: 'Private Lenders', value: stats.lenders, color: '#c9a84c', icon: <Landmark className="w-4 h-4" /> },
+    { label: 'Agents', value: stats.agents, color: '#c9a84c', icon: <Home className="w-4 h-4" /> },
     { label: 'Contractors', value: stats.contractors, color: '#D97706', icon: <Wrench className="w-4 h-4" /> },
     { label: 'Need Follow-up', value: stats.needFollowUp, color: '#DC2626', icon: <AlertTriangle className="w-4 h-4" /> },
   ];
@@ -637,8 +637,8 @@ function StatsBar({ contacts }: { contacts: Contact[] }) {
           key={s.label}
           className="rounded-lg p-4 border"
           style={{
-            background: '#0C1018',
-            borderColor: '#161E2A',
+            background: '#111111',
+            borderColor: '#1e1e1e',
           }}
         >
           <div className="flex items-center justify-between mb-2">
@@ -676,7 +676,7 @@ function ScoreBar({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' })
     <div className="flex items-center gap-2">
       <div
         className={cn('flex-1 rounded-full overflow-hidden', height)}
-        style={{ backgroundColor: '#161E2A' }}
+        style={{ backgroundColor: '#1e1e1e' }}
       >
         <div
           className={cn('rounded-full transition-all duration-500', height)}
@@ -999,7 +999,7 @@ function AddContactModal({
                   onChange={(e) => updateField('relationshipScore', Number(e.target.value))}
                   className="flex-1 h-2 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #059669 0%, #059669 ${((Number(form.relationshipScore) - 1) / 9) * 100}%, #161E2A ${((Number(form.relationshipScore) - 1) / 9) * 100}%, #161E2A 100%)`,
+                    background: `linear-gradient(to right, #c9a84c 0%, #c9a84c ${((Number(form.relationshipScore) - 1) / 9) * 100}%, #1e1e1e ${((Number(form.relationshipScore) - 1) / 9) * 100}%, #1e1e1e 100%)`,
                   }}
                 />
                 <span className="font-mono text-sm font-bold text-white min-w-[32px] text-center">
@@ -1036,9 +1036,9 @@ function AddContactModal({
           {form.type === 'private_lender' && (
             <div
               className="rounded-lg border p-4 space-y-4"
-              style={{ backgroundColor: '#0EA5E910', borderColor: '#0EA5E930' }}
+              style={{ backgroundColor: '#c9a84c10', borderColor: '#c9a84c30' }}
             >
-              <p className="text-xs font-display font-semibold uppercase tracking-wider" style={{ color: '#0EA5E9' }}>
+              <p className="text-xs font-display font-semibold uppercase tracking-wider" style={{ color: '#c9a84c' }}>
                 Private Lender Details
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1082,9 +1082,9 @@ function AddContactModal({
           {form.type === 'real_estate_agent' && (
             <div
               className="rounded-lg border p-4 space-y-4"
-              style={{ backgroundColor: '#05966910', borderColor: '#05966930' }}
+              style={{ backgroundColor: '#c9a84c10', borderColor: '#c9a84c30' }}
             >
-              <p className="text-xs font-display font-semibold uppercase tracking-wider" style={{ color: '#059669' }}>
+              <p className="text-xs font-display font-semibold uppercase tracking-wider" style={{ color: '#c9a84c' }}>
                 Agent Details
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1109,8 +1109,8 @@ function AddContactModal({
                       >
                         <Star
                           className="w-5 h-5"
-                          fill={star <= Number(form.investorFriendlyRating || 0) ? '#059669' : 'transparent'}
-                          stroke={star <= Number(form.investorFriendlyRating || 0) ? '#059669' : '#4A6080'}
+                          fill={star <= Number(form.investorFriendlyRating || 0) ? '#c9a84c' : 'transparent'}
+                          stroke={star <= Number(form.investorFriendlyRating || 0) ? '#c9a84c' : '#4A6080'}
                         />
                       </button>
                     ))}
@@ -1235,8 +1235,8 @@ function ContactDetailPanel({
   const [callNotes, setCallNotes] = useState('');
 
   const activityIcons: Record<string, React.ReactNode> = {
-    email: <Send className="w-3.5 h-3.5" style={{ color: '#0EA5E9' }} />,
-    call: <PhoneCall className="w-3.5 h-3.5" style={{ color: '#059669' }} />,
+    email: <Send className="w-3.5 h-3.5" style={{ color: '#c9a84c' }} />,
+    call: <PhoneCall className="w-3.5 h-3.5" style={{ color: '#c9a84c' }} />,
     deal: <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#8B5CF6' }} />,
     note: <FileText className="w-3.5 h-3.5" style={{ color: '#D97706' }} />,
   };
@@ -1268,8 +1268,8 @@ function ContactDetailPanel({
       <div
         className="fixed top-0 right-0 z-50 w-full sm:w-[480px] h-full overflow-y-auto border-l animate-slide-in-right"
         style={{
-          background: '#0C1018',
-          borderColor: '#161E2A',
+          background: '#111111',
+          borderColor: '#1e1e1e',
         }}
       >
         {/* Close button */}
@@ -1310,7 +1310,7 @@ function ContactDetailPanel({
         </div>
 
         {/* Divider */}
-        <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+        <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
 
         {/* Contact info */}
         <div className="px-6 py-4 space-y-3">
@@ -1358,7 +1358,7 @@ function ContactDetailPanel({
         </div>
 
         {/* Divider */}
-        <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+        <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
 
         {/* One-click action buttons */}
         <div className="px-6 py-4">
@@ -1404,7 +1404,7 @@ function ContactDetailPanel({
           {showCallLog && (
             <div
               className="mt-3 rounded-lg border p-3 space-y-3"
-              style={{ backgroundColor: '#080B0F', borderColor: '#161E2A' }}
+              style={{ backgroundColor: '#080808', borderColor: '#1e1e1e' }}
             >
               <Select
                 label="Call Outcome"
@@ -1452,7 +1452,7 @@ function ContactDetailPanel({
         </div>
 
         {/* Divider */}
-        <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+        <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
 
         {/* Relationship Intelligence */}
         <div className="px-6 py-4">
@@ -1462,14 +1462,14 @@ function ContactDetailPanel({
           <div
             className="rounded-lg border p-4"
             style={{
-              backgroundColor: '#05966910',
-              borderColor: '#05966925',
+              backgroundColor: '#c9a84c10',
+              borderColor: '#c9a84c25',
             }}
           >
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0"
-                style={{ backgroundColor: '#05966920', color: '#059669' }}
+                style={{ backgroundColor: '#c9a84c20', color: '#c9a84c' }}
               >
                 <Sparkles className="w-4 h-4" />
               </div>
@@ -1499,7 +1499,7 @@ function ContactDetailPanel({
         {/* Type-specific details */}
         {Object.keys(contact.metadata).length > 0 && (
           <>
-            <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+            <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
             <div className="px-6 py-4">
               <p className="text-[10px] font-body text-muted uppercase tracking-wider mb-3">
                 {cfg.label} Details
@@ -1608,7 +1608,7 @@ function ContactDetailPanel({
         )}
 
         {/* Activity Timeline */}
-        <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+        <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
         <div className="px-6 py-4">
           <p className="text-[10px] font-body text-muted uppercase tracking-wider mb-3">
             Activity Timeline
@@ -1620,12 +1620,12 @@ function ContactDetailPanel({
                 {i < MOCK_ACTIVITIES.length - 1 && (
                   <div
                     className="absolute left-[13px] top-7 w-px h-[calc(100%-4px)]"
-                    style={{ backgroundColor: '#161E2A' }}
+                    style={{ backgroundColor: '#1e1e1e' }}
                   />
                 )}
                 <div
                   className="flex items-center justify-center w-7 h-7 rounded-full shrink-0 relative z-10"
-                  style={{ backgroundColor: '#0C1018', border: '1px solid #161E2A' }}
+                  style={{ backgroundColor: '#111111', border: '1px solid #1e1e1e' }}
                 >
                   {activityIcons[a.icon]}
                 </div>
@@ -1641,7 +1641,7 @@ function ContactDetailPanel({
         {/* Deals Associated */}
         {contact.deals.length > 0 && (
           <>
-            <div className="h-px mx-6" style={{ backgroundColor: '#161E2A' }} />
+            <div className="h-px mx-6" style={{ backgroundColor: '#1e1e1e' }} />
             <div className="px-6 py-4 pb-8">
               <p className="text-[10px] font-body text-muted uppercase tracking-wider mb-3">
                 Deals Associated
@@ -1651,13 +1651,13 @@ function ContactDetailPanel({
                   <div
                     key={i}
                     className="flex items-center justify-between rounded-lg border p-3"
-                    style={{ backgroundColor: '#080B0F', borderColor: '#161E2A' }}
+                    style={{ backgroundColor: '#080808', borderColor: '#1e1e1e' }}
                   >
                     <div className="flex items-center gap-2.5">
                       <Building2 className="w-4 h-4 text-muted" />
                       <span className="text-xs text-white font-body">{deal.address}</span>
                     </div>
-                    {dealStageBadge(deal.stage)}
+                    {dealStageBadge(deal.status)}
                   </div>
                 ))}
               </div>
@@ -1692,7 +1692,7 @@ function DetailCell({
         'rounded-lg border p-3',
         span && 'col-span-2',
       )}
-      style={{ backgroundColor: '#080B0F', borderColor: '#161E2A' }}
+      style={{ backgroundColor: '#080808', borderColor: '#1e1e1e' }}
     >
       <div className="flex items-center gap-2 mb-1">
         <span style={{ color }} className="opacity-60">{icon}</span>
@@ -1817,7 +1817,7 @@ export default function ContactsPage() {
               'focus:outline-none focus:border-gold/50 focus:shadow-glow-sm',
               'transition-all duration-200',
             )}
-            style={{ borderColor: '#161E2A', backgroundColor: '#0C1018' }}
+            style={{ borderColor: '#1e1e1e', backgroundColor: '#111111' }}
           />
         </div>
 
@@ -1833,7 +1833,7 @@ export default function ContactsPage() {
                 'focus:outline-none focus:border-gold/50',
                 'transition-all duration-200',
               )}
-              style={{ borderColor: '#161E2A', backgroundColor: '#0C1018' }}
+              style={{ borderColor: '#1e1e1e', backgroundColor: '#111111' }}
             >
               <option value="all">All Types</option>
               {CONTACT_TYPE_OPTIONS.map((opt) => (
@@ -1856,7 +1856,7 @@ export default function ContactsPage() {
                 'focus:outline-none focus:border-gold/50',
                 'transition-all duration-200',
               )}
-              style={{ borderColor: '#161E2A', backgroundColor: '#0C1018' }}
+              style={{ borderColor: '#1e1e1e', backgroundColor: '#111111' }}
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -1885,7 +1885,7 @@ export default function ContactsPage() {
           <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
             <div
               className="flex items-center justify-center w-16 h-16 mb-5 rounded-lg"
-              style={{ backgroundColor: '#05966915', color: '#059669', border: '1px solid #05966930' }}
+              style={{ backgroundColor: '#c9a84c15', color: '#c9a84c', border: '1px solid #c9a84c30' }}
             >
               <Users className="w-7 h-7" />
             </div>

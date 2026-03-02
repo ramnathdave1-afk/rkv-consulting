@@ -77,9 +77,9 @@ export function ScheduleETab({
 
       // Auto-populated amounts based on property data and transaction history
       const annualRent = rentalIncome > 0 ? rentalIncome : (prop.monthly_rent || 0) * 12
-      const annualInsurance = (prop.insurance || 0)
+      const annualInsurance = (prop.insurance_annual || 0)
       const annualMortgageInterest = (prop.mortgage_payment || 0) * 12 * 0.7
-      const annualTaxes = (prop.property_tax || 0)
+      const annualTaxes = (prop.tax_annual || 0)
 
       // Depreciation calculation
       const purchasePrice = prop.purchase_price || 0
@@ -172,7 +172,7 @@ export function ScheduleETab({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <p className="label mb-2">Total Rental Income</p>
           <p className="text-2xl font-bold text-green font-mono">
@@ -182,7 +182,7 @@ export function ScheduleETab({
         </div>
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <p className="label mb-2">Total Expenses</p>
           <p className="text-2xl font-bold text-red font-mono">
@@ -192,7 +192,7 @@ export function ScheduleETab({
         </div>
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <p className="label mb-2">Net Rental Income (Loss)</p>
           <p
@@ -231,7 +231,7 @@ export function ScheduleETab({
       {propertyScheduleData.length === 0 ? (
         <div
           className="bg-card border border-border rounded-xl p-12 text-center"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <Building2 className="w-10 h-10 text-muted/40 mx-auto mb-3" />
           <p className="text-sm text-muted">No properties found</p>
@@ -248,7 +248,7 @@ export function ScheduleETab({
             <div
               key={propId}
               className="bg-card border border-border rounded-xl overflow-hidden print:break-inside-avoid"
-              style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
             >
               {/* Property Header */}
               <div className="p-6 border-b border-border">
@@ -425,7 +425,7 @@ export function ScheduleETab({
           .print\\:break-inside-avoid {
             break-inside: avoid;
           }
-          [style*="background: #0C1018"] {
+          [style*="background: #111111"] {
             background: white !important;
             border-color: #e5e7eb !important;
             color: black !important;

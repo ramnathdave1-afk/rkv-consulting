@@ -48,7 +48,7 @@ import type {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const PIE_COLORS = ['#059669', '#0EA5E9', '#059669', '#3B82F6', '#A855F7', '#DC2626', '#F97316'];
+const PIE_COLORS = ['#c9a84c', '#c9a84c', '#c9a84c', '#3B82F6', '#A855F7', '#DC2626', '#F97316'];
 
 
 /* ------------------------------------------------------------------ */
@@ -89,7 +89,7 @@ function getDealStageLabel(stage: string): string {
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass rounded-lg px-3 py-2 shadow-card" style={{ background: '#0C1018', border: '1px solid rgba(5, 150, 105, 0.2)' }}>
+    <div className="glass rounded-lg px-3 py-2 shadow-card" style={{ background: '#111111', border: '1px solid rgba(201, 168, 76, 0.2)' }}>
       <p className="font-mono text-[10px] text-muted">{label}</p>
       <p className="font-mono text-sm font-semibold text-gold">{formatFullCurrency(payload[0].value)}</p>
     </div>
@@ -196,8 +196,8 @@ export default function DashboardPage() {
           id: `payment-${payment.id}`,
           type: 'payment',
           description: payment.status === 'paid'
-            ? `Rent payment received: ${formatFullCurrency(payment.amount)}`
-            : `Rent payment ${payment.status}: ${formatFullCurrency(payment.amount)}`,
+            ? `Rent payment received: ${formatFullCurrency(payment.amount_due)}`
+            : `Rent payment ${payment.status}: ${formatFullCurrency(payment.amount_due)}`,
           timestamp: payment.paid_date || payment.due_date,
         });
       });
@@ -245,7 +245,7 @@ export default function DashboardPage() {
           id: 'overdue-rent',
           type: 'danger',
           title: 'Overdue Rent Payments',
-          message: `${overduePayments.length} rent payment${overduePayments.length > 1 ? 's are' : ' is'} overdue. Total: ${formatFullCurrency(overduePayments.reduce((sum, p) => sum + p.amount, 0))}`,
+          message: `${overduePayments.length} rent payment${overduePayments.length > 1 ? 's are' : ' is'} overdue. Total: ${formatFullCurrency(overduePayments.reduce((sum, p) => sum + (p.amount_due || 0), 0))}`,
           actionLabel: 'View Payments',
           action: () => router.push('/tenants'),
           dismissible: true,
@@ -288,9 +288,22 @@ export default function DashboardPage() {
         });
       }
 
-      // Insurance expiring within 60 days (check property notes/documents for now)
-      // TODO: Add insurance_expiry field to properties table
-      // For now, skip this alert as there is no insurance_expiry column yet
+      // Insurance expiring within 60 days
+      const sixtyDaysFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+      const expiringInsurance = properties.filter(
+        (p) => p.insurance_expiry && new Date(p.insurance_expiry) <= sixtyDaysFromNow && new Date(p.insurance_expiry) >= now,
+      );
+      if (expiringInsurance.length > 0) {
+        newAlerts.push({
+          id: 'expiring-insurance',
+          type: 'warning',
+          title: 'Insurance Expiring Soon',
+          message: `${expiringInsurance.length} property insurance policy${expiringInsurance.length > 1 ? ' policies expire' : ' expires'} within the next 60 days.`,
+          actionLabel: 'View Properties',
+          action: () => router.push('/properties'),
+          dismissible: true,
+        });
+      }
 
       setAlerts(newAlerts);
     } catch (err) {
@@ -319,7 +332,7 @@ export default function DashboardPage() {
   );
 
   const totalMonthlyExpenses = properties.reduce(
-    (sum, p) => sum + (p.monthly_expenses || 0),
+    (sum, p) => sum + (p.mortgage_payment || 0) + (p.insurance_annual || 0) / 12 + (p.tax_annual || 0) / 12 + (p.hoa_monthly || 0),
     0,
   );
 
@@ -405,7 +418,7 @@ export default function DashboardPage() {
       upcomingEvents.push({
         id: `rent-${p.id}`,
         date: new Date(p.due_date),
-        description: `Rent due: ${formatFullCurrency(p.amount)}`,
+        description: `Rent due: ${formatFullCurrency(p.amount_due)}`,
         type: 'rent',
         icon: DollarSign,
       });
@@ -575,7 +588,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Portfolio Performance LineChart */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-5">
             <span className="label text-gold">Portfolio Performance</span>
             <span className="font-body text-[10px] text-muted-deep">12 Months</span>
@@ -594,7 +607,7 @@ export default function DashboardPage() {
                   dataKey="month"
                   stroke="#4A6080"
                   tick={{ fill: '#4A6080', fontSize: 12 }}
-                  axisLine={{ stroke: '#161E2A' }}
+                  axisLine={{ stroke: '#1e1e1e' }}
                   tickLine={false}
                 />
                 <YAxis
@@ -609,13 +622,13 @@ export default function DashboardPage() {
                 <Line
                   type="monotone"
                   dataKey="cashFlow"
-                  stroke="#059669"
+                  stroke="#c9a84c"
                   strokeWidth={2.5}
                   dot={false}
                   activeDot={{
                     r: 5,
-                    fill: '#059669',
-                    stroke: '#0C1018',
+                    fill: '#c9a84c',
+                    stroke: '#111111',
                     strokeWidth: 2,
                   }}
                 />
@@ -625,7 +638,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Property Breakdown — Horizontal Bars */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-5">
             <span className="label text-gold">Property Breakdown</span>
             <span className="font-body text-[10px] text-muted-deep">{properties.length} Assets</span>
@@ -654,12 +667,12 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ background: '#161E2A' }}>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1e1e1e' }}>
                         <div
                           className="h-full rounded-full transition-all duration-700 ease-out"
                           style={{
                             width: `${pct}%`,
-                            background: `linear-gradient(90deg, #059669, ${PIE_COLORS[index % PIE_COLORS.length]})`,
+                            background: `linear-gradient(90deg, #c9a84c, ${PIE_COLORS[index % PIE_COLORS.length]})`,
                           }}
                         />
                       </div>
@@ -681,7 +694,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Active Deals */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-4">
             <span className="label text-gold">Active Pipeline</span>
             <Link
@@ -700,7 +713,7 @@ export default function DashboardPage() {
           ) : deals.length > 0 ? (
             <div className="space-y-3">
               {deals
-                .filter((d) => d.stage !== 'closed' && d.stage !== 'dead')
+                .filter((d) => d.status !== 'closed' && d.status !== 'dead')
                 .slice(0, 3)
                 .map((deal) => {
                   const score = deal.analysis?.score
@@ -722,7 +735,7 @@ export default function DashboardPage() {
                             {formatFullCurrency(deal.asking_price)}
                           </span>
                           <span className="text-[10px] font-medium text-muted bg-border/50 rounded-full px-2 py-0.5">
-                            {getDealStageLabel(deal.stage)}
+                            {getDealStageLabel(deal.status)}
                           </span>
                         </div>
                       </div>
@@ -739,7 +752,7 @@ export default function DashboardPage() {
                     </div>
                   );
                 })}
-              {deals.filter((d) => d.stage !== 'closed' && d.stage !== 'dead').length === 0 && (
+              {deals.filter((d) => d.status !== 'closed' && d.status !== 'dead').length === 0 && (
                 <div className="text-center py-8">
                   <p className="font-body text-[11px] text-muted-deep">No active deals</p>
                   <Link
@@ -765,7 +778,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming Events */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-4">
             <span className="label text-gold">Upcoming · 30 Days</span>
           </div>
@@ -820,9 +833,9 @@ export default function DashboardPage() {
         </div>
 
         {/* AI Intelligence Brief */}
-        <div className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5 relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           {/* Animated left border */}
-          <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg, #059669, #0EA5E9, #059669)', backgroundSize: '100% 200%', animation: 'border-rotate 3s ease infinite' }} />
+          <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg, #c9a84c, #c9a84c, #c9a84c)', backgroundSize: '100% 200%', animation: 'border-rotate 3s ease infinite' }} />
           <div className="flex items-center justify-between mb-4 pl-2">
             <span className="label text-gold">AI Intelligence Brief</span>
             <Sparkles className="h-3 w-3 text-gold opacity-50" />
@@ -886,7 +899,7 @@ export default function DashboardPage() {
       {/* ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Mini Calendar Widget — Next 7 Days */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-4">
             <span className="label text-gold">Next 7 Days</span>
             <Link
@@ -1001,7 +1014,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Investment IQ Score Widget */}
-        <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center justify-between mb-4">
             <span className="label text-gold">Investment IQ</span>
             <Sparkles className="h-3 w-3 text-gold opacity-40" />
@@ -1042,16 +1055,16 @@ export default function DashboardPage() {
               : 0;
 
             const grade = overallIQ >= 80 ? 'A' : overallIQ >= 60 ? 'B' : overallIQ >= 40 ? 'C' : 'D';
-            const gradeColor = overallIQ >= 80 ? '#059669' : overallIQ >= 60 ? '#0EA5E9' : overallIQ >= 40 ? '#D97706' : '#DC2626';
+            const gradeColor = overallIQ >= 80 ? '#c9a84c' : overallIQ >= 60 ? '#c9a84c' : overallIQ >= 40 ? '#D97706' : '#DC2626';
 
             const radius = 52;
             const circumference = 2 * Math.PI * radius;
             const strokeDashoffset = circumference - (overallIQ / 100) * circumference;
 
             const subScores = [
-              { label: 'Cash Flow', score: cashFlowScore, color: '#059669' },
-              { label: 'Diversification', score: diversificationScore, color: '#0EA5E9' },
-              { label: 'Equity Growth', score: equityScore, color: '#059669' },
+              { label: 'Cash Flow', score: cashFlowScore, color: '#c9a84c' },
+              { label: 'Diversification', score: diversificationScore, color: '#c9a84c' },
+              { label: 'Equity Growth', score: equityScore, color: '#c9a84c' },
               { label: 'Risk Mgmt', score: riskScore, color: '#3B82F6' },
               { label: 'Tax Efficiency', score: taxScore, color: '#D97706' },
               { label: 'Market Strength', score: marketScore, color: '#8B5CF6' },
@@ -1070,7 +1083,7 @@ export default function DashboardPage() {
                 {/* Circular gauge */}
                 <div className="relative w-32 h-32">
                   <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r={radius} fill="none" stroke="#161E2A" strokeWidth="8" />
+                    <circle cx="60" cy="60" r={radius} fill="none" stroke="#1e1e1e" strokeWidth="8" />
                     <circle
                       cx="60" cy="60" r={radius} fill="none"
                       stroke={gradeColor} strokeWidth="8" strokeLinecap="round"

@@ -4,10 +4,12 @@ import { callClaude } from '@/lib/ai/claude'
 import { PLANS, type PlanName } from '@/lib/stripe/plans'
 import sgMail from '@sendgrid/mail'
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
-
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.SENDGRID_API_KEY) {
+      return NextResponse.json({ error: 'SendGrid API key not configured' }, { status: 503 })
+    }
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     const supabase = createClient()
     const {
       data: { user },

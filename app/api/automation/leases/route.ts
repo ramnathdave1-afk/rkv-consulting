@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
     switch (action) {
       // ── Send Renewal Offer via Email Agent ──────────────────────────
       case 'send_renewal': {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || ''
+        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || ''
         const emailResponse = await fetch(`${baseUrl}/api/agents/email`, {
           method: 'POST',
           headers: {
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
           )
         }
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || ''
+        const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || req.headers.get('origin') || ''
         const daysRemaining = tenant.lease_end
           ? Math.ceil(
               (new Date(tenant.lease_end).getTime() - Date.now()) /

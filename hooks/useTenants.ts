@@ -265,13 +265,13 @@ export function useRentCollectionStats() {
       let overdueCount = 0
 
       for (const p of payments) {
-        totalDue += p.amount + (p.late_fee ?? 0)
+        totalDue += p.amount_due + (p.late_fee_charged ?? 0)
 
         if (p.status === 'paid') {
-          totalCollected += p.amount
+          totalCollected += p.amount_paid
         } else if (p.status === 'partial') {
           // Partial payments: count what was actually paid (amount recorded)
-          totalCollected += p.amount
+          totalCollected += p.amount_paid
         }
 
         if (p.status === 'late' || p.status === 'pending') {

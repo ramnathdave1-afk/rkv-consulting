@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { property_id, property_address, notes } = body
+    const { property_id, property_address } = body
 
     if (!property_address) {
       return NextResponse.json(
@@ -41,11 +41,9 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: user.id,
         property_id: property_id || null,
-        property_address,
         token,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
-        notes: notes || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -61,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build the shareable application link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin
     const applicationLink = `${baseUrl}/apply/${token}`
 
     return NextResponse.json({

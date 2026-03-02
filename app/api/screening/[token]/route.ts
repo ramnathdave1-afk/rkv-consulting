@@ -121,15 +121,15 @@ export async function PUT(
       email,
       phone,
       date_of_birth,
-      ssn_last4,
+      ssn_last4: _ssn_last4,
       current_address,
       current_employer,
       annual_income,
       move_in_date,
       num_occupants,
       pets,
-      references,
-      additional_info,
+      references: _references,
+      additional_info: _additional_info,
     } = body
 
     // Basic validation
@@ -145,27 +145,20 @@ export async function PUT(
       .from('screening_applications')
       .update({
         status: 'submitted',
-        applicant_data: {
-          first_name,
-          last_name,
-          email,
-          phone: phone || null,
-          date_of_birth: date_of_birth || null,
-          ssn_last4: ssn_last4 || null,
-          current_address: current_address || null,
-          current_employer: current_employer || null,
-          annual_income: annual_income || null,
-          move_in_date: move_in_date || null,
-          num_occupants: num_occupants || null,
-          pets: pets || null,
-          references: references || null,
-          additional_info: additional_info || null,
-        },
-        submitted_at: new Date().toISOString(),
+        applicant_name: `${first_name} ${last_name}`,
+        applicant_email: email,
+        applicant_phone: phone || null,
+        date_of_birth: date_of_birth || null,
+        current_address: current_address || null,
+        employer: current_employer || null,
+        monthly_income: annual_income ? parseFloat(annual_income) / 12 : null,
+        move_in_date: move_in_date || null,
+        number_of_occupants: num_occupants ? parseInt(num_occupants) : null,
+        pets: !!pets,
         updated_at: new Date().toISOString(),
       })
       .eq('token', token)
-      .select('id, status, submitted_at')
+      .select('id, status')
       .single()
 
     if (updateError) {

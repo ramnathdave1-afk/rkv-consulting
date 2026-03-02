@@ -212,12 +212,11 @@ export function usePortfolioMetrics() {
         const value = p.current_value ?? p.purchase_price ?? 0
         const mortgage = p.mortgage_balance ?? 0
         const rent = p.monthly_rent ?? 0
-        const expenses = p.monthly_expenses ?? 0
-        const mortgagePayment = p.mortgage_payment ?? 0
+        const expenses = (p.mortgage_payment ?? 0) + (p.insurance_annual ?? 0) / 12 + (p.tax_annual ?? 0) / 12 + (p.hoa_monthly ?? 0)
 
         totalValue += value
         totalEquity += value - mortgage
-        totalMonthlyCashFlow += rent - expenses - mortgagePayment
+        totalMonthlyCashFlow += rent - expenses
 
         // Cap rate = NOI / value
         if (value > 0) {

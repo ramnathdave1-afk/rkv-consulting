@@ -964,7 +964,7 @@ function SettingsInner() {
                 name="Google Maps"
                 description="Property mapping and location intelligence"
                 connected={integrationStatus.google_maps}
-                onAction={() => toast.info(integrationStatus.google_maps ? 'Google Maps is connected' : 'Set GOOGLE_MAPS_API_KEY in environment variables')}
+                onAction={() => toast.info(integrationStatus.google_maps ? 'Google Maps is connected' : 'Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in environment variables')}
               />
             </div>
 
@@ -978,7 +978,7 @@ function SettingsInner() {
                 {[
                   { name: 'SENDGRID_API_KEY', masked: 'SG.****...****' },
                   { name: 'TWILIO_AUTH_TOKEN', masked: '****...****' },
-                  { name: 'GOOGLE_MAPS_API_KEY', masked: 'AIza****...****' },
+                  { name: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY', masked: 'AIza****...****' },
                   { name: 'STRIPE_SECRET_KEY', masked: 'sk_****...****' },
                 ].map((key) => (
                   <div

@@ -589,7 +589,7 @@ export default function DealsPage() {
           id: row.id as string,
           address: (row.address as string) || 'Untitled Deal',
           aiScore: (row.ai_score as number) || 0,
-          status: (row.stage === 'lead' || row.stage === 'analyzing') ? 'pipeline' as const : 'analyzed' as const,
+          status: (row.status === 'lead' || row.status === 'analyzing') ? 'pipeline' as const : 'analyzed' as const,
           date: new Date(row.created_at as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
           formData: (row.saved_inputs || row.analysis_data) as DealFormData,
           results: row.analysis_data as AnalysisResults,
@@ -637,7 +637,7 @@ export default function DealsPage() {
           ai_score: results.aiScore,
           red_flags: results.redFlags || [],
           saved_inputs: data,
-          stage: 'reviewing',
+          status: 'reviewing',
         }).select().single();
 
         const dealId = inserted?.id || Date.now().toString();
@@ -661,7 +661,7 @@ export default function DealsPage() {
   /* ---- Add to pipeline ------------------------------------------ */
   const handleAddToPipeline = useCallback(async () => {
     if (!currentDealId) return;
-    await supabase.from('deals').update({ stage: 'lead' }).eq('id', currentDealId);
+    await supabase.from('deals').update({ status: 'lead' }).eq('id', currentDealId);
     setSavedDeals((prev) =>
       prev.map((d) => d.id === currentDealId ? { ...d, status: 'pipeline' as const } : d),
     );

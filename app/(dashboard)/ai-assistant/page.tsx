@@ -15,7 +15,6 @@ import {
   Trash2,
   PanelLeftClose,
   PanelLeftOpen,
-  Send,
   Copy,
   Check,
   Activity,
@@ -29,6 +28,9 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { FeatureGate } from '@/components/paywall/FeatureGate';
 import { useSubscription } from '@/hooks/useSubscription';
+import { TextShimmer } from '@/components/ui/text-shimmer';
+import { useAnimatedText } from '@/components/ui/animated-text';
+import { AIInputWithSuggestions } from '@/components/ui/ai-input-with-suggestions';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -98,6 +100,49 @@ const QUICK_COMMANDS = [
   { label: 'CALCULATE TAX EXPOSURE', prompt: 'Review my portfolio and calculate my current tax exposure, including depreciation and potential deductions.' },
   { label: 'IDENTIFY OPPORTUNITIES', prompt: 'Based on my portfolio and current market conditions, identify the best investment opportunities for me.' },
   { label: 'GENERATE MARKET BRIEF', prompt: 'Generate a market trend report for the areas where I own properties, including pricing trends, rent growth, and demand indicators.' },
+];
+
+/* ------------------------------------------------------------------ */
+/*  AI Input suggestion actions (themed for RKV)                       */
+/* ------------------------------------------------------------------ */
+
+const AI_SUGGESTION_ACTIONS = [
+  {
+    text: 'Analyze Portfolio',
+    icon: Building2,
+    colors: {
+      icon: 'text-emerald-500',
+      border: 'border-emerald-500/30',
+      bg: 'bg-emerald-500/10',
+    },
+  },
+  {
+    text: 'Market Report',
+    icon: LineChart,
+    colors: {
+      icon: 'text-sky-500',
+      border: 'border-sky-500/30',
+      bg: 'bg-sky-500/10',
+    },
+  },
+  {
+    text: 'Review Deals',
+    icon: TrendingUp,
+    colors: {
+      icon: 'text-amber-500',
+      border: 'border-amber-500/30',
+      bg: 'bg-amber-500/10',
+    },
+  },
+  {
+    text: 'Draft Notice',
+    icon: FileText,
+    colors: {
+      icon: 'text-purple-500',
+      border: 'border-purple-500/30',
+      bg: 'bg-purple-500/10',
+    },
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -174,11 +219,11 @@ function renderMarkdown(text: string): React.ReactNode[] {
         elements.push(
           <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-border">
             {codeLang && (
-              <div className="px-3 py-1.5 bg-[#0C1018]/80 border-b border-border text-[10px] text-muted uppercase tracking-wider font-mono">
+              <div className="px-3 py-1.5 bg-[#111111]/80 border-b border-border text-[10px] text-muted uppercase tracking-wider font-mono">
                 {codeLang}
               </div>
             )}
-            <pre className="px-4 py-3 bg-[#0C1018]/50 overflow-x-auto">
+            <pre className="px-4 py-3 bg-[#111111]/50 overflow-x-auto">
               <code className="text-xs text-gold-light font-mono leading-relaxed">
                 {codeLines.join('\n')}
               </code>
@@ -380,10 +425,10 @@ function ChatBubble({
           {/* User message */}
           <div className="relative">
             <div
-              className="px-4 py-3 text-sm leading-relaxed font-body text-[#E2E8F0] rounded-lg"
+              className="px-4 py-3 text-sm leading-relaxed font-body text-[#f5f5f5] rounded-lg"
               style={{
-                background: 'rgba(5,150,105,0.07)',
-                border: '1px solid rgba(5,150,105,0.25)',
+                background: 'rgba(201,168,76,0.07)',
+                border: '1px solid rgba(201,168,76,0.25)',
               }}
             >
               {/* Copy button */}
@@ -393,7 +438,7 @@ function ChatBubble({
                 className={cn(
                   'absolute -top-2 left-0 opacity-0 group-hover:opacity-100',
                   'transition-opacity duration-150',
-                  'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+                  'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
                   'hover:border-gold/20 text-muted hover:text-gold',
                 )}
                 title="Copy message"
@@ -424,12 +469,12 @@ function ChatBubble({
         <div
           className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
           style={{
-            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            background: 'linear-gradient(180deg, #c9a84c 0%, #b8943f 50%, #c9a84c 100%)',
             backgroundSize: '100% 200%',
             animation: 'gradientShift 3s ease infinite',
           }}
         />
-        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
           {/* Copy button */}
           <button
             type="button"
@@ -437,7 +482,7 @@ function ChatBubble({
             className={cn(
               'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+              'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
               'hover:border-gold/20 text-muted hover:text-gold',
             )}
             title="Copy message"
@@ -456,6 +501,8 @@ function ChatBubble({
 /* ------------------------------------------------------------------ */
 
 function StreamingBubble({ content, isStreaming }: { content: string; isStreaming: boolean }) {
+  const animatedContent = useAnimatedText(content, ' ');
+
   return (
     <div className="w-full">
       {/* AI label */}
@@ -463,9 +510,6 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
         <span className="font-body text-[11px] text-gold uppercase tracking-wider">
           RKV {content ? '' : '// Processing'}
         </span>
-        {!content && (
-          <span className="font-mono text-[11px] text-gold animate-pulse">...</span>
-        )}
       </div>
       {/* Message body */}
       <div className="relative">
@@ -473,32 +517,27 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
         <div
           className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
           style={{
-            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            background: 'linear-gradient(180deg, #c9a84c 0%, #b8943f 50%, #c9a84c 100%)',
             backgroundSize: '100% 200%',
             animation: 'gradientShift 3s ease infinite',
           }}
         />
-        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
           {content ? (
             <div className="space-y-0">
-              {renderMarkdown(content)}
+              {renderMarkdown(animatedContent)}
               {isStreaming && (
                 <span className="inline-block w-0.5 h-5 bg-gold animate-pulse ml-0.5 align-middle" />
               )}
             </div>
           ) : isStreaming ? (
-            /* Scanning progress bar */
-            <div className="space-y-2">
-              <div className="h-[2px] w-48 bg-[#161E2A] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
-                  style={{
-                    width: '40%',
-                    animation: 'scanLine 1.5s ease-in-out infinite',
-                  }}
-                />
-              </div>
-            </div>
+            /* TextShimmer loading indicator while waiting for response */
+            <TextShimmer
+              className="font-mono text-sm [--base-color:#888888] [--base-gradient-color:#c9a84c] dark:[--base-color:#888888] dark:[--base-gradient-color:#c9a84c]"
+              duration={1.5}
+            >
+              Analyzing your portfolio...
+            </TextShimmer>
           ) : null}
         </div>
       </div>
@@ -520,7 +559,7 @@ function LiveContextPanel({ context }: { context: PortfolioContext }) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-[#161E2A]">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[#1e1e1e]">
         <p className="font-body uppercase tracking-wider text-[10px] text-gold">
           LIVE CONTEXT
         </p>
@@ -628,7 +667,7 @@ function LiveContextPanel({ context }: { context: PortfolioContext }) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-body text-[10px] text-muted-deep">Portfolio</span>
-              <span className="font-mono text-[11px] text-[#E2E8F0]">
+              <span className="font-mono text-[11px] text-[#f5f5f5]">
                 ${totalValue > 0 ? totalValue.toLocaleString() : '--'}
               </span>
             </div>
@@ -644,7 +683,7 @@ function LiveContextPanel({ context }: { context: PortfolioContext }) {
                 ${totalExpenses > 0 ? totalExpenses.toLocaleString() : '--'}
               </span>
             </div>
-            <div className="flex items-center justify-between border-t border-[#161E2A] pt-1.5 mt-1">
+            <div className="flex items-center justify-between border-t border-[#1e1e1e] pt-1.5 mt-1">
               <span className="font-body text-[10px] text-muted-deep">Cash Flow</span>
               <span className={cn(
                 'font-mono text-[11px] font-bold',
@@ -685,7 +724,6 @@ export default function AIAssistantPage() {
   const [usageCount, setUsageCount] = useState(0);
   const [usageLimit, setUsageLimit] = useState(200);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [input, setInput] = useState('');
   const [portfolioContext, setPortfolioContext] = useState<PortfolioContext>({
     properties: [],
     tenants: [],
@@ -697,10 +735,8 @@ export default function AIAssistantPage() {
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const MAX_CHARS = 4000;
   const isEmpty = messages.length === 0 && !isStreaming;
 
   /* ---- Plan-based usage label ---- */
@@ -773,7 +809,7 @@ export default function AIAssistantPage() {
     const [propertiesRes, tenantsRes, dealsRes, maintenanceRes] = await Promise.all([
       supabase
         .from('properties')
-        .select('address, city, state, property_type, current_value, monthly_rent, monthly_expenses, status')
+        .select('address, city, state, property_type, current_value, monthly_rent, mortgage_payment, insurance_annual, tax_annual, hoa_monthly, status')
         .eq('user_id', user.id)
         .limit(20),
       supabase
@@ -784,9 +820,9 @@ export default function AIAssistantPage() {
         .limit(20),
       supabase
         .from('deals')
-        .select('address, asking_price, stage, analysis')
+        .select('address, asking_price, status, analysis')
         .eq('user_id', user.id)
-        .neq('stage', 'dead')
+        .neq('status', 'dead')
         .limit(10),
       supabase
         .from('maintenance_requests')
@@ -803,7 +839,7 @@ export default function AIAssistantPage() {
 
     const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
     const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
-    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_expenses || 0), 0);
+    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.mortgage_payment || 0) + (p.insurance_annual || 0)/12 + (p.tax_annual || 0)/12 + (p.hoa_monthly || 0), 0);
 
     setPortfolioContext({
       properties,
@@ -819,14 +855,6 @@ export default function AIAssistantPage() {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
-
-  /* ---- Auto-resize textarea ---- */
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 160) + 'px';
-  }, [input]);
 
   /* ---- Scroll to bottom ---- */
   const scrollToBottom = useCallback(() => {
@@ -854,7 +882,6 @@ export default function AIAssistantPage() {
     setMessages([]);
     setStreamingContent('');
     setIsStreaming(false);
-    setInput('');
   }
 
   async function handleDeleteConversation(id: string) {
@@ -896,14 +923,14 @@ export default function AIAssistantPage() {
     const [propertiesRes, dealsRes, tenantsRes, maintenanceRes] = await Promise.all([
       supabase
         .from('properties')
-        .select('address, city, state, property_type, current_value, monthly_rent, monthly_expenses, status')
+        .select('address, city, state, property_type, current_value, monthly_rent, mortgage_payment, insurance_annual, tax_annual, hoa_monthly, status')
         .eq('user_id', userId)
         .limit(20),
       supabase
         .from('deals')
-        .select('address, asking_price, stage, analysis')
+        .select('address, asking_price, status, analysis')
         .eq('user_id', userId)
-        .neq('stage', 'dead')
+        .neq('status', 'dead')
         .limit(10),
       supabase
         .from('tenants')
@@ -926,7 +953,7 @@ export default function AIAssistantPage() {
 
     const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
     const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
-    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_expenses || 0), 0);
+    const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.mortgage_payment || 0) + (p.insurance_annual || 0)/12 + (p.tax_annual || 0)/12 + (p.hoa_monthly || 0), 0);
 
     return `You are RKV AI Assistant, a professional real estate investment advisor for RKV Consulting.
 
@@ -937,14 +964,14 @@ CONTEXT ABOUT THE USER'S PORTFOLIO:
 - Monthly expenses: $${totalExpenses.toLocaleString()}
 - Monthly cash flow: $${(totalRent - totalExpenses).toLocaleString()}
 - Active tenants: ${tenants.length}
-- Active deals: ${deals.filter((d: Record<string, any>) => d.stage !== 'closed').length}
+- Active deals: ${deals.filter((d: Record<string, any>) => d.status !== 'closed').length}
 - Open maintenance requests: ${maintenance.length}
 
 PROPERTIES:
 ${properties.map((p: Record<string, any>) => `- ${p.address}, ${p.city}, ${p.state} (${p.property_type}, ${p.status}) - Value: $${(p.current_value || 0).toLocaleString()}, Rent: $${(p.monthly_rent || 0).toLocaleString()}/mo`).join('\n')}
 
 ACTIVE DEALS:
-${deals.map((d: Record<string, any>) => `- ${d.address} - Asking: $${d.asking_price.toLocaleString()} - Stage: ${d.stage}`).join('\n') || 'None'}
+${deals.map((d: Record<string, any>) => `- ${d.address} - Asking: $${d.asking_price.toLocaleString()} - Status: ${d.status}`).join('\n') || 'None'}
 
 ACTIVE TENANTS:
 ${tenants.map((t: Record<string, any>) => `- ${t.first_name} ${t.last_name} - Rent: $${t.monthly_rent.toLocaleString()}/mo - Lease ends: ${t.lease_end || 'N/A'}`).join('\n') || 'None'}
@@ -980,11 +1007,6 @@ GUIDELINES:
     setMessages(updatedMessages);
     setIsStreaming(true);
     setStreamingContent('');
-    setInput('');
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
 
     let convId = activeConversationId;
     const isNewConversation = !convId;
@@ -1143,20 +1165,6 @@ GUIDELINES:
     }
   }
 
-  /* ---- Input handlers ---- */
-  function handleSend() {
-    const trimmed = input.trim();
-    if (!trimmed || isStreaming) return;
-    handleSendMessage(trimmed);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }
-
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
   /* ---------------------------------------------------------------- */
@@ -1183,11 +1191,11 @@ GUIDELINES:
         }
       `}</style>
 
-      <div className="-m-8 flex flex-col bg-[#080B0F]" style={{ height: 'calc(100vh - 4rem)' }}>
+      <div className="-m-8 flex flex-col bg-[#080808]" style={{ height: 'calc(100vh - 4rem)' }}>
         {/* ============================================================ */}
         {/*  TOP BAR - HEADER                                            */}
         {/* ============================================================ */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-[#161E2A] bg-[#0C1018]">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-[#1e1e1e] bg-[#111111]">
           <div className="flex items-center gap-3">
             {/* Sidebar toggle */}
             <button
@@ -1199,7 +1207,7 @@ GUIDELINES:
             </button>
 
             <div>
-              <h2 className="font-display font-bold text-xl text-[#E2E8F0] leading-none">
+              <h2 className="font-display font-bold text-xl text-[#f5f5f5] leading-none">
                 RKV Intelligence
               </h2>
               <p className="font-body text-[11px] text-gold mt-0.5">
@@ -1210,7 +1218,7 @@ GUIDELINES:
 
           <div className="flex items-center gap-4">
             {/* Model badge */}
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md border border-[#161E2A] bg-[#0C1018]">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md border border-[#1e1e1e] bg-[#111111]">
               <span className="font-body text-[10px] text-muted uppercase tracking-wider">Claude Sonnet</span>
               <div className="flex items-center gap-1.5">
                 <span className="pulse-dot" />
@@ -1220,7 +1228,7 @@ GUIDELINES:
 
             {/* Usage meter */}
             <div className="flex items-center gap-2">
-              <div className="w-20 h-1.5 bg-[#161E2A] rounded-full overflow-hidden">
+              <div className="w-20 h-1.5 bg-[#1e1e1e] rounded-full overflow-hidden">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
@@ -1228,7 +1236,7 @@ GUIDELINES:
                       ? 'bg-[#DC2626]'
                       : usageCount / usageLimit > 0.7
                       ? 'bg-gold'
-                      : 'bg-[#059669]'
+                      : 'bg-[#c9a84c]'
                   )}
                   style={{ width: `${Math.min((usageCount / usageLimit) * 100, 100)}%` }}
                 />
@@ -1253,7 +1261,7 @@ GUIDELINES:
           {/* ========================================================== */}
           <div
             className={cn(
-              'flex-shrink-0 bg-[#0C1018] border-r border-[#161E2A] transition-all duration-300 overflow-hidden flex flex-col',
+              'flex-shrink-0 bg-[#111111] border-r border-[#1e1e1e] transition-all duration-300 overflow-hidden flex flex-col',
               sidebarOpen ? 'w-[260px]' : 'w-0'
             )}
           >
@@ -1284,7 +1292,7 @@ GUIDELINES:
             <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
               {conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center px-3">
-                  <MessageSquare className="h-6 w-6 text-[#161E2A] mb-3" />
+                  <MessageSquare className="h-6 w-6 text-[#1e1e1e] mb-3" />
                   <p className="font-body text-[10px] text-muted-deep">No sessions found</p>
                   <p className="font-body text-[10px] text-muted-deep/60 mt-1">
                     Start a new session to begin
@@ -1305,10 +1313,10 @@ GUIDELINES:
                   >
                     <ChevronRight className={cn(
                       'h-3 w-3 flex-shrink-0 mt-1 transition-colors',
-                      activeConversationId === conv.id ? 'text-gold' : 'text-[#161E2A]'
+                      activeConversationId === conv.id ? 'text-gold' : 'text-[#1e1e1e]'
                     )} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-[#E2E8F0] truncate leading-snug font-body">
+                      <p className="text-[12px] text-[#f5f5f5] truncate leading-snug font-body">
                         {conv.title}
                       </p>
                       <p className="font-mono text-[11px] text-muted-deep mt-0.5">
@@ -1331,7 +1339,7 @@ GUIDELINES:
             </div>
 
             {/* Quick Commands section */}
-            <div className="flex-shrink-0 border-t border-[#161E2A]">
+            <div className="flex-shrink-0 border-t border-[#1e1e1e]">
               <div className="p-3">
                 <p className="font-body uppercase tracking-wider text-[10px] text-gold mb-2 px-1">
                   Quick Actions
@@ -1363,7 +1371,7 @@ GUIDELINES:
           {/* ========================================================== */}
           {/*  CENTER PANEL - CHAT INTERFACE                               */}
           {/* ========================================================== */}
-          <div className="flex-1 flex flex-col min-w-0 bg-[#080B0F]">
+          <div className="flex-1 flex flex-col min-w-0 bg-[#080808]">
 
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
@@ -1381,8 +1389,8 @@ GUIDELINES:
                         className="w-20 h-20"
                         style={{
                           clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                          border: '1px solid rgba(5,150,105,0.3)',
-                          background: 'rgba(5,150,105,0.05)',
+                          border: '1px solid rgba(201,168,76,0.3)',
+                          background: 'rgba(201,168,76,0.05)',
                         }}
                       />
                     </div>
@@ -1392,7 +1400,7 @@ GUIDELINES:
                     </div>
                   </div>
 
-                  <h2 className="font-display font-bold text-xl text-[#E2E8F0] mb-2">
+                  <h2 className="font-display font-bold text-xl text-[#f5f5f5] mb-2">
                     How can I help?
                   </h2>
                   <p className="font-body text-[11px] text-muted-deep mb-8 leading-relaxed max-w-sm">
@@ -1411,9 +1419,9 @@ GUIDELINES:
                           className={cn(
                             'flex items-start gap-3 p-3.5 rounded-md text-left',
                             'bg-transparent',
-                            'border-l-2 border-gold/30 border-t border-r border-b border-t-[#161E2A] border-r-[#161E2A] border-b-[#161E2A]',
+                            'border-l-2 border-gold/30 border-t border-r border-b border-t-[#1e1e1e] border-r-[#1e1e1e] border-b-[#1e1e1e]',
                             'hover:border-l-gold hover:bg-gold/5',
-                            'hover:shadow-[0_0_20px_rgba(5,150,105,0.08)]',
+                            'hover:shadow-[0_0_20px_rgba(201,168,76,0.08)]',
                             'transition-all duration-200 group/prompt',
                           )}
                           style={{ animation: `fadeInUp 0.4s ease ${idx * 0.1}s both` }}
@@ -1421,7 +1429,7 @@ GUIDELINES:
                           <div className="flex-shrink-0 w-7 h-7 rounded-md bg-gold/10 border border-gold/20 flex items-center justify-center group-hover/prompt:bg-gold/20 transition-colors">
                             <Icon className="h-3.5 w-3.5 text-gold" />
                           </div>
-                          <span className="text-[12px] text-muted group-hover/prompt:text-[#E2E8F0] transition-colors leading-snug font-body">
+                          <span className="text-[12px] text-muted group-hover/prompt:text-[#f5f5f5] transition-colors leading-snug font-body">
                             {action.label}
                           </span>
                         </button>
@@ -1455,62 +1463,28 @@ GUIDELINES:
             </div>
 
             {/* ---- Input area ---- */}
-            <div className="flex-shrink-0 border-t border-[#161E2A] bg-[#0C1018] px-6 py-4">
+            <div className="flex-shrink-0 border-t border-[#1e1e1e] bg-[#111111] px-2 sm:px-6 py-0">
               <div className="max-w-3xl mx-auto">
-                <div className="relative flex items-end gap-3 bg-transparent border border-[#161E2A] rounded-lg px-4 py-3 focus-within:border-gold/30 focus-within:shadow-[0_0_20px_rgba(5,150,105,0.08)] transition-all">
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value.slice(0, MAX_CHARS))}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask a question..."
-                    rows={1}
-                    className={cn(
-                      'flex-1 bg-transparent text-sm text-[#E2E8F0] font-body',
-                      'placeholder:font-body placeholder:text-muted-deep',
-                      'resize-none outline-none',
-                      'min-h-[24px] max-h-[160px]',
-                    )}
-                    disabled={isStreaming}
-                  />
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className={cn(
-                        'font-mono text-[10px] tabular-nums',
-                        input.length > MAX_CHARS * 0.9
-                          ? 'text-[#DC2626]'
-                          : 'text-muted-deep'
-                      )}
+                {isStreaming ? (
+                  <div className="flex items-center justify-center py-5">
+                    <TextShimmer
+                      className="font-mono text-sm [--base-color:#888888] [--base-gradient-color:#c9a84c] dark:[--base-color:#888888] dark:[--base-gradient-color:#c9a84c]"
+                      duration={1.5}
                     >
-                      {input.length}/{MAX_CHARS}
-                    </span>
-
-                    {/* Hexagonal send button */}
-                    <button
-                      type="button"
-                      onClick={handleSend}
-                      disabled={!input.trim() || isStreaming}
-                      className={cn(
-                        'flex items-center justify-center w-9 h-9',
-                        'transition-all duration-200',
-                        input.trim() && !isStreaming
-                          ? 'text-[#080B0F] hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]'
-                          : 'text-muted-deep cursor-not-allowed'
-                      )}
-                      style={{
-                        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                        background: input.trim() && !isStreaming
-                          ? '#059669'
-                          : '#161E2A',
-                      }}
-                    >
-                      <Send className="h-4 w-4" />
-                    </button>
+                      RKV Intelligence is thinking...
+                    </TextShimmer>
                   </div>
-                </div>
+                ) : (
+                  <AIInputWithSuggestions
+                    placeholder="Ask about your portfolio, market data, deals..."
+                    actions={AI_SUGGESTION_ACTIONS}
+                    onSubmit={(text) => handleSendMessage(text)}
+                    minHeight={48}
+                    maxHeight={160}
+                  />
+                )}
 
-                <p className="font-body text-[10px] text-muted-deep text-center mt-2">
+                <p className="font-body text-[10px] text-muted-deep text-center pb-2">
                   AI responses may contain inaccuracies. Verify critical data independently.
                 </p>
               </div>
@@ -1520,7 +1494,7 @@ GUIDELINES:
           {/* ========================================================== */}
           {/*  RIGHT PANEL (280px) - LIVE CONTEXT                         */}
           {/* ========================================================== */}
-          <div className="hidden xl:flex flex-shrink-0 w-[280px] bg-[#0C1018] border-l border-[#161E2A] flex-col">
+          <div className="hidden xl:flex flex-shrink-0 w-[280px] bg-[#111111] border-l border-[#1e1e1e] flex-col">
             <LiveContextPanel context={portfolioContext} />
           </div>
 

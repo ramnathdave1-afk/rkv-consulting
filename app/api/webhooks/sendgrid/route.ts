@@ -17,9 +17,10 @@ function validateSendGridSignature(
 ): boolean {
   const webhookKey = process.env.SENDGRID_WEBHOOK_KEY
   if (!webhookKey) {
-    // If no webhook key is configured, skip validation (dev mode)
-    console.warn('[SendGrid Webhook] SENDGRID_WEBHOOK_KEY not set, skipping signature validation')
-    return true
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[SendGrid Webhook] SENDGRID_WEBHOOK_KEY not set in production!')
+    }
+    return true // dev mode bypass
   }
 
   const signature = req.headers.get('x-twilio-email-event-webhook-signature')

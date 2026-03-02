@@ -43,9 +43,9 @@ import {
 /** Pipeline column definitions */
 const PIPELINE_COLUMNS = [
   { key: 'lead' as const, label: 'WATCHING', color: '#4A6080' },
-  { key: 'analyzing' as const, label: 'ANALYZING', color: '#0EA5E9' },
+  { key: 'analyzing' as const, label: 'ANALYZING', color: '#c9a84c' },
   { key: 'offer_sent' as const, label: 'OFFER SENT', color: '#D97706' },
-  { key: 'under_contract' as const, label: 'UNDER CONTRACT', color: '#059669' },
+  { key: 'under_contract' as const, label: 'UNDER CONTRACT', color: '#c9a84c' },
   { key: 'due_diligence' as const, label: 'DUE DILIGENCE', color: '#8B5CF6' },
   { key: 'closing' as const, label: 'CLOSING', color: '#EC4899' },
   { key: 'closed' as const, label: 'CLOSED', color: '#10B981' },
@@ -55,8 +55,8 @@ const PIPELINE_COLUMNS = [
 type PipelineStage = typeof PIPELINE_COLUMNS[number]['key'];
 
 /** Extended deal type with virtual "closing" stage */
-type PipelineDeal = Omit<Deal, 'stage'> & {
-  stage: PipelineStage;
+type PipelineDeal = Omit<Deal, 'status'> & {
+  status: PipelineStage;
 };
 
 /** Stage ordering for "move to next" */
@@ -182,7 +182,7 @@ function getNextStage(current: PipelineStage): PipelineStage | null {
   return STAGE_ORDER[idx + 1];
 }
 
-function mapStageToDb(stage: PipelineStage): Deal['stage'] {
+function mapStageToDb(stage: PipelineStage): Deal['status'] {
   if (stage === 'closing') return 'due_diligence';
   return stage;
 }
@@ -212,8 +212,8 @@ function StatCard({
     <div
       className="flex items-center gap-3 rounded-lg px-4 py-3 min-w-[160px]"
       style={{
-        background: '#0C1018',
-        border: `1px solid ${accent ? 'rgba(5, 150, 105, 0.3)' : '#161E2A'}`,
+        background: '#111111',
+        border: `1px solid ${accent ? 'rgba(201, 168, 76, 0.3)' : '#1e1e1e'}`,
       }}
     >
       {icon && (
@@ -263,7 +263,7 @@ function DealCard({
       ? '#DC2626'
       : deal.priority === 'medium'
         ? '#D97706'
-        : '#059669';
+        : '#c9a84c';
 
   const displayAddress = deal.address
     ? deal.address.length > 28
@@ -284,7 +284,7 @@ function DealCard({
       )}
       style={{
         background: '#0F1620',
-        border: '1px solid #161E2A',
+        border: '1px solid #1e1e1e',
       }}
     >
       {/* Priority dot + address */}
@@ -363,15 +363,15 @@ function KanbanColumn({
         isDragOver && 'ring-1 ring-gold/40',
       )}
       style={{
-        background: '#0C1018',
-        border: `1px solid ${isDragOver ? 'rgba(5, 150, 105, 0.4)' : '#161E2A'}`,
+        background: '#111111',
+        border: `1px solid ${isDragOver ? 'rgba(201, 168, 76, 0.4)' : '#1e1e1e'}`,
         minHeight: '400px',
       }}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, column.key)}
     >
       {/* Column header */}
-      <div className="px-3 py-3 border-b" style={{ borderColor: '#161E2A' }}>
+      <div className="px-3 py-3 border-b" style={{ borderColor: '#1e1e1e' }}>
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <span
@@ -487,19 +487,19 @@ function DetailPanel({
   const score = analysis?.score ?? null;
   const grade = analysis?.grade ?? (score != null ? getGradeFromScore(score) : null);
   const days = daysSinceCreated(deal);
-  const stageLabel = PIPELINE_COLUMNS.find((c) => c.key === deal.stage)?.label || deal.stage;
-  const stageColor = PIPELINE_COLUMNS.find((c) => c.key === deal.stage)?.color || '#4A6080';
+  const stageLabel = PIPELINE_COLUMNS.find((c) => c.key === deal.status)?.label || deal.status;
+  const stageColor = PIPELINE_COLUMNS.find((c) => c.key === deal.status)?.color || '#4A6080';
 
-  const nextStage = getNextStage(deal.stage);
+  const nextStage = getNextStage(deal.status);
   const nextStageLabel = nextStage
     ? PIPELINE_COLUMNS.find((c) => c.key === nextStage)?.label
     : null;
 
-  const showChecklist = deal.stage === 'under_contract' || deal.stage === 'due_diligence';
+  const showChecklist = deal.status === 'under_contract' || deal.status === 'due_diligence';
   const checklistItems =
-    deal.stage === 'under_contract'
+    deal.status === 'under_contract'
       ? UNDER_CONTRACT_CHECKLIST
-      : deal.stage === 'due_diligence'
+      : deal.status === 'due_diligence'
         ? DUE_DILIGENCE_CHECKLIST
         : [];
 
@@ -519,13 +519,13 @@ function DetailPanel({
     <div
       className="fixed top-0 right-0 w-full sm:w-[480px] h-screen z-50 flex flex-col animate-slide-in-right"
       style={{
-        background: '#0C1018',
-        borderLeft: '1px solid #161E2A',
+        background: '#111111',
+        borderLeft: '1px solid #1e1e1e',
         boxShadow: '-8px 0 40px rgba(0, 0, 0, 0.5)',
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#161E2A' }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#1e1e1e' }}>
         <div className="flex-1 min-w-0 mr-3">
           <h2 className="font-display font-bold text-white text-base truncate">
             {deal.address || deal.title}
@@ -564,7 +564,7 @@ function DetailPanel({
             {stageDropdownOpen && (
               <div
                 className="absolute top-full left-0 mt-1 z-10 w-56 rounded-lg shadow-card overflow-hidden"
-                style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 {PIPELINE_COLUMNS.map((col) => (
                   <button
@@ -577,7 +577,7 @@ function DetailPanel({
                     className={cn(
                       'w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] font-body',
                       'transition-colors hover:bg-white/5',
-                      deal.stage === col.key ? 'text-white bg-white/[0.03]' : 'text-muted',
+                      deal.status === col.key ? 'text-white bg-white/[0.03]' : 'text-muted',
                     )}
                   >
                     <span
@@ -585,7 +585,7 @@ function DetailPanel({
                       style={{ backgroundColor: col.color }}
                     />
                     {col.label}
-                    {deal.stage === col.key && (
+                    {deal.status === col.key && (
                       <CheckCircle2 className="w-3.5 h-3.5 text-gold ml-auto" />
                     )}
                   </button>
@@ -596,15 +596,15 @@ function DetailPanel({
 
           {/* Price info */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}>
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">Asking</p>
               <p className="font-mono text-sm font-bold text-gold">{formatCurrency(deal.asking_price)}</p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}>
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">Offer</p>
               <p className="font-mono text-sm font-bold text-white">{formatCurrency(deal.offer_price)}</p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}>
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">ARV</p>
               <p className="font-mono text-sm font-bold text-white">{formatCurrency(deal.arv)}</p>
             </div>
@@ -612,11 +612,11 @@ function DetailPanel({
 
           {/* Repair cost & rent estimate */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}>
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">Repair Cost</p>
               <p className="font-mono text-sm font-bold text-white">{formatCurrency(deal.repair_cost)}</p>
             </div>
-            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #161E2A' }}>
+            <div className="rounded-lg p-3" style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}>
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-1">Mo. Rent Est.</p>
               <p className="font-mono text-sm font-bold text-white">{formatCurrency(deal.monthly_rent_estimate)}</p>
             </div>
@@ -626,7 +626,7 @@ function DetailPanel({
           {analysis && score != null && (
             <div
               className="rounded-lg p-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[10px] uppercase tracking-wider font-body text-muted">AI Analysis</p>
@@ -694,11 +694,11 @@ function DetailPanel({
           {showChecklist && (
             <div
               className="rounded-lg overflow-hidden"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
-              <div className="px-4 py-3 border-b" style={{ borderColor: '#161E2A' }}>
+              <div className="px-4 py-3 border-b" style={{ borderColor: '#1e1e1e' }}>
                 <p className="text-[10px] uppercase tracking-wider font-body text-muted">
-                  {deal.stage === 'under_contract' ? 'Under Contract' : 'Due Diligence'} Checklist
+                  {deal.status === 'under_contract' ? 'Under Contract' : 'Due Diligence'} Checklist
                 </p>
                 <p className="text-[11px] font-mono text-gold mt-0.5">
                   {Object.values(dealChecklist).filter(Boolean).length}/{checklistItems.length} complete
@@ -720,7 +720,7 @@ function DetailPanel({
           {/* Activity timeline */}
           <div
             className="rounded-lg p-4"
-            style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+            style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
           >
             <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-3">Activity</p>
             <div className="space-y-3">
@@ -759,7 +759,7 @@ function DetailPanel({
           {/* Notes */}
           <div
             className="rounded-lg p-4"
-            style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+            style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] uppercase tracking-wider font-body text-muted">Notes</p>
@@ -779,7 +779,7 @@ function DetailPanel({
                   value={notesValue}
                   onChange={(e) => setNotesValue(e.target.value)}
                   className="w-full h-24 bg-transparent text-white text-[13px] font-body rounded-lg p-2 resize-y focus:outline-none focus:ring-1 focus:ring-gold/30"
-                  style={{ border: '1px solid #161E2A', backgroundColor: '#080B0F' }}
+                  style={{ border: '1px solid #1e1e1e', backgroundColor: '#080808' }}
                   placeholder="Add notes about this deal..."
                 />
                 <div className="flex items-center gap-2">
@@ -800,7 +800,7 @@ function DetailPanel({
           {(deal.agent_name || deal.agent_phone || deal.agent_email) && (
             <div
               className="rounded-lg p-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
             >
               <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-3">Contact</p>
               <div className="space-y-2">
@@ -833,7 +833,7 @@ function DetailPanel({
           {/* Follow-up date */}
           <div
             className="rounded-lg p-4"
-            style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+            style={{ background: '#0F1620', border: '1px solid #1e1e1e' }}
           >
             <p className="text-[10px] uppercase tracking-wider font-body text-muted mb-2">Set Follow-up</p>
             <div className="flex items-center gap-2">
@@ -842,7 +842,7 @@ function DetailPanel({
                 value={followUpDate}
                 onChange={(e) => setFollowUpDate(e.target.value)}
                 className="flex-1 h-9 bg-transparent text-white text-[13px] font-body rounded-lg px-3 focus:outline-none focus:ring-1 focus:ring-gold/30"
-                style={{ border: '1px solid #161E2A', backgroundColor: '#080B0F', colorScheme: 'dark' }}
+                style={{ border: '1px solid #1e1e1e', backgroundColor: '#080808', colorScheme: 'dark' }}
               />
               <Button
                 size="sm"
@@ -862,7 +862,7 @@ function DetailPanel({
       </div>
 
       {/* Footer actions */}
-      <div className="px-5 py-4 border-t space-y-2" style={{ borderColor: '#161E2A' }}>
+      <div className="px-5 py-4 border-t space-y-2" style={{ borderColor: '#1e1e1e' }}>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -884,7 +884,7 @@ function DetailPanel({
             </Button>
           )}
         </div>
-        {deal.stage === 'closed' && (
+        {deal.status === 'closed' && (
           <Button
             size="sm"
             variant="solid"
@@ -1208,17 +1208,17 @@ export default function PipelinePage() {
     const now = new Date();
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    const watching = deals.filter((d) => d.stage === 'lead').length;
-    const analyzing = deals.filter((d) => d.stage === 'analyzing').length;
-    const underContract = deals.filter((d) => d.stage === 'under_contract' || d.stage === 'due_diligence').length;
+    const watching = deals.filter((d) => d.status === 'lead').length;
+    const analyzing = deals.filter((d) => d.status === 'analyzing').length;
+    const underContract = deals.filter((d) => d.status === 'under_contract' || d.status === 'due_diligence').length;
 
-    const closedDeals = deals.filter((d) => d.stage === 'closed');
+    const closedDeals = deals.filter((d) => d.status === 'closed');
     const closedThisYear = closedDeals.filter((d) => {
       const closeDate = d.close_date ? new Date(d.close_date) : new Date(d.updated_at);
       return closeDate >= yearStart;
     }).length;
 
-    const passed = deals.filter((d) => d.stage === 'dead').length;
+    const passed = deals.filter((d) => d.status === 'dead').length;
 
     // Avg days to close (for closed deals)
     const closedWithDays = closedDeals.map((d) => {
@@ -1262,7 +1262,7 @@ export default function PipelinePage() {
       dead: [],
     };
     filteredDeals.forEach((deal) => {
-      const stage = deal.stage as PipelineStage;
+      const stage = deal.status as PipelineStage;
       if (map[stage]) {
         map[stage].push(deal);
       } else {
@@ -1326,13 +1326,13 @@ export default function PipelinePage() {
       setDraggedDealId(null);
 
       const deal = deals.find((d) => d.id === dealId);
-      if (!deal || deal.stage === newStage) return;
+      if (!deal || deal.status === newStage) return;
 
       // Optimistic update
       setDeals((prev) =>
         prev.map((d) =>
           d.id === dealId
-            ? { ...d, stage: newStage, updated_at: new Date().toISOString() }
+            ? { ...d, status: newStage, updated_at: new Date().toISOString() }
             : d,
         ),
       );
@@ -1340,14 +1340,14 @@ export default function PipelinePage() {
       // Update selected deal if open
       if (selectedDeal?.id === dealId) {
         setSelectedDeal((prev) =>
-          prev ? { ...prev, stage: newStage, updated_at: new Date().toISOString() } : prev,
+          prev ? { ...prev, status: newStage, updated_at: new Date().toISOString() } : prev,
         );
       }
 
       // Persist to Supabase
       const dbStage = mapStageToDb(newStage);
       const updateData: Record<string, unknown> = {
-        stage: dbStage,
+        status: dbStage,
         updated_at: new Date().toISOString(),
       };
       if (newStage === 'closed') {
@@ -1360,7 +1360,7 @@ export default function PipelinePage() {
         .eq('id', dealId);
 
       if (error) {
-        console.error('Error updating deal stage:', error);
+        console.error('Error updating deal status:', error);
         toast.error('Failed to update deal stage');
         // Revert
         setDeals((prev) =>
@@ -1380,25 +1380,25 @@ export default function PipelinePage() {
   const handleStageChange = useCallback(
     async (dealId: string, newStage: PipelineStage) => {
       const deal = deals.find((d) => d.id === dealId);
-      if (!deal || deal.stage === newStage) return;
+      if (!deal || deal.status === newStage) return;
 
       // Optimistic update
       setDeals((prev) =>
         prev.map((d) =>
           d.id === dealId
-            ? { ...d, stage: newStage, updated_at: new Date().toISOString() }
+            ? { ...d, status: newStage, updated_at: new Date().toISOString() }
             : d,
         ),
       );
       if (selectedDeal?.id === dealId) {
         setSelectedDeal((prev) =>
-          prev ? { ...prev, stage: newStage, updated_at: new Date().toISOString() } : prev,
+          prev ? { ...prev, status: newStage, updated_at: new Date().toISOString() } : prev,
         );
       }
 
       const dbStage = mapStageToDb(newStage);
       const updateData: Record<string, unknown> = {
-        stage: dbStage,
+        status: dbStage,
         updated_at: new Date().toISOString(),
       };
       if (newStage === 'closed') {
@@ -1488,7 +1488,7 @@ export default function PipelinePage() {
         agent_email: form.agent_email || null,
         notes: form.notes || null,
         priority: form.priority || 'medium',
-        stage: 'lead',
+        status: 'lead',
       };
 
       const { data, error } = await supabase
@@ -1633,7 +1633,7 @@ export default function PipelinePage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by address or city..."
             className="w-full h-9 pl-9 pr-3 bg-transparent text-white text-[13px] font-body rounded-lg focus:outline-none focus:ring-1 focus:ring-gold/30 placeholder:text-muted-deep"
-            style={{ border: '1px solid #161E2A', backgroundColor: '#0C1018' }}
+            style={{ border: '1px solid #1e1e1e', backgroundColor: '#111111' }}
           />
           {searchQuery && (
             <button
@@ -1650,7 +1650,7 @@ export default function PipelinePage() {
           value={filterPropertyType}
           onChange={(e) => setFilterPropertyType(e.target.value)}
           className="h-9 px-3 pr-8 text-[13px] font-body text-white rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-gold/30"
-          style={{ border: '1px solid #161E2A', backgroundColor: '#0C1018' }}
+          style={{ border: '1px solid #1e1e1e', backgroundColor: '#111111' }}
         >
           <option value="">All Types</option>
           {PROPERTY_TYPE_OPTIONS.slice(1).map((opt) => (
@@ -1663,7 +1663,7 @@ export default function PipelinePage() {
           value={filterSource}
           onChange={(e) => setFilterSource(e.target.value)}
           className="h-9 px-3 pr-8 text-[13px] font-body text-white rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-gold/30"
-          style={{ border: '1px solid #161E2A', backgroundColor: '#0C1018' }}
+          style={{ border: '1px solid #1e1e1e', backgroundColor: '#111111' }}
         >
           {availableSources.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1675,7 +1675,7 @@ export default function PipelinePage() {
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value)}
           className="h-9 px-3 pr-8 text-[13px] font-body text-white rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-gold/30"
-          style={{ border: '1px solid #161E2A', backgroundColor: '#0C1018' }}
+          style={{ border: '1px solid #1e1e1e', backgroundColor: '#111111' }}
         >
           <option value="">All Priorities</option>
           <option value="high">High</option>
@@ -1693,7 +1693,7 @@ export default function PipelinePage() {
               setFilterPriority('');
             }}
             className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-body text-gold hover:bg-gold/10 transition-colors"
-            style={{ border: '1px solid rgba(5, 150, 105, 0.3)' }}
+            style={{ border: '1px solid rgba(201, 168, 76, 0.3)' }}
           >
             <X className="w-3 h-3" />
             Clear filters

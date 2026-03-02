@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       arv: body.arv_estimate || null,
       repair_cost: null,
       monthly_rent_estimate: body.rent_estimate || null,
-      stage: 'lead',
+      status: 'lead',
       priority: 'medium',
       source: body.source || 'deal_feed',
       agent_name: null,

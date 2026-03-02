@@ -136,7 +136,7 @@ function generateSuggestions(
         id: `deal-${deal.id}`,
         type: 'deal',
         icon: <TrendingUp className="h-4 w-4 text-gold-light" />,
-        headline: `"${deal.name || deal.title || 'Deal'}" stuck in ${deal.stage || 'pipeline'} for ${daysStale} days`,
+        headline: `"${deal.name || deal.title || 'Deal'}" stuck in ${deal.status || 'pipeline'} for ${daysStale} days`,
         context: `Deals that stall often lose momentum. Review and take the next step.`,
         actionLabel: 'Review Deal',
         priority: daysStale > 30 ? 'high' : 'medium',
@@ -219,12 +219,12 @@ function SuggestionCard({
       exit="hidden"
       layout
       className="rounded-lg p-3.5 group/card transition-colors duration-200"
-      style={{ background: '#0A0E14', border: '1px solid #161E2A' }}
+      style={{ background: '#0A0E14', border: '1px solid #1e1e1e' }}
     >
       <div className="flex items-start gap-3">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-          style={{ background: '#161E2A' }}
+          style={{ background: '#1e1e1e' }}
         >
           {suggestion.icon}
         </div>
@@ -379,7 +379,7 @@ export default function AIConcierge({
           !isOpen
             ? {
                 boxShadow:
-                  '0 0 30px rgba(5, 150, 105, 0.3), 0 4px 20px rgba(0, 0, 0, 0.4)',
+                  '0 0 30px rgba(201, 168, 76, 0.3), 0 4px 20px rgba(0, 0, 0, 0.4)',
               }
             : undefined
         }
@@ -411,21 +411,21 @@ export default function AIConcierge({
             exit="exit"
             className="fixed bottom-24 right-6 z-50 w-96 max-h-[70vh] rounded-lg overflow-hidden flex flex-col"
             style={{
-              background: '#0C1018',
-              border: '1px solid #161E2A',
+              background: '#111111',
+              border: '1px solid #1e1e1e',
               boxShadow:
-                '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(5, 150, 105, 0.05)',
+                '0 8px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(201, 168, 76, 0.05)',
             }}
           >
             {/* Panel Header */}
             <div
               className="px-4 py-3.5 flex items-center justify-between shrink-0"
-              style={{ borderBottom: '1px solid #161E2A' }}
+              style={{ borderBottom: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2.5">
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(5, 150, 105, 0.15)' }}
+                  style={{ background: 'rgba(201, 168, 76, 0.15)' }}
                 >
                   <Sparkles className="h-4 w-4 text-gold" />
                 </div>
@@ -469,7 +469,7 @@ export default function AIConcierge({
                   >
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-                      style={{ background: 'rgba(5, 150, 105, 0.1)' }}
+                      style={{ background: 'rgba(201, 168, 76, 0.1)' }}
                     >
                       <Sparkles className="h-6 w-6 text-gold" />
                     </div>

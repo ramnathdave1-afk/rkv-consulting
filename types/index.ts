@@ -90,9 +90,10 @@ export interface Property {
   mortgage_balance: number | null;
   mortgage_rate: number | null;
   mortgage_payment: number | null;
-  insurance: number | null;
-  property_tax: number | null;
-  hoa_fees: number | null;
+  insurance_annual: number | null;
+  insurance_expiry: string | null;
+  tax_annual: number | null;
+  hoa_monthly: number | null;
   vacancy_rate: number | null;
   status: 'active' | 'vacant' | 'under_renovation' | 'listed_for_sale' | 'sold' | 'pending';
   notes: string | null;
@@ -137,7 +138,7 @@ export interface Deal {
   arv: number | null; // after repair value
   repair_cost: number | null;
   monthly_rent_estimate: number | null;
-  stage: 'lead' | 'analyzing' | 'offer_sent' | 'under_contract' | 'due_diligence' | 'closed' | 'dead';
+  status: 'lead' | 'analyzing' | 'reviewing' | 'offer_sent' | 'under_contract' | 'due_diligence' | 'closed' | 'dead';
   priority: 'low' | 'medium' | 'high';
   source: string | null;
   agent_name: string | null;
@@ -174,12 +175,13 @@ export interface RentPayment {
   user_id: string; // uuid, references profiles.id
   tenant_id: string; // uuid, references tenants.id
   property_id: string; // uuid, references properties.id
-  amount: number;
+  amount_due: number;
+  amount_paid: number;
   due_date: string; // date
   paid_date: string | null; // date
   status: 'pending' | 'paid' | 'late' | 'partial' | 'waived';
   payment_method: 'cash' | 'check' | 'bank_transfer' | 'online' | 'other' | null;
-  late_fee: number | null;
+  late_fee_charged: number | null;
   notes: string | null;
   created_at: string; // timestamptz
   updated_at: string; // timestamptz
