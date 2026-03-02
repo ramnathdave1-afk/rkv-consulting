@@ -1,9 +1,9 @@
 import axios, { AxiosError } from 'axios'
 
-// Works with "Zillow Real Estate API" by Collector or any RapidAPI Zillow API.
-// Set RAPIDAPI_KEY. Optionally set RAPIDAPI_ZILLOW_HOST to match the API's X-RapidAPI-Host.
+// Zillow Real Estate API on RapidAPI (host: zillow-real-estate-api.p.rapidapi.com).
+// Set RAPIDAPI_KEY in Vercel. Override host with RAPIDAPI_ZILLOW_HOST if needed.
 const ZILLOW_HOST =
-  process.env.RAPIDAPI_ZILLOW_HOST || 'zillow-real-estate-api-by-collector.p.rapidapi.com'
+  process.env.RAPIDAPI_ZILLOW_HOST || 'zillow-real-estate-api.p.rapidapi.com'
 
 function getZillowClient() {
   return axios.create({
@@ -123,7 +123,49 @@ export async function searchListings(params: {
 
   const client = getZillowClient()
 
-  // 1) Try propertyExtendedSearch (zillow-com1 style)
+  // 1) Try /v1/ listing search (zillow-real-estate-api.p.rapidapi.com)
+  try {
+    const r = await client.get('/v1/listings', {
+      params: {
+        location: params.location,
+        type: params.status === 'ForRent' ? 'rent' : 'sale',
+        page: params.page || 1,
+      },
+    })
+    const results = extractResults(r.data)
+    if (results.length > 0) {
+      return {
+        totalResultCount: r.data?.totalCount ?? r.data?.totalResultCount ?? results.length,
+        results,
+      }
+    }
+  } catch (err) {
+    const status = err instanceof AxiosError ? err.response?.status : 0
+    if (status !== 404 && status !== 501) {
+      return handleError(err, 'searchListings (/v1/listings)')
+    }
+  }
+
+  try {
+    const r = await client.get('/v1/search', {
+      params: {
+        q: params.location,
+        type: params.status === 'ForRent' ? 'rent' : 'sale',
+        page: params.page || 1,
+      },
+    })
+    const results = extractResults(r.data)
+    if (results.length > 0) {
+      return {
+        totalResultCount: r.data?.totalCount ?? results.length,
+        results,
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2) Try propertyExtendedSearch (legacy style)
   try {
     const r = await client.get('/propertyExtendedSearch', {
       params: {
@@ -196,7 +238,17 @@ export async function getPropertyDetails(zpid: string): Promise<Record<string, u
 
   const client = getZillowClient()
 
-  for (const path of ['/property', '/getPropertyDetails', '/propertyDetails']) {
+  const pathsWithZpid = [`/v1/property/${zpid}`, `/v1/propertyDetails/${zpid}`]
+  for (const path of pathsWithZpid) {
+    try {
+      const response = await client.get(path)
+      if (response.data) return response.data
+    } catch {
+      // try next
+    }
+  }
+  const pathsWithParam = ['/v1/property', '/v1/propertyDetails', '/property', '/getPropertyDetails', '/propertyDetails']
+  for (const path of pathsWithParam) {
     try {
       const response = await client.get(path, { params: { zpid } })
       if (response.data) return response.data
