@@ -31,10 +31,10 @@ import { FeatureGate } from '@/components/paywall/FeatureGate';
 import type { Property, ScreeningResult } from '@/types';
 
 /* ------------------------------------------------------------------ */
-/*  Mock screening data                                                */
+/*  Screening display type                                             */
 /* ------------------------------------------------------------------ */
 
-const MOCK_SCREENINGS: {
+interface ScreeningDisplay {
   id: string;
   applicantName: string;
   applicantEmail: string;
@@ -42,134 +42,7 @@ const MOCK_SCREENINGS: {
   date: string;
   status: 'pending' | 'complete' | 'expired';
   result: ScreeningResult | null;
-}[] = [
-  {
-    id: 'scr-001',
-    applicantName: 'Marcus Williams',
-    applicantEmail: 'marcus.w@email.com',
-    propertyAddress: '1420 Oak Lane, Unit B',
-    date: '2026-02-20',
-    status: 'complete',
-    result: {
-      applicant_name: 'Marcus Williams',
-      application_date: '2026-02-20',
-      credit_score: 742,
-      credit_grade: 'good',
-      credit_flags: [],
-      monthly_income: 6800,
-      income_to_rent_ratio: 3.4,
-      employment_verified: true,
-      employer: 'Deloitte Consulting',
-      eviction_history: false,
-      criminal_background: false,
-      prior_landlord_references: 2,
-      rental_history_years: 6,
-      overall_score: 85,
-      risk_level: 'low',
-      recommendation: 'approve',
-      conditions: [],
-      flags: [],
-      summary:
-        'Marcus Williams is a strong applicant with a credit score of 742 and a stable income of $6,800/mo from Deloitte Consulting. His income-to-rent ratio of 3.4x exceeds the standard 3x threshold. He has a clean eviction record and 6 years of rental history with 2 positive landlord references. No criminal background or credit flags detected. Recommend full approval with standard lease terms.',
-    },
-  },
-  {
-    id: 'scr-002',
-    applicantName: 'Jennifer Chen',
-    applicantEmail: 'jchen.design@email.com',
-    propertyAddress: '835 Maple Drive',
-    date: '2026-02-18',
-    status: 'complete',
-    result: {
-      applicant_name: 'Jennifer Chen',
-      application_date: '2026-02-18',
-      credit_score: 618,
-      credit_grade: 'fair',
-      credit_flags: ['Late payment (30 days) - auto loan, Sep 2025', 'High credit utilization (68%)'],
-      monthly_income: 4200,
-      income_to_rent_ratio: 2.6,
-      employment_verified: true,
-      employer: 'Self-employed (Freelance Designer)',
-      eviction_history: false,
-      criminal_background: false,
-      prior_landlord_references: 1,
-      rental_history_years: 3,
-      overall_score: 52,
-      risk_level: 'medium',
-      recommendation: 'approve_with_conditions',
-      conditions: [
-        'Require additional security deposit equal to 1 month rent',
-        'Require co-signer or guarantor',
-        'Proof of 3 months income documentation',
-      ],
-      flags: [
-        'Income-to-rent ratio below 3x threshold',
-        'Self-employed income may vary',
-        'Recent late payment on credit report',
-      ],
-      summary:
-        'Jennifer Chen presents a moderate risk profile. Her credit score of 618 is in the fair range with two flags: a recent 30-day late payment on an auto loan and high credit utilization at 68%. As a self-employed freelance designer earning $4,200/mo, her income-to-rent ratio of 2.6x falls below the standard 3x threshold. However, she has no eviction or criminal history and has 3 years of stable rental history. Recommend conditional approval with additional deposit and co-signer requirement.',
-    },
-  },
-  {
-    id: 'scr-003',
-    applicantName: 'David Thompson',
-    applicantEmail: 'd.thompson@email.com',
-    propertyAddress: '1420 Oak Lane, Unit A',
-    date: '2026-02-15',
-    status: 'complete',
-    result: {
-      applicant_name: 'David Thompson',
-      application_date: '2026-02-15',
-      credit_score: 485,
-      credit_grade: 'poor',
-      credit_flags: [
-        'Collections account - medical ($2,400)',
-        'Late payments (60+ days) on 2 accounts',
-        'Credit utilization at 92%',
-        'Short credit history (2 years)',
-      ],
-      monthly_income: 3100,
-      income_to_rent_ratio: 1.9,
-      employment_verified: true,
-      employer: 'Amazon Warehouse',
-      eviction_history: true,
-      criminal_background: false,
-      prior_landlord_references: 0,
-      rental_history_years: 1,
-      overall_score: 22,
-      risk_level: 'high',
-      recommendation: 'deny',
-      conditions: [],
-      flags: [
-        'Previous eviction on record (2024)',
-        'Income-to-rent ratio well below 3x threshold',
-        'Multiple derogatory marks on credit report',
-        'No landlord references available',
-      ],
-      summary:
-        'David Thompson presents a high-risk profile that does not meet minimum qualification standards. His credit score of 485 is in the poor range with multiple derogatory marks including a collections account, multiple late payments, and very high credit utilization. His income of $3,100/mo provides only a 1.9x income-to-rent ratio. Most critically, he has a prior eviction from 2024 and no landlord references. Based on these factors, application is recommended for denial.',
-    },
-  },
-  {
-    id: 'scr-004',
-    applicantName: 'Priya Patel',
-    applicantEmail: 'priya.p@email.com',
-    propertyAddress: '835 Maple Drive',
-    date: '2026-02-24',
-    status: 'pending',
-    result: null,
-  },
-  {
-    id: 'scr-005',
-    applicantName: 'Robert Kim',
-    applicantEmail: 'r.kim@email.com',
-    propertyAddress: '2100 Birch Court',
-    date: '2026-01-10',
-    status: 'expired',
-    result: null,
-  },
-];
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -244,7 +117,7 @@ function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
 
-  const color = score >= 70 ? '#059669' : score >= 40 ? '#059669' : '#DC2626';
+  const color = score >= 70 ? '#c9a84c' : score >= 40 ? '#c9a84c' : '#DC2626';
 
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
@@ -288,7 +161,8 @@ function ScoreRing({ score, size = 96 }: { score: number; size?: number }) {
 function ScreeningContent() {
   const supabase = createClient();
   const [properties, setProperties] = useState<Property[]>([]);
-  const [selectedScreening, setSelectedScreening] = useState<typeof MOCK_SCREENINGS[0] | null>(null);
+  const [screenings, setScreenings] = useState<ScreeningDisplay[]>([]);
+  const [selectedScreening, setSelectedScreening] = useState<ScreeningDisplay | null>(null);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState('');
   const [selectedUnit, setSelectedUnit] = useState('');
@@ -297,20 +171,59 @@ function ScreeningContent() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [actionTaken, setActionTaken] = useState<Record<string, 'approved' | 'declined' | 'more_info'>>({});
 
-  /* ---- Fetch properties ---- */
+  /* ---- Fetch properties & screenings ---- */
 
   useEffect(() => {
-    async function fetchProperties() {
+    async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
+
+      // Fetch properties
+      const { data: propData } = await supabase
         .from('properties')
         .select('*')
         .eq('user_id', user.id)
         .order('address');
-      setProperties(data || []);
+      setProperties(propData || []);
+
+      // Fetch screening applications with joined property address
+      const { data: screeningData } = await supabase
+        .from('screening_applications')
+        .select('*, properties(address, city, state)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (screeningData) {
+        const mapped: ScreeningDisplay[] = screeningData.map((row: any) => {
+          // Map DB status to display status
+          let displayStatus: 'pending' | 'complete' | 'expired' = 'pending';
+          if (row.status === 'completed') {
+            displayStatus = 'complete';
+          } else if (row.status === 'expired') {
+            displayStatus = 'expired';
+          }
+          // pending, submitted, screening all show as 'pending'
+
+          // Build property address from joined property data
+          const prop = row.properties;
+          const propertyAddress = prop
+            ? `${prop.address}${prop.city ? ', ' + prop.city : ''}${prop.state ? ', ' + prop.state : ''}`
+            : 'No property linked';
+
+          return {
+            id: row.id,
+            applicantName: row.applicant_name || 'Unknown Applicant',
+            applicantEmail: row.applicant_email || '',
+            propertyAddress,
+            date: row.created_at,
+            status: displayStatus,
+            result: row.result_data as ScreeningResult | null,
+          };
+        });
+        setScreenings(mapped);
+      }
     }
-    fetchProperties();
+    fetchData();
   }, [supabase]);
 
   /* ---- Generate application link ---- */
@@ -396,87 +309,99 @@ function ScreeningContent() {
       {/* ============================================================ */}
       {/*  SCREENING REQUESTS TABLE                                     */}
       {/* ============================================================ */}
-      <Card padding="none">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left px-5 py-3 label">Applicant Name</th>
-                <th className="text-left px-5 py-3 label">Property</th>
-                <th className="text-center px-5 py-3 label">Status</th>
-                <th className="text-center px-5 py-3 label">Score</th>
-                <th className="text-left px-5 py-3 label">Date</th>
-                <th className="text-right px-5 py-3 label">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_SCREENINGS.map((screening) => {
-                const sb = statusBadge(screening.status);
-                const isSelected = selectedScreening?.id === screening.id;
+      {screenings.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-card border border-border mb-4">
+            <Shield className="h-6 w-6 text-muted" />
+          </div>
+          <p className="text-sm font-medium text-white mb-1">No screening applications yet</p>
+          <p className="text-xs text-muted max-w-sm">
+            Send a screening link to get started. Click &quot;Send Application&quot; above to generate a unique link for a prospective tenant.
+          </p>
+        </Card>
+      ) : (
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left px-5 py-3 label">Applicant Name</th>
+                  <th className="text-left px-5 py-3 label">Property</th>
+                  <th className="text-center px-5 py-3 label">Status</th>
+                  <th className="text-center px-5 py-3 label">Score</th>
+                  <th className="text-left px-5 py-3 label">Date</th>
+                  <th className="text-right px-5 py-3 label">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {screenings.map((screening) => {
+                  const sb = statusBadge(screening.status);
+                  const isSelected = selectedScreening?.id === screening.id;
 
-                return (
-                  <tr
-                    key={screening.id}
-                    onClick={() => screening.result && setSelectedScreening(screening)}
-                    className={cn(
-                      'border-b border-border/50 transition-colors',
-                      screening.result ? 'cursor-pointer hover:bg-white/[0.02]' : '',
-                      isSelected && 'bg-gold/5',
-                    )}
-                  >
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-card border border-border">
-                          <User className="h-3.5 w-3.5 text-muted" />
-                        </div>
-                        <div>
-                          <span className="text-white font-medium">{screening.applicantName}</span>
-                          <p className="text-[10px] text-muted">{screening.applicantEmail}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-muted">{screening.propertyAddress}</td>
-                    <td className="px-5 py-3 text-center">
-                      <Badge variant={sb.variant} size="sm">{sb.label}</Badge>
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      {screening.result ? (
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span className={cn('text-lg font-bold font-mono', getScoreColor(screening.result.overall_score))}>
-                            {screening.result.overall_score}
-                          </span>
-                          <span className="text-[10px] text-muted">/100</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted">--</span>
+                  return (
+                    <tr
+                      key={screening.id}
+                      onClick={() => screening.result && setSelectedScreening(screening)}
+                      className={cn(
+                        'border-b border-border/50 transition-colors',
+                        screening.result ? 'cursor-pointer hover:bg-white/[0.02]' : '',
+                        isSelected && 'bg-gold/5',
                       )}
-                    </td>
-                    <td className="px-5 py-3 text-muted">{formatDate(screening.date)}</td>
-                    <td className="px-5 py-3 text-right">
-                      {screening.result ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedScreening(screening);
-                          }}
-                          className="inline-flex items-center gap-1 text-xs text-gold hover:text-gold-light transition-colors"
-                        >
-                          View Results
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                      ) : screening.status === 'pending' ? (
-                        <span className="text-xs text-muted">Awaiting response</span>
-                      ) : (
-                        <span className="text-xs text-muted">Expired</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                    >
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-card border border-border">
+                            <User className="h-3.5 w-3.5 text-muted" />
+                          </div>
+                          <div>
+                            <span className="text-white font-medium">{screening.applicantName}</span>
+                            <p className="text-[10px] text-muted">{screening.applicantEmail}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-muted">{screening.propertyAddress}</td>
+                      <td className="px-5 py-3 text-center">
+                        <Badge variant={sb.variant} size="sm">{sb.label}</Badge>
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        {screening.result ? (
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span className={cn('text-lg font-bold font-mono', getScoreColor(screening.result.overall_score))}>
+                              {screening.result.overall_score}
+                            </span>
+                            <span className="text-[10px] text-muted">/100</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">--</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-muted">{formatDate(screening.date)}</td>
+                      <td className="px-5 py-3 text-right">
+                        {screening.result ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedScreening(screening);
+                            }}
+                            className="inline-flex items-center gap-1 text-xs text-gold hover:text-gold-light transition-colors"
+                          >
+                            View Results
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        ) : screening.status === 'pending' ? (
+                          <span className="text-xs text-muted">Awaiting response</span>
+                        ) : (
+                          <span className="text-xs text-muted">Expired</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* ============================================================ */}
       {/*  RESULTS SECTION                                              */}

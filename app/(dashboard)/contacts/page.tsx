@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -185,353 +186,19 @@ const SORT_OPTIONS = [
 ];
 
 /* ================================================================== */
-/*  MOCK DATA                                                          */
+/*  HELPERS (ID gen)                                                   */
 /* ================================================================== */
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
-const MOCK_CONTACTS: Contact[] = [
-  {
-    id: generateId(),
-    name: 'Marcus Chen',
-    company: 'Pacific Capital Lending',
-    email: 'marcus.chen@pacificcap.com',
-    phone: '(415) 555-0142',
-    type: 'private_lender',
-    notes: 'Prefers deals in Bay Area. Quick to fund, typically 5-7 business days.',
-    relationshipScore: 9,
-    lastContacted: '2026-02-23',
-    birthday: '1978-06-15',
-    preferredContactMethod: 'phone',
-    metadata: {
-      maxLoanAmount: 2500000,
-      typicalRate: 8.5,
-      typicalLTV: 75,
-      statesTheyLendIn: 'CA, NV, AZ, OR',
-    },
-    dealsCount: 4,
-    deals: [
-      { address: '892 Pacific Heights Blvd', status: 'Closed' },
-      { address: '1240 Marina Dr', status: 'Under Contract' },
-    ],
-    createdAt: '2025-03-10',
-  },
-  {
-    id: generateId(),
-    name: 'Sarah Blackwell',
-    company: 'Blackwell Real Estate Group',
-    email: 'sarah@blackwellre.com',
-    phone: '(602) 555-0198',
-    type: 'real_estate_agent',
-    notes: 'Specializes in off-market multifamily. Strong Phoenix connections.',
-    relationshipScore: 8,
-    lastContacted: '2026-02-20',
-    birthday: '1985-11-22',
-    preferredContactMethod: 'email',
-    metadata: {
-      marketsTheyWork: 'Phoenix, Scottsdale, Tempe, Mesa',
-      investorFriendlyRating: 5,
-    },
-    dealsCount: 3,
-    deals: [
-      { address: '456 Elm Ave, Scottsdale', status: 'Closed' },
-      { address: '789 Camelback Rd', status: 'Due Diligence' },
-    ],
-    createdAt: '2025-05-18',
-  },
-  {
-    id: generateId(),
-    name: 'Tony Ramirez',
-    company: 'Ramirez Construction LLC',
-    email: 'tony@ramirezconstruction.com',
-    phone: '(480) 555-0167',
-    type: 'contractor',
-    notes: 'Best GC in the valley for rehabs. Crews available year-round.',
-    relationshipScore: 7,
-    lastContacted: '2026-02-10',
-    birthday: '1980-03-08',
-    preferredContactMethod: 'text',
-    metadata: {
-      specialties: 'Kitchen/Bath, Roofing, Foundation, HVAC',
-      hourlyRate: 85,
-      licenseNumber: 'ROC-298745',
-    },
-    dealsCount: 6,
-    deals: [
-      { address: '123 Oak St Rehab', status: 'In Progress' },
-      { address: '456 Elm Ave Renovation', status: 'Completed' },
-    ],
-    createdAt: '2025-01-15',
-  },
-  {
-    id: generateId(),
-    name: 'Jessica Nguyen',
-    company: 'DealSource Wholesale',
-    email: 'jess@dealsourcewholesale.com',
-    phone: '(713) 555-0234',
-    type: 'wholesaler',
-    notes: 'High volume in Houston market. 2-3 deals per month average.',
-    relationshipScore: 6,
-    lastContacted: '2026-01-15',
-    birthday: '1990-09-12',
-    preferredContactMethod: 'phone',
-    metadata: {
-      marketsTheySource: 'Houston, Dallas, San Antonio, Austin',
-      averageDiscount: 22,
-      reliabilityRating: 4,
-    },
-    dealsCount: 2,
-    deals: [
-      { address: '1800 Westheimer Rd, Houston', status: 'Under Contract' },
-    ],
-    createdAt: '2025-07-20',
-  },
-  {
-    id: generateId(),
-    name: 'David Park',
-    company: 'Park & Associates Law',
-    email: 'dpark@parklaw.com',
-    phone: '(212) 555-0311',
-    type: 'attorney',
-    notes: 'Expert in real estate closings, entity structuring, and 1031 exchanges.',
-    relationshipScore: 8,
-    lastContacted: '2026-02-18',
-    birthday: '1975-12-01',
-    preferredContactMethod: 'email',
-    metadata: {},
-    dealsCount: 5,
-    deals: [
-      { address: '45 Wall St Entity Setup', status: 'Completed' },
-      { address: '1031 Exchange — Portfolio', status: 'Active' },
-    ],
-    createdAt: '2024-11-02',
-  },
-  {
-    id: generateId(),
-    name: 'Linda Morrison',
-    company: 'Morrison Tax Advisory',
-    email: 'linda@morrisontax.com',
-    phone: '(303) 555-0189',
-    type: 'cpa_accountant',
-    notes: 'Handles all RE entity tax filings. Cost seg study referral partner.',
-    relationshipScore: 9,
-    lastContacted: '2026-02-25',
-    birthday: '1972-04-30',
-    preferredContactMethod: 'email',
-    metadata: {},
-    dealsCount: 0,
-    deals: [],
-    createdAt: '2025-02-14',
-  },
-  {
-    id: generateId(),
-    name: 'Robert Finley',
-    company: 'Finley Property Management',
-    email: 'rob@finleypm.com',
-    phone: '(404) 555-0275',
-    type: 'property_manager',
-    notes: 'Manages 200+ units in Atlanta metro. Strong tenant placement.',
-    relationshipScore: 7,
-    lastContacted: '2026-02-05',
-    birthday: '1983-08-19',
-    preferredContactMethod: 'phone',
-    metadata: {},
-    dealsCount: 3,
-    deals: [
-      { address: '1200 Peachtree NE — 12 units', status: 'Active' },
-      { address: '890 Piedmont Ave — 8 units', status: 'Active' },
-    ],
-    createdAt: '2025-04-22',
-  },
-  {
-    id: generateId(),
-    name: 'Amanda Sterling',
-    company: 'Sterling Capital Partners',
-    email: 'amanda@sterlingcap.com',
-    phone: '(305) 555-0144',
-    type: 'partner_jv',
-    notes: 'JV partner for large multifamily acquisitions. $5M+ equity checks.',
-    relationshipScore: 10,
-    lastContacted: '2026-02-24',
-    birthday: '1981-01-25',
-    preferredContactMethod: 'in_person',
-    metadata: {},
-    dealsCount: 2,
-    deals: [
-      { address: 'Sunset Palms — 48 units', status: 'Under Contract' },
-      { address: 'Harbor View — 96 units', status: 'Closed' },
-    ],
-    createdAt: '2025-06-01',
-  },
-  {
-    id: generateId(),
-    name: 'William Tran',
-    company: 'Sunrise Lending Group',
-    email: 'will@sunriselending.com',
-    phone: '(949) 555-0388',
-    type: 'private_lender',
-    notes: 'Bridge loans specialist. Funded 12 deals last year.',
-    relationshipScore: 7,
-    lastContacted: '2026-01-05',
-    birthday: '1988-07-04',
-    preferredContactMethod: 'email',
-    metadata: {
-      maxLoanAmount: 1500000,
-      typicalRate: 10.0,
-      typicalLTV: 70,
-      statesTheyLendIn: 'CA, TX, FL',
-    },
-    dealsCount: 3,
-    deals: [
-      { address: '3400 Newport Beach', status: 'Closed' },
-    ],
-    createdAt: '2025-08-10',
-  },
-  {
-    id: generateId(),
-    name: 'Priya Sharma',
-    company: 'Compass Realty',
-    email: 'priya.sharma@compass.com',
-    phone: '(512) 555-0221',
-    type: 'real_estate_agent',
-    notes: 'Austin market specialist. Knows every pocket listing.',
-    relationshipScore: 5,
-    lastContacted: '2025-12-20',
-    birthday: '1992-02-14',
-    preferredContactMethod: 'text',
-    metadata: {
-      marketsTheyWork: 'Austin, Round Rock, Cedar Park',
-      investorFriendlyRating: 4,
-    },
-    dealsCount: 1,
-    deals: [
-      { address: '2100 S Lamar Blvd, Austin', status: 'Prospecting' },
-    ],
-    createdAt: '2025-09-15',
-  },
-  {
-    id: generateId(),
-    name: 'Carlos Mendez',
-    company: 'Mendez Plumbing & Electric',
-    email: 'carlos@mendezpe.com',
-    phone: '(623) 555-0455',
-    type: 'contractor',
-    notes: 'Plumbing and electrical specialist. Fast turnaround on bids.',
-    relationshipScore: 6,
-    lastContacted: '2026-02-14',
-    birthday: '1986-10-05',
-    preferredContactMethod: 'phone',
-    metadata: {
-      specialties: 'Plumbing, Electrical, Drywall',
-      hourlyRate: 75,
-      licenseNumber: 'ROC-312890',
-    },
-    dealsCount: 4,
-    deals: [
-      { address: '123 Oak St — Electrical', status: 'Completed' },
-    ],
-    createdAt: '2025-03-28',
-  },
-  {
-    id: generateId(),
-    name: 'Natasha Volkov',
-    company: 'Atlas Wholesale Group',
-    email: 'natasha@atlaswholesale.com',
-    phone: '(702) 555-0177',
-    type: 'wholesaler',
-    notes: 'Las Vegas and Henderson markets. Reliable assignment contracts.',
-    relationshipScore: 4,
-    lastContacted: '2025-11-30',
-    birthday: '1994-05-18',
-    preferredContactMethod: 'email',
-    metadata: {
-      marketsTheySource: 'Las Vegas, Henderson, North Las Vegas',
-      averageDiscount: 18,
-      reliabilityRating: 3,
-    },
-    dealsCount: 1,
-    deals: [
-      { address: '5600 Boulder Hwy, Henderson', status: 'Expired' },
-    ],
-    createdAt: '2025-10-01',
-  },
-  {
-    id: generateId(),
-    name: 'James Whitfield',
-    company: 'Independent Investor',
-    email: 'jwhitfield@gmail.com',
-    phone: '(817) 555-0299',
-    type: 'other',
-    notes: 'Met at RE meetup. Interested in passive investing opportunities.',
-    relationshipScore: 3,
-    lastContacted: '2025-10-10',
-    birthday: '1970-12-12',
-    preferredContactMethod: 'email',
-    metadata: {},
-    dealsCount: 0,
-    deals: [],
-    createdAt: '2025-10-10',
-  },
-  {
-    id: generateId(),
-    name: 'Erika Johansson',
-    company: 'Nordic Capital RE',
-    email: 'erika@nordiccapre.com',
-    phone: '(646) 555-0422',
-    type: 'partner_jv',
-    notes: 'International capital partner. Focuses on value-add multifamily.',
-    relationshipScore: 8,
-    lastContacted: '2026-02-22',
-    birthday: '1979-03-21',
-    preferredContactMethod: 'email',
-    metadata: {},
-    dealsCount: 1,
-    deals: [
-      { address: 'Brooklyn Heights — 24 units', status: 'Due Diligence' },
-    ],
-    createdAt: '2025-11-15',
-  },
-  {
-    id: generateId(),
-    name: 'Miguel Flores',
-    company: 'Flores Property Services',
-    email: 'miguel@floresps.com',
-    phone: '(210) 555-0388',
-    type: 'property_manager',
-    notes: 'San Antonio PM. Excellent with Section 8 tenants.',
-    relationshipScore: 6,
-    lastContacted: '2026-01-28',
-    birthday: '1987-11-09',
-    preferredContactMethod: 'text',
-    metadata: {},
-    dealsCount: 2,
-    deals: [
-      { address: '400 Alamo Plaza — 6 units', status: 'Active' },
-    ],
-    createdAt: '2025-08-20',
-  },
-];
-
-/* ================================================================== */
-/*  MOCK ACTIVITY TIMELINE                                             */
-/* ================================================================== */
-
-const MOCK_ACTIVITIES: ActivityEntry[] = [
-  { icon: 'email', description: 'Email sent via AI Agent', timestamp: '3 days ago' },
-  { icon: 'call', description: 'Call logged: Discussed new deal opportunity', timestamp: '1 week ago' },
-  { icon: 'deal', description: 'Deal #12 closed together', timestamp: '2 weeks ago' },
-  { icon: 'note', description: 'Notes updated after in-person meeting', timestamp: '3 weeks ago' },
-  { icon: 'email', description: 'Portfolio update email sent', timestamp: '1 month ago' },
-];
-
 /* ================================================================== */
 /*  HELPERS                                                            */
 /* ================================================================== */
 
 function daysSince(dateStr: string): number {
-  const now = new Date('2026-02-26');
+  const now = new Date();
   const then = new Date(dateStr);
   const diff = now.getTime() - then.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -1233,6 +900,40 @@ function ContactDetailPanel({
   const [showCallLog, setShowCallLog] = useState(false);
   const [callOutcome, setCallOutcome] = useState('connected');
   const [callNotes, setCallNotes] = useState('');
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  // Fetch real activities for this contact
+  useEffect(() => {
+    let cancelled = false;
+    const fetchActivities = async () => {
+      setActivitiesLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('contact_activities')
+          .select('id, type, description, created_at')
+          .eq('contact_id', contact.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (!cancelled && !error && data) {
+          const mapped: ActivityEntry[] = data.map((row: { type: string; description: string; created_at: string }) => ({
+            icon: (['email', 'call', 'deal', 'note'].includes(row.type) ? row.type : 'note') as ActivityEntry['icon'],
+            description: row.description,
+            timestamp: daysAgoLabel(row.created_at),
+          }));
+          setActivities(mapped);
+        }
+      } catch {
+        // silently fail — empty activities is fine
+      } finally {
+        if (!cancelled) setActivitiesLoading(false);
+      }
+    };
+    fetchActivities();
+    return () => { cancelled = true; };
+  }, [contact.id]);
 
   const activityIcons: Record<string, React.ReactNode> = {
     email: <Send className="w-3.5 h-3.5" style={{ color: '#c9a84c' }} />,
@@ -1613,29 +1314,45 @@ function ContactDetailPanel({
           <p className="text-[10px] font-body text-muted uppercase tracking-wider mb-3">
             Activity Timeline
           </p>
-          <div className="space-y-0">
-            {MOCK_ACTIVITIES.map((a, i) => (
-              <div key={i} className="flex items-start gap-3 relative">
-                {/* Timeline line */}
-                {i < MOCK_ACTIVITIES.length - 1 && (
+          {activitiesLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full animate-pulse" style={{ backgroundColor: '#1e1e1e' }} />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 rounded animate-pulse w-3/4" style={{ backgroundColor: '#1e1e1e' }} />
+                    <div className="h-2.5 rounded animate-pulse w-1/3" style={{ backgroundColor: '#1e1e1e' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="space-y-0">
+              {activities.map((a, i) => (
+                <div key={i} className="flex items-start gap-3 relative">
+                  {/* Timeline line */}
+                  {i < activities.length - 1 && (
+                    <div
+                      className="absolute left-[13px] top-7 w-px h-[calc(100%-4px)]"
+                      style={{ backgroundColor: '#1e1e1e' }}
+                    />
+                  )}
                   <div
-                    className="absolute left-[13px] top-7 w-px h-[calc(100%-4px)]"
-                    style={{ backgroundColor: '#1e1e1e' }}
-                  />
-                )}
-                <div
-                  className="flex items-center justify-center w-7 h-7 rounded-full shrink-0 relative z-10"
-                  style={{ backgroundColor: '#111111', border: '1px solid #1e1e1e' }}
-                >
-                  {activityIcons[a.icon]}
+                    className="flex items-center justify-center w-7 h-7 rounded-full shrink-0 relative z-10"
+                    style={{ backgroundColor: '#111111', border: '1px solid #1e1e1e' }}
+                  >
+                    {activityIcons[a.icon]}
+                  </div>
+                  <div className="pb-4 flex-1">
+                    <p className="text-xs text-white/80 font-body">{a.description}</p>
+                    <p className="text-[10px] text-muted font-body mt-0.5">{a.timestamp}</p>
+                  </div>
                 </div>
-                <div className="pb-4 flex-1">
-                  <p className="text-xs text-white/80 font-body">{a.description}</p>
-                  <p className="text-[10px] text-muted font-body mt-0.5">{a.timestamp}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted font-body">No activity yet for this contact.</p>
+          )}
         </div>
 
         {/* Deals Associated */}
@@ -1710,12 +1427,99 @@ function DetailCell({
 /* ================================================================== */
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>(MOCK_CONTACTS);
+  const supabase = createClient();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('last_contacted');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+
+  // Fetch contacts from Supabase
+  const fetchContacts = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      userIdRef.current = user.id;
+
+      // Fetch contacts
+      const { data: contactRows, error: contactsError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_contacted', { ascending: false, nullsFirst: false });
+
+      if (contactsError) {
+        console.error('Error fetching contacts:', contactsError);
+        return;
+      }
+
+      if (!contactRows) {
+        setContacts([]);
+        return;
+      }
+
+      // Fetch deal counts per contact via deal_contacts join
+      const contactIds = contactRows.map((r: { id: string }) => r.id);
+      const dealCountMap: Record<string, number> = {};
+      const dealDetailsMap: Record<string, { address: string; status: string }[]> = {};
+
+      if (contactIds.length > 0) {
+        const { data: dealLinks } = await supabase
+          .from('deal_contacts')
+          .select('contact_id, deal_id, deals(address, status)')
+          .in('contact_id', contactIds);
+
+        if (dealLinks) {
+          for (const link of dealLinks) {
+            const cId = (link as { contact_id: string }).contact_id;
+            dealCountMap[cId] = (dealCountMap[cId] || 0) + 1;
+            if (!dealDetailsMap[cId]) dealDetailsMap[cId] = [];
+            const dealData = (link as { deals: { address: string; status: string } | null }).deals;
+            if (dealData) {
+              dealDetailsMap[cId].push({
+                address: dealData.address || '',
+                status: dealData.status || '',
+              });
+            }
+          }
+        }
+      }
+
+      // Map DB rows to Contact interface
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped: Contact[] = contactRows.map((row: any) => ({
+        id: row.id,
+        name: row.name || '',
+        company: row.company || '',
+        email: row.email || '',
+        phone: row.phone || '',
+        type: (row.type || 'other') as ContactType,
+        notes: row.notes || '',
+        relationshipScore: row.relationship_score ?? 5,
+        lastContacted: row.last_contacted || row.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+        birthday: row.birthday || '',
+        preferredContactMethod: (row.preferred_contact_method || 'email') as PreferredContactMethod,
+        metadata: row.metadata || {},
+        dealsCount: dealCountMap[row.id] || 0,
+        deals: dealDetailsMap[row.id] || [],
+        createdAt: row.created_at?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+      }));
+
+      setContacts(mapped);
+    } catch (err) {
+      console.error('Error fetching contacts:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -1754,9 +1558,48 @@ export default function ContactsPage() {
     return result;
   }, [contacts, search, typeFilter, sortBy]);
 
-  const handleAddContact = useCallback((newContact: Contact) => {
-    setContacts((prev) => [newContact, ...prev]);
-  }, []);
+  const handleAddContact = useCallback(async (newContact: Contact) => {
+    try {
+      const userId = userIdRef.current;
+      if (!userId) {
+        toast.error('Not authenticated');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert({
+          user_id: userId,
+          name: newContact.name,
+          company: newContact.company || null,
+          email: newContact.email || null,
+          phone: newContact.phone || null,
+          type: newContact.type,
+          notes: newContact.notes || null,
+          relationship_score: newContact.relationshipScore,
+          last_contacted: newContact.lastContacted || null,
+          birthday: newContact.birthday || null,
+          preferred_contact_method: newContact.preferredContactMethod,
+          metadata: newContact.metadata,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding contact:', error);
+        toast.error('Failed to save contact');
+        return;
+      }
+
+      if (data) {
+        // Refetch to ensure consistency
+        fetchContacts();
+      }
+    } catch (err) {
+      console.error('Error adding contact:', err);
+      toast.error('Failed to save contact');
+    }
+  }, [supabase, fetchContacts]);
 
   const handleSelectContact = useCallback((contact: Contact) => {
     setSelectedContact(contact);
@@ -1870,7 +1713,34 @@ export default function ContactsPage() {
       </div>
 
       {/* Contact Grid */}
-      {filteredContacts.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-lg border overflow-hidden"
+              style={{ background: '#111111', borderColor: '#1e1e1e' }}
+            >
+              <div className="h-[2px] w-full animate-pulse" style={{ backgroundColor: '#1e1e1e' }} />
+              <div className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full animate-pulse" style={{ backgroundColor: '#1e1e1e' }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 rounded animate-pulse w-2/3" style={{ backgroundColor: '#1e1e1e' }} />
+                    <div className="h-3 rounded animate-pulse w-1/2" style={{ backgroundColor: '#1e1e1e' }} />
+                  </div>
+                  <div className="h-5 w-20 rounded animate-pulse" style={{ backgroundColor: '#1e1e1e' }} />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 rounded animate-pulse w-3/4" style={{ backgroundColor: '#1e1e1e' }} />
+                  <div className="h-3 rounded animate-pulse w-2/3" style={{ backgroundColor: '#1e1e1e' }} />
+                </div>
+                <div className="h-2 rounded-full animate-pulse" style={{ backgroundColor: '#1e1e1e' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredContacts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredContacts.map((contact) => (
             <ContactCard

@@ -45,6 +45,32 @@ import { toast } from '@/components/ui/Toast';
 import type { Property } from '@/types';
 
 /* ================================================================== */
+/*  Seeded PRNG — deterministic random from a string seed              */
+/* ================================================================== */
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + ch;
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+/** Returns a seeded pseudo-random number generator (Mulberry32). */
+function seededRng(seed: string): () => number {
+  let s = hashString(seed);
+  return () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ================================================================== */
 /*  Mock Data                                                          */
 /* ================================================================== */
 
@@ -147,7 +173,8 @@ function generateListing(property: Property): GeneratedListing {
   const state = property.state || 'AZ';
 
   const adjectives = ['Stunning', 'Beautiful', 'Spacious', 'Charming', 'Modern', 'Elegant', 'Inviting'];
-  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const rng = seededRng(`listing-${property.id}`);
+  const adj = adjectives[Math.floor(rng() * adjectives.length)];
 
   const title = `${adj} ${beds}BR/${baths}BA ${typeLabel} in ${city}`;
 
@@ -191,6 +218,10 @@ This is a rare opportunity to call this exceptional property home. Schedule your
 function generateInquiries(properties: Property[]): Inquiry[] {
   if (properties.length === 0) return [];
 
+  // Build a stable seed from property IDs so output is deterministic per-dataset
+  const seed = properties.map((p) => p.id).join('-');
+  const rng = seededRng(`inquiries-${seed}`);
+
   return Array.from({ length: 12 }, (_, i) => {
     const prop = properties[i % properties.length];
     const firstName = PROSPECT_FIRST_NAMES[i];
@@ -198,9 +229,11 @@ function generateInquiries(properties: Property[]): Inquiry[] {
     const message = INQUIRY_MESSAGES[i];
     const source = INQUIRY_SOURCES[i];
 
-    const daysAgo = Math.floor(Math.random() * 14) + 1;
+    const daysAgo = Math.floor(rng() * 14) + 1;
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
+    // Pin time to noon so the ISO string is stable within the same day
+    date.setHours(12, 0, 0, 0);
 
     let score: 'High' | 'Medium' | 'Low';
     if (message.toLowerCase().includes('move-in') && (message.toLowerCase().includes('income') || message.toLowerCase().includes('salary'))) {
@@ -211,11 +244,15 @@ function generateInquiries(properties: Property[]): Inquiry[] {
       score = 'Low';
     }
 
+    const areaCode = 480 + Math.floor(rng() * 20);
+    const phoneMiddle = String(Math.floor(rng() * 900) + 100);
+    const phoneLast = String(Math.floor(rng() * 9000) + 1000);
+
     return {
       id: `inq-${i + 1}`,
       prospectName: `${firstName} ${lastName}`,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
-      phone: `(${480 + Math.floor(Math.random() * 20)}) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+      phone: `(${areaCode}) ${phoneMiddle}-${phoneLast}`,
       message,
       source,
       dateReceived: date.toISOString(),
@@ -229,8 +266,11 @@ function generateInquiries(properties: Property[]): Inquiry[] {
 function generateShowings(properties: Property[]): Showing[] {
   if (properties.length === 0) return [];
 
+  const seed = properties.map((p) => p.id).join('-');
+  const rng = seededRng(`showings-${seed}`);
+
   const names = ['Marcus Johnson', 'Sarah Rodriguez', 'David Chen', 'Emily Patel', 'Robert Thompson'];
-  const statuses: Array<'Confirmed' | 'Pending' | 'Completed'> = ['Confirmed', 'Pending', 'Completed', 'Confirmed', 'Pending'];
+  const allStatuses: Array<'Confirmed' | 'Pending' | 'Completed'> = ['Confirmed', 'Pending', 'Completed'];
 
   return names.map((name, i) => {
     const prop = properties[i % properties.length];
@@ -239,13 +279,16 @@ function generateShowings(properties: Property[]): Showing[] {
     date.setDate(date.getDate() + daysFromNow);
     date.setHours(10 + i * 2, 0, 0, 0);
 
+    // Deterministic status per showing slot
+    const status = allStatuses[Math.floor(rng() * allStatuses.length)];
+
     return {
       id: `show-${i + 1}`,
       prospectName: name,
       propertyAddress: prop.address,
       propertyId: prop.id,
       dateTime: date.toISOString(),
-      status: statuses[i],
+      status,
     };
   });
 }
@@ -334,19 +377,24 @@ export default function VacanciesPage() {
   const inquiries = useMemo(() => generateInquiries(properties), [properties]);
   const showings = useMemo(() => generateShowings(properties), [properties]);
 
-  // Mock per-property listing status & counts
+  // Per-property listing status & counts (deterministic from property id)
   const propertyMeta = useMemo(() => {
     const map: Record<string, { listingStatus: string; inquiries: number; showings: number }> = {};
+    const statuses = ['Not Listed', 'Listed', 'Active'];
     properties.forEach((p) => {
+      const rng = seededRng(`meta-${p.id}`);
+      // Count how many generated inquiries target this property
+      const propInquiryCount = inquiries.filter((inq) => inq.propertyId === p.id).length;
+      const propShowingCount = showings.filter((s) => s.propertyId === p.id).length;
       map[p.id] = {
-        listingStatus: ['Not Listed', 'Listed', 'Active'][Math.floor(Math.random() * 3)],
-        inquiries: Math.floor(Math.random() * 9),
-        showings: Math.floor(Math.random() * 4),
+        listingStatus: statuses[Math.floor(rng() * statuses.length)],
+        inquiries: propInquiryCount,
+        showings: propShowingCount,
       };
     });
     return map;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties.map((p) => p.id).join(',')]);
+  }, [properties.map((p) => p.id).join(','), inquiries, showings]);
 
   /* -------------------------------- Fetch --------------------------------- */
   useEffect(() => {
@@ -739,7 +787,7 @@ export default function VacanciesPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center font-display font-semibold text-sm text-gold shrink-0"
-                      style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid rgba(5, 150, 105, 0.2)' }}
+                      style={{ background: 'rgba(201, 168, 76, 0.1)', border: '1px solid rgba(201, 168, 76, 0.2)' }}
                     >
                       {inquiry.prospectName.split(' ').map((n) => n[0]).join('')}
                     </div>
@@ -919,7 +967,7 @@ export default function VacanciesPage() {
                   <div className="flex items-center gap-4 min-w-0">
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center font-display font-semibold text-sm text-gold shrink-0"
-                      style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid rgba(5, 150, 105, 0.2)' }}
+                      style={{ background: 'rgba(201, 168, 76, 0.1)', border: '1px solid rgba(201, 168, 76, 0.2)' }}
                     >
                       {showing.prospectName.split(' ').map((n) => n[0]).join('')}
                     </div>
@@ -1006,58 +1054,81 @@ export default function VacanciesPage() {
   /* ================================================================== */
 
   const AnalyticsTab = () => {
+    // Compute metrics from real inquiry/showing/property data
+    const totalInquiries = inquiries.length;
+    const totalShowings = showings.length;
+    const highInterestCount = inquiries.filter((inq) => inq.interestScore === 'High').length;
+    const conversionRate = totalInquiries > 0 ? Math.round((highInterestCount / totalInquiries) * 100) : 0;
+
+    // Compute source distribution from actual inquiries
+    const sourceCounts: Record<string, number> = {};
+    inquiries.forEach((inq) => {
+      sourceCounts[inq.source] = (sourceCounts[inq.source] || 0) + 1;
+    });
+    const bestPlatform = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0];
+    const bestPlatformName = bestPlatform ? bestPlatform[0] : 'N/A';
+    const bestPlatformPct = bestPlatform && totalInquiries > 0
+      ? Math.round((bestPlatform[1] / totalInquiries) * 100)
+      : 0;
+
     const stats = [
       {
-        label: 'Avg Days to Fill',
-        value: '18',
+        label: 'Avg Days Vacant',
+        value: String(avgDaysVacant),
         unit: 'days',
         icon: <Clock className="w-5 h-5" />,
         color: 'text-gold',
       },
       {
-        label: 'Total Inquiries This Month',
-        value: '34',
+        label: 'Total Inquiries',
+        value: String(totalInquiries),
         unit: '',
         icon: <MessageSquare className="w-5 h-5" />,
         color: 'text-gold-light',
       },
       {
         label: 'Showings Scheduled',
-        value: '12',
+        value: String(totalShowings),
         unit: '',
         icon: <Calendar className="w-5 h-5" />,
         color: 'text-gold',
       },
       {
-        label: 'Inquiry to Application',
-        value: '35',
+        label: 'High-Interest Rate',
+        value: String(conversionRate),
         unit: '%',
         icon: <TrendingUp className="w-5 h-5" />,
         color: 'text-green',
       },
       {
-        label: 'Best Performing Platform',
-        value: 'Zillow',
-        unit: '45% of leads',
+        label: 'Top Lead Source',
+        value: bestPlatformName,
+        unit: `${bestPlatformPct}% of leads`,
         icon: <Star className="w-5 h-5" />,
         color: 'text-warning',
       },
       {
-        label: 'Avg Time to First Response',
-        value: '2.1',
-        unit: 'hours',
+        label: 'Est. Lost Rent / Month',
+        value: `$${totalLostIncome.toLocaleString()}`,
+        unit: '',
         icon: <Zap className="w-5 h-5" />,
         color: 'text-gold',
       },
     ];
 
-    const inquirySources = [
-      { platform: 'Zillow', percent: 45, color: '#059669' },
-      { platform: 'FB Marketplace', percent: 25, color: '#0EA5E9' },
-      { platform: 'Direct', percent: 15, color: '#D97706' },
-      { platform: 'Apartments.com', percent: 10, color: '#6366F1' },
-      { platform: 'Other', percent: 5, color: '#4A6080' },
+    // Build source distribution from actual inquiry data
+    const sourceConfig: { key: string; label: string; color: string }[] = [
+      { key: 'Zillow', label: 'Zillow', color: '#c9a84c' },
+      { key: 'Facebook', label: 'FB Marketplace', color: '#c9a84c' },
+      { key: 'Direct', label: 'Direct', color: '#D97706' },
+      { key: 'Apartments.com', label: 'Apartments.com', color: '#6366F1' },
+      { key: 'Craigslist', label: 'Craigslist', color: '#4A6080' },
     ];
+    const inquirySources = sourceConfig.map((src) => ({
+      platform: src.label,
+      percent: totalInquiries > 0 ? Math.round(((sourceCounts[src.key] || 0) / totalInquiries) * 100) : 0,
+      color: src.color,
+    }));
 
     return (
       <div className="space-y-6">
@@ -1098,7 +1169,7 @@ export default function VacanciesPage() {
                   <span className="text-sm text-white font-body">{source.platform}</span>
                   <span className="text-sm font-mono text-muted">{source.percent}%</span>
                 </div>
-                <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: '#161E2A' }}>
+                <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: '#1e1e1e' }}>
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
@@ -1139,8 +1210,8 @@ export default function VacanciesPage() {
                     <div
                       className="absolute inset-0 rounded-t-md"
                       style={{
-                        background: 'linear-gradient(180deg, #059669 0%, #059669/40 100%)',
-                        boxShadow: '0 0 12px rgba(5, 150, 105, 0.2)',
+                        background: 'linear-gradient(180deg, #c9a84c 0%, #c9a84c/40 100%)',
+                        boxShadow: '0 0 12px rgba(201, 168, 76, 0.2)',
                       }}
                     />
                   </div>
@@ -1173,7 +1244,7 @@ export default function VacanciesPage() {
           {selectedProperty && (
             <div
               className="rounded-lg p-4 flex items-center gap-4"
-              style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-gold/10 border border-gold/20 shrink-0">
                 <Home className="w-5 h-5 text-gold" />
@@ -1293,7 +1364,7 @@ export default function VacanciesPage() {
                     <div
                       key={i}
                       className="flex items-center gap-2 text-sm text-white font-body px-3 py-2 rounded-lg"
-                      style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                      style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                     >
                       <Check className="w-3.5 h-3.5 text-gold shrink-0" />
                       {highlight}
@@ -1310,21 +1381,21 @@ export default function VacanciesPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <div
                     className="p-3 rounded-lg text-center"
-                    style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     <p className="text-[10px] uppercase tracking-wider text-muted font-body mb-1">Monthly Rent</p>
                     <p className="font-mono font-semibold text-gold">{generatedListing.rentalTerms.price}</p>
                   </div>
                   <div
                     className="p-3 rounded-lg text-center"
-                    style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     <p className="text-[10px] uppercase tracking-wider text-muted font-body mb-1">Security Deposit</p>
                     <p className="font-mono font-semibold text-white text-sm">{generatedListing.rentalTerms.deposit}</p>
                   </div>
                   <div
                     className="p-3 rounded-lg text-center"
-                    style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     <p className="text-[10px] uppercase tracking-wider text-muted font-body mb-1">Lease Term</p>
                     <p className="font-mono font-semibold text-white text-sm">{generatedListing.rentalTerms.leaseLength}</p>
@@ -1335,7 +1406,7 @@ export default function VacanciesPage() {
               {/* Publish Section */}
               <div
                 className="rounded-lg p-4"
-                style={{ background: '#0F1620', border: '1px solid #161E2A' }}
+                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 <h4 className="font-display font-semibold text-white text-sm mb-3 flex items-center gap-2">
                   <Megaphone className="w-4 h-4 text-gold" />
