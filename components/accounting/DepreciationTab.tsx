@@ -137,7 +137,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="label">Annual Deduction</span>
@@ -152,7 +152,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
         </div>
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="label">Total Accumulated</span>
@@ -167,7 +167,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
         </div>
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="label">Remaining Basis</span>
@@ -182,7 +182,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
         </div>
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="label">Building Value</span>
@@ -200,7 +200,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
       {/* Depreciation Table */}
       <div
         className="bg-card border border-border rounded-xl overflow-hidden"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
@@ -367,7 +367,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
                                   ? '#DC2626'
                                   : dep.progress > 50
                                     ? '#F59E0B'
-                                    : '#059669',
+                                    : '#c9a84c',
                             }}
                           />
                         </div>
@@ -417,7 +417,7 @@ export function DepreciationTab({ properties }: { properties: Property[] }) {
       {/* Info Box */}
       <div
         className="bg-card border border-border rounded-xl p-5"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="flex items-start gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 flex-shrink-0 mt-0.5">

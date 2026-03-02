@@ -277,12 +277,12 @@ function calcMortgageTermRemaining(p: Property): string {
 /*  Recharts theme                                                     */
 /* ------------------------------------------------------------------ */
 
-const CHART_GOLD = '#059669';
-const CHART_GREEN = '#059669';
+const CHART_GOLD = '#c9a84c';
+const CHART_GREEN = '#c9a84c';
 const CHART_RED = '#DC2626';
 const CHART_MUTED = '#4A6080';
-const CHART_BORDER = '#161E2A';
-const PIE_COLORS = ['#059669', '#059669', '#DC2626', '#3B82F6', '#A855F7', '#F97316', '#06B6D4'];
+const CHART_BORDER = '#1e1e1e';
+const PIE_COLORS = ['#c9a84c', '#c9a84c', '#DC2626', '#3B82F6', '#A855F7', '#F97316', '#06B6D4'];
 
 function ChartTooltipContent({
   active,
@@ -295,7 +295,7 @@ function ChartTooltipContent({
 }) {
   if (!active || !payload) return null;
   return (
-    <div className="rounded-lg px-3 py-2 shadow-card rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-lg px-3 py-2 shadow-card rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <p className="text-xs text-muted mb-1 font-mono">{label}</p>
       {payload.map((item, i) => (
         <p key={i} className="text-sm font-medium font-mono" style={{ color: item.color }}>
@@ -355,7 +355,7 @@ function MetricCard({
         'rounded-xl p-4',
         'hover:border-gold/30 hover:shadow-glow-sm transition-all duration-200',
       )}
-      style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+      style={{ background: '#111111', border: '1px solid #1e1e1e' }}
     >
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-4 w-4 text-muted" />
@@ -1522,11 +1522,11 @@ function FinancialsTab({
                     <Tooltip
                       formatter={(value: number | undefined) => fmt(value ?? 0)}
                       contentStyle={{
-                        background: '#0C1018',
-                        border: '1px solid #161E2A',
+                        background: '#111111',
+                        border: '1px solid #1e1e1e',
                         borderRadius: 8,
                       }}
-                      itemStyle={{ color: '#E2E8F0' }}
+                      itemStyle={{ color: '#f5f5f5' }}
                     />
                     <Legend
                       formatter={(value: string) => (

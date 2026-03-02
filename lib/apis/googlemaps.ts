@@ -1,5 +1,4 @@
 import axios, { AxiosError } from 'axios'
-import { Loader } from '@googlemaps/js-api-loader'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -161,27 +160,55 @@ export async function geocodeAddressDetailed(
 
 // ── Client-side Loader ──────────────────────────────────────────────────────
 
-let loaderInstance: Loader | null = null
+let loadPromise: Promise<void> | null = null
 
 /**
- * Get a singleton instance of the Google Maps JS API Loader.
- * Use this on the client side to load the Maps JavaScript API
- * before rendering map components.
- *
- * Usage:
- * ```ts
- * const loader = getGoogleMapsLoader()
- * const { Map } = await loader.importLibrary('maps')
- * const { Marker } = await loader.importLibrary('marker')
- * ```
+ * Load the Google Maps JavaScript API via a script tag.
+ * Returns a promise that resolves when `google.maps.places` is available.
+ * Idempotent — safe to call multiple times.
  */
-export function getGoogleMapsLoader(): Loader {
-  if (!loaderInstance) {
-    loaderInstance = new Loader({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-      version: 'weekly',
-      libraries: ['places', 'geometry', 'marker'],
-    })
-  }
-  return loaderInstance
+export function loadGoogleMapsApi(): Promise<void> {
+  if (loadPromise) return loadPromise
+
+  loadPromise = new Promise<void>((resolve, reject) => {
+    // Already loaded (e.g. script tag in HTML)?
+    if (
+      typeof google !== 'undefined' &&
+      google.maps?.places
+    ) {
+      resolve()
+      return
+    }
+
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
+    if (!apiKey) {
+      reject(new Error('[GoogleMaps] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set'))
+      return
+    }
+
+    // Reuse an existing script if another code path injected one
+    const existing = document.querySelector(
+      'script[src*="maps.googleapis.com/maps/api/js"]'
+    ) as HTMLScriptElement | null
+    if (existing) {
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () =>
+        reject(new Error('[GoogleMaps] Existing script failed to load'))
+      )
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,marker&v=weekly`
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve()
+    script.onerror = () => {
+      loadPromise = null // allow retry
+      reject(new Error('[GoogleMaps] Script tag failed to load'))
+    }
+    document.head.appendChild(script)
+  })
+
+  return loadPromise
 }

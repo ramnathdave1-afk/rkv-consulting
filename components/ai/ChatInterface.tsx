@@ -192,13 +192,13 @@ export function ChatInterface({
         }
       `}</style>
 
-      <div className="flex h-full bg-[#080B0F]">
+      <div className="flex h-full bg-[#080808]">
         {/* ============================================================ */}
         {/*  LEFT PANEL - SESSION HISTORY + QUICK COMMANDS                */}
         {/* ============================================================ */}
         <div
           className={cn(
-            'flex-shrink-0 bg-[#0C1018] border-r border-[#161E2A] transition-all duration-300 overflow-hidden flex flex-col',
+            'flex-shrink-0 bg-[#111111] border-r border-[#1e1e1e] transition-all duration-300 overflow-hidden flex flex-col',
             sidebarOpen ? 'w-[260px]' : 'w-0'
           )}
         >
@@ -238,7 +238,7 @@ export function ChatInterface({
           <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
             {conversations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center px-3">
-                <MessageSquare className="h-6 w-6 text-[#161E2A] mb-3" />
+                <MessageSquare className="h-6 w-6 text-[#1e1e1e] mb-3" />
                 <p className="font-body text-[10px] text-muted-deep">No sessions found</p>
                 <p className="font-body text-[10px] text-muted-deep/60 mt-1">
                   Start a new session to begin
@@ -259,10 +259,10 @@ export function ChatInterface({
                 >
                   <ChevronRight className={cn(
                     'h-3 w-3 flex-shrink-0 mt-1 transition-colors',
-                    activeConversationId === conv.id ? 'text-gold' : 'text-[#161E2A]'
+                    activeConversationId === conv.id ? 'text-gold' : 'text-[#1e1e1e]'
                   )} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] text-[#E2E8F0] truncate leading-snug font-body">
+                    <p className="text-[12px] text-[#f5f5f5] truncate leading-snug font-body">
                       {conv.title}
                     </p>
                     <p className="font-mono text-[11px] text-muted-deep mt-0.5">
@@ -287,7 +287,7 @@ export function ChatInterface({
           </div>
 
           {/* Quick Commands section */}
-          <div className="flex-shrink-0 border-t border-[#161E2A]">
+          <div className="flex-shrink-0 border-t border-[#1e1e1e]">
             <div className="p-3">
               <p className="font-body uppercase tracking-wider text-[10px] text-gold mb-2 px-1">
                 Quick Actions
@@ -325,7 +325,7 @@ export function ChatInterface({
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="absolute top-3 left-3 z-10 p-2 rounded-md bg-[#0C1018] border border-[#161E2A] text-muted hover:text-gold hover:bg-gold/5 transition-colors"
+              className="absolute top-3 left-3 z-10 p-2 rounded-md bg-[#111111] border border-[#1e1e1e] text-muted hover:text-gold hover:bg-gold/5 transition-colors"
             >
               <PanelLeftOpen className="h-4 w-4" />
             </button>
@@ -349,8 +349,8 @@ export function ChatInterface({
                       className="w-20 h-20"
                       style={{
                         clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                        border: '1px solid rgba(5,150,105,0.3)',
-                        background: 'rgba(5,150,105,0.05)',
+                        border: '1px solid rgba(201,168,76,0.3)',
+                        background: 'rgba(201,168,76,0.05)',
                       }}
                     />
                   </div>
@@ -359,7 +359,7 @@ export function ChatInterface({
                   </div>
                 </div>
 
-                <h2 className="font-display font-bold text-xl text-[#E2E8F0] mb-2">
+                <h2 className="font-display font-bold text-xl text-[#f5f5f5] mb-2">
                   How can I help?
                 </h2>
                 <p className="font-body text-[11px] text-muted-deep mb-8 leading-relaxed max-w-sm">
@@ -378,9 +378,9 @@ export function ChatInterface({
                         className={cn(
                           'flex items-start gap-3 p-3.5 rounded-md text-left',
                           'bg-transparent',
-                          'border-l-2 border-gold/30 border-t border-r border-b border-t-[#161E2A] border-r-[#161E2A] border-b-[#161E2A]',
+                          'border-l-2 border-gold/30 border-t border-r border-b border-t-[#1e1e1e] border-r-[#1e1e1e] border-b-[#1e1e1e]',
                           'hover:border-l-gold hover:bg-gold/5',
-                          'hover:shadow-[0_0_20px_rgba(5,150,105,0.08)]',
+                          'hover:shadow-[0_0_20px_rgba(201,168,76,0.08)]',
                           'transition-all duration-200 group/prompt',
                         )}
                         style={{ animation: `fadeInUp 0.4s ease ${idx * 0.1}s both` }}
@@ -388,7 +388,7 @@ export function ChatInterface({
                         <div className="flex-shrink-0 w-7 h-7 rounded-md bg-gold/10 border border-gold/20 flex items-center justify-center group-hover/prompt:bg-gold/20 transition-colors">
                           <Icon className="h-3.5 w-3.5 text-gold" />
                         </div>
-                        <span className="text-[12px] text-muted group-hover/prompt:text-[#E2E8F0] transition-colors leading-snug font-body">
+                        <span className="text-[12px] text-muted group-hover/prompt:text-[#f5f5f5] transition-colors leading-snug font-body">
                           {sp.label}
                         </span>
                       </button>
@@ -423,9 +423,9 @@ export function ChatInterface({
           </div>
 
           {/* ---- Input area ---- */}
-          <div className="flex-shrink-0 border-t border-[#161E2A] bg-[#0C1018] px-6 py-4">
+          <div className="flex-shrink-0 border-t border-[#1e1e1e] bg-[#111111] px-6 py-4">
             <div className="max-w-3xl mx-auto">
-              <div className="relative flex items-end gap-3 bg-transparent border border-[#161E2A] rounded-lg px-4 py-3 focus-within:border-gold/30 focus-within:shadow-[0_0_20px_rgba(5,150,105,0.08)] transition-all">
+              <div className="relative flex items-end gap-3 bg-transparent border border-[#1e1e1e] rounded-lg px-4 py-3 focus-within:border-gold/30 focus-within:shadow-[0_0_20px_rgba(201,168,76,0.08)] transition-all">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -434,7 +434,7 @@ export function ChatInterface({
                   placeholder="Ask a question..."
                   rows={1}
                   className={cn(
-                    'flex-1 bg-transparent text-sm text-[#E2E8F0] font-body',
+                    'flex-1 bg-transparent text-sm text-[#f5f5f5] font-body',
                     'placeholder:font-body placeholder:text-muted-deep',
                     'resize-none outline-none',
                     'min-h-[24px] max-h-[160px]',
@@ -464,14 +464,14 @@ export function ChatInterface({
                       'flex items-center justify-center w-9 h-9',
                       'transition-all duration-200',
                       input.trim() && !isStreaming
-                        ? 'text-[#080B0F] hover:shadow-[0_0_15px_rgba(5,150,105,0.4)]'
+                        ? 'text-[#080808] hover:shadow-[0_0_15px_rgba(201,168,76,0.4)]'
                         : 'text-muted-deep cursor-not-allowed'
                     )}
                     style={{
                       clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                       background: input.trim() && !isStreaming
-                        ? '#059669'
-                        : '#161E2A',
+                        ? '#c9a84c'
+                        : '#1e1e1e',
                     }}
                   >
                     <Send className="h-4 w-4" />

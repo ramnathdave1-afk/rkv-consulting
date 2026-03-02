@@ -116,9 +116,9 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080B0F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-[#059669] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-[#c9a84c] border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-[#4A6080]" style={{ fontFamily: 'DM Sans, sans-serif' }}>
             Loading application...
           </p>
@@ -130,8 +130,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
   // Error state
   if (error && !application) {
     return (
-      <div className="min-h-screen bg-[#080B0F] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-[#0C1018] border border-[#161E2A] rounded-2xl p-8 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-[#111111] border border-[#1e1e1e] rounded-2xl p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -151,8 +151,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
   // Success state
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#080B0F] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-[#0C1018] border border-[#161E2A] rounded-2xl p-8 text-center">
+      <div className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-[#111111] border border-[#1e1e1e] rounded-2xl p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -171,7 +171,7 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
 
   // Application form
   return (
-    <div className="min-h-screen bg-[#080B0F] py-8 px-4">
+    <div className="min-h-screen bg-[#080808] py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -179,8 +179,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
             <span className="text-lg font-bold text-white" style={{ fontFamily: 'Syne, sans-serif' }}>
               RKV
             </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
-            <span className="text-lg font-bold text-[#059669]" style={{ fontFamily: 'Syne, sans-serif' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c]" />
+            <span className="text-lg font-bold text-[#c9a84c]" style={{ fontFamily: 'Syne, sans-serif' }}>
               Consulting
             </span>
           </div>
@@ -188,7 +188,7 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
             Rental Application
           </h1>
           {application?.property_address && (
-            <p className="text-sm text-[#059669]" style={{ fontFamily: 'DM Sans, sans-serif' }}>
+            <p className="text-sm text-[#c9a84c]" style={{ fontFamily: 'DM Sans, sans-serif' }}>
               {application.property_address}
             </p>
           )}
@@ -203,8 +203,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
           )}
 
           {/* Personal Information */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-[#059669] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#c9a84c] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
               Personal Information
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -217,16 +217,16 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
           </div>
 
           {/* Current Residence */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-[#059669] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#c9a84c] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
               Current Residence
             </h3>
             <FormInput label="Current Address" value={form.current_address} onChange={(v) => set('current_address', v)} placeholder="Street, City, State, Zip" />
           </div>
 
           {/* Employment & Income */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-[#059669] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#c9a84c] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
               Employment & Income
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -236,8 +236,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
           </div>
 
           {/* Move-in Details */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-[#059669] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#c9a84c] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
               Move-in Details
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -248,8 +248,8 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
           </div>
 
           {/* References & Additional */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
-            <h3 className="text-sm font-semibold text-[#059669] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#c9a84c] uppercase tracking-wider mb-4" style={{ fontFamily: 'Syne, sans-serif' }}>
               References & Additional Info
             </h3>
             <div className="space-y-4">
@@ -259,7 +259,7 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
           </div>
 
           {/* Consent */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6">
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6">
             <p className="text-xs text-[#4A6080] leading-relaxed" style={{ fontFamily: 'DM Sans, sans-serif' }}>
               By submitting this application, you authorize the property manager to verify the information provided,
               including employment, rental history, and references. You understand that this is an application only
@@ -273,7 +273,7 @@ export default function ApplyPage({ params }: { params: Promise<{ token: string 
             disabled={submitting}
             className={cn(
               'w-full h-12 rounded-xl text-sm font-semibold',
-              'bg-[#059669] text-black',
+              'bg-[#c9a84c] text-black',
               'hover:brightness-110 hover:shadow-[0_0_20px_rgba(201,168,76,0.3)]',
               'transition-all duration-200',
               'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -326,9 +326,9 @@ function FormInput({
         required={required}
         className={cn(
           'w-full h-10 px-3 rounded-lg text-sm text-white',
-          'bg-[#080B0F] border border-[#161E2A]',
+          'bg-[#080808] border border-[#1e1e1e]',
           'placeholder:text-[#4A6080]/40',
-          'focus:outline-none focus:border-[#059669]/50 focus:ring-1 focus:ring-[#059669]/20',
+          'focus:outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20',
           'transition-colors',
         )}
         style={{ fontFamily: 'DM Sans, sans-serif' }}
@@ -360,9 +360,9 @@ function FormTextarea({
         rows={3}
         className={cn(
           'w-full px-3 py-2 rounded-lg text-sm text-white resize-y',
-          'bg-[#080B0F] border border-[#161E2A]',
+          'bg-[#080808] border border-[#1e1e1e]',
           'placeholder:text-[#4A6080]/40',
-          'focus:outline-none focus:border-[#059669]/50 focus:ring-1 focus:ring-[#059669]/20',
+          'focus:outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20',
           'transition-colors',
         )}
         style={{ fontFamily: 'DM Sans, sans-serif' }}

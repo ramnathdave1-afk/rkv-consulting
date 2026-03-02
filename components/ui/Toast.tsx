@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils';
 /* ------------------------------------------------------------------ */
 
 const toastBaseStyle: React.CSSProperties = {
-  background: '#0C1018',
-  color: '#E2E8F0',
-  border: '1px solid #161E2A',
+  background: '#111111',
+  color: '#f5f5f5',
+  border: '1px solid #1e1e1e',
   borderRadius: '8px',
   padding: '12px 16px',
   fontSize: '13px',
@@ -27,13 +27,13 @@ const customToast = {
     toast.success(message, {
       style: {
         ...toastBaseStyle,
-        background: '#059669',
-        borderColor: '#059669',
+        background: '#c9a84c',
+        borderColor: '#c9a84c',
         color: '#FFFFFF',
       },
       iconTheme: {
         primary: '#FFFFFF',
-        secondary: '#059669',
+        secondary: '#c9a84c',
       },
       ...options,
     }),
@@ -79,7 +79,7 @@ const customToast = {
           height="18"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#059669"
+          stroke="#c9a84c"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -126,13 +126,13 @@ function Toaster({ className }: ToasterProps) {
           success: {
             style: {
               ...toastBaseStyle,
-              background: '#059669',
-              borderColor: '#059669',
+              background: '#c9a84c',
+              borderColor: '#c9a84c',
               color: '#FFFFFF',
             },
             iconTheme: {
               primary: '#FFFFFF',
-              secondary: '#059669',
+              secondary: '#c9a84c',
             },
           },
           error: {

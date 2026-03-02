@@ -41,11 +41,11 @@ export default function MetricCard({
   loading = false,
 }: MetricCardProps) {
   const isPositive = change >= 0;
-  const sparklineColor = trend === 'down' ? '#DC2626' : '#059669';
+  const sparklineColor = trend === 'down' ? '#DC2626' : '#c9a84c';
 
   if (loading) {
     return (
-      <div className="relative overflow-hidden rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="relative overflow-hidden rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         <Skeleton className="h-3 w-20 mb-4" />
         <Skeleton className="h-8 w-28 mb-3" />
         <Skeleton className="h-3 w-32" />
@@ -59,7 +59,7 @@ export default function MetricCard({
         'relative overflow-hidden rounded-lg p-5 group',
         'transition-all duration-300 ease-out cursor-default',
       )}
-      style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+      style={{ background: '#111111', border: '1px solid #1e1e1e' }}
     >
       {/* Subtle background */}
       <div className="absolute inset-0 opacity-5 pointer-events-none" />

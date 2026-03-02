@@ -165,7 +165,7 @@ export default function TenantPortalPage() {
       <div className="h-[2px] bg-gradient-to-r from-gold via-gold-light to-transparent" />
 
       {/* Header */}
-      <header className="border-b border-border" style={{ background: '#060910' }}>
+      <header className="border-b border-border" style={{ background: '#050505' }}>
         <div className="max-w-5xl mx-auto px-4 py-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
@@ -214,7 +214,7 @@ export default function TenantPortalPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <DollarSign className="h-4 w-4 text-green" />
                   <span className="label text-muted">Monthly Rent</span>
@@ -225,7 +225,7 @@ export default function TenantPortalPage() {
                 <p className="text-xs text-muted mt-1">Due on the {tenant?.rent_due_day || 1}st</p>
               </div>
 
-              <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Clock className="h-4 w-4 text-gold" />
                   <span className="label text-muted">Lease Expires</span>
@@ -238,7 +238,7 @@ export default function TenantPortalPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Wrench className="h-4 w-4 text-gold-light" />
                   <span className="label text-muted">Open Requests</span>
@@ -254,7 +254,7 @@ export default function TenantPortalPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => setActiveTab('payments')}
-                className="flex items-center gap-4 rounded-xl p-5 text-left transition-all hover:border-gold/30" style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                className="flex items-center gap-4 rounded-xl p-5 text-left transition-all hover:border-gold/30" style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 <div className="w-12 h-12 rounded-xl bg-green/10 flex items-center justify-center">
                   <CreditCard className="h-6 w-6 text-green" />
@@ -267,7 +267,7 @@ export default function TenantPortalPage() {
 
               <button
                 onClick={() => { setActiveTab('maintenance'); setShowNewRequest(true); }}
-                className="flex items-center gap-4 rounded-xl p-5 text-left transition-all hover:border-gold/30" style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                className="flex items-center gap-4 rounded-xl p-5 text-left transition-all hover:border-gold/30" style={{ background: '#111111', border: '1px solid #1e1e1e' }}
               >
                 <div className="w-12 h-12 rounded-xl bg-gold-light/10 flex items-center justify-center">
                   <Wrench className="h-6 w-6 text-gold-light" />
@@ -284,7 +284,7 @@ export default function TenantPortalPage() {
         {/* Payments Tab */}
         {activeTab === 'payments' && (
           <div className="space-y-6">
-            <div className="rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h2 className="font-display font-semibold text-lg text-white mb-4">Make a Payment</h2>
               <div className="flex items-center justify-between p-4 rounded-lg bg-deep border border-border mb-4">
                 <div>
@@ -319,7 +319,7 @@ export default function TenantPortalPage() {
 
             {/* New Request Form */}
             {showNewRequest && (
-              <div className="rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <h3 className="font-display font-semibold text-white mb-4">Submit a Request</h3>
                 <div className="space-y-4">
                   <div>
@@ -396,7 +396,7 @@ export default function TenantPortalPage() {
             <div className="space-y-3">
               {requests.length > 0 ? (
                 requests.map((req) => (
-                  <div key={req.id} className="rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+                  <div key={req.id} className="rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-body font-medium text-white">{req.title}</p>
@@ -434,7 +434,7 @@ export default function TenantPortalPage() {
         {/* Lease Tab */}
         {activeTab === 'lease' && (
           <div className="space-y-6">
-            <div className="rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h2 className="font-display font-semibold text-lg text-white mb-4">Lease Information</h2>
               {tenant ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -469,7 +469,7 @@ export default function TenantPortalPage() {
         {/* Messages Tab */}
         {activeTab === 'messages' && (
           <div className="space-y-6">
-            <div className="rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h2 className="font-display font-semibold text-lg text-white mb-4">Message Your Landlord</h2>
               <div className="space-y-4">
                 <textarea
@@ -494,7 +494,7 @@ export default function TenantPortalPage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-6" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex flex-col items-center justify-center py-8">
                 <AlertCircle className="h-10 w-10 text-muted/40 mb-3" />
                 <p className="text-sm text-muted">No message history yet</p>
@@ -505,7 +505,7 @@ export default function TenantPortalPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6" style={{ background: '#060910' }}>
+      <footer className="border-t border-border py-6" style={{ background: '#050505' }}>
         <div className="max-w-5xl mx-auto px-4 text-center">
           <p className="text-xs text-muted-deep">
             Powered by <span className="text-muted">RKV Consulting</span> · Tenant Portal

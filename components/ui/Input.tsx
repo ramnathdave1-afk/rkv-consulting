@@ -18,7 +18,7 @@ const baseInputStyles = [
   'border border-border rounded-[6px]',
   'placeholder:font-body placeholder:text-muted-deep',
   'transition-all duration-150 ease-out',
-  'focus:outline-none focus:border-gold focus:ring-2 focus:ring-[rgba(5,150,105,0.12)]',
+  'focus:outline-none focus:border-[#c9a84c] focus:ring-2 focus:ring-[rgba(201,168,76,0.12)]',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ');
 

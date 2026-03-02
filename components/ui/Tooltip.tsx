@@ -79,16 +79,16 @@ function Tooltip({
             className,
           )}
           style={{
-            background: '#0C1018',
-            border: '1px solid #161E2A',
-            color: '#E2E8F0',
+            background: '#111111',
+            border: '1px solid #1e1e1e',
+            color: '#f5f5f5',
           }}
         >
           {content}
           <RadixTooltip.Arrow
             width={10}
             height={5}
-            style={{ fill: '#161E2A' }}
+            style={{ fill: '#1e1e1e' }}
           />
         </RadixTooltip.Content>
       </RadixTooltip.Portal>

@@ -15,7 +15,7 @@ import {
   Calculator,
   Sparkles,
 } from 'lucide-react';
-import { getGoogleMapsLoader } from '@/lib/apis/googlemaps';
+import { loadGoogleMapsApi } from '@/lib/apis/googlemaps';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -138,9 +138,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
       if (!addressInputRef.current) return;
 
       try {
-        const loader = getGoogleMapsLoader();
-        // @ts-expect-error - Loader class is deprecated but still works
-        await (loader.load ? loader.load() : loader.importLibrary('places'));
+        await loadGoogleMapsApi();
 
         autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
           types: ['address'],

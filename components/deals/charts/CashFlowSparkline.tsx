@@ -8,10 +8,10 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#059669';
-const CARD_BG = '#0C1018';
-const BORDER = '#161E2A';
-const GREEN = '#059669';
+const GOLD = '#c9a84c';
+const CARD_BG = '#111111';
+const BORDER = '#1e1e1e';
+const GREEN = '#c9a84c';
 const RED = '#DC2626';
 
 /* ------------------------------------------------------------------ */

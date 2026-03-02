@@ -22,9 +22,9 @@ const LeafletMap = dynamic(() => import('./LeafletMap'), {
 
 function MapSkeleton() {
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden" style={{ background: '#080B0F', border: '1px solid #161E2A' }}>
+    <div className="relative w-full h-full rounded-xl overflow-hidden" style={{ background: '#080808', border: '1px solid #1e1e1e' }}>
       {/* Fake map background */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0C1018, #080B0F, #0C1018)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #111111, #080808, #111111)' }} />
 
       {/* Animated cyan shimmer */}
       <div className="absolute inset-0 overflow-hidden">
@@ -32,7 +32,7 @@ function MapSkeleton() {
           className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(5,150,105,0.04), transparent)',
+              'linear-gradient(90deg, transparent, rgba(201,168,76,0.04), transparent)',
           }}
         />
       </div>
@@ -60,8 +60,8 @@ function MapSkeleton() {
                 left: dot.left,
                 width: dot.size,
                 height: dot.size,
-                background: 'rgba(5,150,105,0.15)',
-                boxShadow: '0 0 8px rgba(5,150,105,0.1)',
+                background: 'rgba(201,168,76,0.15)',
+                boxShadow: '0 0 8px rgba(201,168,76,0.1)',
                 animationDelay: `${i * 200}ms`,
               }}
             />

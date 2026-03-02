@@ -1,0 +1,19 @@
+workflowVersion: 1.0.0
+speakeasyVersion: latest
+sources:
+    petstore-oas:
+        inputs:
+            - location: openapi.yaml
+        output: .speakeasy/out.openapi.yaml
+        registry:
+            location: registry.speakeasyapi.dev/rkv-consulting/rkv-consulting/petstore-oas
+targets:
+    petstore:
+        target: typescript
+        source: petstore-oas
+        codeSamples:
+            registry:
+                location: registry.speakeasyapi.dev/rkv-consulting/rkv-consulting/petstore-oas-typescript-code-samples
+            labelOverride:
+                fixedValue: Typescript (SDK)
+            blocking: false

@@ -249,7 +249,7 @@ export default function GuidedOnboarding({
             ) : (
               <div
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(5, 150, 105, 0.1)' }}
+                style={{ background: 'rgba(201, 168, 76, 0.1)' }}
               >
                 <Brain className="h-4 w-4 text-gold" />
               </div>
@@ -273,11 +273,11 @@ export default function GuidedOnboarding({
             style={{
               width: `${progressPercent}%`,
               background: allComplete
-                ? '#059669'
-                : 'linear-gradient(90deg, #059669, #0EA5E9)',
+                ? '#c9a84c'
+                : 'linear-gradient(90deg, #c9a84c, #c9a84c)',
               boxShadow: allComplete
-                ? '0 0 12px rgba(5, 150, 105, 0.4)'
-                : '0 0 8px rgba(5, 150, 105, 0.2)',
+                ? '0 0 12px rgba(201, 168, 76, 0.4)'
+                : '0 0 8px rgba(201, 168, 76, 0.2)',
             }}
           />
           {/* Shimmer on the progress bar */}
@@ -304,7 +304,7 @@ export default function GuidedOnboarding({
       </div>
 
       {/* Divider */}
-      <div className="h-px" style={{ background: '#161E2A' }} />
+      <div className="h-px" style={{ background: '#1e1e1e' }} />
 
       {/* Checklist */}
       <div className="px-2 py-2 space-y-0.5">

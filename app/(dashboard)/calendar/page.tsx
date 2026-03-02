@@ -85,11 +85,11 @@ const MONTH_NAMES = [
 ];
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
-  rent_due: '#059669',
+  rent_due: '#c9a84c',
   lease_expiry: '#D97706',
-  maintenance: '#0EA5E9',
-  mortgage: '#0EA5E9',
-  deal_closing: '#059669',
+  maintenance: '#c9a84c',
+  mortgage: '#c9a84c',
+  deal_closing: '#c9a84c',
   tax_deadline: '#DC2626',
   meeting: '#8B5CF6',
   call: '#06B6D4',
@@ -187,7 +187,7 @@ function getLeaseExpiryColor(leaseEnd: string): string {
   const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays <= 30) return '#DC2626';
   if (diffDays <= 90) return '#D97706';
-  return '#059669';
+  return '#c9a84c';
 }
 
 function generateId(): string {
@@ -232,7 +232,7 @@ function CalendarStatsBar({
         <div
           key={stat.label}
           className="flex items-center gap-3 rounded-lg px-4 py-3"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div
             className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
@@ -342,7 +342,7 @@ function MonthlyCalendarGrid({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-7 gap-px" style={{ background: '#161E2A' }}>
+      <div className="grid grid-cols-7 gap-px" style={{ background: '#1e1e1e' }}>
         {cells.map((cell, idx) => {
           const dayEvents = eventsByDate[cell.dateStr] || [];
           const visibleEvents = dayEvents.slice(0, 3);
@@ -367,7 +367,7 @@ function MonthlyCalendarGrid({
                 isSelected && 'ring-1 ring-gold/40 z-10',
               )}
               style={{
-                background: isSelected ? '#0F1620' : cell.isCurrentMonth ? '#0C1018' : '#060910',
+                background: isSelected ? '#0F1620' : cell.isCurrentMonth ? '#111111' : '#050505',
               }}
             >
               {/* Day number */}
@@ -445,7 +445,7 @@ function WeeklyCalendarView({
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-7 gap-px" style={{ background: '#161E2A' }}>
+      <div className="grid grid-cols-7 gap-px" style={{ background: '#1e1e1e' }}>
         {weekDates.map((date) => {
           const dateStr = formatDate(date.getFullYear(), date.getMonth(), date.getDate());
           const dayEvents = eventsByDate[dateStr] || [];
@@ -455,14 +455,14 @@ function WeeklyCalendarView({
             <div
               key={dateStr}
               className="flex flex-col min-h-[400px]"
-              style={{ background: '#0C1018' }}
+              style={{ background: '#111111' }}
             >
               {/* Day header */}
               <div
                 className={cn(
                   'flex flex-col items-center py-3 border-b',
                 )}
-                style={{ borderColor: '#161E2A' }}
+                style={{ borderColor: '#1e1e1e' }}
               >
                 <span className="text-[10px] uppercase tracking-wider text-muted font-body">
                   {DAYS_OF_WEEK[date.getDay()]}
@@ -530,13 +530,13 @@ function EventDetailPanel({
   const handleAction = (action: string) => {
     toast.success(action, {
       style: {
-        background: '#0C1018',
-        color: '#E2E8F0',
-        border: '1px solid #161E2A',
+        background: '#111111',
+        color: '#f5f5f5',
+        border: '1px solid #1e1e1e',
       },
       iconTheme: {
-        primary: '#059669',
-        secondary: '#080B0F',
+        primary: '#c9a84c',
+        secondary: '#080808',
       },
     });
   };
@@ -553,13 +553,13 @@ function EventDetailPanel({
       <div
         className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[384px] overflow-y-auto animate-slide-in-right"
         style={{
-          background: '#0C1018',
-          borderLeft: '1px solid #161E2A',
+          background: '#111111',
+          borderLeft: '1px solid #1e1e1e',
           boxShadow: '-8px 0 40px rgba(0, 0, 0, 0.5)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#161E2A' }}>
+        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: '#1e1e1e' }}>
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
@@ -616,7 +616,7 @@ function EventDetailPanel({
           {event.amount != null && event.amount > 0 && (
             <div
               className="flex items-center gap-3 rounded-lg p-4"
-              style={{ background: '#060910', border: '1px solid #161E2A' }}
+              style={{ background: '#050505', border: '1px solid #1e1e1e' }}
             >
               <div
                 className="flex items-center justify-center w-10 h-10 rounded-lg"
@@ -637,7 +637,7 @@ function EventDetailPanel({
           {event.propertyAddress && (
             <div
               className="rounded-lg p-4"
-              style={{ background: '#060910', border: '1px solid #161E2A' }}
+              style={{ background: '#050505', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <Home size={14} className="text-gold" />
@@ -664,7 +664,7 @@ function EventDetailPanel({
           {event.tenantName && (
             <div
               className="rounded-lg p-4"
-              style={{ background: '#060910', border: '1px solid #161E2A' }}
+              style={{ background: '#050505', border: '1px solid #1e1e1e' }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <Users size={14} className="text-gold" />
@@ -815,13 +815,13 @@ function AddEventModal({
     onClose();
     toast.success('Event added to calendar', {
       style: {
-        background: '#0C1018',
-        color: '#E2E8F0',
-        border: '1px solid #161E2A',
+        background: '#111111',
+        color: '#f5f5f5',
+        border: '1px solid #1e1e1e',
       },
       iconTheme: {
-        primary: '#059669',
-        secondary: '#080B0F',
+        primary: '#c9a84c',
+        secondary: '#080808',
       },
     });
   };
@@ -937,19 +937,19 @@ function DayEventsList({
   return (
     <div
       className="rounded-lg overflow-hidden"
-      style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+      style={{ background: '#111111', border: '1px solid #1e1e1e' }}
     >
-      <div className="px-4 py-3 border-b" style={{ borderColor: '#161E2A' }}>
+      <div className="px-4 py-3 border-b" style={{ borderColor: '#1e1e1e' }}>
         <h3 className="text-sm font-display font-semibold text-white">{formattedDate}</h3>
         <p className="text-[10px] text-muted font-body mt-0.5">{dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}</p>
       </div>
-      <div className="divide-y" style={{ borderColor: '#161E2A' }}>
+      <div className="divide-y" style={{ borderColor: '#1e1e1e' }}>
         {dayEvents.map((event) => (
           <button
             key={event.id}
             onClick={() => onSelectEvent(event)}
             className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02] transition-colors"
-            style={{ borderColor: '#161E2A' }}
+            style={{ borderColor: '#1e1e1e' }}
           >
             <div
               className="w-2 h-8 rounded-full shrink-0"
@@ -1126,7 +1126,7 @@ export default function CalendarPage() {
               title: `${firstName} ${lastName} — Rent Due ${formatCurrency(monthlyRent)}`,
               date: rentDate,
               type: 'rent_due',
-              color: '#059669',
+              color: '#c9a84c',
               propertyId,
               propertyAddress: propAddress,
               propertyType: propType,
@@ -1183,7 +1183,7 @@ export default function CalendarPage() {
             title: `${req.title} at ${propAddress || 'Property'}`,
             date: scheduledDate,
             type: 'maintenance',
-            color: '#0EA5E9',
+            color: '#c9a84c',
             propertyId: req.property_id as string,
             propertyAddress: propAddress,
             propertyType: property?.property_type as string | null,
@@ -1230,7 +1230,7 @@ export default function CalendarPage() {
                 title: `Mortgage Payment — ${formatCurrency(txAmount)}`,
                 date: mortDate,
                 type: 'mortgage',
-                color: '#0EA5E9',
+                color: '#c9a84c',
                 propertyId: tx.property_id as string | null,
                 propertyAddress: prop?.address || null,
                 propertyType: prop?.property_type || null,
@@ -1264,7 +1264,7 @@ export default function CalendarPage() {
             title: `${deal.title} — Closing`,
             date: closeDate,
             type: 'deal_closing',
-            color: '#059669',
+            color: '#c9a84c',
             propertyId: null,
             propertyAddress: deal.address as string | null,
             propertyType: null,
@@ -1330,7 +1330,7 @@ export default function CalendarPage() {
               title: `Mortgage Payment — ${formatCurrency(mortgagePayment)}`,
               date: mortDate,
               type: 'mortgage',
-              color: '#0EA5E9',
+              color: '#c9a84c',
               propertyId: prop.id as string,
               propertyAddress: prop.address as string,
               propertyType: prop.property_type as string,
@@ -1398,7 +1398,7 @@ export default function CalendarPage() {
           {/* View toggle */}
           <div
             className="flex items-center rounded-lg p-0.5"
-            style={{ background: '#060910', border: '1px solid #161E2A' }}
+            style={{ background: '#050505', border: '1px solid #1e1e1e' }}
           >
             <button
               onClick={() => setViewMode('month')}
@@ -1464,7 +1464,7 @@ export default function CalendarPage() {
           {/* ======================================================== */}
           <div
             className="flex items-center justify-between rounded-lg px-4 py-3"
-            style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+            style={{ background: '#111111', border: '1px solid #1e1e1e' }}
           >
             <button
               onClick={viewMode === 'month' ? goToPrevMonth : goToPrevWeek}
@@ -1499,7 +1499,7 @@ export default function CalendarPage() {
           {/* ======================================================== */}
           <div
             className="rounded-lg overflow-hidden"
-            style={{ border: '1px solid #161E2A' }}
+            style={{ border: '1px solid #1e1e1e' }}
           >
             {viewMode === 'month' ? (
               <MonthlyCalendarGrid

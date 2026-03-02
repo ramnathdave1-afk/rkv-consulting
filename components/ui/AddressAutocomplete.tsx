@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getGoogleMapsLoader } from '@/lib/apis/googlemaps';
+import { loadGoogleMapsApi } from '@/lib/apis/googlemaps';
 
 export type AddressData = {
   fullAddress: string;
@@ -51,7 +51,7 @@ export default function AddressAutocomplete({
         'bg-[var(--bg-primary)] border border-border',
         'text-white font-body text-[14px]',
         'placeholder:text-muted-deep',
-        'focus:outline-none focus:border-gold focus:ring-2 focus:ring-[rgba(5,150,105,0.12)]',
+        'focus:outline-none focus:border-gold focus:ring-2 focus:ring-[rgba(201,168,76,0.12)]',
         'transition-all duration-150 ease-out',
         selected && 'pr-10',
         className,
@@ -65,13 +65,7 @@ export default function AddressAutocomplete({
     async function init() {
       if (!inputRef.current) return;
       try {
-        const loader = getGoogleMapsLoader();
-        // Loader supports both load() and importLibrary() depending on version
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyLoader = loader as any;
-        if (anyLoader.load) await anyLoader.load();
-        else if (anyLoader.importLibrary) await anyLoader.importLibrary('places');
-        else throw new Error('Google Maps loader does not support load() or importLibrary()');
+        await loadGoogleMapsApi();
 
         if (!mounted || !inputRef.current) return;
 

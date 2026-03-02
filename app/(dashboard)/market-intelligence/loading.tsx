@@ -1,7 +1,7 @@
 function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    <div className={`relative overflow-hidden rounded-lg bg-[#1e1e1e]/30 border border-[#1e1e1e]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#c9a84c]/5 to-transparent" />
     </div>
   );
 }
@@ -16,7 +16,7 @@ export default function MarketIntelligenceLoading() {
           <SkeletonBlock className="h-4 w-72 mt-2" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-[#059669]/20" />
+          <div className="h-3 w-3 rounded-full bg-[#c9a84c]/20" />
           <SkeletonBlock className="h-4 w-20" />
         </div>
       </div>

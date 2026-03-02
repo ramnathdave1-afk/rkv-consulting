@@ -52,9 +52,9 @@ function getBenchmarkStatus(
 
 const statusColors: Record<BenchmarkStatus, { bg: string; text: string; dot: string; label: string }> = {
   good: {
-    bg: 'rgba(5, 150, 105, 0.1)',
-    text: '#059669',
-    dot: '#059669',
+    bg: 'rgba(201, 168, 76, 0.1)',
+    text: '#c9a84c',
+    dot: '#c9a84c',
     label: 'Healthy',
   },
   warning: {
@@ -154,10 +154,10 @@ export default function MetricTooltip({
             sideOffsets[side],
           )}
           style={{
-            background: '#0C1018',
-            border: '1px solid #161E2A',
+            background: '#111111',
+            border: '1px solid #1e1e1e',
             boxShadow:
-              '0 8px 30px rgba(0, 0, 0, 0.4), 0 0 40px rgba(5, 150, 105, 0.03)',
+              '0 8px 30px rgba(0, 0, 0, 0.4), 0 0 40px rgba(201, 168, 76, 0.03)',
           }}
         >
           {/* Metric name */}
@@ -173,7 +173,7 @@ export default function MetricTooltip({
           {/* Your value */}
           <div
             className="rounded-lg px-3 py-2 mb-2"
-            style={{ background: '#080B0F', border: '1px solid #1A2332' }}
+            style={{ background: '#080808', border: '1px solid #1A2332' }}
           >
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
@@ -189,7 +189,7 @@ export default function MetricTooltip({
           {benchmark && (
             <div
               className="rounded-lg px-3 py-2"
-              style={{ background: '#080B0F', border: '1px solid #1A2332' }}
+              style={{ background: '#080808', border: '1px solid #1A2332' }}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-mono text-muted uppercase tracking-wider">

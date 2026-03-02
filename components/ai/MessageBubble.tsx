@@ -141,10 +141,10 @@ export function MessageBubble({
           {/* User message */}
           <div className="relative">
             <div
-              className="px-4 py-3 text-sm leading-relaxed font-body text-[#E2E8F0] rounded-lg"
+              className="px-4 py-3 text-sm leading-relaxed font-body text-[#f5f5f5] rounded-lg"
               style={{
-                background: 'rgba(5,150,105,0.07)',
-                border: '1px solid rgba(5,150,105,0.25)',
+                background: 'rgba(201,168,76,0.07)',
+                border: '1px solid rgba(201,168,76,0.25)',
               }}
             >
               {/* Copy button */}
@@ -154,7 +154,7 @@ export function MessageBubble({
                 className={cn(
                   'absolute -top-2 left-0 opacity-0 group-hover:opacity-100',
                   'transition-opacity duration-150',
-                  'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+                  'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
                   'hover:border-gold/20 text-muted hover:text-gold',
                 )}
                 title="Copy message"
@@ -191,12 +191,12 @@ export function MessageBubble({
         <div
           className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
           style={{
-            background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+            background: 'linear-gradient(180deg, #c9a84c 0%, #c9a84c 50%, #c9a84c 100%)',
             backgroundSize: '100% 200%',
             animation: 'gradientShift 3s ease infinite',
           }}
         />
-        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+        <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
           {/* Copy button */}
           <button
             type="button"
@@ -204,7 +204,7 @@ export function MessageBubble({
             className={cn(
               'absolute -top-2 right-0 opacity-0 group-hover:opacity-100',
               'transition-opacity duration-150',
-              'p-1.5 rounded-lg bg-[#0C1018] border border-[#161E2A]',
+              'p-1.5 rounded-lg bg-[#111111] border border-[#1e1e1e]',
               'hover:border-gold/20 text-muted hover:text-gold',
             )}
             title="Copy message"

@@ -51,7 +51,7 @@ export default function ActivityFeed({
 }: ActivityFeedProps) {
   if (!activities || activities.length === 0) {
     return (
-      <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         <h3 className="label text-gold mb-4">Activity Log</h3>
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <span className="font-body text-[11px] text-muted-deep">No activity recorded</span>
@@ -61,7 +61,7 @@ export default function ActivityFeed({
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-lg p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <h3 className="label text-gold mb-4">Activity Log</h3>
 
       <div className="overflow-y-auto pr-1 -mr-1 space-y-px" style={{ maxHeight }}>

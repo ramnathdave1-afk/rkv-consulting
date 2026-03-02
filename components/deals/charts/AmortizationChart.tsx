@@ -17,11 +17,11 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#059669';
-const CARD_BG = '#0C1018';
-const BORDER = '#161E2A';
+const GOLD = '#c9a84c';
+const CARD_BG = '#111111';
+const BORDER = '#1e1e1e';
 const MUTED = '#4A6080';
-const GRID = '#161E2A';
+const GRID = '#1e1e1e';
 const MUTED_FILL = '#4B5563';
 
 /* ------------------------------------------------------------------ */
@@ -55,7 +55,7 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif' }}>
+      <p style={{ color: '#f5f5f5', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif' }}>
         Year {label}
       </p>
       {payload.map((entry, i) => (
@@ -69,7 +69,7 @@ function CustomTooltip({
           }}
         >
           <span style={{ color: entry.color, fontSize: 11 }}>{entry.name}</span>
-          <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: '#f5f5f5', fontVariantNumeric: 'tabular-nums' }}>
             {formatCurrency(entry.value)}
           </span>
         </div>

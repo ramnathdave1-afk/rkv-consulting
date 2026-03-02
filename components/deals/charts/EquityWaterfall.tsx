@@ -17,14 +17,14 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#059669';
-const CARD_BG = '#0C1018';
-const BORDER = '#161E2A';
-const GREEN = '#059669';
+const GOLD = '#c9a84c';
+const CARD_BG = '#111111';
+const BORDER = '#1e1e1e';
+const GREEN = '#c9a84c';
 const CYAN = '#06B6D4';
 const MUTED = '#4A6080';
-const GRID = '#161E2A';
-const WHITE = '#E2E8F0';
+const GRID = '#1e1e1e';
+const WHITE = '#f5f5f5';
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -91,7 +91,7 @@ export default function EquityWaterfall({
     { name: 'Down Payment', value: Math.round(downPayment), color: GOLD },
     { name: 'Principal Paid', value: Math.round(principalPaid), color: GREEN },
     { name: 'Appreciation', value: Math.round(appreciation), color: CYAN },
-    { name: 'Total Equity', value: Math.round(totalEquity), color: '#0EA5E9' },
+    { name: 'Total Equity', value: Math.round(totalEquity), color: '#c9a84c' },
   ];
 
   return (
@@ -118,7 +118,7 @@ export default function EquityWaterfall({
               v === 0 ? '$0' : `$${(v / 1000).toFixed(0)}k`
             }
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(5,150,105,0.05)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(201,168,76,0.05)' }} />
           <Bar
             dataKey="value"
             radius={[6, 6, 0, 0]}

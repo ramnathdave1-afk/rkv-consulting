@@ -160,7 +160,7 @@ export default function WholesalersPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at 50% 30%, rgba(5,150,105,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 60%, rgba(14,165,233,0.04) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 60%, rgba(14,165,233,0.04) 0%, transparent 50%)',
           }}
         />
         {/* Subtle grid */}
@@ -211,7 +211,7 @@ export default function WholesalersPage() {
                 'px-8 py-3.5 rounded-xl font-display font-semibold text-sm tracking-wide',
                 'bg-gold text-black hover:brightness-110 transition-all duration-200',
               )}
-              style={{ boxShadow: '0 0 30px rgba(5,150,105,0.25)' }}
+              style={{ boxShadow: '0 0 30px rgba(201,168,76,0.25)' }}
             >
               Submit a Deal
             </Link>
@@ -287,7 +287,7 @@ export default function WholesalersPage() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 30% 50%, rgba(5,150,105,0.04) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 30% 50%, rgba(201,168,76,0.04) 0%, transparent 60%)',
           }}
         />
 
@@ -392,7 +392,7 @@ export default function WholesalersPage() {
             <div
               className="absolute inset-0 pointer-events-none opacity-10"
               style={{
-                background: 'radial-gradient(ellipse at center, rgba(5,150,105,0.3) 0%, transparent 70%)',
+                background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.3) 0%, transparent 70%)',
               }}
             />
 
@@ -409,7 +409,7 @@ export default function WholesalersPage() {
                   'inline-flex items-center px-10 py-4 rounded-xl font-display font-semibold text-sm tracking-wide',
                   'bg-gold text-black hover:brightness-110 transition-all duration-200',
                 )}
-                style={{ boxShadow: '0 0 40px rgba(5,150,105,0.25)' }}
+                style={{ boxShadow: '0 0 40px rgba(201,168,76,0.25)' }}
               >
                 Submit a Deal
               </Link>

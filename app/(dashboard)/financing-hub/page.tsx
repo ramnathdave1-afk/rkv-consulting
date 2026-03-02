@@ -97,7 +97,7 @@ function buildAmortization(principal: number, annualRate: number, termYears: num
 function AmortTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg px-3 py-2 shadow-card" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-lg px-3 py-2 shadow-card" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <p className="text-xs text-muted mb-1">Year {label}</p>
       {payload.map((e, i) => (
         <p key={i} className="text-xs font-mono" style={{ color: e.color }}>{e.name}: {fmtWhole(e.value)}</p>
@@ -326,7 +326,7 @@ function FinancingHubContent() {
             { label: '15-Year Fixed', val: rates.fifteenYearFixed, prev: rates.lastWeek.fifteenYearFixed },
             { label: '5/1 ARM', val: rates.fiveOneArm, prev: rates.lastWeek.fiveOneArm },
           ].map(item => (
-            <div key={item.label} className="rounded-lg p-5 text-center rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div key={item.label} className="rounded-lg p-5 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <p className="label mb-2">{item.label}</p>
               <p className="text-3xl font-bold text-gold font-mono">
                 {ratesLoading ? <span className="inline-block w-16 h-8 bg-border rounded animate-pulse" /> : `${item.val?.toFixed(2) ?? '--'}%`}
@@ -364,8 +364,8 @@ function FinancingHubContent() {
               <input
                 type="range" min={0} max={50} step={1} value={downPct}
                 onChange={e => setDownPct(parseInt(e.target.value))}
-                className="w-full h-2 bg-[#080B0F] rounded-lg appearance-none cursor-pointer accent-gold"
-                style={{ background: `linear-gradient(to right, #059669 0%, #059669 ${downPct * 2}%, #161E2A ${downPct * 2}%, #161E2A 100%)` }}
+                className="w-full h-2 bg-[#080808] rounded-lg appearance-none cursor-pointer accent-gold"
+                style={{ background: `linear-gradient(to right, #c9a84c 0%, #c9a84c ${downPct * 2}%, #1e1e1e ${downPct * 2}%, #1e1e1e 100%)` }}
               />
               <div className="flex justify-between text-[10px] text-muted mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
             </div>
@@ -382,7 +382,7 @@ function FinancingHubContent() {
 
           {/* results */}
           <div className="space-y-5">
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <p className="label mb-1">Monthly Payment (P&I)</p>
               <p className="text-3xl font-bold text-gold font-mono">{fmt(calcResults.monthlyPI)}</p>
               <div className="border-t border-border mt-3 pt-3 space-y-1.5">
@@ -397,10 +397,10 @@ function FinancingHubContent() {
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={amortData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,37,48,0.6)" vertical={false} />
-                  <XAxis dataKey="year" stroke="#4A6080" tick={{ fill: '#4A6080', fontSize: 10 }} axisLine={{ stroke: '#161E2A' }} tickLine={false} />
+                  <XAxis dataKey="year" stroke="#4A6080" tick={{ fill: '#4A6080', fontSize: 10 }} axisLine={{ stroke: '#1e1e1e' }} tickLine={false} />
                   <YAxis stroke="#4A6080" tick={{ fill: '#4A6080', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => fmtShort(v)} width={55} />
                   <RechartsTooltip content={<AmortTooltip />} />
-                  <Area type="monotone" dataKey="principal" stackId="1" stroke="#059669" fill="#059669" fillOpacity={0.3} name="Principal" />
+                  <Area type="monotone" dataKey="principal" stackId="1" stroke="#c9a84c" fill="#c9a84c" fillOpacity={0.3} name="Principal" />
                   <Area type="monotone" dataKey="interest" stackId="1" stroke="#DC2626" fill="#DC2626" fillOpacity={0.2} name="Interest" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -461,7 +461,7 @@ function FinancingHubContent() {
                         <span className="text-muted">LTV Ratio</span>
                         <span className={cn('font-semibold font-mono', ltv > 80 ? 'text-red' : ltv > 60 ? 'text-gold' : 'text-green')}>{ltv.toFixed(1)}%</span>
                       </div>
-                      <div className="h-2 bg-[#080B0F] rounded-full overflow-hidden">
+                      <div className="h-2 bg-[#080808] rounded-full overflow-hidden">
                         <div
                           className={cn('h-full rounded-full transition-all', ltv > 80 ? 'bg-red' : ltv > 60 ? 'bg-gold' : 'bg-green')}
                           style={{ width: `${Math.min(ltv, 100)}%` }}
@@ -513,7 +513,7 @@ function FinancingHubContent() {
         {selectedProp && refiResults ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Current */}
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h3 className="label mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-muted" />Current Loan</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted">Balance</span><span className="text-white font-mono">{fmtWhole(refiResults.balance)}</span></div>
@@ -523,7 +523,7 @@ function FinancingHubContent() {
             </div>
 
             {/* New */}
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h3 className="label mb-4 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold" />New Loan</h3>
               <div className="space-y-4">
                 <Input label="New Rate (%)" type="number" step="0.05" value={refiNewRate} onChange={e => setRefiNewRate(e.target.value)} />
@@ -533,7 +533,7 @@ function FinancingHubContent() {
             </div>
 
             {/* Results */}
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <h3 className="label mb-4">Analysis</h3>
               <div className="space-y-4">
                 <div>
@@ -598,7 +598,7 @@ function FinancingHubContent() {
           </div>
 
           <div className="space-y-5">
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <p className="label mb-1">Estimated Max Purchase Price</p>
               <p className="text-3xl font-bold text-gold font-mono">{fmtWhole(prequalResults.maxPurchase)}</p>
               <div className="border-t border-border mt-3 pt-3 space-y-2">
@@ -608,7 +608,7 @@ function FinancingHubContent() {
             </div>
 
             {/* DTI visualization */}
-            <div className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <div className="flex justify-between items-center mb-3">
                 <p className="text-xs font-medium text-muted">Debt-to-Income Ratio</p>
                 <span className={cn(

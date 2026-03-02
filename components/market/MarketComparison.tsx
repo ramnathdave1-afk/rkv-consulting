@@ -108,9 +108,9 @@ export default function MarketComparison({
   const canAddMore = markets.length < 3;
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Cyan accent top border */}
-      <div className="h-[2px] bg-gradient-to-r from-[#059669]/0 via-[#059669]/60 to-[#059669]/0" />
+      <div className="h-[2px] bg-gradient-to-r from-[#c9a84c]/0 via-[#c9a84c]/60 to-[#c9a84c]/0" />
 
       <div className="p-5">
         {/* Header */}
@@ -126,7 +126,7 @@ export default function MarketComparison({
         {markets.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full mb-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full mb-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
               <Plus className="h-5 w-5 text-muted" />
             </div>
             <p className="text-sm text-muted font-display mb-1">No markets selected</p>
@@ -154,7 +154,7 @@ export default function MarketComparison({
               {markets.map((market) => (
                 <div
                   key={market.id}
-                  className="rounded-lg p-3 relative group" style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                  className="rounded-lg p-3 relative group" style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                 >
                   <button
                     onClick={() => onRemoveMarket(market.id)}
@@ -244,8 +244,8 @@ export default function MarketComparison({
                     const isBest = score === Math.max(...allScores) && markets.length > 1;
 
                     let scoreColor = '#4A6080';
-                    if (score >= 75) scoreColor = '#059669';
-                    else if (score >= 55) scoreColor = '#059669';
+                    if (score >= 75) scoreColor = '#c9a84c';
+                    else if (score >= 55) scoreColor = '#c9a84c';
                     else if (score < 35) scoreColor = '#DC2626';
 
                     return (

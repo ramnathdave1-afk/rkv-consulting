@@ -91,7 +91,7 @@ function TabsTrigger({
         'text-muted whitespace-nowrap',
         'transition-colors duration-150 ease-out',
         'hover:text-white',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)] focus-visible:ring-inset',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.20)] focus-visible:ring-inset',
         'disabled:opacity-40 disabled:cursor-not-allowed',
         // Active state
         'data-[state=active]:text-white',
@@ -120,7 +120,7 @@ function TabsContent({ value, children, className }: TabsContentProps) {
       value={value}
       className={cn(
         'mt-4 outline-none',
-        'focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)] rounded-lg',
+        'focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.20)] rounded-lg',
         // Entrance animation
         'data-[state=active]:animate-fade-up',
         className,

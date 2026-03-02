@@ -1,7 +1,7 @@
 function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    <div className={`relative overflow-hidden rounded-lg bg-[#1e1e1e]/30 border border-[#1e1e1e]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#c9a84c]/5 to-transparent" />
     </div>
   );
 }
@@ -21,7 +21,7 @@ export default function DealsLoading() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Input Form */}
-        <div className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-6 space-y-4">
+        <div className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-6 space-y-4">
           <SkeletonBlock className="h-6 w-32" />
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="space-y-1.5">

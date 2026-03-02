@@ -118,7 +118,7 @@ export default function PublicPortfolioPage() {
       <div className="h-[2px] bg-gradient-to-r from-gold via-gold-light to-transparent" />
 
       {/* Header */}
-      <header className="border-b border-border" style={{ background: '#060910' }}>
+      <header className="border-b border-border" style={{ background: '#050505' }}>
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center">
@@ -145,7 +145,7 @@ export default function PublicPortfolioPage() {
           ].map((metric) => {
             const Icon = metric.icon;
             return (
-              <div key={metric.label} className="rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div key={metric.label} className="rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <Icon className={cn('h-4 w-4', metric.color)} />
                   <span className="label text-muted">{metric.label}</span>
@@ -167,7 +167,7 @@ export default function PublicPortfolioPage() {
             const equity = (property.current_value || 0) - (property.purchase_price || 0);
 
             return (
-              <div key={property.id} className="rounded-xl p-5" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div key={property.id} className="rounded-xl p-5" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-body font-medium text-white text-sm">{property.address}</p>
@@ -224,7 +224,7 @@ export default function PublicPortfolioPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-6 mt-16" style={{ background: '#060910' }}>
+      <footer className="border-t border-border py-6 mt-16" style={{ background: '#050505' }}>
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-xs text-muted-deep">
             Powered by <span className="text-muted font-medium">RKV Consulting</span> · Portfolio Intelligence Platform

@@ -1,7 +1,7 @@
 function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    <div className={`relative overflow-hidden rounded-lg bg-[#1e1e1e]/30 border border-[#1e1e1e]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#c9a84c]/5 to-transparent" />
     </div>
   );
 }
@@ -21,7 +21,7 @@ export default function MaintenanceLoading() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-4 space-y-2">
+          <div key={i} className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-4 space-y-2">
             <SkeletonBlock className="h-3 w-20" />
             <SkeletonBlock className="h-7 w-16" />
           </div>
@@ -34,7 +34,7 @@ export default function MaintenanceLoading() {
           <div key={i} className="space-y-3">
             <SkeletonBlock className="h-6 w-28" />
             {Array.from({ length: 3 - i }).map((_, j) => (
-              <div key={j} className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-4 space-y-2">
+              <div key={j} className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-4 space-y-2">
                 <SkeletonBlock className="h-4 w-3/4" />
                 <SkeletonBlock className="h-3 w-1/2" />
                 <div className="flex gap-2">

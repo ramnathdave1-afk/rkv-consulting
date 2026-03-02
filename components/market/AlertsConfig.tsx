@@ -156,15 +156,15 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
 
   if (loading) {
     return (
-      <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         <div className="h-[2px] bg-gradient-to-r from-[#F59E0B]/0 via-[#F59E0B]/60 to-[#F59E0B]/0" />
         <div className="p-5">
           <div className="flex items-center gap-3">
-            <div className="h-4 w-40 bg-[#161E2A] rounded animate-pulse" />
+            <div className="h-4 w-40 bg-[#1e1e1e] rounded animate-pulse" />
           </div>
           <div className="mt-4 space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 bg-[#161E2A] rounded-lg animate-pulse" />
+              <div key={i} className="h-10 bg-[#1e1e1e] rounded-lg animate-pulse" />
             ))}
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
   }
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Accent top border */}
       <div className="h-[2px] bg-gradient-to-r from-[#F59E0B]/0 via-[#F59E0B]/60 to-[#F59E0B]/0" />
 
@@ -231,8 +231,8 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
                 className={cn(
                   'w-full h-9 rounded-lg px-3 pr-8 text-sm font-mono text-white placeholder:text-muted-deep focus:outline-none transition-all',
                   enabled
-                    ? 'bg-[#080B0F] border border-border focus:border-gold/50'
-                    : 'bg-[#080B0F]/50 border border-border/50 text-muted cursor-not-allowed'
+                    ? 'bg-[#080808] border border-border focus:border-gold/50'
+                    : 'bg-[#080808]/50 border border-border/50 text-muted cursor-not-allowed'
                 )}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted font-mono">%</span>
@@ -257,8 +257,8 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
                 className={cn(
                   'w-full h-9 rounded-lg pl-7 pr-3 text-sm font-mono text-white placeholder:text-muted-deep focus:outline-none transition-all',
                   enabled
-                    ? 'bg-[#080B0F] border border-border focus:border-gold/50'
-                    : 'bg-[#080B0F]/50 border border-border/50 text-muted cursor-not-allowed'
+                    ? 'bg-[#080808] border border-border focus:border-gold/50'
+                    : 'bg-[#080808]/50 border border-border/50 text-muted cursor-not-allowed'
                 )}
               />
             </div>
@@ -282,8 +282,8 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
                 className={cn(
                   'w-full h-9 rounded-lg px-3 pr-8 text-sm font-mono text-white placeholder:text-muted-deep focus:outline-none transition-all',
                   enabled
-                    ? 'bg-[#080B0F] border border-border focus:border-gold/50'
-                    : 'bg-[#080B0F]/50 border border-border/50 text-muted cursor-not-allowed'
+                    ? 'bg-[#080808] border border-border focus:border-gold/50'
+                    : 'bg-[#080808]/50 border border-border/50 text-muted cursor-not-allowed'
                 )}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted font-mono">%</span>
@@ -351,7 +351,7 @@ export default function AlertsConfig({ trackedMarkets }: AlertsConfigProps) {
         )}
 
         {enabled && triggeredMarkets.length === 0 && (capRate || medianPrice || rentToPrice) && (
-          <div className="flex items-center gap-2 rounded-lg p-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center gap-2 rounded-lg p-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
             <Check className="h-3.5 w-3.5 text-green flex-shrink-0" />
             <span className="text-[10px] text-muted font-mono">
               No tracked markets currently meet your alert criteria

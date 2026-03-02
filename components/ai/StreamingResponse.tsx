@@ -113,13 +113,13 @@ export function StreamingResponse({ content, isStreaming }: StreamingResponsePro
           <div
             className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
             style={{
-              background: 'linear-gradient(180deg, #059669 0%, #0EA5E9 50%, #059669 100%)',
+              background: 'linear-gradient(180deg, #c9a84c 0%, #c9a84c 50%, #c9a84c 100%)',
               backgroundSize: '100% 200%',
               animation: 'gradientShift 3s ease infinite',
             }}
           />
 
-          <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#E2E8F0]">
+          <div className="pl-4 pr-2 py-3 text-sm leading-relaxed font-body text-[#f5f5f5]">
             {content ? (
               <div className="space-y-0">
                 {formatContent(content)}
@@ -131,7 +131,7 @@ export function StreamingResponse({ content, isStreaming }: StreamingResponsePro
             ) : isStreaming ? (
               /* Scanning progress bar */
               <div className="space-y-2">
-                <div className="h-[2px] w-48 bg-[#161E2A] rounded-full overflow-hidden">
+                <div className="h-[2px] w-48 bg-[#1e1e1e] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-transparent via-gold to-transparent rounded-full"
                     style={{

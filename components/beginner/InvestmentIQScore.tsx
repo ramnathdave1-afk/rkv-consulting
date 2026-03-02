@@ -285,7 +285,7 @@ function CircularGauge({ score, grade, gradeColor }: { score: number; grade: str
           cy="90"
           r={radius}
           fill="none"
-          stroke="#161E2A"
+          stroke="#1e1e1e"
           strokeWidth={stroke}
         />
         {/* Score arc */}
@@ -381,7 +381,7 @@ function SubScoreCard({ sub }: { sub: SubScore }) {
   return (
     <div
       className="rounded-lg p-4 transition-all duration-200"
-      style={{ background: '#0A0E14', border: '1px solid #161E2A' }}
+      style={{ background: '#0A0E14', border: '1px solid #1e1e1e' }}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5">
@@ -421,7 +421,7 @@ function SubScoreCard({ sub }: { sub: SubScore }) {
             <div
               key={i}
               className="rounded-lg p-3 flex items-start gap-3"
-              style={{ background: '#080B0F', border: '1px solid #1A2332' }}
+              style={{ background: '#080808', border: '1px solid #1A2332' }}
             >
               <Zap
                 className="h-3.5 w-3.5 mt-0.5 shrink-0"
@@ -465,18 +465,18 @@ export default function InvestmentIQScore({
         key: 'cashFlow',
         label: 'Cash Flow Health',
         score: cashFlow.score,
-        icon: <TrendingUp className="h-4 w-4" style={{ color: '#059669' }} />,
+        icon: <TrendingUp className="h-4 w-4" style={{ color: '#c9a84c' }} />,
         explanation: cashFlow.explanation,
-        color: '#059669',
+        color: '#c9a84c',
         suggestions: suggestionsMap.cashFlow,
       },
       {
         key: 'diversification',
         label: 'Portfolio Diversification',
         score: diversification.score,
-        icon: <PieChart className="h-4 w-4" style={{ color: '#0EA5E9' }} />,
+        icon: <PieChart className="h-4 w-4" style={{ color: '#c9a84c' }} />,
         explanation: diversification.explanation,
-        color: '#0EA5E9',
+        color: '#c9a84c',
         suggestions: suggestionsMap.diversification,
       },
       {
@@ -535,8 +535,8 @@ export default function InvestmentIQScore({
   }, [overallScore]);
 
   const gradeColor = useMemo(() => {
-    if (overallScore >= 80) return '#059669';
-    if (overallScore >= 60) return '#0EA5E9';
+    if (overallScore >= 80) return '#c9a84c';
+    if (overallScore >= 60) return '#c9a84c';
     if (overallScore >= 40) return '#F59E0B';
     return '#DC2626';
   }, [overallScore]);

@@ -1126,9 +1126,8 @@ function PropertyMapView({ properties }: { properties: Property[] }) {
     let cancelled = false;
 
     async function initMap() {
-      const { getGoogleMapsLoader } = await import('@/lib/apis/googlemaps');
-      const loader = getGoogleMapsLoader();
-      await (loader as unknown as { importLibrary: (lib: string) => Promise<unknown> }).importLibrary('maps');
+      const { loadGoogleMapsApi } = await import('@/lib/apis/googlemaps');
+      await loadGoogleMapsApi();
 
       if (cancelled || !mapRef.current) return;
 

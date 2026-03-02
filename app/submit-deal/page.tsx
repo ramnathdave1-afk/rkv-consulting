@@ -435,7 +435,7 @@ export default function SubmitDealPage() {
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
               'disabled:opacity-50 disabled:cursor-not-allowed',
             )}
-            style={{ boxShadow: '0 0 30px rgba(5,150,105,0.2)' }}
+            style={{ boxShadow: '0 0 30px rgba(201,168,76,0.2)' }}
           >
             {submitting ? (
               <span className="inline-flex items-center gap-2">

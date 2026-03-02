@@ -210,7 +210,7 @@ export default function DashboardLayout({
       {/* MOBILE OVERLAY */}
       {mobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-[rgba(8,11,15,0.75)] backdrop-blur-sm z-[55] md:hidden"
+          className="fixed inset-0 bg-[rgba(8,8,8,0.8)] backdrop-blur-sm z-[55] md:hidden"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -222,7 +222,7 @@ export default function DashboardLayout({
         'fixed left-0 top-0 w-[260px] h-screen flex flex-col overflow-y-auto z-[60] transition-transform duration-300',
         'md:translate-x-0',
         mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      )} style={{ background: '#060910', borderRight: '1px solid #161E2A' }}>
+      )} style={{ background: '#050505', borderRight: '1px solid #1e1e1e' }}>
 
         {/* Brand */}
         <div className="p-5 pb-4">
@@ -254,7 +254,7 @@ export default function DashboardLayout({
             <div key={group.label} className="mb-4">
               {/* Group label */}
               <div className="flex items-center gap-2 mb-1.5 px-3">
-                <span className="whitespace-nowrap font-body font-semibold text-[10px] uppercase tracking-[0.15em] text-[#1E2D40]">
+                <span className="whitespace-nowrap font-body font-semibold text-[10px] uppercase tracking-[0.15em] text-[#333]">
                   {group.label}
                 </span>
                 <div className="flex-1 h-px bg-border/30" />
@@ -298,7 +298,7 @@ export default function DashboardLayout({
                         'flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-body font-medium',
                         'transition-all duration-150',
                         isActive
-                          ? 'text-white bg-[#05966908] border-l-2 border-gold'
+                          ? 'text-white bg-[rgba(201,168,76,0.05)] border-l-2 border-gold'
                           : 'text-muted hover:text-[#94A3B8]',
                       )}
                     >
@@ -336,13 +336,13 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  TOP BAR                                                      */}
       {/* ============================================================ */}
-      <header className="fixed top-0 left-0 md:left-[260px] right-0 h-[52px] z-40 flex items-center justify-between px-4 md:px-5" style={{ background: '#080B0F', borderBottom: '1px solid #161E2A' }}>
+      <header className="fixed top-0 left-0 md:left-[260px] right-0 h-[52px] z-40 flex items-center justify-between px-4 md:px-5" style={{ background: '#080808', borderBottom: '1px solid #1e1e1e' }}>
         {/* Left: hamburger (mobile) + breadcrumb */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileSidebarOpen((prev) => !prev)}
-            className="md:hidden flex items-center justify-center w-8 h-8 rounded text-muted hover:text-white hover:bg-[#05966908] transition-colors"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded text-muted hover:text-white hover:bg-[rgba(201,168,76,0.05)] transition-colors"
           >
             {mobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -379,14 +379,14 @@ export default function DashboardLayout({
               className={cn(
                 'flex items-center justify-center w-9 h-9 rounded-full',
                 'border border-gold text-gold font-body text-[12px] font-semibold',
-                'hover:bg-[#05966908] transition-colors cursor-pointer',
+                'hover:bg-[rgba(201,168,76,0.05)] transition-colors cursor-pointer',
               )}
             >
               {initials}
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-12 w-60 rounded-lg overflow-hidden animate-fade-up" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div className="absolute right-0 top-12 w-60 rounded-lg overflow-hidden animate-fade-up" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="p-3 border-b border-border/50">
                   <p className="text-[13px] font-medium text-white truncate">
                     {user?.full_name || 'User'}
@@ -427,7 +427,7 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {lockedAlert && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] animate-fade-up">
-          <div className="flex items-center gap-3 rounded-lg px-5 py-3" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="flex items-center gap-3 rounded-lg px-5 py-3" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
             <Lock className="h-4 w-4 text-gold flex-shrink-0" />
             <p className="text-sm text-white font-body">
               <span className="font-semibold text-gold">{lockedAlert}</span> requires an upgrade.
@@ -455,7 +455,7 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  MOBILE BOTTOM NAV                                            */}
       {/* ============================================================ */}
-      <nav className="fixed bottom-0 left-0 right-0 h-14 z-50 md:hidden flex items-center justify-around px-2" style={{ background: 'rgba(8, 11, 15, 0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #161E2A' }}>
+      <nav className="fixed bottom-0 left-0 right-0 h-14 z-50 md:hidden flex items-center justify-around px-2" style={{ background: 'rgba(8, 8, 8, 0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #1e1e1e' }}>
         {[
           { label: 'Home', href: '/dashboard', icon: LayoutDashboard },
           { label: 'Portfolio', href: '/properties', icon: Building2 },

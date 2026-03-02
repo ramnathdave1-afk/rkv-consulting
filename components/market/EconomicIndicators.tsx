@@ -70,19 +70,19 @@ function IndicatorCard({
   let trendColor = '#4A6080';
   if (!isNeutral) {
     const isGood = (isUp && config.positiveIsGood) || (isDown && !config.positiveIsGood);
-    trendColor = isGood ? '#059669' : '#DC2626';
+    trendColor = isGood ? '#c9a84c' : '#DC2626';
   }
 
   const TrendIcon = isNeutral ? Minus : isUp ? TrendingUp : TrendingDown;
   const Icon = config.icon;
 
   return (
-    <div className="flex-1 min-w-[140px] rounded-lg p-3.5 hover:border-gold/20 transition-colors group relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="flex-1 min-w-[140px] rounded-lg p-3.5 hover:border-gold/20 transition-colors group relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Hover accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:via-gold/30 transition-all duration-500" />
 
       <div className="flex items-center gap-2 mb-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="flex h-7 w-7 items-center justify-center rounded-md" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <Icon className="h-3.5 w-3.5 text-muted" />
         </div>
         <p className="label text-muted leading-tight" style={{ fontSize: '10px' }}>

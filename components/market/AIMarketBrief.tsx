@@ -70,8 +70,8 @@ function parseBriefSections(text: string): BriefSection[] {
 /* ------------------------------------------------------------------ */
 
 const sectionStyles: Record<string, { color: string; border: string }> = {
-  'Market Overview': { color: '#059669', border: '#059669' },
-  'Investment Thesis': { color: '#0EA5E9', border: '#0EA5E9' },
+  'Market Overview': { color: '#c9a84c', border: '#c9a84c' },
+  'Investment Thesis': { color: '#c9a84c', border: '#c9a84c' },
   'Key Risks': { color: '#DC2626', border: '#DC2626' },
   'Outlook': { color: '#F59E0B', border: '#F59E0B' },
 }
@@ -84,7 +84,7 @@ function getSectionStyle(title: string) {
   if (lower.includes('thesis') || lower.includes('investment')) return sectionStyles['Investment Thesis']
   if (lower.includes('risk')) return sectionStyles['Key Risks']
   if (lower.includes('outlook')) return sectionStyles['Outlook']
-  return { color: '#059669', border: '#059669' }
+  return { color: '#c9a84c', border: '#c9a84c' }
 }
 
 /* ------------------------------------------------------------------ */
@@ -95,12 +95,12 @@ function BriefShimmer() {
   return (
     <div className="space-y-4 animate-pulse">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
-          <div className="h-4 w-32 rounded bg-[#161E2A] mb-3" />
+        <div key={i} className="rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
+          <div className="h-4 w-32 rounded bg-[#1e1e1e] mb-3" />
           <div className="space-y-2">
-            <div className="h-3 w-full rounded bg-[#161E2A]" />
-            <div className="h-3 w-5/6 rounded bg-[#161E2A]" />
-            <div className="h-3 w-4/6 rounded bg-[#161E2A]" />
+            <div className="h-3 w-full rounded bg-[#1e1e1e]" />
+            <div className="h-3 w-5/6 rounded bg-[#1e1e1e]" />
+            <div className="h-3 w-4/6 rounded bg-[#1e1e1e]" />
           </div>
         </div>
       ))}
@@ -152,9 +152,9 @@ export default function AIMarketBrief({ city, state, marketData }: AIMarketBrief
   // Not generated yet — show the button
   if (!brief && !loading && !error) {
     return (
-      <div className="rounded-xl p-4 relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="rounded-xl p-4 relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         {/* Gradient left border */}
-        <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ background: 'linear-gradient(to bottom, #059669, #0EA5E9)' }} />
+        <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ background: 'linear-gradient(to bottom, #c9a84c, #c9a84c)' }} />
 
         <h4 className="label text-gold mb-3 flex items-center gap-2" style={{ fontSize: '10px' }}>
           <span className="pulse-dot" />
@@ -177,9 +177,9 @@ export default function AIMarketBrief({ city, state, marketData }: AIMarketBrief
   }
 
   return (
-    <div className="rounded-xl relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Gradient left border */}
-      <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ background: 'linear-gradient(to bottom, #059669, #0EA5E9)' }} />
+      <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ background: 'linear-gradient(to bottom, #c9a84c, #c9a84c)' }} />
 
       {/* Header — always visible, acts as toggle */}
       <button
@@ -243,7 +243,7 @@ export default function AIMarketBrief({ city, state, marketData }: AIMarketBrief
                   <div
                     key={idx}
                     className="rounded-lg p-3.5 relative overflow-hidden"
-                    style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+                    style={{ background: '#111111', border: '1px solid #1e1e1e' }}
                   >
                     {/* Left accent bar matching section color */}
                     <div

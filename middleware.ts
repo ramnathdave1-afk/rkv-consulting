@@ -26,7 +26,17 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/deals/submit') ||
     pathname.startsWith('/api/deals/automatch') ||
+    pathname.startsWith('/api/health') ||
+    pathname.startsWith('/api/integrations/status') ||
     pathname.startsWith('/apply/') ||
+    pathname.startsWith('/portfolio/') ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/careers') ||
+    pathname.startsWith('/contact') ||
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/security') ||
     pathname.includes('.')
   ) {
     return true;
@@ -80,10 +90,11 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  // Get current session
+  // Get session from JWT (local validation, no network call)
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   // ---- Protected dashboard routes ----
   if (!isPublicPath(pathname)) {
@@ -100,7 +111,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---- Onboarding redirect for first-time users ----
-  if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api/')) {
+  // Only query DB if the onboarding cookie is not set (avoids a DB call on every request)
+  const onboardingDone = req.cookies.get('onboarding_completed')?.value === '1';
+  if (user && !onboardingDone && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api/')) {
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -110,6 +123,16 @@ export async function middleware(req: NextRequest) {
 
       if (profile && profile.onboarding_completed === false) {
         return NextResponse.redirect(new URL('/onboarding', req.url));
+      }
+
+      // User has completed onboarding — set cookie so we skip the DB check next time
+      if (profile && profile.onboarding_completed !== false) {
+        res.cookies.set('onboarding_completed', '1', {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+        });
       }
     } catch {
       // If profile check fails, don't block the user

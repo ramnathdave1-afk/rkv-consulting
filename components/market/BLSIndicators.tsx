@@ -69,18 +69,18 @@ function BLSMetricCard({
   let trendColor = '#4A6080'
   if (!isNeutral) {
     const isGood = (isUp && positiveIsGood) || (isDown && !positiveIsGood)
-    trendColor = isGood ? '#059669' : '#DC2626'
+    trendColor = isGood ? '#c9a84c' : '#DC2626'
   }
 
   const TrendIcon = isNeutral ? Minus : isUp ? TrendingUp : TrendingDown
 
   return (
-    <div className="flex-1 min-w-[160px] rounded-lg p-4 hover:border-gold/20 transition-colors group relative overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="flex-1 min-w-[160px] rounded-lg p-4 hover:border-gold/20 transition-colors group relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Top hover accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:via-gold/30 transition-all duration-500" />
 
       <div className="flex items-center gap-2 mb-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="flex h-8 w-8 items-center justify-center rounded-md" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <Icon className="h-4 w-4 text-muted" />
         </div>
         <p className="label text-muted leading-tight" style={{ fontSize: '10px' }}>
@@ -124,15 +124,15 @@ function ShimmerCards() {
         <div
           key={i}
           className="flex-1 min-w-[160px] rounded-lg p-4"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-md bg-[#161E2A] animate-pulse" />
-            <div className="h-3 w-20 rounded bg-[#161E2A] animate-pulse" />
+            <div className="h-8 w-8 rounded-md bg-[#1e1e1e] animate-pulse" />
+            <div className="h-3 w-20 rounded bg-[#1e1e1e] animate-pulse" />
           </div>
           <div className="flex items-end justify-between">
-            <div className="h-6 w-16 rounded bg-[#161E2A] animate-pulse" />
-            <div className="h-3 w-12 rounded bg-[#161E2A] animate-pulse" />
+            <div className="h-6 w-16 rounded bg-[#1e1e1e] animate-pulse" />
+            <div className="h-3 w-12 rounded bg-[#1e1e1e] animate-pulse" />
           </div>
         </div>
       ))}
@@ -179,9 +179,9 @@ export default function BLSIndicators({ metro, state }: BLSIndicatorsProps) {
   }, [fetchBLSData])
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Accent top border */}
-      <div className="h-[2px] bg-gradient-to-r from-[#0EA5E9]/0 via-[#0EA5E9]/60 to-[#0EA5E9]/0" />
+      <div className="h-[2px] bg-gradient-to-r from-[#c9a84c]/0 via-[#c9a84c]/60 to-[#c9a84c]/0" />
 
       <div className="p-5">
         {/* Header */}
@@ -190,7 +190,7 @@ export default function BLSIndicators({ metro, state }: BLSIndicatorsProps) {
             <h3 className="label text-gold">
               BLS ECONOMIC DATA //
             </h3>
-            <span className="text-[10px] font-mono font-semibold bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20 rounded-full px-2 py-0.5">
+            <span className="text-[10px] font-mono font-semibold bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20 rounded-full px-2 py-0.5">
               {metro}, {state}
             </span>
           </div>

@@ -47,7 +47,7 @@ const typeConfig: Record<AlertType, { icon: LucideIcon; label: string; bg: strin
   price_drop:   { icon: TrendingDown, label: 'Price Drops',    bg: 'bg-red/10',       text: 'text-red' },
   new_listing:  { icon: Home,         label: 'New Listings',   bg: 'bg-green/10',     text: 'text-green' },
   rate_change:  { icon: Percent,      label: 'Rate Changes',   bg: 'bg-gold/10',      text: 'text-gold' },
-  market_shift: { icon: BarChart3,    label: 'Market Shifts',  bg: 'bg-[#0EA5E9]/10', text: 'text-[#0EA5E9]' },
+  market_shift: { icon: BarChart3,    label: 'Market Shifts',  bg: 'bg-[#c9a84c]/10', text: 'text-[#c9a84c]' },
 };
 
 const impactConfig: Record<ImpactLevel, { variant: 'danger' | 'default' | 'success'; label: string }> = {
@@ -78,7 +78,7 @@ function AlertCard({ alert }: { alert: Alert }) {
   const relativeTime = formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true });
 
   // Severity-based left border color
-  const leftBorderColor = alert.impact === 'high' ? '#DC2626' : alert.impact === 'medium' ? '#F59E0B' : '#059669';
+  const leftBorderColor = alert.impact === 'high' ? '#DC2626' : alert.impact === 'medium' ? '#F59E0B' : '#c9a84c';
 
   return (
     <Card variant="default" padding="md" className="hover:border-gold/20 transition-all duration-200" style={{ borderLeft: `2px solid ${leftBorderColor}` }}>
@@ -140,7 +140,7 @@ function EmptyState({ filter }: { filter: FilterKey }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-border/50 mb-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-border/50 mb-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
         <Bell className="h-7 w-7 text-muted" />
       </div>
       <p className="text-sm font-medium text-white font-display mb-1">No {label}</p>

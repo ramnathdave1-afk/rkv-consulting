@@ -52,8 +52,8 @@ function EmptyState({
           className={cn(
             'flex items-center justify-center',
             'w-16 h-16 mb-5',
-            'bg-[#05966912] text-gold',
-            'border border-[rgba(5,150,105,0.25)]',
+            'bg-[#c9a84c12] text-gold',
+            'border border-[rgba(201,168,76,0.25)]',
             'rounded-lg',
           )}
         >

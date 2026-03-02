@@ -61,7 +61,7 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
 
   // For mortgage rates: down is green (good for borrowers), up is red
   const isGood = diff < 0;
-  const color = isGood ? '#059669' : '#DC2626';
+  const color = isGood ? '#c9a84c' : '#DC2626';
   const Icon = diff < 0 ? TrendingDown : TrendingUp;
   const sign = diff > 0 ? '+' : '';
 
@@ -81,7 +81,7 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
 
 function RateCard({ rate, accentColor }: { rate: RateData; accentColor: string }) {
   return (
-    <div className="flex-1 rounded-lg p-3.5 rounded-lg hover:border-gold/20 transition-colors" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="flex-1 rounded-lg p-3.5 rounded-lg hover:border-gold/20 transition-colors" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       <p className="label text-muted mb-1" style={{ fontSize: '10px' }}>
         {rate.label}
       </p>
@@ -121,9 +121,9 @@ export default function InterestRateTracker({
   }, [lastUpdated]);
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Cyan accent top border */}
-      <div className="h-[2px] bg-gradient-to-r from-[#059669]/0 via-[#059669]/60 to-[#059669]/0" />
+      <div className="h-[2px] bg-gradient-to-r from-[#c9a84c]/0 via-[#c9a84c]/60 to-[#c9a84c]/0" />
 
       <div className="p-5">
         {/* Header */}
@@ -145,14 +145,14 @@ export default function InterestRateTracker({
 
         {/* Rate Cards */}
         <div className="flex gap-3 mb-5">
-          <RateCard rate={rates.mortgage30yr} accentColor="#059669" />
-          <RateCard rate={rates.mortgage15yr} accentColor="#059669" />
-          <RateCard rate={rates.fedFunds} accentColor="#0EA5E9" />
+          <RateCard rate={rates.mortgage30yr} accentColor="#c9a84c" />
+          <RateCard rate={rates.mortgage15yr} accentColor="#c9a84c" />
+          <RateCard rate={rates.fedFunds} accentColor="#c9a84c" />
         </div>
 
         {/* Historical Chart */}
         {history.length > 0 && (
-          <div className="rounded-lg p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
             <h4 className="label text-muted mb-3" style={{ fontSize: '10px' }}>
               2-YEAR RATE HISTORY
             </h4>
@@ -161,14 +161,14 @@ export default function InterestRateTracker({
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,37,48,0.6)" />
                 <XAxis
                   dataKey="date"
-                  stroke="#1E2D40"
+                  stroke="#333333"
                   fontSize={9}
                   fontFamily="JetBrains Mono, monospace"
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  stroke="#1E2D40"
+                  stroke="#333333"
                   fontSize={9}
                   fontFamily="JetBrains Mono, monospace"
                   tickLine={false}
@@ -178,11 +178,11 @@ export default function InterestRateTracker({
                 <Tooltip
                   contentStyle={{
                     background: 'rgba(4,8,16,0.96)',
-                    border: '1px solid #161E2A',
+                    border: '1px solid #1e1e1e',
                     borderRadius: '10px',
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '11px',
-                    color: '#E2E8F0',
+                    color: '#f5f5f5',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -210,7 +210,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="mortgage30yr"
-                  stroke="#059669"
+                  stroke="#c9a84c"
                   strokeWidth={2}
                   dot={false}
                   animationDuration={800}
@@ -218,7 +218,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="mortgage15yr"
-                  stroke="#059669"
+                  stroke="#c9a84c"
                   strokeWidth={2}
                   dot={false}
                   animationDuration={800}
@@ -226,7 +226,7 @@ export default function InterestRateTracker({
                 <Line
                   type="monotone"
                   dataKey="fedFunds"
-                  stroke="#0EA5E9"
+                  stroke="#c9a84c"
                   strokeWidth={1.5}
                   dot={false}
                   strokeDasharray="4 3"

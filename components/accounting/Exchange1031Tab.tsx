@@ -201,7 +201,7 @@ export function Exchange1031Tab() {
       {/* Sale Information */}
       <div
         className="bg-card border border-border rounded-xl p-6"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="flex items-center gap-3 mb-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/10">
@@ -324,7 +324,7 @@ export function Exchange1031Tab() {
         {/* 45-Day Identification Period */}
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -416,7 +416,7 @@ export function Exchange1031Tab() {
                       ? '#DC2626'
                       : deadlines.daysToIdentification <= 7
                         ? '#F59E0B'
-                        : '#059669',
+                        : '#c9a84c',
                   }}
                 />
               </div>
@@ -436,7 +436,7 @@ export function Exchange1031Tab() {
         {/* 180-Day Completion Deadline */}
         <div
           className="bg-card border border-border rounded-xl p-6"
-          style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -528,7 +528,7 @@ export function Exchange1031Tab() {
                       ? '#DC2626'
                       : deadlines.daysToCompletion <= 14
                         ? '#F59E0B'
-                        : '#059669',
+                        : '#c9a84c',
                   }}
                 />
               </div>
@@ -549,7 +549,7 @@ export function Exchange1031Tab() {
       {/* Replacement Properties */}
       <div
         className="bg-card border border-border rounded-xl overflow-hidden"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="p-6 border-b border-border flex items-center justify-between">
           <div>
@@ -708,7 +708,7 @@ export function Exchange1031Tab() {
       {/* Notes */}
       <div
         className="bg-card border border-border rounded-xl p-6"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
@@ -735,7 +735,7 @@ export function Exchange1031Tab() {
       {/* IRS Rules Info Box */}
       <div
         className="bg-card border border-border rounded-xl p-5"
-        style={{ background: '#0C1018', border: '1px solid #161E2A' }}
+        style={{ background: '#111111', border: '1px solid #1e1e1e' }}
       >
         <div className="flex items-start gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-500/10 flex-shrink-0 mt-0.5">

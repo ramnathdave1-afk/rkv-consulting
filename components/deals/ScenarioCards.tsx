@@ -127,15 +127,15 @@ function ScenarioCards({ scenarios }: ScenarioCardsProps) {
       <SingleCard
         label="Base Case"
         icon={<Target className="w-4 h-4" />}
-        borderColor="#059669"
+        borderColor="#c9a84c"
         badge="Most Likely"
-        badgeColor="#059669"
+        badgeColor="#c9a84c"
         data={scenarios.base}
       />
       <SingleCard
         label="Aggressive"
         icon={<TrendingUp className="w-4 h-4" />}
-        borderColor="#059669"
+        borderColor="#c9a84c"
         data={scenarios.aggressive}
       />
     </div>

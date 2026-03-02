@@ -134,13 +134,13 @@ function ProjectionChart({ data, years: initialYears = 30 }: ProjectionChartProp
           <LineChart data={filteredData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#161E2A"
+              stroke="#1e1e1e"
               vertical={false}
             />
             <XAxis
               dataKey="year"
               tick={{ fill: '#4A6080', fontSize: 11, fontFamily: 'Inter' }}
-              axisLine={{ stroke: '#161E2A' }}
+              axisLine={{ stroke: '#1e1e1e' }}
               tickLine={false}
               label={{
                 value: 'Year',
@@ -172,29 +172,29 @@ function ProjectionChart({ data, years: initialYears = 30 }: ProjectionChartProp
               type="monotone"
               dataKey="equity"
               name="Equity"
-              stroke="#059669"
+              stroke="#c9a84c"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#059669', stroke: '#080B0F', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#c9a84c', stroke: '#080808', strokeWidth: 2 }}
             />
             <Line
               type="monotone"
               dataKey="cashFlow"
               name="Cash Flow"
-              stroke="#059669"
+              stroke="#c9a84c"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#059669', stroke: '#080B0F', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#c9a84c', stroke: '#080808', strokeWidth: 2 }}
             />
             <Line
               type="monotone"
               dataKey="totalWealth"
               name="Total Wealth"
-              stroke="#E2E8F0"
+              stroke="#f5f5f5"
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
-              activeDot={{ r: 4, fill: '#E2E8F0', stroke: '#080B0F', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: '#f5f5f5', stroke: '#080808', strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>

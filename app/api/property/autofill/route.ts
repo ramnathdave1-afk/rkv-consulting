@@ -20,40 +20,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'address is required' }, { status: 400 });
     }
 
+    const hasAttom = !!process.env.ATTOM_API_KEY;
+
+    // Only call ATTOM if key is configured; always call Rentcast
     const [attomDetail, attomValuation, attomAssessment, rentEstimate, rentcastProperty] =
       await Promise.all([
-        fetchPropertyDetail(address),
-        fetchPropertyValuation(address),
-        fetchAssessment(address),
+        hasAttom ? fetchPropertyDetail(address) : Promise.resolve(null),
+        hasAttom ? fetchPropertyValuation(address) : Promise.resolve(null),
+        hasAttom ? fetchAssessment(address) : Promise.resolve(null),
         fetchRentEstimate(address),
         fetchPropertyDetails(address),
       ]);
 
+    // Flat structure consumed by DealForm's handleAutoFill
+    // Prefer ATTOM data, fall back to Rentcast property details
     return NextResponse.json({
       address,
-      attom: {
-        beds: attomDetail?.building?.rooms?.beds ?? null,
-        baths: attomDetail?.building?.rooms?.bathsTotal ?? null,
-        sqft: attomDetail?.building?.size?.livingSize ?? attomDetail?.building?.size?.universalSize ?? null,
-        yearBuilt: attomDetail?.summary?.yearBuilt ?? null,
-        lotSize: attomDetail?.lot?.lotSize1 ?? null,
-        propertyType: attomDetail?.summary?.propType ?? attomDetail?.summary?.propSubType ?? null,
-        estimatedValue: attomValuation?.avm?.amount?.value ?? null,
-        estimatedValueHigh: attomValuation?.avm?.amount?.high ?? null,
-        estimatedValueLow: attomValuation?.avm?.amount?.low ?? null,
-        annualTaxes: attomAssessment?.assessment?.tax?.taxAmt ?? null,
-        lastSalePrice: rentcastProperty?.lastSalePrice ?? null,
-        lastSaleDate: rentcastProperty?.lastSaleDate ?? null,
-        schoolDistrict: null,
-        floodZone: null,
-      },
-      rentcast: {
-        estimatedRent: rentEstimate?.price ?? null,
-        rentRangeLow: rentEstimate?.priceRangeLow ?? null,
-        rentRangeHigh: rentEstimate?.priceRangeHigh ?? null,
-        vacancyRate: null,
-        rentGrowthYoY: null,
-      },
+      estimatedValue:
+        attomValuation?.avm?.amount?.value ?? rentcastProperty?.lastSalePrice ?? null,
+      afterRepairValue: attomValuation?.avm?.amount?.high ?? null,
+      monthlyRent: rentEstimate?.price ?? null,
+      propertyType:
+        attomDetail?.summary?.propType
+        ?? attomDetail?.summary?.propSubType
+        ?? rentcastProperty?.propertyType
+        ?? null,
+      beds: attomDetail?.building?.rooms?.beds ?? rentcastProperty?.bedrooms ?? null,
+      baths: attomDetail?.building?.rooms?.bathsTotal ?? rentcastProperty?.bathrooms ?? null,
+      sqft:
+        attomDetail?.building?.size?.livingSize
+        ?? attomDetail?.building?.size?.universalSize
+        ?? rentcastProperty?.squareFootage
+        ?? null,
+      yearBuilt: attomDetail?.summary?.yearBuilt ?? rentcastProperty?.yearBuilt ?? null,
+      lotSize: attomDetail?.lot?.lotSize1 ?? rentcastProperty?.lotSize ?? null,
+      annualTaxes: attomAssessment?.assessment?.tax?.taxAmt ?? null,
+      lastSalePrice: rentcastProperty?.lastSalePrice ?? null,
+      lastSaleDate: rentcastProperty?.lastSaleDate ?? null,
+      rentRangeLow: rentEstimate?.priceRangeLow ?? null,
+      rentRangeHigh: rentEstimate?.priceRangeHigh ?? null,
     });
   } catch (e) {
     // eslint-disable-next-line no-console

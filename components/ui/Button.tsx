@@ -24,24 +24,23 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
-    'bg-gold text-white',
-    'hover:bg-[#047857]',
+    'bg-[#c9a84c] text-black',
+    'hover:bg-[#b8943f]',
     'active:scale-[0.97]',
   ].join(' '),
-  // Back-compat alias used around the app
   solid: [
-    'bg-gold text-white',
-    'hover:bg-[#047857]',
+    'bg-[#c9a84c] text-black',
+    'hover:bg-[#b8943f]',
     'active:scale-[0.97]',
   ].join(' '),
   outline: [
-    'bg-transparent border border-gold text-gold',
-    'hover:bg-[rgba(5,150,105,0.06)]',
+    'bg-transparent border border-[#c9a84c] text-[#c9a84c]',
+    'hover:bg-[rgba(201,168,76,0.08)]',
     'active:scale-[0.97]',
   ].join(' '),
   ghost: [
-    'bg-transparent border border-border text-muted',
-    'hover:border-border-hover hover:text-white',
+    'bg-transparent border border-[#1e1e1e] text-[#888]',
+    'hover:border-[#333] hover:text-white',
     'active:scale-[0.97]',
   ].join(' '),
   danger: [
@@ -118,7 +117,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center font-body font-semibold',
           'transition-all duration-150 ease-out',
           'select-none whitespace-nowrap',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.25)]',
           // Variant + size
           variantStyles[variant],
           sizeStyles[size],

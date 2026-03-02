@@ -45,14 +45,14 @@ function formatMetricValue(key: string, value: number): string {
 }
 
 function getYoYArrow(change: number) {
-  if (change > 0) return { icon: TrendingUp, color: '#059669', label: `+${change.toFixed(1)}%` };
+  if (change > 0) return { icon: TrendingUp, color: '#c9a84c', label: `+${change.toFixed(1)}%` };
   if (change < 0) return { icon: TrendingDown, color: '#DC2626', label: `${change.toFixed(1)}%` };
   return { icon: TrendingUp, color: '#4A6080', label: '0.0%' };
 }
 
 function getScoreBadge(score: number) {
-  if (score >= 75) return { label: 'Strong Buy', bg: 'rgba(5,150,105,0.15)', border: 'rgba(5,150,105,0.3)', text: '#059669' };
-  if (score >= 55) return { label: 'Moderate', bg: 'rgba(5,150,105,0.15)', border: 'rgba(5,150,105,0.3)', text: '#059669' };
+  if (score >= 75) return { label: 'Strong Buy', bg: 'rgba(201,168,76,0.15)', border: 'rgba(201,168,76,0.3)', text: '#c9a84c' };
+  if (score >= 55) return { label: 'Moderate', bg: 'rgba(201,168,76,0.15)', border: 'rgba(201,168,76,0.3)', text: '#c9a84c' };
   if (score >= 35) return { label: 'Neutral', bg: 'rgba(74,127,165,0.15)', border: 'rgba(74,127,165,0.3)', text: '#4A6080' };
   return { label: 'Caution', bg: 'rgba(220,38,38,0.15)', border: 'rgba(220,38,38,0.3)', text: '#DC2626' };
 }
@@ -76,7 +76,7 @@ function MetricCard({
   const ArrowIcon = arrow?.icon;
 
   return (
-    <div className="rounded-lg p-3 group relative overflow-hidden hover:border-gold/20 transition-colors" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+    <div className="rounded-lg p-3 group relative overflow-hidden hover:border-gold/20 transition-colors" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
       {/* Top hover accent */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:via-gold/30 transition-all duration-500" />
 
@@ -170,11 +170,11 @@ export default function DetailPanel({
   const scoreColor = getInvestmentPotentialColor(investmentScore);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-300" style={{ background: '#0C1018', borderLeft: '1px solid #161E2A' }}>
+    <div className="h-full flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-300" style={{ background: '#111111', borderLeft: '1px solid #1e1e1e' }}>
       {/* ── Header ── */}
       <div className="relative">
         {/* Top cyan accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#059669] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c9a84c] to-transparent" />
 
         <div className="flex items-center justify-between p-5 pb-4 border-b border-border/60">
           <div className="flex-1 min-w-0">
@@ -208,7 +208,7 @@ export default function DetailPanel({
       {/* ── Scrollable Content ── */}
       <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {/* Investment Potential Score */}
-        <div className="flex items-center justify-between rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+        <div className="flex items-center justify-between rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 items-center justify-center rounded-full"
@@ -244,7 +244,7 @@ export default function DetailPanel({
 
         {/* 12-Month Trend Chart */}
         {trends.length > 0 && (
-          <div className="rounded-xl p-4" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+          <div className="rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
             <h4 className="label text-gold mb-3 flex items-center gap-1.5" style={{ fontSize: '10px' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-gold" />
               12-MONTH PRICE TREND
@@ -253,21 +253,21 @@ export default function DetailPanel({
               <AreaChart data={trends} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="detailPriceGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#059669" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#059669" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#c9a84c" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#c9a84c" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,37,48,0.6)" />
                 <XAxis
                   dataKey="month"
-                  stroke="#1E2D40"
+                  stroke="#333333"
                   fontSize={9}
                   fontFamily="JetBrains Mono, monospace"
                   interval={2}
                   tickLine={false}
                 />
                 <YAxis
-                  stroke="#1E2D40"
+                  stroke="#333333"
                   fontSize={9}
                   fontFamily="JetBrains Mono, monospace"
                   tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
@@ -276,11 +276,11 @@ export default function DetailPanel({
                 <Tooltip
                   contentStyle={{
                     background: 'rgba(4,8,16,0.96)',
-                    border: '1px solid #161E2A',
+                    border: '1px solid #1e1e1e',
                     borderRadius: '10px',
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '11px',
-                    color: '#E2E8F0',
+                    color: '#f5f5f5',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                   }}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -289,7 +289,7 @@ export default function DetailPanel({
                 <Area
                   type="monotone"
                   dataKey="medianPrice"
-                  stroke="#059669"
+                  stroke="#c9a84c"
                   strokeWidth={2}
                   fill="url(#detailPriceGrad)"
                   animationDuration={800}

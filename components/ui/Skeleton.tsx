@@ -60,7 +60,7 @@ const scanLineStyle: React.CSSProperties = {
 
 const skeletonBase = 'relative overflow-hidden rounded';
 const skeletonBg: React.CSSProperties = {
-  backgroundColor: '#161E2A',
+  backgroundColor: '#1e1e1e',
 };
 
 /* ------------------------------------------------------------------ */

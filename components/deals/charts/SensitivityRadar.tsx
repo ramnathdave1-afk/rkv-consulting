@@ -16,13 +16,13 @@ import type { AnalyzerSensitivityResult } from '@/types';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#059669';
-const VIOLET = '#0EA5E9';
-const CARD_BG = '#0C1018';
-const BORDER = '#161E2A';
-const GREEN = '#059669';
+const GOLD = '#c9a84c';
+const VIOLET = '#c9a84c';
+const CARD_BG = '#111111';
+const BORDER = '#1e1e1e';
+const GREEN = '#c9a84c';
 const MUTED = '#4A6080';
-const GRID = '#161E2A';
+const GRID = '#1e1e1e';
 
 /* ------------------------------------------------------------------ */
 /*  Custom tooltip                                                     */
@@ -56,7 +56,7 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif', fontSize: 11 }}>
+      <p style={{ color: '#f5f5f5', fontWeight: 600, marginBottom: 6, fontFamily: 'Syne, sans-serif', fontSize: 11 }}>
         {label}
       </p>
       {payload.map((entry, i) => (
@@ -70,7 +70,7 @@ function CustomTooltip({
           }}
         >
           <span style={{ color: entry.color, fontSize: 11 }}>{entry.name}</span>
-          <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: '#f5f5f5', fontVariantNumeric: 'tabular-nums' }}>
             {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
           </span>
         </div>

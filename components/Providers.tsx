@@ -27,19 +27,19 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           position="top-right"
           toastOptions={{
             style: {
-              background: '#0C1018',
-              color: '#E2E8F0',
-              border: '1px solid #161E2A',
+              background: '#111111',
+              color: '#f5f5f5',
+              border: '1px solid #1e1e1e',
               borderRadius: '8px',
               fontSize: '13px',
               fontFamily: 'var(--font-body)',
-              boxShadow: '0 0 20px rgba(5, 150, 105, 0.1)',
+              boxShadow: '0 0 20px rgba(201, 168, 76, 0.1)',
             },
             success: {
-              iconTheme: { primary: '#059669', secondary: '#0C1018' },
+              iconTheme: { primary: '#c9a84c', secondary: '#111111' },
             },
             error: {
-              iconTheme: { primary: '#DC2626', secondary: '#0C1018' },
+              iconTheme: { primary: '#DC2626', secondary: '#111111' },
             },
             duration: 4000,
           }}

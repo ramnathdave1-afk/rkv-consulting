@@ -1,0 +1,37 @@
+speakeasyVersion: 1.736.2
+sources:
+    petstore-oas:
+        sourceNamespace: petstore-oas
+        sourceRevisionDigest: sha256:79b05b3c903377383b1ffff975c77201c984df00c5ebe24c3c0f20580776f8e1
+        sourceBlobDigest: sha256:0a88ef48bace41abce14841a48ce1fbe15c0cc00ca41940d9c774db73a27211f
+        tags:
+            - latest
+            - 1.0.0
+targets:
+    petstore:
+        source: petstore-oas
+        sourceNamespace: petstore-oas
+        sourceRevisionDigest: sha256:79b05b3c903377383b1ffff975c77201c984df00c5ebe24c3c0f20580776f8e1
+        sourceBlobDigest: sha256:0a88ef48bace41abce14841a48ce1fbe15c0cc00ca41940d9c774db73a27211f
+        codeSamplesNamespace: petstore-oas-typescript-code-samples
+        codeSamplesRevisionDigest: sha256:367661f3124501604827d2ff1b06819275a1f29bc9fb699eb7bc53e4f4027396
+workflow:
+    workflowVersion: 1.0.0
+    speakeasyVersion: latest
+    sources:
+        petstore-oas:
+            inputs:
+                - location: openapi.yaml
+            output: .speakeasy/out.openapi.yaml
+            registry:
+                location: registry.speakeasyapi.dev/rkv-consulting/rkv-consulting/petstore-oas
+    targets:
+        petstore:
+            target: typescript
+            source: petstore-oas
+            codeSamples:
+                registry:
+                    location: registry.speakeasyapi.dev/rkv-consulting/rkv-consulting/petstore-oas-typescript-code-samples
+                labelOverride:
+                    fixedValue: Typescript (SDK)
+                blocking: false

@@ -54,52 +54,52 @@ function getRadius(population: number): number {
 
 const DARK_THEME_CSS = `
   .leaflet-container {
-    background: #080B0F !important;
+    background: #080808 !important;
     font-family: 'Inter', sans-serif;
   }
   .leaflet-control-attribution { display: none !important; }
   .leaflet-control-zoom {
-    border: 1px solid #161E2A !important;
+    border: 1px solid #1e1e1e !important;
     border-radius: 8px !important;
     overflow: hidden;
   }
   .leaflet-control-zoom a {
-    background: #0C1018 !important;
-    color: #059669 !important;
-    border-color: #161E2A !important;
+    background: #111111 !important;
+    color: #c9a84c !important;
+    border-color: #1e1e1e !important;
     width: 32px !important;
     height: 32px !important;
     line-height: 32px !important;
     font-size: 16px !important;
   }
   .leaflet-control-zoom a:hover {
-    background: #161E2A !important;
-    color: #E2E8F0 !important;
+    background: #1e1e1e !important;
+    color: #f5f5f5 !important;
   }
   .leaflet-popup-content-wrapper {
-    background: #0C1018 !important;
-    color: #E2E8F0 !important;
-    border: 1px solid #161E2A !important;
+    background: #111111 !important;
+    color: #f5f5f5 !important;
+    border: 1px solid #1e1e1e !important;
     border-radius: 10px !important;
-    box-shadow: 0 8px 32px rgba(5,150,105,0.08), 0 4px 16px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 8px 32px rgba(201,168,76,0.08), 0 4px 16px rgba(0,0,0,0.5) !important;
     font-family: 'Inter', sans-serif !important;
   }
   .leaflet-popup-tip {
-    background: #0C1018 !important;
-    border: 1px solid #161E2A !important;
+    background: #111111 !important;
+    border: 1px solid #1e1e1e !important;
   }
   .leaflet-popup-close-button {
     color: #4A6080 !important;
   }
   .leaflet-popup-close-button:hover {
-    color: #059669 !important;
+    color: #c9a84c !important;
   }
   .leaflet-tooltip {
     background: rgba(4, 8, 16, 0.96) !important;
-    color: #E2E8F0 !important;
-    border: 1px solid #161E2A !important;
+    color: #f5f5f5 !important;
+    border: 1px solid #1e1e1e !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 20px rgba(5,150,105,0.06), 0 4px 16px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.06), 0 4px 16px rgba(0,0,0,0.5) !important;
     padding: 10px 14px !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 12px !important;
@@ -109,12 +109,12 @@ const DARK_THEME_CSS = `
     border-top-color: rgba(4, 8, 16, 0.96) !important;
   }
   .rkv-map-tooltip-name {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'DM Serif Display', serif;
     font-weight: 700;
     font-size: 14px;
-    color: #059669;
+    color: #c9a84c;
     margin-bottom: 6px;
-    text-shadow: 0 0 8px rgba(5,150,105,0.3);
+    text-shadow: 0 0 8px rgba(201,168,76,0.3);
   }
   .rkv-map-tooltip-row {
     display: flex;
@@ -133,7 +133,7 @@ const DARK_THEME_CSS = `
     font-family: 'JetBrains Mono', monospace;
     font-weight: 600;
     font-size: 12px;
-    color: #E2E8F0;
+    color: #f5f5f5;
   }
 `;
 
@@ -256,7 +256,7 @@ export default function LeafletMap({
         radius,
         fillColor: color,
         fillOpacity: isSelected ? 0.9 : 0.65,
-        color: isSelected ? '#059669' : 'rgba(255,255,255,0.15)',
+        color: isSelected ? '#c9a84c' : 'rgba(255,255,255,0.15)',
         weight: isSelected ? 3 : 1,
       });
 
@@ -306,7 +306,7 @@ export default function LeafletMap({
           radius: radius + 5,
           fillColor: 'transparent',
           fillOpacity: 0,
-          color: '#059669',
+          color: '#c9a84c',
           weight: 2.5,
           dashArray: '6 3',
           opacity: 0.85,
@@ -329,7 +329,7 @@ export default function LeafletMap({
   ]);
 
   return (
-    <div className="relative w-full h-full" style={{ background: '#080B0F' }}>
+    <div className="relative w-full h-full" style={{ background: '#080808' }}>
       <div ref={containerRef} className="w-full h-full" />
       {/* Vignette overlay */}
       <div

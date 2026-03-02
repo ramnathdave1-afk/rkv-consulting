@@ -137,7 +137,7 @@ export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
                 className="absolute -inset-px rounded-xl opacity-20 blur-md pointer-events-none"
                 style={{
                   background:
-                    'radial-gradient(ellipse at center, rgba(5,150,105,0.25) 0%, transparent 70%)',
+                    'radial-gradient(ellipse at center, rgba(201,168,76,0.25) 0%, transparent 70%)',
                 }}
               />
 

@@ -36,7 +36,7 @@ export default function SparklineChart({
   data,
   width = 120,
   height = 40,
-  color = '#059669',
+  color = '#c9a84c',
   showArea = false,
 }: SparklineChartProps) {
   const { linePath, areaPath } = useMemo(() => {

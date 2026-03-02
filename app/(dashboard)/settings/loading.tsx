@@ -1,7 +1,7 @@
 function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    <div className={`relative overflow-hidden rounded-lg bg-[#1e1e1e]/30 border border-[#1e1e1e]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#c9a84c]/5 to-transparent" />
     </div>
   );
 }
@@ -16,14 +16,14 @@ export default function SettingsLoading() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 rounded-lg border border-[#161E2A]/50 bg-[#161E2A]/20 p-1 w-fit">
+      <div className="flex gap-1 rounded-lg border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-1 w-fit">
         {Array.from({ length: 5 }).map((_, i) => (
           <SkeletonBlock key={i} className="h-9 w-28 rounded-md" />
         ))}
       </div>
 
       {/* Form Fields */}
-      <div className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-6 space-y-5 max-w-2xl">
+      <div className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-6 space-y-5 max-w-2xl">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="space-y-1.5">
             <SkeletonBlock className="h-3 w-28" />

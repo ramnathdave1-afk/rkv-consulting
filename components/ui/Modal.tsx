@@ -168,9 +168,9 @@ function ModalContent({
                 <button
                   className={cn(
                     'absolute right-4 top-4 p-1.5 rounded-lg',
-                    'text-muted hover:text-white hover:bg-[#05966908]',
+                    'text-muted hover:text-white hover:bg-[#c9a84c08]',
                     'transition-colors duration-150',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(5,150,105,0.20)]',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,168,76,0.20)]',
                   )}
                   aria-label="Close"
                 >
@@ -209,7 +209,7 @@ function ModalFooter({ children, className }: ModalFooterProps) {
         'px-6 py-4 flex items-center justify-end gap-3',
         className,
       )}
-      style={{ borderTop: '1px solid #161E2A' }}
+      style={{ borderTop: '1px solid #1e1e1e' }}
     >
       {children}
     </div>

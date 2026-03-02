@@ -58,12 +58,6 @@ function useCountUp(
 /* ================================================================== */
 /*  DATA                                                               */
 /* ================================================================== */
-const painPoints = [
-  'Spending 40 hours a week managing properties?',
-  'Chasing tenants for rent every month?',
-  'Missing market opportunities while competitors move fast?',
-];
-
 const problems = [
   {
     icon: Calculator,
@@ -305,7 +299,7 @@ function PortfolioDashboardPreview() {
               className="flex-1 rounded-t"
               style={{
                 height: `${h}%`,
-                backgroundColor: i === 11 ? '#059669' : '#161E2A',
+                backgroundColor: i === 11 ? '#c9a84c' : '#1e1e1e',
               }}
             />
           ))}
@@ -544,7 +538,7 @@ const featurePreviews = [
 /* ================================================================== */
 function DeepDiveDealAnalyzer() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-gold" />
@@ -576,7 +570,7 @@ function DeepDiveDealAnalyzer() {
             className="flex-1 rounded-sm"
             style={{
               height: `${h}%`,
-              backgroundColor: i >= 8 ? '#059669' : '#161E2A',
+              backgroundColor: i >= 8 ? '#c9a84c' : '#1e1e1e',
             }}
           />
         ))}
@@ -587,7 +581,7 @@ function DeepDiveDealAnalyzer() {
 
 function DeepDiveMarketIntel() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-gold" />
@@ -624,7 +618,7 @@ function DeepDiveMarketIntel() {
 
 function DeepDiveVoiceAgent() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Phone className="w-4 h-4 text-gold" />
@@ -658,7 +652,7 @@ function DeepDiveVoiceAgent() {
 
 function DeepDiveContractor() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-3 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-3 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Hammer className="w-4 h-4 text-gold" />
@@ -691,7 +685,7 @@ function DeepDiveContractor() {
 
 function DeepDivePortfolio() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LayoutDashboard className="w-4 h-4 text-gold" />
@@ -717,7 +711,7 @@ function DeepDivePortfolio() {
           <polyline
             points="0,50 25,42 50,45 75,35 100,38 125,30 150,28 175,22 200,25 225,18 250,15 275,10 300,8"
             fill="none"
-            stroke="#059669"
+            stroke="#c9a84c"
             strokeWidth="2"
           />
           <polyline
@@ -727,8 +721,8 @@ function DeepDivePortfolio() {
           />
           <defs>
             <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#059669" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+              <stop offset="0%" stopColor="#c9a84c" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#c9a84c" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>
@@ -739,7 +733,7 @@ function DeepDivePortfolio() {
 
 function DeepDiveAccounting() {
   return (
-    <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 space-y-4 w-full">
+    <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PieChart className="w-4 h-4 text-gold" />
@@ -830,8 +824,6 @@ function MetricCounter({
 /* ================================================================== */
 export default function MarketingPage() {
   const [scrolled, setScrolled] = useState(false);
-  const [painIndex, setPainIndex] = useState(0);
-  const [painSettled, setPainSettled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const [agentActionIndex, setAgentActionIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -875,23 +867,6 @@ export default function MarketingPage() {
     return () => obs.disconnect();
   }, []);
 
-  /* -- Pain point cycling ------------------------------------------ */
-  useEffect(() => {
-    if (painSettled) return;
-
-    const interval = setInterval(() => {
-      setPainIndex((prev) => {
-        if (prev >= painPoints.length - 1) {
-          setPainSettled(true);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [painSettled]);
-
   /* -- Agent action ticker ----------------------------------------- */
   useEffect(() => {
     const interval = setInterval(() => {
@@ -912,14 +887,14 @@ export default function MarketingPage() {
   const ActivePreview = featurePreviews[activeFeature];
 
   return (
-    <div className="min-h-screen bg-[#080B0F] font-body text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#080808] font-body text-white overflow-x-hidden">
       {/* ============================================================ */}
       {/* SECTION 1 -- NAVBAR                                          */}
       {/* ============================================================ */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled
-            ? 'bg-[#080B0Fcc] backdrop-blur-[20px] border-b border-border'
+            ? 'bg-[#080808cc] backdrop-blur-[20px] border-b border-[#1e1e1e]'
             : 'bg-transparent'
         }`}
       >
@@ -967,7 +942,7 @@ export default function MarketingPage() {
             </a>
             <a
               href="/signup"
-              className="bg-gold text-white text-[13px] font-body font-semibold px-5 py-2 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150"
+              className="bg-[#c9a84c] text-black text-[13px] font-body font-semibold px-5 py-2 rounded-[6px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150"
             >
               Get Started
             </a>
@@ -979,9 +954,9 @@ export default function MarketingPage() {
             className="md:hidden flex flex-col gap-1.5 p-2"
             aria-label="Toggle menu"
           >
-            <span className={`block w-5 h-px bg-[#E2E8F0] transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
-            <span className={`block w-5 h-px bg-[#E2E8F0] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-5 h-px bg-[#E2E8F0] transition-transform duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-5 h-px bg-[#f5f5f5] transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-5 h-px bg-[#f5f5f5] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-px bg-[#f5f5f5] transition-transform duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
           </button>
         </div>
 
@@ -993,7 +968,7 @@ export default function MarketingPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] bg-[rgba(8,11,15,0.75)] backdrop-blur-sm md:hidden"
+                className="fixed inset-0 z-[60] bg-[rgba(8,8,8,0.8)] backdrop-blur-sm md:hidden"
                 onClick={() => setMobileMenuOpen(false)}
               />
               <motion.div
@@ -1001,7 +976,7 @@ export default function MarketingPage() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'tween', duration: 0.22 }}
-                className="fixed top-0 right-0 bottom-0 z-[70] w-[min(360px,100%)] md:hidden bg-[#080B0F] border-l border-border"
+                className="fixed top-0 right-0 bottom-0 z-[70] w-[min(360px,100%)] md:hidden bg-[#080808] border-l border-[#1e1e1e]"
               >
                 <div className="h-16 px-6 flex items-center justify-between border-b border-border">
                   <span className="font-display font-bold text-[15px] tracking-tight text-white">Menu</span>
@@ -1024,7 +999,7 @@ export default function MarketingPage() {
                       onClick={() => scrollTo(link.toLowerCase())}
                       className={`w-full text-left px-4 py-3 rounded-[6px] border transition-colors font-body text-[13px] ${
                         activeSection === link.toLowerCase()
-                          ? 'border-gold text-white bg-[#05966908]'
+                          ? 'border-[#c9a84c] text-white bg-[rgba(201,168,76,0.05)]'
                           : 'border-border text-muted hover:text-white hover:border-border-hover'
                       }`}
                     >
@@ -1041,7 +1016,7 @@ export default function MarketingPage() {
                     </a>
                     <a
                       href="/signup"
-                      className="w-full text-center bg-gold text-white px-5 py-2 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 font-body text-[13px] font-semibold"
+                      className="w-full text-center bg-[#c9a84c] text-black px-5 py-2 rounded-[6px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150 font-body text-[13px] font-semibold"
                     >
                       Get Started
                     </a>
@@ -1056,84 +1031,41 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 2 -- HERO                                            */}
       {/* ============================================================ */}
-      <section className="relative min-h-screen flex items-center justify-center text-center px-6 overflow-hidden">
-        {/* Animated grid background */}
-        <div
-          className="absolute inset-0 animated-grid opacity-[0.28] pointer-events-none"
-          style={{
-            maskImage: 'radial-gradient(ellipse at center 40%, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center 40%, black 0%, transparent 70%)',
-          }}
-        />
-
-        {/* Subtle radial glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center 40%, rgba(5, 150, 105, 0.06) 0%, transparent 60%)',
-          }}
-        />
-
-        <div className="relative z-10 max-w-4xl mx-auto">
-          {/* Status badge */}
+      <section className="relative min-h-screen flex items-center px-6 overflow-hidden pt-32">
+        <div className="relative z-10 max-w-5xl mx-auto w-full">
+          {/* Uppercase label */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center justify-center gap-2 mb-10"
+            className="flex items-center gap-2 mb-8"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            <span className="font-body font-medium text-[11px] text-gold uppercase tracking-[0.15em]">
-              Live Platform · 14-Day Free Trial
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] animate-pulse" />
+            <span className="font-body font-medium text-[11px] text-[#c9a84c] uppercase tracking-[0.2em]">
+              Portfolio Intelligence Platform
             </span>
           </motion.div>
 
-          {/* Cycling pain points */}
-          <div className="h-12 md:h-14 flex items-center justify-center mb-8">
-            <AnimatePresence mode="wait">
-              {!painSettled ? (
-                <motion.p
-                  key={painIndex}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-[18px] md:text-[20px] text-muted font-body leading-[1.7]"
-                >
-                  {painPoints[painIndex]}
-                </motion.p>
-              ) : (
-                <motion.p
-                  key="settled"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  className="text-[18px] md:text-[20px] text-gold font-body leading-[1.7]"
-                >
-                  RKV Consulting eliminates all of it.
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Main heading */}
+          {/* Main serif headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-tight mb-6 text-white"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-display leading-[1.1] mb-8 text-white"
           >
-            Your Portfolio.
+            Your Real Estate
             <br />
-            <span className="text-gradient">On Autopilot.</span>
+            Portfolio, on
+            <br />
+            <span className="text-[#c9a84c]">Autopilot.</span>
           </motion.h1>
 
-          {/* Subheading */}
+          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-muted font-body text-[18px] leading-[1.7] max-w-[680px] mx-auto mb-10"
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-[#888] font-body text-lg leading-[1.7] max-w-[600px] mb-10"
           >
             AI-powered deal analysis, automated tenant management, and institutional-grade
             portfolio intelligence. Built for investors who refuse to settle.
@@ -1143,20 +1075,20 @@ export default function MarketingPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row items-start gap-4 mb-20"
           >
             <a
               href="/signup"
-              className="bg-gold text-white font-body font-semibold text-[13px] px-6 py-3 rounded-[6px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+              className="bg-[#c9a84c] text-black font-body font-semibold text-[13px] px-8 py-3.5 rounded-[6px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
             >
               Start Free Trial
             </a>
             <button
               onClick={() => scrollTo('features')}
-              className="border border-gold text-gold font-body font-semibold text-[13px] px-6 py-3 rounded-[6px] hover:bg-[rgba(5,150,105,0.06)] active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
+              className="border border-[#333] text-[#888] font-body font-semibold text-[13px] px-8 py-3.5 rounded-[6px] hover:border-[#c9a84c] hover:text-white active:scale-[0.97] transition-all duration-150 w-full sm:w-auto"
             >
-              Watch Demo
+              Learn More
             </button>
           </motion.div>
 
@@ -1165,19 +1097,19 @@ export default function MarketingPage() {
             ref={heroStatsRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-0"
+            transition={{ duration: 1, delay: 0.9 }}
+            className="flex flex-col sm:flex-row items-start gap-8 sm:gap-0"
           >
             {[
-              { value: heroHoursSaved.toLocaleString(), label: 'Hrs Saved Monthly', prefix: '', suffix: '' },
-              { value: `$${Math.round(heroTaxSavings).toLocaleString()}`, label: 'Tax Savings Found', prefix: '', suffix: '' },
-              { value: `${Math.round(heroRetention)}%`, label: 'Tenant Retention', prefix: '', suffix: '' },
+              { value: heroHoursSaved.toLocaleString(), label: 'Hrs Saved Monthly' },
+              { value: `$${Math.round(heroTaxSavings).toLocaleString()}`, label: 'Tax Savings Found' },
+              { value: `${Math.round(heroRetention)}%`, label: 'Tenant Retention' },
             ].map((stat, i) => (
               <div key={stat.label} className="flex items-center">
-                {i > 0 && <div className="hidden sm:block w-px h-10 bg-border mx-10" />}
-                <div className="text-center">
+                {i > 0 && <div className="hidden sm:block w-px h-10 bg-[#1e1e1e] mx-10" />}
+                <div>
                   <div className="text-2xl font-mono font-semibold text-white">{stat.value}</div>
-                  <div className="text-[11px] font-body font-medium uppercase tracking-[0.08em] text-muted mt-1">
+                  <div className="text-[11px] font-body font-medium uppercase tracking-[0.08em] text-[#555] mt-1">
                     {stat.label}
                   </div>
                 </div>
@@ -1215,7 +1147,7 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-[#0C1018] border border-[#161E2A] border-l-2 border-l-red rounded-xl p-6"
+                className="bg-[#111111] border border-[#1e1e1e] border-l-2 border-l-red rounded-xl p-6"
               >
                 <problem.icon className="w-5 h-5 text-red mb-4" />
                 <h3 className="font-display font-bold text-lg mb-1 text-white">{problem.headline}</h3>
@@ -1278,7 +1210,7 @@ export default function MarketingPage() {
 
             {/* Right -- preview panel */}
             <div className="lg:w-2/3">
-              <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 md:p-8 min-h-[400px]">
+              <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 md:p-8 min-h-[400px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeFeature}
@@ -1304,14 +1236,13 @@ export default function MarketingPage() {
         <div
           className="absolute top-0 left-0 right-0 h-px"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, #059669 50%, transparent 100%)',
+            background: 'linear-gradient(90deg, transparent 0%, #c9a84c 50%, transparent 100%)',
           }}
         />
-        {/* Bottom border gradient */}
         <div
           className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            background: 'linear-gradient(90deg, transparent 0%, #059669 50%, transparent 100%)',
+            background: 'linear-gradient(90deg, transparent 0%, #c9a84c 50%, transparent 100%)',
           }}
         />
 
@@ -1376,7 +1307,7 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 7 -- AI AGENTS SPOTLIGHT                             */}
       {/* ============================================================ */}
-      <section className="py-24 md:py-32 px-6 bg-[#0C1018]/50">
+      <section className="py-24 md:py-32 px-6 bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -1431,7 +1362,7 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-8"
+                className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-8"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
@@ -1458,7 +1389,7 @@ export default function MarketingPage() {
           </div>
 
           {/* Live feed ticker */}
-          <div className="bg-[#0C1018] border border-[#161E2A] rounded-xl p-6 relative overflow-hidden">
+          <div className="bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 relative overflow-hidden">
             <div className="flex items-center gap-2 mb-4">
               <Activity className="w-4 h-4 text-gold" />
               <span className="text-sm font-display font-bold text-white">Live Agent Feed</span>
@@ -1513,7 +1444,7 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className={`relative bg-[#0C1018] border ${plan.borderColor} rounded-xl p-8 ${
+                className={`relative bg-[#111111] border ${plan.borderColor} rounded-xl p-8 ${
                   plan.badge ? 'ring-1 ring-gold/30' : ''
                 }`}
               >
@@ -1541,8 +1472,8 @@ export default function MarketingPage() {
                   href="/pricing"
                   className={`block text-center py-3 rounded-lg text-sm font-body font-medium transition-all duration-300 ${
                     plan.badge
-                      ? 'bg-gold text-white hover:bg-[#047857] active:scale-[0.97] transition-all duration-150'
-                      : 'border border-border text-white hover:border-border-hover active:scale-[0.97] transition-all duration-150'
+                      ? 'bg-[#c9a84c] text-black hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150'
+                      : 'border border-[#1e1e1e] text-white hover:border-[#333] active:scale-[0.97] transition-all duration-150'
                   }`}
                 >
                   Get Started
@@ -1576,21 +1507,15 @@ export default function MarketingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="bg-[#0C1018] border border-border border-t-2 border-t-gold rounded-lg p-8 relative"
+                className="bg-[#111111] border border-[#1e1e1e] rounded-lg p-8 relative"
               >
-                {/* Quotation mark */}
                 <svg
-                  className="absolute top-6 left-6 w-10 h-10 text-gold opacity-20"
+                  className="absolute top-6 left-6 w-10 h-10 text-[#c9a84c] opacity-15"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                 </svg>
-                <div className="flex items-center gap-1 mt-1">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star key={idx} className="w-4 h-4 text-[#D97706] fill-[#D97706]" />
-                  ))}
-                </div>
                 <p className="text-white/90 font-body italic mb-6 mt-6 leading-relaxed">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
@@ -1607,7 +1532,7 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 10 -- COMPETITOR COMPARISON                           */}
       {/* ============================================================ */}
-      <section className="py-24 md:py-32 px-6" style={{ background: '#060910' }}>
+      <section className="py-24 md:py-32 px-6" style={{ background: '#050505' }}>
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1633,11 +1558,11 @@ export default function MarketingPage() {
           >
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="sticky top-0 z-10 border-b border-border bg-[#111827]">
+                <tr className="sticky top-0 z-10 border-b border-[#1e1e1e] bg-[#1a1a1a]">
                   <th className="py-4 px-4 text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">
                     Feature
                   </th>
-                  <th className="py-4 px-4 text-center bg-[#05966912]">
+                  <th className="py-4 px-4 text-center bg-[rgba(201,168,76,0.08)]">
                     <span className="text-gold font-display font-bold text-sm">RKV</span>
                   </th>
                   <th className="py-4 px-4 text-center text-[11px] text-muted font-body font-semibold uppercase tracking-[0.08em]">Yardi</th>
@@ -1664,8 +1589,8 @@ export default function MarketingPage() {
                 ].map((row, i) => (
                   <tr
                     key={row.feature}
-                    className={`border-b border-border transition-colors hover:bg-[#111827] ${
-                      i % 2 === 0 ? 'bg-[#0C1018]' : 'bg-[var(--bg-primary)]'
+                    className={`border-b border-[#1e1e1e] transition-colors hover:bg-[#1a1a1a] ${
+                      i % 2 === 0 ? 'bg-[#111111]' : 'bg-[#080808]'
                     }`}
                   >
                     <td className="py-3 px-4 text-white/80">{row.feature}</td>
@@ -1683,7 +1608,7 @@ export default function MarketingPage() {
                         {typeof has === 'string' ? (
                           <span className="font-mono text-muted">{has}</span>
                         ) : has ? (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#05966908] border border-border">
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[rgba(201,168,76,0.05)] border border-[#1e1e1e]">
                             <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                           </span>
                         ) : <span className="text-muted-deep">—</span>}
@@ -1707,7 +1632,7 @@ export default function MarketingPage() {
               { value: '$2,400+', label: 'Annual savings vs. competitors' },
               { value: '40hrs', label: 'Saved per month with AI automation' },
             ].map((stat) => (
-              <div key={stat.label} className="text-center py-4 rounded-lg" style={{ background: '#0C1018', border: '1px solid #161E2A' }}>
+              <div key={stat.label} className="text-center py-4 rounded-lg bg-[#111111] border border-[#1e1e1e]">
                 <p className="text-2xl font-bold text-gold font-mono">{stat.value}</p>
                 <p className="text-xs text-muted font-body mt-1">{stat.label}</p>
               </div>
@@ -1719,8 +1644,8 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 11 -- FINAL CTA                                      */}
       {/* ============================================================ */}
-      <section className="py-32 px-6 text-center relative">
-        <div className="relative max-w-3xl mx-auto">
+      <section className="py-32 px-6 text-center relative overflow-hidden">
+        <div className="relative z-10 max-w-3xl mx-auto">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1738,7 +1663,7 @@ export default function MarketingPage() {
           >
             <a
               href="/signup"
-              className="inline-block bg-gold text-white font-body font-semibold px-10 py-4 rounded-[6px] text-[13px] hover:bg-[#047857] active:scale-[0.97] transition-all duration-150 mb-4"
+              className="inline-block bg-[#c9a84c] text-black font-body font-semibold px-10 py-4 rounded-[6px] text-[13px] hover:bg-[#b8943f] active:scale-[0.97] transition-all duration-150 mb-4"
             >
               Get Started Today &mdash; 14 Day Free Trial
             </a>
@@ -1752,7 +1677,7 @@ export default function MarketingPage() {
       {/* ============================================================ */}
       {/* SECTION 11 -- FOOTER                                         */}
       {/* ============================================================ */}
-      <footer id="about" className="bg-[#080B0F] border-t border-[#161E2A] py-16 px-6">
+      <footer id="about" className="bg-[#050505] border-t border-[#1e1e1e] py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}

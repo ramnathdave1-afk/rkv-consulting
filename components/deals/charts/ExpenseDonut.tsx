@@ -7,14 +7,14 @@ import { formatCurrency } from '@/lib/calculations/property-analyzer';
 /*  Design tokens                                                      */
 /* ------------------------------------------------------------------ */
 
-const GOLD = '#059669';
-const _GOLD_LIGHT = '#0EA5E9';
-const CARD_BG = '#0C1018';
-const BORDER = '#161E2A';
-const GREEN = '#059669';
+const GOLD = '#c9a84c';
+const _GOLD_LIGHT = '#c9a84c';
+const CARD_BG = '#111111';
+const BORDER = '#1e1e1e';
+const GREEN = '#c9a84c';
 const MUTED = '#4A6080';
-const VIOLET = '#0EA5E9';
-const CYAN_LIGHT = '#0EA5E9';
+const VIOLET = '#c9a84c';
+const CYAN_LIGHT = '#c9a84c';
 
 // Futuristic palette — 6 distinct tones that read well on dark backgrounds
 const EXPENSE_COLORS = [GOLD, '#DC2626', GREEN, VIOLET, CYAN_LIGHT, MUTED];
@@ -49,10 +49,10 @@ function CustomTooltip({
         fontSize: 12,
       }}
     >
-      <p style={{ color: '#E2E8F0', fontWeight: 600, marginBottom: 4, fontFamily: 'Syne, sans-serif' }}>
+      <p style={{ color: '#f5f5f5', fontWeight: 600, marginBottom: 4, fontFamily: 'Syne, sans-serif' }}>
         {entry.name}
       </p>
-      <p style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }}>
+      <p style={{ color: '#f5f5f5', fontVariantNumeric: 'tabular-nums' }}>
         {formatCurrency(entry.value)}
       </p>
     </div>
@@ -138,7 +138,7 @@ export default function ExpenseDonut({
             textAnchor="middle"
             dominantBaseline="central"
             style={{
-              fill: '#E2E8F0',
+              fill: '#f5f5f5',
               fontSize: 18,
               fontFamily: 'Syne, sans-serif',
               fontWeight: 700,
@@ -173,7 +173,7 @@ export default function ExpenseDonut({
             <span style={{ color: '#4A6080' }} className="truncate">
               {d.name}
             </span>
-            <span style={{ color: '#E2E8F0', fontVariantNumeric: 'tabular-nums' }} className="ml-auto">
+            <span style={{ color: '#f5f5f5', fontVariantNumeric: 'tabular-nums' }} className="ml-auto">
               {total > 0 ? `${((d.value / total) * 100).toFixed(0)}%` : '—'}
             </span>
           </div>

@@ -2,220 +2,61 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import * as Accordion from '@radix-ui/react-accordion'
-import { Check, X, ChevronDown, Zap, Shield, Crown, Info } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
+import { PricingTable } from '@/components/ui/pricing-table'
+import type { PricingFeature, PricingPlan } from '@/components/ui/pricing-table'
 
 /* ================================================================== */
-/*  TYPES                                                              */
+/*  PRICING TABLE DATA                                                  */
 /* ================================================================== */
 
-type BillingPeriod = 'monthly' | 'annual'
-
-interface PlanFeature {
-  text: string
-  included: boolean
-  badge?: string
-  badgeColor?: 'gold' | 'green' | 'muted'
-  tooltip?: string
-}
-
-interface PricingPlan {
-  id: 'basic' | 'pro' | 'elite'
-  label: string
-  labelColor: string
-  name: string
-  monthlyPrice: number
-  annualPrice: number
-  annualMonthly: number
-  description: string
-  features: PlanFeature[]
-  ctaText: string
-  ctaStyle: 'ghost' | 'gold' | 'green'
-  popular?: boolean
-  icon: React.ReactNode
-  borderColor: string
-  priceColor: string
-}
-
-/* ================================================================== */
-/*  PLAN DATA                                                          */
-/* ================================================================== */
-
-const plans: PricingPlan[] = [
+const pricingPlans: PricingPlan[] = [
   {
-    id: 'basic',
-    label: 'Starter',
-    labelColor: 'text-muted',
     name: 'Basic',
-    monthlyPrice: 20,
-    annualPrice: 192,
-    annualMonthly: 16,
-    description: 'For investors just getting started',
-    icon: <Shield className="w-5 h-5" />,
-    borderColor: 'border-[#161E2A]',
-    priceColor: 'text-white',
-    ctaText: 'Start with Basic',
-    ctaStyle: 'ghost',
-    features: [
-      { text: 'Up to 3 properties', included: true },
-      { text: '5 deal analyses per month', included: true },
-      { text: 'Basic tenant management (10 tenants)', included: true },
-      { text: 'Deal pipeline (10 deals)', included: true },
-      { text: 'Basic document storage', included: true },
-      { text: 'Mobile access', included: true },
-      { text: 'AI Assistant', included: false, badge: 'Pro+', badgeColor: 'gold' },
-      { text: 'Tenant Screening', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'Market Intelligence & Heat Map', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'Accounting Center', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'Contractor Network', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'AI Voice & Email Agents', included: false, badge: 'Elite only', badgeColor: 'gold' },
-    ],
+    price: { monthly: 20, yearly: 192 },
+    level: 'basic',
   },
   {
-    id: 'pro',
-    label: 'Most Popular',
-    labelColor: 'text-gold',
     name: 'Pro',
-    monthlyPrice: 99,
-    annualPrice: 950,
-    annualMonthly: 79,
-    description: 'For serious investors scaling their portfolio',
-    icon: <Zap className="w-5 h-5" />,
-    borderColor: 'border-gold',
-    priceColor: 'text-gold',
+    price: { monthly: 99, yearly: 950 },
+    level: 'pro',
     popular: true,
-    ctaText: 'Start with Pro',
-    ctaStyle: 'gold',
-    features: [
-      { text: 'Up to 20 properties', included: true },
-      { text: '50 deal analyses per month', included: true },
-      { text: 'Full tenant management (100 tenants)', included: true },
-      { text: 'AI Assistant (200 messages/month)', included: true },
-      { text: 'Live market intelligence + heat map', included: true },
-      { text: 'Time analysis & performance charts', included: true },
-      { text: 'Accounting & tax center', included: true },
-      { text: 'Financing hub', included: true },
-      { text: 'Contractor network & auto-bidding', included: true },
-      { text: 'Tenant screening', included: true },
-      { text: 'Full document vault', included: true },
-      { text: 'Zoning intelligence', included: true },
-      { text: 'Exit strategy planner', included: true },
-      { text: 'Bulk portfolio import', included: true },
-      { text: 'AI Voice Agent', included: false, badge: 'Elite only', badgeColor: 'gold', tooltip: 'Available on the Elite plan. AI calls tenants and handles disputes automatically.' },
-      { text: 'AI Email Automation', included: false, badge: 'Elite only', badgeColor: 'gold' },
-      { text: 'Autopilot Mode', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'Unlimited properties', included: false, badge: 'locked', badgeColor: 'muted' },
-      { text: 'Syndication tools', included: false, badge: 'locked', badgeColor: 'muted' },
-    ],
   },
   {
-    id: 'elite',
-    label: 'Full Autopilot',
-    labelColor: 'text-green',
     name: 'Elite',
-    monthlyPrice: 199,
-    annualPrice: 1910,
-    annualMonthly: 159,
-    description: 'For professional investors who want everything automated',
-    icon: <Crown className="w-5 h-5" />,
-    borderColor: 'border-green',
-    priceColor: 'text-white',
-    ctaText: 'Go Elite',
-    ctaStyle: 'green',
-    features: [
-      { text: 'Unlimited properties', included: true },
-      { text: 'Unlimited deal analyses', included: true },
-      { text: 'Unlimited AI messages', included: true },
-      { text: 'Everything in Pro', included: true },
-      { text: 'AI Voice Agent — calls tenants, handles disputes', included: true },
-      { text: 'AI Email Automation — full sequence management', included: true },
-      { text: 'AI SMS Agent — 24/7 instant responses', included: true },
-      { text: 'Autopilot Mode — AI runs everything', included: true },
-      { text: 'Syndication tools & investor reporting', included: true },
-      { text: 'Priority support', included: true },
-      { text: 'Dedicated account manager', included: true },
-      { text: 'White label (coming soon)', included: true },
-      { text: 'Early access to all new features', included: true },
-    ],
+    price: { monthly: 199, yearly: 1910 },
+    level: 'elite',
   },
 ]
 
-/* ================================================================== */
-/*  FEATURE COMPARISON TABLE DATA                                      */
-/* ================================================================== */
-
-interface ComparisonRow {
-  feature: string
-  basic: string | boolean
-  pro: string | boolean
-  elite: string | boolean
-}
-
-interface ComparisonCategory {
-  name: string
-  rows: ComparisonRow[]
-}
-
-const comparisonData: ComparisonCategory[] = [
-  {
-    name: 'Core',
-    rows: [
-      { feature: 'Properties', basic: '3', pro: '20', elite: 'Unlimited' },
-      { feature: 'Deal Pipeline', basic: '10 deals', pro: '100 deals', elite: 'Unlimited' },
-      { feature: 'Document Storage', basic: 'Basic', pro: 'Full Vault', elite: 'Full Vault' },
-      { feature: 'Mobile Access', basic: true, pro: true, elite: true },
-      { feature: 'Portfolio Dashboard', basic: true, pro: true, elite: true },
-    ],
-  },
-  {
-    name: 'Analysis',
-    rows: [
-      { feature: 'Deal Analyses / Month', basic: '5', pro: '50', elite: 'Unlimited' },
-      { feature: 'Market Intelligence', basic: false, pro: true, elite: true },
-      { feature: 'Live Heat Map', basic: false, pro: true, elite: true },
-      { feature: 'Time Analysis', basic: false, pro: true, elite: true },
-      { feature: 'Zoning Intelligence', basic: false, pro: true, elite: true },
-      { feature: 'Exit Strategy Planner', basic: false, pro: true, elite: true },
-      { feature: 'Portfolio Benchmarking', basic: false, pro: true, elite: true },
-    ],
-  },
-  {
-    name: 'Management',
-    rows: [
-      { feature: 'Tenant Management', basic: '10 tenants', pro: '100 tenants', elite: 'Unlimited' },
-      { feature: 'Tenant Screening', basic: false, pro: true, elite: true },
-      { feature: 'Accounting & Tax Center', basic: false, pro: true, elite: true },
-      { feature: 'Financing Hub', basic: false, pro: true, elite: true },
-      { feature: 'Contractor Network', basic: false, pro: true, elite: true },
-      { feature: 'Bulk Portfolio Import', basic: false, pro: true, elite: true },
-    ],
-  },
-  {
-    name: 'AI & Automation',
-    rows: [
-      { feature: 'AI Assistant Messages', basic: false, pro: '200/mo', elite: 'Unlimited' },
-      { feature: 'AI Voice Agent', basic: false, pro: false, elite: true },
-      { feature: 'AI Email Automation', basic: false, pro: false, elite: true },
-      { feature: 'AI SMS Agent', basic: false, pro: false, elite: true },
-      { feature: 'Autopilot Mode', basic: false, pro: false, elite: true },
-      { feature: 'AI Deal Recommendations', basic: false, pro: true, elite: true },
-      { feature: 'Live Rent Autofill', basic: false, pro: true, elite: true },
-    ],
-  },
-  {
-    name: 'Advanced',
-    rows: [
-      { feature: 'Syndication Tools', basic: false, pro: false, elite: true },
-      { feature: 'Investor Reporting', basic: false, pro: false, elite: true },
-      { feature: 'Priority Support', basic: false, pro: false, elite: true },
-      { feature: 'Dedicated Account Manager', basic: false, pro: false, elite: true },
-      { feature: 'White Label', basic: false, pro: false, elite: 'Coming Soon' },
-      { feature: 'Early Access Features', basic: false, pro: false, elite: true },
-    ],
-  },
+const pricingFeatures: PricingFeature[] = [
+  // Core
+  { name: 'Portfolio Dashboard', included: 'basic' },
+  { name: 'Deal Pipeline', included: 'basic' },
+  { name: 'Document Storage', included: 'basic' },
+  { name: 'Mobile Access', included: 'basic' },
+  // Pro
+  { name: 'AI Assistant (200 msgs/mo)', included: 'pro' },
+  { name: 'Live Market Intelligence', included: 'pro' },
+  { name: 'Heat Map & Zoning Intel', included: 'pro' },
+  { name: 'Tenant Screening', included: 'pro' },
+  { name: 'Accounting & Tax Center', included: 'pro' },
+  { name: 'Financing Hub', included: 'pro' },
+  { name: 'Contractor Network', included: 'pro' },
+  { name: 'Deal Feed with AI Scoring', included: 'pro' },
+  { name: 'Exit Strategy Planner', included: 'pro' },
+  // Elite
+  { name: 'Unlimited Properties & Deals', included: 'elite' },
+  { name: 'Unlimited AI Messages', included: 'elite' },
+  { name: 'AI Voice Agent', included: 'elite' },
+  { name: 'AI Email Automation', included: 'elite' },
+  { name: 'AI SMS Agent', included: 'elite' },
+  { name: 'Autopilot Mode', included: 'elite' },
+  { name: 'Syndication & Investor Reporting', included: 'elite' },
+  { name: 'Priority Support & Dedicated Manager', included: 'elite' },
 ]
 
 /* ================================================================== */
@@ -256,21 +97,21 @@ const faqItems = [
 ]
 
 /* ================================================================== */
-/*  STRIPE PRICE IDS (replace with real IDs)                           */
+/*  STRIPE PRICE IDS                                                   */
 /* ================================================================== */
 
-const STRIPE_PRICES: Record<string, Record<BillingPeriod, string>> = {
+const STRIPE_PRICES: Record<string, Record<string, string>> = {
   basic: {
-    monthly: 'price_basic_monthly',
-    annual: 'price_basic_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY || 'price_basic_monthly',
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_ANNUAL || 'price_basic_annual',
   },
   pro: {
-    monthly: 'price_pro_monthly',
-    annual: 'price_pro_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL || 'price_pro_annual',
   },
   elite: {
-    monthly: 'price_elite_monthly',
-    annual: 'price_elite_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_MONTHLY || 'price_elite_monthly',
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_ANNUAL || 'price_elite_annual',
   },
 }
 
@@ -281,18 +122,17 @@ const STRIPE_PRICES: Record<string, Record<BillingPeriod, string>> = {
 function ROICalculator() {
   const [numProperties, setNumProperties] = useState(5)
 
-  // Cost estimates
-  const hoursPerPropertyPerMonth = 8 // hours managing each property
-  const hourlyRate = 50 // opportunity cost per hour
-  const toolCostPerProperty = 15 // avg cost of Yardi/AppFolio per unit/month
-  const accountantCostPerYear = 800 // per property
-  const missedMaintenanceCost = 1200 // avg per property per year from delayed maintenance
+  const hoursPerPropertyPerMonth = 8
+  const hourlyRate = 50
+  const toolCostPerProperty = 15
+  const accountantCostPerYear = 800
+  const missedMaintenanceCost = 1200
 
-  const timeSavedHours = numProperties * hoursPerPropertyPerMonth * 0.6 // 60% time saved
+  const timeSavedHours = numProperties * hoursPerPropertyPerMonth * 0.6
   const timeSavedDollars = timeSavedHours * hourlyRate * 12
   const toolSavings = numProperties * toolCostPerProperty * 12
-  const accountingSavings = numProperties * (accountantCostPerYear * 0.3) // 30% reduction
-  const maintenanceSavings = numProperties * (missedMaintenanceCost * 0.4) // 40% reduction
+  const accountingSavings = numProperties * (accountantCostPerYear * 0.3)
+  const maintenanceSavings = numProperties * (missedMaintenanceCost * 0.4)
   const totalAnnualSavings = timeSavedDollars + toolSavings + accountingSavings + maintenanceSavings
 
   const rkvCost = numProperties <= 5 ? 49 * 12 : numProperties <= 50 ? 99 * 12 : 199 * 12
@@ -301,7 +141,6 @@ function ROICalculator() {
 
   return (
     <div className="space-y-8">
-      {/* Slider */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-medium text-white font-body">Number of Properties</label>
@@ -313,7 +152,7 @@ function ROICalculator() {
           max={100}
           value={numProperties}
           onChange={(e) => setNumProperties(parseInt(e.target.value))}
-          className="w-full h-2 bg-[#161E2A] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:shadow-lg"
+          className="w-full h-2 bg-[#1e1e1e] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:shadow-lg"
         />
         <div className="flex justify-between text-[10px] text-muted font-body mt-1">
           <span>1</span>
@@ -324,7 +163,6 @@ function ROICalculator() {
         </div>
       </div>
 
-      {/* Savings breakdown */}
       <div className="grid grid-cols-2 gap-4">
         {[
           { label: 'Time Saved', value: `$${timeSavedDollars.toLocaleString()}`, sub: `${Math.round(timeSavedHours * 12)} hrs/year` },
@@ -332,7 +170,7 @@ function ROICalculator() {
           { label: 'Accounting Savings', value: `$${Math.round(accountingSavings).toLocaleString()}`, sub: 'Schedule E automation' },
           { label: 'Maintenance Prevention', value: `$${Math.round(maintenanceSavings).toLocaleString()}`, sub: 'proactive scheduling' },
         ].map((item) => (
-          <div key={item.label} className="rounded-lg p-4" style={{ background: '#080B0F', border: '1px solid #161E2A' }}>
+          <div key={item.label} className="rounded-lg p-4" style={{ background: '#080808', border: '1px solid #1e1e1e' }}>
             <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">{item.label}</p>
             <p className="text-lg font-bold text-green font-mono">{item.value}</p>
             <p className="text-[10px] text-muted font-body mt-0.5">{item.sub}</p>
@@ -340,8 +178,7 @@ function ROICalculator() {
         ))}
       </div>
 
-      {/* Summary */}
-      <div className="border-t border-[#161E2A] pt-6">
+      <div className="border-t border-[#1e1e1e] pt-6">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-[10px] text-muted uppercase tracking-wider font-body mb-1">Total Annual Savings</p>
@@ -370,22 +207,22 @@ function PricingPageInner() {
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  const [billing, setBilling] = useState<BillingPeriod>('monthly')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
 
   /* ---------------------------------------------------------------- */
-  /*  Auto-trigger checkout for new signups                            */
+  /*  Checkout logic                                                    */
   /* ---------------------------------------------------------------- */
 
   const triggerCheckout = useCallback(
-    async (planId: string, period: BillingPeriod) => {
+    async (planId: string, interval: string) => {
       setLoadingPlan(planId)
       try {
-        const priceId = STRIPE_PRICES[planId][period]
+        const priceId = STRIPE_PRICES[planId]?.[interval]
+        if (!priceId) return
         const res = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ priceId }),
+          body: JSON.stringify({ priceId, planName: planId }),
         })
         const data = await res.json()
         if (data.url) {
@@ -404,58 +241,22 @@ function PricingPageInner() {
     const isNew = searchParams.get('new')
     const plan = searchParams.get('plan')
     if (isNew === 'true' && plan) {
-      triggerCheckout(plan, billing)
+      triggerCheckout(plan, 'monthly')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  /* ---------------------------------------------------------------- */
-  /*  Handle CTA click                                                 */
-  /* ---------------------------------------------------------------- */
-
-  const handleCTAClick = async (planId: string) => {
+  const handleCheckout = async (planLevel: string, interval: 'monthly' | 'yearly') => {
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
-      router.push(`/signup?plan=${planId}`)
+      router.push(`/signup?plan=${planLevel}`)
       return
     }
 
-    triggerCheckout(planId, billing)
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Render helpers                                                   */
-  /* ---------------------------------------------------------------- */
-
-  const renderBadge = (badge: string, color: 'gold' | 'green' | 'muted') => {
-    const colorMap = {
-      gold: 'bg-gold/10 text-gold border-gold/20',
-      green: 'bg-green/10 text-green border-green/20',
-      muted: 'bg-[#161E2A] text-muted border-[#161E2A]',
-    }
-    return (
-      <span
-        className={cn(
-          'ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-[0.1em] border',
-          colorMap[color]
-        )}
-      >
-        {badge}
-      </span>
-    )
-  }
-
-  const renderComparisonCell = (value: string | boolean) => {
-    if (value === true) {
-      return <Check className="w-4 h-4 text-green mx-auto" />
-    }
-    if (value === false) {
-      return <X className="w-4 h-4 text-muted/40 mx-auto" />
-    }
-    return <span className="text-sm text-white font-mono">{value}</span>
+    triggerCheckout(planLevel, interval)
   }
 
   /* ================================================================ */
@@ -463,20 +264,12 @@ function PricingPageInner() {
   /* ================================================================ */
 
   return (
-    <div className="min-h-screen bg-[#080B0F] font-body">
+    <div className="min-h-screen bg-[#080808] font-body">
       {/* ============================================================ */}
-      {/*  HERO SECTION                                                 */}
+      {/*  HERO SECTION WITH ANIMATED GRADIENT                          */}
       {/* ============================================================ */}
-      <section className="pt-24 pb-16 px-6 relative">
-        {/* Radial glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center 30%, rgba(5, 150, 105, 0.06) 0%, transparent 60%)',
-          }}
-        />
-        <div className="relative max-w-6xl mx-auto text-center">
-          {/* Brand */}
+      <section className="pt-24 pb-16 px-6 relative overflow-hidden">
+        <div className="relative z-10 max-w-6xl mx-auto text-center">
           <motion.p
             className="text-[10px] font-mono uppercase tracking-wider text-gold mb-6"
             initial={{ opacity: 0, y: -10 }}
@@ -486,7 +279,6 @@ function PricingPageInner() {
             RKV Consulting
           </motion.p>
 
-          {/* Heading */}
           <motion.h1
             className="font-display font-bold text-4xl md:text-5xl text-white leading-tight"
             initial={{ opacity: 0, y: 20 }}
@@ -496,7 +288,6 @@ function PricingPageInner() {
             Simple, Transparent Pricing.
           </motion.h1>
 
-          {/* Subhead */}
           <motion.p
             className="text-muted text-lg mt-4 max-w-xl mx-auto font-body"
             initial={{ opacity: 0, y: 20 }}
@@ -505,346 +296,28 @@ function PricingPageInner() {
           >
             Choose the plan that matches your ambition. Upgrade or cancel anytime.
           </motion.p>
-
-          {/* Billing Toggle */}
-          <motion.div
-            className="mt-10 inline-flex items-center gap-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <span
-              className={cn(
-                'text-sm font-mono transition-colors',
-                billing === 'monthly' ? 'text-white' : 'text-muted'
-              )}
-            >
-              Monthly
-            </span>
-
-            {/* Pill toggle */}
-            <button
-              onClick={() =>
-                setBilling((prev) => (prev === 'monthly' ? 'annual' : 'monthly'))
-              }
-              className={cn(
-                'relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50',
-                billing === 'annual' ? 'bg-gold' : 'bg-[#161E2A]'
-              )}
-              aria-label="Toggle billing period"
-            >
-              <motion.div
-                className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md"
-                animate={{ x: billing === 'annual' ? 28 : 0 }}
-                transition={{ type: 'spring' as const, stiffness: 500, damping: 30 }}
-              />
-            </button>
-
-            <span
-              className={cn(
-                'text-sm font-mono transition-colors',
-                billing === 'annual' ? 'text-white' : 'text-muted'
-              )}
-            >
-              Annual
-            </span>
-
-            {/* Save badge */}
-            <AnimatePresence>
-              {billing === 'annual' && (
-                <motion.span
-                  className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.1em] font-semibold bg-gold/15 text-gold border border-gold/25"
-                  initial={{ opacity: 0, scale: 0.8, x: -10 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, x: -10 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  Save 20%
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.div>
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/*  PRICING CARDS                                                */}
+      {/*  PRICING TABLE                                                */}
       {/* ============================================================ */}
       <section className="pb-24 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 items-start justify-center">
-          {plans.map((plan, index) => {
-            const isPopular = plan.popular
-            const isElite = plan.id === 'elite'
-            const price =
-              billing === 'monthly' ? plan.monthlyPrice : plan.annualMonthly
-            const isLoading = loadingPlan === plan.id
-
-            return (
-              <motion.div
-                key={plan.id}
-                className={cn(
-                  'relative w-full lg:w-1/3 rounded-2xl p-8',
-                  'bg-[#0C1018] rounded-lg',
-                  isPopular ? 'border-2 border-gold lg:-mt-4 lg:scale-105' : 'border border-[#161E2A]',
-                  'transition-all duration-300'
-                )}
-                style={
-                  isPopular
-                    ? {
-                        boxShadow: '0 0 40px rgba(5,150,105,0.15)',
-                      }
-                    : undefined
-                }
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 * index }}
-              >
-                {/* Popular badge */}
-                {isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-gold text-black">
-                      <Zap className="w-3 h-3" />
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                {/* Plan label */}
-                <div className="flex items-center gap-2 mb-4">
-                  <span className={cn('opacity-60', plan.labelColor)}>
-                    {plan.icon}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[10px] font-mono uppercase tracking-wider font-semibold',
-                      plan.labelColor
-                    )}
-                  >
-                    {plan.label}
-                  </span>
-                </div>
-
-                {/* Price */}
-                <div className="mb-2">
-                  <div className="flex items-baseline gap-1">
-                    <span
-                      className={cn(
-                        'text-5xl font-bold font-mono',
-                        plan.priceColor,
-                        isPopular && 'text-gold'
-                      )}
-                    >
-                      ${price}
-                    </span>
-                    <span className="text-muted text-sm font-mono">/mo</span>
-                  </div>
-                  {billing === 'annual' && (
-                    <p className="text-muted text-xs mt-1 font-mono">
-                      ${plan.annualPrice}/year
-                    </p>
-                  )}
-                </div>
-
-                {/* Description */}
-                <p className="text-muted text-sm mb-6 font-body">
-                  {plan.description}
-                </p>
-
-                {/* Divider */}
-                <div className="h-px bg-[#161E2A] mb-6" />
-
-                {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feat, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm">
-                      {feat.included ? (
-                        <Check
-                          className={cn(
-                            'w-4 h-4 mt-0.5 flex-shrink-0',
-                            isElite ? 'text-green' : 'text-green'
-                          )}
-                        />
-                      ) : (
-                        <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted/40" />
-                      )}
-                      <span
-                        className={cn(
-                          'font-mono text-[12px]',
-                          feat.included ? 'text-white/90' : 'text-muted/60'
-                        )}
-                      >
-                        {feat.text}
-                        {feat.badge && renderBadge(feat.badge, feat.badgeColor || 'muted')}
-                        {feat.tooltip && (
-                          <span className="relative group inline-block ml-1">
-                            <Info className="w-3 h-3 text-muted/50 inline cursor-help" />
-                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-[#0C1018] border border-[#161E2A] text-xs text-white/80 w-52 text-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 font-mono">
-                              {feat.tooltip}
-                            </span>
-                          </span>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA Button */}
-                <motion.button
-                  onClick={() => handleCTAClick(plan.id)}
-                  disabled={isLoading}
-                  className={cn(
-                    'w-full py-3.5 rounded-xl font-display font-semibold text-sm tracking-wide transition-all duration-200',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
-                    plan.ctaStyle === 'ghost' &&
-                      'border border-[#161E2A] text-white hover:border-white/30 hover:bg-white/5 focus-visible:ring-white/30',
-                    plan.ctaStyle === 'gold' &&
-                      'bg-gold text-black hover:brightness-110 shadow-glow focus-visible:ring-gold/50',
-                    plan.ctaStyle === 'green' &&
-                      'bg-green text-black hover:brightness-110 focus-visible:ring-green/50',
-                    isLoading && 'opacity-60 cursor-not-allowed'
-                  )}
-                  style={
-                    plan.ctaStyle === 'gold'
-                      ? { boxShadow: '0 0 30px rgba(5,150,105,0.25)' }
-                      : undefined
-                  }
-                  whileHover={{ scale: isLoading ? 1 : 1.02 }}
-                  whileTap={{ scale: isLoading ? 1 : 0.98 }}
-                >
-                  {isLoading ? (
-                    <span className="inline-flex items-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                      Processing...
-                    </span>
-                  ) : (
-                    plan.ctaText
-                  )}
-                </motion.button>
-              </motion.div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/*  FEATURE COMPARISON TABLE                                     */}
-      {/* ============================================================ */}
-      <section className="pb-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.h2
-            className="font-display font-bold text-3xl text-white text-center mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            Compare All Features
-          </motion.h2>
-          <motion.p
-            className="text-muted text-center mb-12 font-body"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            A detailed breakdown of what each plan includes.
-          </motion.p>
-
-          <motion.div
-            className="overflow-x-auto rounded-2xl border border-[#161E2A] rounded-lg"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <table className="w-full min-w-[640px]">
-              {/* Sticky header */}
-              <thead>
-                <tr className="bg-[#0C1018] sticky top-0 z-10">
-                  <th className="text-left px-6 py-4 text-[10px] font-mono uppercase tracking-wider text-muted w-2/5">
-                    Feature
-                  </th>
-                  <th className="text-center px-6 py-4 font-display font-semibold text-sm text-white w-1/5">
-                    Basic
-                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
-                      ${billing === 'monthly' ? '20' : '16'}/mo
-                    </span>
-                  </th>
-                  <th className="text-center px-6 py-4 font-display font-semibold text-sm text-gold w-1/5">
-                    Pro
-                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
-                      ${billing === 'monthly' ? '99' : '79'}/mo
-                    </span>
-                  </th>
-                  <th className="text-center px-6 py-4 font-display font-semibold text-sm text-green w-1/5">
-                    Elite
-                    <span className="block text-[10px] text-muted font-mono font-normal mt-0.5">
-                      ${billing === 'monthly' ? '199' : '159'}/mo
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {comparisonData.map((category) => (
-                  <React.Fragment key={category.name}>
-                    {/* Category header row */}
-                    <tr className="bg-[#0C1018]/80">
-                      <td
-                        colSpan={4}
-                        className="px-6 py-3 text-[10px] font-mono uppercase tracking-wider text-gold font-semibold"
-                      >
-                        {category.name}
-                      </td>
-                    </tr>
-
-                    {/* Feature rows */}
-                    {category.rows.map((row, rowIndex) => (
-                      <tr
-                        key={row.feature}
-                        className={cn(
-                          'border-t border-[#161E2A]/50 transition-colors hover:bg-white/[0.02]',
-                          rowIndex % 2 === 0 ? 'bg-[#0C1018]/30' : 'bg-[#0C1018]/10'
-                        )}
-                      >
-                        <td className="px-6 py-3.5 text-sm text-white/80 font-mono">
-                          {row.feature}
-                        </td>
-                        <td className="px-6 py-3.5 text-center">
-                          {renderComparisonCell(row.basic)}
-                        </td>
-                        <td className="px-6 py-3.5 text-center">
-                          {renderComparisonCell(row.pro)}
-                        </td>
-                        <td className="px-6 py-3.5 text-center">
-                          {renderComparisonCell(row.elite)}
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <PricingTable
+            features={pricingFeatures}
+            plans={pricingPlans}
+            defaultPlan="pro"
+            defaultInterval="monthly"
+            onPlanSelect={(plan) => console.log('Selected:', plan)}
+            isLoading={!!loadingPlan}
+            onCheckout={(plan, interval) => handleCheckout(plan, interval)}
+          />
+        </motion.div>
       </section>
 
       {/* ============================================================ */}
@@ -882,7 +355,7 @@ function PricingPageInner() {
                 <Accordion.Item
                   key={index}
                   value={`faq-${index}`}
-                  className="bg-[#0C1018] border border-[#161E2A] rounded-xl overflow-hidden transition-colors data-[state=open]:border-gold/30 rounded-lg"
+                  className="bg-card border border-border rounded-xl overflow-hidden transition-colors data-[state=open]:border-gold/30"
                 >
                   <Accordion.Trigger className="w-full flex items-center justify-between px-6 py-5 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold/40 rounded-xl">
                     <span className="font-display font-semibold text-sm text-white pr-4">
@@ -929,7 +402,7 @@ function PricingPageInner() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-[#0C1018] border border-[#161E2A] rounded-2xl p-8"
+            className="bg-card border border-border rounded-2xl p-8"
           >
             <ROICalculator />
           </motion.div>
@@ -942,22 +415,15 @@ function PricingPageInner() {
       <section className="pb-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
-            className="bg-[#0C1018] border border-[#161E2A] rounded-2xl p-12 relative overflow-hidden rounded-lg glow-border"
+            className="relative rounded-2xl p-12 overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            {/* Blueprint grid background */}
-            <div className="absolute inset-0 blueprint-grid opacity-[0.04] pointer-events-none" />
-            {/* Glow background */}
-            <div
-              className="absolute inset-0 opacity-10 pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(ellipse at center, rgba(5,150,105,0.3) 0%, transparent 70%)',
-              }}
-            />
+            <div className="absolute inset-0 bg-card/80" />
+            <div className="absolute inset-0 border border-border rounded-2xl" />
+
             <h3 className="relative font-display font-bold text-2xl text-white mb-3">
               Ready to transform your portfolio?
             </h3>
@@ -965,9 +431,9 @@ function PricingPageInner() {
               Start your 14-day free trial. No credit card required.
             </p>
             <motion.button
-              onClick={() => handleCTAClick('pro')}
+              onClick={() => handleCheckout('pro', 'monthly')}
               className="relative inline-flex items-center px-8 py-3.5 rounded-xl bg-gold text-black font-display font-semibold text-sm tracking-wide hover:brightness-110 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-              style={{ boxShadow: '0 0 30px rgba(5,150,105,0.25)' }}
+              style={{ boxShadow: '0 0 30px rgba(201,168,76,0.25)' }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -988,7 +454,7 @@ export default function PricingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#080B0F] flex items-center justify-center">
+        <div className="min-h-screen bg-[#080808] flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
         </div>
       }

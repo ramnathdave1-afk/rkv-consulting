@@ -32,14 +32,14 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 /* ------------------------------------------------------------------ */
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
-  success: 'bg-[#05966915] text-[#059669] border-[#05966940]',
-  danger: 'bg-[#DC262615] text-[#DC2626] border-[#DC262640]',
-  warning: 'bg-[#D9770615] text-[#D97706] border-[#D9770640]',
-  info: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
-  violet: 'bg-[#0EA5E915] text-[#0EA5E9] border-[#0EA5E940]', // Premium
-  muted: 'bg-[#161E2A] text-[#64748B] border-[#2A3A50]',
-  plan: '', // dynamically set
+  default: 'bg-[#1a1a1a] text-[#888] border-[#333]',
+  success: 'bg-[rgba(201,168,76,0.08)] text-[#c9a84c] border-[rgba(201,168,76,0.25)]',
+  danger: 'bg-[rgba(220,38,38,0.08)] text-[#DC2626] border-[rgba(220,38,38,0.25)]',
+  warning: 'bg-[rgba(217,119,6,0.08)] text-[#D97706] border-[rgba(217,119,6,0.25)]',
+  info: 'bg-[#1a1a1a] text-[#888] border-[#333]',
+  violet: 'bg-[rgba(201,168,76,0.08)] text-[#c9a84c] border-[rgba(201,168,76,0.25)]',
+  muted: 'bg-[#1a1a1a] text-[#888] border-[#333]',
+  plan: '',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
@@ -105,10 +105,10 @@ function Badge({
                   : variant === 'warning'
                     ? '#D97706'
                     : variant === 'violet'
-                      ? '#0EA5E9'
+                      ? '#c9a84c'
                       : variant === 'success'
-                        ? '#059669'
-                        : '#64748B',
+                        ? '#c9a84c'
+                        : '#888',
           }}
         />
       )}

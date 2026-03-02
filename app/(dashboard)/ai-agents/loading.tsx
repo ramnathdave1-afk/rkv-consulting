@@ -1,7 +1,7 @@
 function SkeletonBlock({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-[#161E2A]/30 border border-[#161E2A]/50 ${className || ''}`}>
-      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#059669]/5 to-transparent" />
+    <div className={`relative overflow-hidden rounded-lg bg-[#1e1e1e]/30 border border-[#1e1e1e]/50 ${className || ''}`}>
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-[#c9a84c]/5 to-transparent" />
     </div>
   );
 }
@@ -16,7 +16,7 @@ export default function AIAgentsLoading() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 rounded-lg border border-[#161E2A]/50 bg-[#161E2A]/20 p-1 w-fit">
+      <div className="flex gap-1 rounded-lg border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-1 w-fit">
         {Array.from({ length: 5 }).map((_, i) => (
           <SkeletonBlock key={i} className="h-9 w-24 rounded-md" />
         ))}
@@ -25,7 +25,7 @@ export default function AIAgentsLoading() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-5 space-y-2">
+          <div key={i} className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-5 space-y-2">
             <SkeletonBlock className="h-3 w-20" />
             <SkeletonBlock className="h-8 w-16" />
           </div>
@@ -33,7 +33,7 @@ export default function AIAgentsLoading() {
       </div>
 
       {/* Activity Feed */}
-      <div className="rounded-xl border border-[#161E2A]/50 bg-[#161E2A]/20 p-6 space-y-4">
+      <div className="rounded-xl border border-[#1e1e1e]/50 bg-[#1e1e1e]/20 p-6 space-y-4">
         <SkeletonBlock className="h-5 w-36" />
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3">

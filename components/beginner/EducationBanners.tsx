@@ -89,8 +89,8 @@ function EducationBanner({
     <div
       className="rounded-lg overflow-hidden transition-all duration-300"
       style={{
-        background: 'rgba(5, 150, 105, 0.06)',
-        border: '1px solid rgba(5, 150, 105, 0.15)',
+        background: 'rgba(201, 168, 76, 0.06)',
+        border: '1px solid rgba(201, 168, 76, 0.15)',
       }}
     >
       {/* Header */}
@@ -101,7 +101,7 @@ function EducationBanner({
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(5, 150, 105, 0.15)' }}
+            style={{ background: 'rgba(201, 168, 76, 0.15)' }}
           >
             <Lightbulb className="h-4 w-4 text-gold" />
           </div>
@@ -130,7 +130,7 @@ function EducationBanner({
       {expanded && (
         <div
           className="px-4 pb-4 animate-fade-up"
-          style={{ borderTop: '1px solid rgba(5, 150, 105, 0.1)' }}
+          style={{ borderTop: '1px solid rgba(201, 168, 76, 0.1)' }}
         >
           <div className="pt-3 space-y-3">
             {glossary.map((item, i) => (
