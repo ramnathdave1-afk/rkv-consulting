@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
+import HeroExpandable from '@/components/ui/hero-button-expendable';
 import {
   transitionEntrance,
   variantEntranceFromBelow,
-  variantScaleIn,
   useReducedMotion,
   transitionReduced,
   variantReduced,
@@ -847,7 +847,6 @@ export default function MarketingPage() {
   const [activeSection, setActiveSection] = useState<'features' | 'pricing' | 'about'>('features');
 
   const entranceVariant = reduced ? variantReduced : variantEntranceFromBelow;
-  const scaleVariant = reduced ? variantReduced : variantScaleIn;
   const transition = reduced ? transitionReduced : transitionEntrance;
   const staggerMs = reduced ? 0 : 1;
 
@@ -1045,92 +1044,9 @@ export default function MarketingPage() {
       </nav>
 
       {/* ============================================================ */}
-      {/* SECTION 2 -- HERO (Design system: institutional, ATLAS)       */}
-      {/* Staggered power-up: bg → logo → status pills → headline → subhead → CTAs */}
+      {/* SECTION 2 -- HERO (Expandable CTA with GodRays)                */}
       {/* ============================================================ */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: reduced ? 0.01 : 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 pt-20 pb-16 bg-[#0A0A0F]"
-      >
-        <div className="max-w-4xl mx-auto w-full text-center">
-          {/* Logo — 200ms */}
-          <motion.p
-            initial={entranceVariant.hidden}
-            animate={entranceVariant.visible}
-            transition={{ ...transition, delay: staggerMs * 0.2 }}
-            className="font-body text-[11px] uppercase tracking-[0.25em] text-white/40 mb-8"
-          >
-            RKV CONSULTING
-          </motion.p>
-
-          {/* Status pills — 350ms + 60ms stagger (only looping animation: dot pulse) */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: reduced ? 0 : 0.06, delayChildren: reduced ? 0 : 0.35 } } }}
-            className="inline-flex flex-wrap items-center justify-center gap-6 md:gap-10 py-3 px-5 rounded sharp border border-white/[0.08] bg-[#111118] mb-8"
-          >
-            {[
-              { label: 'Markets', value: '2,847', color: 'text-[#00B4D8]' },
-              { label: 'Data points', value: '12.4B', color: 'text-[#00B4D8]' },
-              { label: 'Model accuracy', value: '94.2%', color: 'text-[#52B788]' },
-            ].map((item) => (
-              <motion.span
-                key={item.label}
-                variants={scaleVariant}
-                transition={transition}
-                className="font-mono text-[11px] text-white/60 uppercase tracking-wider flex items-center gap-2"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00B4D8] shrink-0 animate-status-pulse" aria-hidden />
-                {item.label} <span className={`font-semibold ${item.color}`}>{item.value}</span>
-              </motion.span>
-            ))}
-          </motion.div>
-
-          {/* Headline — 500ms */}
-          <motion.h1
-            initial={entranceVariant.hidden}
-            animate={entranceVariant.visible}
-            transition={{ ...transition, delay: staggerMs * 0.5 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-body font-semibold leading-tight text-white mb-4 tracking-tight"
-          >
-            Institutional-grade intelligence for individual investors.
-          </motion.h1>
-
-          {/* Subhead — 650ms */}
-          <motion.p
-            initial={entranceVariant.hidden}
-            animate={entranceVariant.visible}
-            transition={{ ...transition, delay: staggerMs * 0.65 }}
-            className="text-white/60 font-body text-base md:text-lg max-w-2xl mx-auto mb-10"
-          >
-            Powered by ATLAS: real-time analysis across thousands of markets and billions of data points.
-          </motion.p>
-
-          {/* CTAs — 800ms */}
-          <motion.div
-            initial={entranceVariant.hidden}
-            animate={entranceVariant.visible}
-            transition={{ ...transition, delay: staggerMs * 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
-          >
-            <a
-              href="/signup"
-              className="w-full sm:w-auto bg-[#00B4D8] text-[#0A0A0F] font-body font-semibold text-[13px] px-6 py-2.5 rounded sharp hover:bg-[#0096C7] transition-colors uppercase tracking-wider"
-            >
-              Access Dashboard
-            </a>
-            <a
-              href="/ai-assistant"
-              className="w-full sm:w-auto border border-[#C1121F] text-[#E63946] font-body font-medium text-[13px] px-6 py-2.5 rounded sharp hover:bg-[#C1121F]/10 transition-colors uppercase tracking-wider"
-            >
-              Talk to ATLAS
-            </a>
-          </motion.div>
-        </div>
-      </motion.section>
+      <HeroExpandable />
 
       {/* ============================================================ */}
       {/* VALUE PROPOSITION — 3 cards (stagger 1000ms + 80ms, hover 4px) */}
