@@ -96,13 +96,16 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
-  // ---- Protected dashboard routes ----
-  if (!isPublicPath(pathname)) {
-    if (!user) {
-      const loginUrl = new URL('/login', req.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+  // ---- Protected routes ----
+  if (!isPublicPath(pathname) && !user) {
+    // API routes: return JSON 401 (not a redirect to HTML login page)
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // Page routes: redirect to login
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // ---- Auth pages when already logged in ----
