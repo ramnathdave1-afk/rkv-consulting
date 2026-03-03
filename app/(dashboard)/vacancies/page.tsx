@@ -45,69 +45,8 @@ import { toast } from '@/components/ui/Toast';
 import type { Property } from '@/types';
 
 /* ================================================================== */
-/*  Seeded PRNG — deterministic random from a string seed              */
+/*  Interfaces                                                         */
 /* ================================================================== */
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + ch;
-    hash |= 0; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
-
-/** Returns a seeded pseudo-random number generator (Mulberry32). */
-function seededRng(seed: string): () => number {
-  let s = hashString(seed);
-  return () => {
-    s |= 0;
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/* ================================================================== */
-/*  Mock Data                                                          */
-/* ================================================================== */
-
-const PROSPECT_FIRST_NAMES = [
-  'Marcus', 'Jennifer', 'David', 'Sarah', 'Michael',
-  'Emily', 'Robert', 'Ashley', 'Daniel', 'Jessica',
-  'Christopher', 'Amanda',
-];
-
-const PROSPECT_LAST_NAMES = [
-  'Johnson', 'Williams', 'Chen', 'Rodriguez', 'Patel',
-  'Thompson', 'Garcia', 'Anderson', 'Martinez', 'Lee',
-  'Nguyen', 'Mitchell',
-];
-
-const INQUIRY_MESSAGES = [
-  'Hi, I am very interested in this property. I have a stable income of $6,200/mo and looking to move in by March 1st. Could I schedule a viewing this week?',
-  'Is this unit still available? I would love more details about the lease terms and pet policy.',
-  'Great listing! When can I see the property? I work from home so I have flexible availability for showings.',
-  'I am relocating for work and need a place ASAP. My annual salary is $92K. Can we set up a tour?',
-  'Interested in renting. What utilities are included? Is there parking available?',
-  'Beautiful property! My partner and I are looking for a new home. We both have excellent credit (780+) and combined income of $11K/mo. When is the earliest move-in date?',
-  'Hello, just saw your listing. Quick question - is the rent negotiable for a longer lease term?',
-  'Saw the listing online. Looks perfect for my needs. Can you tell me about the neighborhood?',
-  'Very interested! I am a graduate student at ASU. Do you accept co-signers for the lease?',
-  'I have been looking for exactly this type of place. Currently at 123 Main St and my lease ends next month. Income is $5,800/mo, clean rental history.',
-  'Hi there, reaching out about the rental. Is it possible to do a virtual tour? I am relocating from out of state.',
-  'Love this listing! Are there any upcoming open house dates? My move-in timeline is flexible.',
-];
-
-const INQUIRY_SOURCES: Array<'Zillow' | 'Facebook' | 'Direct' | 'Apartments.com' | 'Craigslist'> = [
-  'Zillow', 'Zillow', 'Zillow', 'Zillow', 'Zillow',
-  'Facebook', 'Facebook', 'Facebook',
-  'Direct', 'Direct',
-  'Apartments.com',
-  'Craigslist',
-];
 
 interface Inquiry {
   id: string;
@@ -150,148 +89,10 @@ interface GeneratedListing {
 }
 
 /* ================================================================== */
-/*  AI Listing Generator (Mock)                                        */
+/*  Helper: Days Vacant (formerly below generators)                    */
 /* ================================================================== */
 
-function generateListing(property: Property): GeneratedListing {
-  const typeLabels: Record<string, string> = {
-    single_family: 'Single Family Home',
-    multi_family: 'Multi-Family',
-    condo: 'Condo',
-    townhouse: 'Townhouse',
-    commercial: 'Commercial Space',
-    land: 'Land',
-    mixed_use: 'Mixed Use',
-  };
-
-  const typeLabel = typeLabels[property.property_type] || 'Property';
-  const beds = property.bedrooms ?? 3;
-  const baths = property.bathrooms ?? 2;
-  const sqft = property.sqft ?? 1400;
-  const rent = property.monthly_rent ?? 1800;
-  const city = property.city || 'Phoenix';
-  const state = property.state || 'AZ';
-
-  const adjectives = ['Stunning', 'Beautiful', 'Spacious', 'Charming', 'Modern', 'Elegant', 'Inviting'];
-  const rng = seededRng(`listing-${property.id}`);
-  const adj = adjectives[Math.floor(rng() * adjectives.length)];
-
-  const title = `${adj} ${beds}BR/${baths}BA ${typeLabel} in ${city}`;
-
-  const description = `Welcome to this exceptional ${typeLabel.toLowerCase()} located in the heart of ${city}, ${state}. This ${adj.toLowerCase()} ${beds}-bedroom, ${baths}-bathroom residence spans ${sqft.toLocaleString()} square feet of thoughtfully designed living space, perfect for those seeking comfort and convenience.
-
-Step inside to discover an open-concept floor plan bathed in natural light. The spacious living area flows seamlessly into the modern kitchen, featuring updated appliances, generous counter space, and ample cabinetry for all your storage needs. The primary suite offers a private retreat with an en-suite bathroom and walk-in closet.
-
-${beds > 2 ? `Additional bedrooms provide versatile spaces ideal for a home office, guest room, or growing family. ` : ''}The property includes in-unit laundry connections, central air conditioning, and high-speed internet capability throughout. ${property.property_type === 'single_family' ? 'Enjoy the private backyard, perfect for outdoor entertaining or relaxing on warm evenings. The attached two-car garage provides secure parking and additional storage.' : 'Community amenities include secure entry, maintained common areas, and convenient parking.'}
-
-Located in one of ${city}'s most sought-after neighborhoods, you'll enjoy easy access to major employment centers, top-rated schools, shopping, dining, and recreational facilities. Public transit options are nearby, and major highways are just minutes away.
-
-This is a rare opportunity to call this exceptional property home. Schedule your private showing today -- this one will not last long at this price!`;
-
-  const highlights = [
-    `${beds} Bedrooms / ${baths} Bathrooms`,
-    `${sqft.toLocaleString()} sq ft of living space`,
-    `${typeLabel}`,
-    `Central AC & Heating`,
-    `Updated Kitchen & Appliances`,
-    `In-Unit Laundry Connections`,
-    property.property_type === 'single_family' ? 'Private Backyard & 2-Car Garage' : 'Secure Entry & Parking',
-    `Prime ${city} Location`,
-  ];
-
-  return {
-    title,
-    description,
-    highlights,
-    rentalTerms: {
-      price: `$${rent.toLocaleString()}/month`,
-      deposit: `$${(rent * 1.5).toLocaleString()} (1.5x monthly rent)`,
-      leaseLength: '12-month minimum lease',
-    },
-  };
-}
-
-/* ================================================================== */
-/*  Mock Data Generators                                               */
-/* ================================================================== */
-
-function generateInquiries(properties: Property[]): Inquiry[] {
-  if (properties.length === 0) return [];
-
-  // Build a stable seed from property IDs so output is deterministic per-dataset
-  const seed = properties.map((p) => p.id).join('-');
-  const rng = seededRng(`inquiries-${seed}`);
-
-  return Array.from({ length: 12 }, (_, i) => {
-    const prop = properties[i % properties.length];
-    const firstName = PROSPECT_FIRST_NAMES[i];
-    const lastName = PROSPECT_LAST_NAMES[i];
-    const message = INQUIRY_MESSAGES[i];
-    const source = INQUIRY_SOURCES[i];
-
-    const daysAgo = Math.floor(rng() * 14) + 1;
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    // Pin time to noon so the ISO string is stable within the same day
-    date.setHours(12, 0, 0, 0);
-
-    let score: 'High' | 'Medium' | 'Low';
-    if (message.toLowerCase().includes('move-in') && (message.toLowerCase().includes('income') || message.toLowerCase().includes('salary'))) {
-      score = 'High';
-    } else if (message.includes('?') || message.toLowerCase().includes('tour') || message.toLowerCase().includes('viewing')) {
-      score = 'Medium';
-    } else {
-      score = 'Low';
-    }
-
-    const areaCode = 480 + Math.floor(rng() * 20);
-    const phoneMiddle = String(Math.floor(rng() * 900) + 100);
-    const phoneLast = String(Math.floor(rng() * 9000) + 1000);
-
-    return {
-      id: `inq-${i + 1}`,
-      prospectName: `${firstName} ${lastName}`,
-      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
-      phone: `(${areaCode}) ${phoneMiddle}-${phoneLast}`,
-      message,
-      source,
-      dateReceived: date.toISOString(),
-      interestScore: score,
-      propertyId: prop.id,
-      propertyAddress: prop.address,
-    };
-  });
-}
-
-function generateShowings(properties: Property[]): Showing[] {
-  if (properties.length === 0) return [];
-
-  const seed = properties.map((p) => p.id).join('-');
-  const rng = seededRng(`showings-${seed}`);
-
-  const names = ['Marcus Johnson', 'Sarah Rodriguez', 'David Chen', 'Emily Patel', 'Robert Thompson'];
-  const allStatuses: Array<'Confirmed' | 'Pending' | 'Completed'> = ['Confirmed', 'Pending', 'Completed'];
-
-  return names.map((name, i) => {
-    const prop = properties[i % properties.length];
-    const daysFromNow = i < 3 ? i + 1 : -(i - 2);
-    const date = new Date();
-    date.setDate(date.getDate() + daysFromNow);
-    date.setHours(10 + i * 2, 0, 0, 0);
-
-    // Deterministic status per showing slot
-    const status = allStatuses[Math.floor(rng() * allStatuses.length)];
-
-    return {
-      id: `show-${i + 1}`,
-      prospectName: name,
-      propertyAddress: prop.address,
-      propertyId: prop.id,
-      dateTime: date.toISOString(),
-      status,
-    };
-  });
-}
+// Note: generateListing, generateInquiries, generateShowings removed — real data only
 
 /* ================================================================== */
 /*  Helper: Days Vacant                                                */
@@ -375,57 +176,78 @@ export default function VacanciesPage() {
   }, [properties]);
 
   const [apiInquiries, setApiInquiries] = useState<Inquiry[]>([]);
+  const [showings, setShowings] = useState<Showing[]>([]);
+  const [listingStatusMap, setListingStatusMap] = useState<Record<string, string>>({});
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/vacancy/inquiries');
-        if (!res.ok || cancelled) return;
-        const data = await res.json();
-        const list = (data || []).map((row: { id: string; property_id: string; prospect_name: string; email: string | null; phone: string | null; message: string | null; source: string; interest_score: string; date_received: string }) => {
-          const prop = properties.find((p) => p.id === row.property_id);
-          return {
-            id: row.id,
-            prospectName: row.prospect_name,
-            email: row.email || '',
-            phone: row.phone || '',
-            message: row.message || '',
-            source: row.source as Inquiry['source'],
-            dateReceived: row.date_received,
-            interestScore: (row.interest_score || 'Medium') as 'High' | 'Medium' | 'Low',
-            propertyId: row.property_id,
-            propertyAddress: prop?.address || 'Unknown',
-          };
-        });
-        if (!cancelled) setApiInquiries(list);
+        const [inquiriesRes, showingsRes, listingsRes] = await Promise.all([
+          fetch('/api/vacancy/inquiries'),
+          fetch('/api/vacancy/showings'),
+          fetch('/api/vacancy/listings'),
+        ]);
+
+        // Inquiries
+        if (inquiriesRes.ok && !cancelled) {
+          const data = await inquiriesRes.json();
+          const list = (data || []).map((row: { id: string; property_id: string; prospect_name: string; email: string | null; phone: string | null; message: string | null; source: string; interest_score: string; date_received: string }) => {
+            const prop = properties.find((p) => p.id === row.property_id);
+            return {
+              id: row.id,
+              prospectName: row.prospect_name,
+              email: row.email || '',
+              phone: row.phone || '',
+              message: row.message || '',
+              source: row.source as Inquiry['source'],
+              dateReceived: row.date_received,
+              interestScore: (row.interest_score || 'Medium') as 'High' | 'Medium' | 'Low',
+              propertyId: row.property_id,
+              propertyAddress: prop?.address || 'Unknown',
+            };
+          });
+          setApiInquiries(list);
+        }
+
+        // Showings
+        if (showingsRes.ok && !cancelled) {
+          const data = await showingsRes.json();
+          setShowings(Array.isArray(data) ? data : []);
+        }
+
+        // Listing statuses
+        if (listingsRes.ok && !cancelled) {
+          const data = await listingsRes.json();
+          setListingStatusMap(data || {});
+        }
       } catch {
-        if (!cancelled) setApiInquiries([]);
+        if (!cancelled) {
+          setApiInquiries([]);
+          setShowings([]);
+          setListingStatusMap({});
+        }
       }
     })();
     return () => { cancelled = true; };
   }, [properties]);
-  const mockInquiries = useMemo(() => generateInquiries(properties), [properties]);
-  const inquiries = apiInquiries.length > 0 ? apiInquiries : mockInquiries;
-  const showings = useMemo(() => generateShowings(properties), [properties]);
+  const inquiries = apiInquiries;
 
-  // Per-property listing status & counts (deterministic from property id)
+  // Per-property listing status & counts from real data
   const propertyMeta = useMemo(() => {
     const map: Record<string, { listingStatus: string; inquiries: number; showings: number }> = {};
-    const statuses = ['Not Listed', 'Listed', 'Active'];
     properties.forEach((p) => {
-      const rng = seededRng(`meta-${p.id}`);
-      // Count how many generated inquiries target this property
       const propInquiryCount = inquiries.filter((inq) => inq.propertyId === p.id).length;
       const propShowingCount = showings.filter((s) => s.propertyId === p.id).length;
       map[p.id] = {
-        listingStatus: statuses[Math.floor(rng() * statuses.length)],
+        listingStatus: listingStatusMap[p.id] || 'Not Listed',
         inquiries: propInquiryCount,
         showings: propShowingCount,
       };
     });
     return map;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties.map((p) => p.id).join(','), inquiries, showings]);
+  }, [properties.map((p) => p.id).join(','), inquiries, showings, listingStatusMap]);
 
   /* -------------------------------- Fetch --------------------------------- */
   useEffect(() => {
@@ -482,16 +304,10 @@ export default function VacanciesPage() {
         setEditTitle(listing.title);
         setEditDescription(listing.description);
       } else {
-        const listing = generateListing(selectedProperty);
-        setGeneratedListing(listing);
-        setEditTitle(listing.title);
-        setEditDescription(listing.description);
+        toast.error('Failed to generate listing. Please try again.');
       }
     } catch {
-      const listing = generateListing(selectedProperty);
-      setGeneratedListing(listing);
-      setEditTitle(listing.title);
-      setEditDescription(listing.description);
+      toast.error('Failed to generate listing. Please try again.');
     } finally {
       setIsGenerating(false);
     }

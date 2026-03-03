@@ -526,6 +526,23 @@ function AccountingContent() {
     end: `${new Date().getFullYear()}-12-31`,
   })
 
+  // 1031 Exchange state
+  interface Exchange1031 {
+    id: string;
+    relinquished_property: string;
+    sale_price: number;
+    sale_date: string;
+    identification_deadline: string;
+    completion_deadline: string;
+    identified_properties: unknown[];
+    status: string;
+    notes: string | null;
+  }
+  const [exchanges, setExchanges] = useState<Exchange1031[]>([])
+  const [showExchangeModal, setShowExchangeModal] = useState(false)
+  const [exchangeForm, setExchangeForm] = useState({ property: '', salePrice: '', saleDate: '', notes: '' })
+  const [savingExchange, setSavingExchange] = useState(false)
+
   /* ---------------------------------------------------------------- */
   /*  Data fetching                                                    */
   /* ---------------------------------------------------------------- */
@@ -561,6 +578,15 @@ function AccountingContent() {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
       setTransactions((txData || []) as Transaction[])
+
+      // Fetch 1031 exchanges
+      try {
+        const exchangeRes = await fetch('/api/exchanges')
+        if (exchangeRes.ok) {
+          const exchangeData = await exchangeRes.json()
+          setExchanges(Array.isArray(exchangeData) ? exchangeData : [])
+        }
+      } catch { /* exchanges table may not exist yet */ }
 
       // Default selected property
       if (propsData.length > 0) {
@@ -841,7 +867,9 @@ function AccountingContent() {
   const depreciationData = useMemo(() => {
     return properties.map((prop) => {
       const purchasePrice = prop.purchase_price || 0
-      const landValue = purchasePrice * 0.2 // estimate 20% land
+      const rawLandValue = (prop as unknown as Record<string, unknown>).land_value as number | null
+      const landValue = rawLandValue != null ? Number(rawLandValue) : purchasePrice * 0.2
+      const isEstimated = rawLandValue == null
       const depreciableBasis = purchasePrice - landValue
       const annualDepreciation = depreciableBasis / 27.5
       const purchaseDate = prop.purchase_date ? new Date(prop.purchase_date) : new Date()
@@ -854,6 +882,7 @@ function AccountingContent() {
         property: prop,
         purchasePrice,
         landValue,
+        isEstimated,
         depreciableBasis,
         annualDepreciation,
         accumulatedDepreciation,
@@ -918,6 +947,31 @@ function AccountingContent() {
   function handleGenerateReport(reportId: string) {
     // Placeholder: generate report PDF
     alert(`Generating ${reportId.replace(/_/g, ' ')} report... PDF generation coming soon.`)
+  }
+
+  async function handleSaveExchange() {
+    if (!exchangeForm.property || !exchangeForm.salePrice || !exchangeForm.saleDate) return
+    setSavingExchange(true)
+    try {
+      const res = await fetch('/api/exchanges', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          relinquishedProperty: exchangeForm.property,
+          salePrice: Number(exchangeForm.salePrice),
+          saleDate: exchangeForm.saleDate,
+          notes: exchangeForm.notes || undefined,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExchanges((prev) => [data, ...prev])
+        setShowExchangeModal(false)
+        setExchangeForm({ property: '', salePrice: '', saleDate: '', notes: '' })
+      }
+    } finally {
+      setSavingExchange(false)
+    }
   }
 
   /* ---------------------------------------------------------------- */
@@ -1642,7 +1696,7 @@ function AccountingContent() {
                     {depreciationData.map((dep) => (
                       <tr key={dep.property.id} className="border-b border-border/50 hover:bg-white/[0.02]">
                         <td className="px-4 py-3 text-white truncate max-w-[200px]">{dep.property.address}</td>
-                        <td className="px-4 py-3 text-right text-text tabular-nums font-mono">{formatCurrency(dep.depreciableBasis)}</td>
+                        <td className="px-4 py-3 text-right text-text tabular-nums font-mono">{formatCurrency(dep.depreciableBasis)}{dep.isEstimated && <span className="text-[10px] text-muted ml-1">est.</span>}</td>
                         <td className="px-4 py-3 text-right text-gold font-medium tabular-nums font-mono">{formatCurrency(dep.annualDepreciation)}</td>
                         <td className="px-4 py-3 text-right text-muted tabular-nums font-mono">{formatCurrency(dep.accumulatedDepreciation)}</td>
                         <td className="px-4 py-3 text-right text-white tabular-nums font-mono">{formatCurrency(dep.remainingBasis)}</td>
@@ -1707,42 +1761,141 @@ function AccountingContent() {
                 </div>
               </div>
 
-              {/* 1031 Exchange Timer */}
+              {/* 1031 Exchange Tracker */}
               <div className="bg-card border border-border rounded-xl p-6" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="label text-[11px]">1031 Exchange Tracker</h3>
                     <p className="text-xs text-muted mt-0.5">Like-kind exchange deadlines</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
-                    <ArrowRightLeft className="w-3 h-3" />
-                    Placeholder
-                  </span>
+                  <button
+                    onClick={() => setShowExchangeModal(true)}
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-gold bg-gold/10 border border-gold/20 rounded-full px-2 py-0.5 hover:bg-gold/20 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    New Exchange
+                  </button>
                 </div>
-                <div className="space-y-4">
-                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted">45-Day Identification Period</span>
-                      <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
-                    </div>
-                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                      <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
-                    </div>
+                {exchanges.length === 0 ? (
+                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                    <ArrowRightLeft className="w-8 h-8 text-muted/40 mx-auto mb-3" />
+                    <p className="text-sm text-muted">No active 1031 exchanges</p>
+                    <p className="text-xs text-muted/60 mt-1">
+                      Start a 1031 exchange when you sell a property to track identification and completion deadlines
+                    </p>
                   </div>
-                  <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted">180-Day Completion Deadline</span>
-                      <span className="text-xs font-semibold text-gold font-mono">-- days remaining</span>
-                    </div>
-                    <div className="w-full h-2 bg-border rounded-full overflow-hidden">
-                      <div className="h-full bg-gold/40 rounded-full" style={{ width: '0%' }} />
-                    </div>
+                ) : (
+                  <div className="space-y-4">
+                    {exchanges.map((ex) => {
+                      const idDeadline = new Date(ex.identification_deadline)
+                      const completionDeadline = new Date(ex.completion_deadline)
+                      const saleDate = new Date(ex.sale_date)
+                      const today = new Date()
+                      const idDaysLeft = Math.max(0, Math.ceil((idDeadline.getTime() - today.getTime()) / 86400000))
+                      const completionDaysLeft = Math.max(0, Math.ceil((completionDeadline.getTime() - today.getTime()) / 86400000))
+                      const idTotal = 45
+                      const completionTotal = 180
+                      const idElapsed = Math.max(0, Math.ceil((today.getTime() - saleDate.getTime()) / 86400000))
+                      const completionElapsed = idElapsed
+                      const idPct = Math.min(100, (idElapsed / idTotal) * 100)
+                      const completionPct = Math.min(100, (completionElapsed / completionTotal) * 100)
+                      const idColor = idDaysLeft > 30 ? 'text-green' : idDaysLeft > 10 ? 'text-gold' : 'text-red'
+                      const completionColor = completionDaysLeft > 30 ? 'text-green' : completionDaysLeft > 10 ? 'text-gold' : 'text-red'
+                      const idBarColor = idDaysLeft > 30 ? 'bg-green' : idDaysLeft > 10 ? 'bg-gold' : 'bg-red'
+                      const completionBarColor = completionDaysLeft > 30 ? 'bg-green' : completionDaysLeft > 10 ? 'bg-gold' : 'bg-red'
+
+                      return (
+                        <div key={ex.id} className="bg-deep border border-border rounded-lg p-4 space-y-3" style={{ background: '#0a0a0a', border: '1px solid #1e1e1e' }}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-white">{ex.relinquished_property}</span>
+                            <span className="text-[10px] text-muted font-mono">{formatCurrency(ex.sale_price)} · Sold {new Date(ex.sale_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-muted">45-Day Identification</span>
+                              <span className={`text-[10px] font-semibold font-mono ${idColor}`}>
+                                {idDaysLeft > 0 ? `${idDaysLeft}d left` : 'Expired'}
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all ${idBarColor}`} style={{ width: `${idPct}%` }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-muted">180-Day Completion</span>
+                              <span className={`text-[10px] font-semibold font-mono ${completionColor}`}>
+                                {completionDaysLeft > 0 ? `${completionDaysLeft}d left` : 'Expired'}
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full transition-all ${completionBarColor}`} style={{ width: `${completionPct}%` }} />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-muted capitalize">Status: {ex.status.replace('_', ' ')}</span>
+                            <span className="text-[10px] text-muted">{(ex.identified_properties || []).length} properties identified</span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <p className="text-[10px] text-muted/60 text-center">
-                    Start a 1031 exchange when you sell a property to track deadlines
-                  </p>
-                </div>
+                )}
               </div>
+
+              {/* New Exchange Modal */}
+              {showExchangeModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowExchangeModal(false)}>
+                  <div className="absolute inset-0 bg-black/60" />
+                  <div className="relative bg-[#111111] border border-[#1e1e1e] rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+                    <h3 className="font-body font-semibold text-white mb-4">Start 1031 Exchange</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[11px] text-muted block mb-1">Relinquished Property</label>
+                        <input
+                          value={exchangeForm.property}
+                          onChange={(e) => setExchangeForm({ ...exchangeForm, property: e.target.value })}
+                          placeholder="Property address sold..."
+                          className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded px-3 py-2 text-[13px] text-white placeholder:text-muted/50 focus:outline-none focus:border-gold/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-muted block mb-1">Sale Price</label>
+                        <input
+                          type="number"
+                          value={exchangeForm.salePrice}
+                          onChange={(e) => setExchangeForm({ ...exchangeForm, salePrice: e.target.value })}
+                          placeholder="450000"
+                          className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded px-3 py-2 text-[13px] text-white placeholder:text-muted/50 focus:outline-none focus:border-gold/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-muted block mb-1">Sale Date</label>
+                        <input
+                          type="date"
+                          value={exchangeForm.saleDate}
+                          onChange={(e) => setExchangeForm({ ...exchangeForm, saleDate: e.target.value })}
+                          className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded px-3 py-2 text-[13px] text-white focus:outline-none focus:border-gold/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] text-muted block mb-1">Notes (optional)</label>
+                        <textarea
+                          value={exchangeForm.notes}
+                          onChange={(e) => setExchangeForm({ ...exchangeForm, notes: e.target.value })}
+                          placeholder="QI details, exchange agreement notes..."
+                          rows={2}
+                          className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded px-3 py-2 text-[13px] text-white placeholder:text-muted/50 focus:outline-none focus:border-gold/50 resize-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button onClick={() => setShowExchangeModal(false)} className="px-4 py-2 rounded text-[13px] text-muted hover:text-white border border-[#1e1e1e]" disabled={savingExchange}>Cancel</button>
+                      <button onClick={handleSaveExchange} disabled={savingExchange || !exchangeForm.property || !exchangeForm.salePrice || !exchangeForm.saleDate} className="px-4 py-2 rounded text-[13px] bg-gold text-black font-medium hover:bg-gold/90 disabled:opacity-50">{savingExchange ? 'Saving...' : 'Start Exchange'}</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quarterly Tax Estimator */}
@@ -1752,9 +1905,9 @@ function AccountingContent() {
                   <h3 className="label text-[11px]">Quarterly Tax Estimator</h3>
                   <p className="text-xs text-muted mt-0.5">Estimated quarterly payments based on rental income</p>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-400 bg-blue-400/10 border border-blue-400/20 rounded-full px-2 py-0.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5">
                   <Calculator className="w-3 h-3" />
-                  Placeholder
+                  {(TAX_RATE * 100).toFixed(0)}% est. rate
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-4">

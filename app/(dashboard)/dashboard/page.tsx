@@ -421,10 +421,8 @@ export default function DashboardPage() {
       return d.getFullYear() === chartNow.getFullYear();
     });
     if (hasAnyTx) return monthsWithNet;
-    return MONTHS.map((month, i) => {
-      const variance = 0.85 + ((i + 1) / 12) * 0.2;
-      return { month, cashFlow: Math.round(monthlyCashFlow * variance) };
-    });
+    // No transactions yet — show zeros instead of fake data
+    return MONTHS.map((month) => ({ month, cashFlow: 0 }));
   })();
 
   // Sparkline: cash flow from last 6 months of transactions; others still derived (no historical snapshots)
@@ -647,12 +645,30 @@ export default function DashboardPage() {
       {/*  ROW 1 - Metric Cards (stagger 60ms, 400ms from below)         */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { title: 'Total Portfolio Value', value: formatCurrency(totalPortfolioValue), change: 0, changeLabel: 'No prior period', icon: DollarSign, trend: 'up' as const, sparklineData: sparklinePortfolio },
-          { title: 'Monthly Cash Flow', value: formatCurrency(monthlyCashFlow), change: 0, changeLabel: 'No prior period', icon: TrendingUp, trend: monthlyCashFlow >= 0 ? ('up' as const) : ('down' as const), sparklineData: sparklineCashFlow },
-          { title: 'Total Equity', value: formatCurrency(totalEquity), change: 0, changeLabel: 'No prior period', icon: BuildingIcon, trend: 'up' as const, sparklineData: sparklineEquity },
-          { title: 'Net ROI', value: netROI.toFixed(1), suffix: '%', change: 0, changeLabel: 'No prior period', icon: Percent, trend: 'up' as const, sparklineData: sparklineROI },
-        ].map((card, i) => (
+        {(() => {
+          // Compute real change% from portfolio snapshots
+          const hasHistory = portfolioSnapshots.length >= 2;
+          const oldest = hasHistory ? portfolioSnapshots[0] : null;
+          const latest = hasHistory ? portfolioSnapshots[portfolioSnapshots.length - 1] : null;
+          const days = hasHistory ? portfolioSnapshots.length : 0;
+          const pctChange = (curr: number, prev: number) => prev !== 0 ? ((curr - prev) / Math.abs(prev)) * 100 : 0;
+          const label = (pct: number) => hasHistory ? `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% vs ${days}d ago` : 'No prior period';
+
+          const pvChange = hasHistory ? pctChange(Number(latest!.portfolio_value), Number(oldest!.portfolio_value)) : 0;
+          const cfChange = hasHistory ? pctChange(Number(latest!.monthly_cash_flow), Number(oldest!.monthly_cash_flow)) : 0;
+          const eqChange = hasHistory ? pctChange(Number(latest!.equity), Number(oldest!.equity)) : 0;
+          const roiChange = hasHistory && oldest!.net_roi != null && latest!.net_roi != null
+            ? Number(latest!.net_roi) - Number(oldest!.net_roi) : 0;
+          const roiLabel = hasHistory && oldest!.net_roi != null
+            ? `${roiChange >= 0 ? '+' : ''}${roiChange.toFixed(1)}pp vs ${days}d ago` : 'No prior period';
+
+          return [
+            { title: 'Total Portfolio Value', value: formatCurrency(totalPortfolioValue), change: pvChange, changeLabel: label(pvChange), icon: DollarSign, trend: (pvChange >= 0 ? 'up' : 'down') as 'up' | 'down', sparklineData: sparklinePortfolio },
+            { title: 'Monthly Cash Flow', value: formatCurrency(monthlyCashFlow), change: cfChange, changeLabel: label(cfChange), icon: TrendingUp, trend: (monthlyCashFlow >= 0 ? 'up' : 'down') as 'up' | 'down', sparklineData: sparklineCashFlow },
+            { title: 'Total Equity', value: formatCurrency(totalEquity), change: eqChange, changeLabel: label(eqChange), icon: BuildingIcon, trend: (eqChange >= 0 ? 'up' : 'down') as 'up' | 'down', sparklineData: sparklineEquity },
+            { title: 'Net ROI', value: netROI.toFixed(1), suffix: '%', change: roiChange, changeLabel: roiLabel, icon: Percent, trend: (roiChange >= 0 ? 'up' : 'down') as 'up' | 'down', sparklineData: sparklineROI },
+          ];
+        })().map((card, i) => (
           <motion.div
             key={card.title}
             initial={entranceVariant.hidden}

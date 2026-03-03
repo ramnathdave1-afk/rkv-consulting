@@ -17,31 +17,54 @@ const STATUS_TO_STAGE: Record<string, string> = Object.fromEntries(
   Object.entries(STAGE_TO_STATUS).map(([k, v]) => [v, k])
 );
 
-function toCRMDeal(
-  row: {
-    id: string;
-    address: string | null;
-    city: string | null;
-    state: string | null;
-    asking_price: number | null;
-    rehab_estimate: number | null;
-    arv: number | null;
-    analysis_data: Record<string, unknown> | null;
-    created_at: string;
-    updated_at: string;
-    property_type: string | null;
-    status: string | null;
-  },
-  keyContact?: { id: string; name: string }
-) {
+interface DealRow {
+  id: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  asking_price: number | null;
+  rehab_estimate: number | null;
+  arv: number | null;
+  analysis_data: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  property_type: string | null;
+  status: string | null;
+  stage_entered_at: string | null;
+  deal_contacts?: { contact_id: string; role: string | null; contacts: { id: string; name: string | null } | null }[];
+}
+
+function toCRMDeal(row: DealRow) {
   const addr = [row.address, row.city, row.state].filter(Boolean).join(', ') || 'Address TBD';
   const purchasePrice = row.asking_price ?? 0;
   const rehab = row.rehab_estimate ?? 0;
   const arv = row.arv ?? 0;
   const totalInv = purchasePrice + rehab;
   const profit = arv - totalInv;
-  const roi = totalInv > 0 ? (profit / totalInv) * 100 : 0;
+  const roi = totalInv > 0 ? Math.round((profit / totalInv) * 1000) / 10 : 0;
   const stage = STATUS_TO_STAGE[row.status || 'lead'] || 'Prospect';
+
+  // Compute daysInStage from stage_entered_at
+  const stageEnteredAt = row.stage_entered_at || row.updated_at || row.created_at;
+  const daysInStage = Math.max(0, Math.floor((Date.now() - new Date(stageEnteredAt).getTime()) / 86400000));
+
+  // Read ATLAS scores from analysis_data JSONB
+  const ad = row.analysis_data || {};
+  const atlasScore = Number(ad.atlas_score ?? ad.score ?? 0);
+  const atlasConfidence = Number(ad.atlas_confidence ?? ad.confidence ?? 0);
+
+  // Derive riskLevel from atlasScore
+  const riskLevel: 'Low' | 'Medium' | 'High' = atlasScore > 7 ? 'Low' : atlasScore >= 5 ? 'Medium' : atlasScore > 0 ? 'High' : 'Medium';
+
+  // Build associatedContacts from deal_contacts join
+  const linkedContacts = (row.deal_contacts || [])
+    .filter((dc) => dc.contacts)
+    .map((dc) => ({
+      id: dc.contacts!.id,
+      name: dc.contacts!.name || 'Unknown',
+      role: dc.role || 'Contact',
+    }));
+  const keyContact = linkedContacts[0] ? { id: linkedContacts[0].id, name: linkedContacts[0].name } : { id: '', name: '' };
 
   return {
     id: row.id,
@@ -55,13 +78,13 @@ function toCRMDeal(
     projectedROI: roi,
     totalInvestment: totalInv,
     projectedProfit: profit,
-    daysInStage: 0,
-    riskLevel: 'Medium' as const,
-    atlasScore: 0,
-    atlasConfidence: 0,
-    keyContact: keyContact || { id: '', name: '' },
-    associatedContacts: [],
-    stageHistory: [{ stage: stage as 'Prospect', enteredAt: row.updated_at || row.created_at }],
+    daysInStage,
+    riskLevel,
+    atlasScore,
+    atlasConfidence,
+    keyContact,
+    associatedContacts: linkedContacts,
+    stageHistory: [{ stage: stage as 'Prospect', enteredAt: stageEnteredAt }],
     activities: [],
     createdAt: row.created_at,
   };
@@ -75,32 +98,13 @@ export async function GET() {
 
     const { data: deals, error: dealsErr } = await supabase
       .from('deals')
-      .select('*')
+      .select('*, deal_contacts(contact_id, role, contacts(id, name))')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
     if (dealsErr) return NextResponse.json({ error: dealsErr.message }, { status: 500 });
 
-    const { data: contacts } = await supabase.from('contacts').select('id, name').eq('user_id', user.id);
-    type ContactInfo = { id: string; name: string };
-    const contactMap = new Map<string, ContactInfo>(
-      (contacts || []).map((c: { id: string; name: string | null }) => [c.id, { id: c.id, name: c.name || 'Unknown' }])
-    );
-
-    const list = (deals || []).map((d: {
-      id: string;
-      address: string | null;
-      city: string | null;
-      state: string | null;
-      asking_price: number | null;
-      rehab_estimate: number | null;
-      arv: number | null;
-      analysis_data: Record<string, unknown> | null;
-      created_at: string;
-      updated_at: string;
-      property_type: string | null;
-      status: string | null;
-    }) => toCRMDeal(d, contactMap.get(d.id) ?? undefined));
+    const list = (deals || []).map((d: DealRow) => toCRMDeal(d));
     return NextResponse.json(list);
   } catch (e) {
     console.error('[CRM Deals]', e);

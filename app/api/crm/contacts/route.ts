@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const STATUS_MAP = ['Active', 'Inactive', 'Hot Lead'] as const;
 const LEAD_SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Network Event', 'Other'] as const;
 
-function toCRMContact(row: {
+interface ContactRow {
   id: string;
   name: string | null;
   company: string | null;
@@ -16,12 +16,21 @@ function toCRMContact(row: {
   relationship_score: number | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
-}) {
+  deal_contacts?: { deal_id: string; deals: { asking_price: number | null } | null }[];
+}
+
+function toCRMContact(row: ContactRow) {
   const parts = (row.name || ' ').trim().split(/\s+/);
   const firstName = parts[0] || '';
   const lastName = parts.slice(1).join(' ') || '';
   const meta = row.metadata || {};
   const tags = (meta.tags as string[]) || (row.type ? [row.type] : []);
+
+  // Compute real dealCount and totalDealVolume from deal_contacts join
+  const linkedDeals = row.deal_contacts || [];
+  const dealCount = linkedDeals.length;
+  const totalDealVolume = linkedDeals.reduce((sum, dc) => sum + (dc.deals?.asking_price ?? 0), 0);
+
   return {
     id: row.id,
     firstName,
@@ -35,8 +44,8 @@ function toCRMContact(row: {
     leadSource: (LEAD_SOURCES.includes((meta.lead_source as typeof LEAD_SOURCES[number]) || 'Other') ? meta.lead_source : 'Other') as typeof LEAD_SOURCES[number],
     leadScore: row.relationship_score ?? 50,
     status: (STATUS_MAP.includes((meta.status as typeof STATUS_MAP[number]) || 'Active') ? meta.status : 'Active') as typeof STATUS_MAP[number],
-    totalDealVolume: Number(meta.total_deal_volume) || 0,
-    dealCount: Number(meta.deal_count) || 0,
+    totalDealVolume,
+    dealCount,
     lastActivity: (meta.last_activity as string) || row.created_at,
     createdAt: row.created_at,
   };
@@ -50,7 +59,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('contacts')
-      .select('*')
+      .select('*, deal_contacts(deal_id, deals(asking_price))')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 

@@ -7,6 +7,7 @@ import { DealForm, type DealFormData } from '@/components/deals/DealForm';
 import { DealResults, type AnalysisResults, type AmortizationRow } from '@/components/deals/DealResults';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useSubscription } from '@/hooks/useSubscription';
 
 import type { ScenarioData } from '@/components/deals/ScenarioCards';
 import type { ProjectionYearData } from '@/components/deals/ProjectionChart';
@@ -306,7 +307,7 @@ function calcAIScore(metrics: {
 /*  Full analysis runner                                               */
 /* ------------------------------------------------------------------ */
 
-function runAnalysis(data: DealFormData): AnalysisResults {
+function runAnalysis(data: DealFormData & { _marketBenchmarks?: { capRate: number; cashOnCash: number; grm: number; dscr: number } }): AnalysisResults {
   /* Derived values */
   const downPaymentAmt = data.askingPrice * (data.downPaymentPct / 100);
   const loanAmount = data.askingPrice - downPaymentAmt;
@@ -425,8 +426,8 @@ function runAnalysis(data: DealFormData): AnalysisResults {
     ltv,
   });
 
-  /* Market averages (placeholder benchmarks) */
-  const marketAvg = {
+  /* Market averages — use real benchmarks if passed, otherwise defaults */
+  const marketAvg = data._marketBenchmarks || {
     capRate: 6.5,
     cashOnCash: 8.0,
     grm: 12.0,
@@ -568,8 +569,9 @@ export default function DealsPage() {
   const [currentResults, setCurrentResults] = useState<AnalysisResults | null>(null);
   const [currentDealId, setCurrentDealId] = useState<string | null>(null);
   const [savedDeals, setSavedDeals] = useState<SavedDeal[]>([]);
+  const { getLimit } = useSubscription();
   const usageCount = savedDeals.length;
-  const usageLimit = 25; /* placeholder -- would come from subscription */
+  const usageLimit = getLimit('dealAnalysisLimit');
 
   /* ---- Fetch saved deals from Supabase on mount ----------------- */
   const fetchSavedDeals = useCallback(async () => {
@@ -609,10 +611,40 @@ export default function DealsPage() {
       setCurrentDealData(data);
       setCurrentResults(null);
 
-      /* Simulate a brief processing delay for UX */
-      await new Promise((r) => setTimeout(r, 1200));
+      /* Fetch real market benchmarks for the property's location */
+      let marketBenchmarks: { capRate: number; cashOnCash: number; grm: number; dscr: number } | undefined;
+      try {
+        // Extract zip or city from address (last part before state/zip pattern)
+        const addressParts = data.propertyAddress.split(',').map((s) => s.trim());
+        const lastPart = addressParts[addressParts.length - 1] || '';
+        const zipMatch = lastPart.match(/(\d{5})/);
+        const cityPart = addressParts.length >= 2 ? addressParts[addressParts.length - 2] : '';
 
-      const results = runAnalysis(data);
+        const params = new URLSearchParams();
+        if (zipMatch) params.set('zip', zipMatch[1]);
+        else if (cityPart) params.set('city', cityPart);
+
+        if (params.toString()) {
+          const marketRes = await fetch(`/api/market/live?${params}`);
+          if (marketRes.ok) {
+            const { market } = await marketRes.json();
+            if (market?.investment) {
+              marketBenchmarks = {
+                capRate: market.investment.estimated_cap_rate ?? 6.5,
+                cashOnCash: market.investment.estimated_cap_rate ? market.investment.estimated_cap_rate * 1.2 : 8.0,
+                grm: market.investment.gross_rent_multiplier ?? 12.0,
+                dscr: 1.25,
+              };
+            }
+          }
+        }
+      } catch { /* fall back to defaults */ }
+
+      const analysisInput = marketBenchmarks
+        ? { ...data, _marketBenchmarks: marketBenchmarks } as DealFormData & { _marketBenchmarks: typeof marketBenchmarks }
+        : data;
+
+      const results = runAnalysis(analysisInput as DealFormData);
       setCurrentResults(results);
       setIsLoading(false);
 

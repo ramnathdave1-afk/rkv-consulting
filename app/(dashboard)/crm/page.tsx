@@ -26,11 +26,6 @@ import { Button } from '@/components/ui/Button';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import { Input, Textarea, Select } from '@/components/ui/Input';
 import {
-  getCRMContacts,
-  getCRMDeals,
-  getCRMActivities,
-  getContactById,
-  getDealById,
   type CRMContact,
   type CRMDeal,
   type CRMActivity,
@@ -127,27 +122,25 @@ export default function CRMPage() {
       if (contactsRes.ok) {
         const data = await contactsRes.json();
         setContacts(Array.isArray(data) ? data : []);
-      } else setContacts(getCRMContacts());
+      } else setContacts([]);
       if (dealsRes.ok) {
         const data = await dealsRes.json();
-        const d = Array.isArray(data) ? data : getCRMDeals();
+        const d = Array.isArray(data) ? data : [];
         setDeals(d);
         setStoreDeals(d);
       } else {
-        const d = getCRMDeals();
-        setDeals(d);
-        setStoreDeals(d);
+        setDeals([]);
+        setStoreDeals([]);
       }
       if (activitiesRes.ok) {
         const data = await activitiesRes.json();
-        setActivities(Array.isArray(data) ? data : getCRMActivities());
-      } else setActivities(getCRMActivities());
+        setActivities(Array.isArray(data) ? data : []);
+      } else setActivities([]);
     } catch {
-      setContacts(getCRMContacts());
-      const d = getCRMDeals();
-      setDeals(d);
-      setStoreDeals(d);
-      setActivities(getCRMActivities());
+      setContacts([]);
+      setDeals([]);
+      setStoreDeals([]);
+      setActivities([]);
     }
   }, [setStoreDeals]);
 
@@ -155,7 +148,7 @@ export default function CRMPage() {
     refetchCRM();
   }, [refetchCRM]);
 
-  const selectedContact = selectedContactId ? (contacts.find((c) => c.id === selectedContactId) ?? getContactById(selectedContactId)) : null;
+  const selectedContact = selectedContactId ? (contacts.find((c) => c.id === selectedContactId) ?? null) : null;
 
   return (
     <div className="space-y-6">
@@ -209,6 +202,7 @@ export default function CRMPage() {
             <ContactDetail
               contact={selectedContact}
               onClose={() => setSelectedContact(null)}
+              onActivityLogged={refetchCRM}
               reduced={reduced}
               entranceVariant={entranceVariant}
               transition={transition}
@@ -267,7 +261,7 @@ export default function CRMPage() {
 
       {/* Deal Detail Drawer */}
       <DealDrawer
-        deal={dealDrawerDealId ? deals.find((d) => d.id === dealDrawerDealId) ?? getDealById(dealDrawerDealId) : null}
+        deal={dealDrawerDealId ? deals.find((d) => d.id === dealDrawerDealId) ?? null : null}
         open={dealDrawerDealId != null}
         onClose={() => setDealDrawerDealId(null)}
         reduced={reduced}
@@ -309,6 +303,13 @@ function ContactsList({
         </Button>
       </div>
       <div className="overflow-y-auto flex-1 divide-y divide-[#1e1e1e]">
+        {contacts.length === 0 && (
+          <div className="p-8 text-center">
+            <Users className="w-8 h-8 text-muted/50 mx-auto mb-3" />
+            <p className="text-[13px] text-muted">No contacts yet</p>
+            <p className="text-[11px] text-muted/60 mt-1">Add your first contact to get started</p>
+          </div>
+        )}
         {contacts.map((c, i) => (
           <motion.button
             key={c.id}
@@ -357,16 +358,43 @@ function ContactsList({
 function ContactDetail({
   contact,
   onClose,
+  onActivityLogged,
   reduced: _reduced,
   entranceVariant,
   transition,
 }: {
   contact: CRMContact | null | undefined;
   onClose: () => void;
+  onActivityLogged?: () => void;
   reduced: boolean;
   entranceVariant: VariantSet;
   transition: object;
 }) {
+  const [activityInput, setActivityInput] = useState<{ type: 'call' | 'note' | 'email' | 'meeting'; description: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function handleLogActivity() {
+    if (!activityInput || !activityInput.description.trim() || !contact) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/crm/activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: activityInput.type,
+          description: activityInput.description.trim(),
+          contactId: contact.id,
+        }),
+      });
+      if (res.ok) {
+        setActivityInput(null);
+        onActivityLogged?.();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (!contact) {
     return (
       <motion.div
@@ -442,24 +470,41 @@ function ContactDetail({
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
-          <Button size="sm" variant="outline" className="text-[12px]">
+          <Button size="sm" variant="outline" className="text-[12px]" onClick={() => setActivityInput({ type: 'call', description: '' })}>
             <PhoneCall className="w-3.5 h-3.5 mr-1" /> Log Call
           </Button>
-          <Button size="sm" variant="outline" className="text-[12px]">
+          <Button size="sm" variant="outline" className="text-[12px]" onClick={() => window.open(`mailto:${contact.email}`)}>
             <Send className="w-3.5 h-3.5 mr-1" /> Send Email
           </Button>
-          <Button size="sm" variant="outline" className="text-[12px]">
+          <Button size="sm" variant="outline" className="text-[12px]" onClick={() => setActivityInput({ type: 'meeting', description: '' })}>
             <CalendarPlus className="w-3.5 h-3.5 mr-1" /> Schedule Meeting
           </Button>
-          <Button size="sm" variant="outline" className="text-[12px]">
+          <Button size="sm" variant="outline" className="text-[12px]" onClick={() => setActivityInput({ type: 'note', description: '' })}>
             <StickyNote className="w-3.5 h-3.5 mr-1" /> Add Note
           </Button>
         </div>
+        {activityInput && (
+          <div className="mt-3 flex gap-2">
+            <input
+              autoFocus
+              placeholder={activityInput.type === 'call' ? 'Call summary...' : activityInput.type === 'meeting' ? 'Meeting details...' : 'Note...'}
+              value={activityInput.description}
+              onChange={(e) => setActivityInput({ ...activityInput, description: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogActivity()}
+              className="flex-1 bg-[#0a0a0a] border border-[#1e1e1e] rounded px-3 py-1.5 text-[12px] text-white placeholder:text-muted/50 focus:outline-none focus:border-gold/50"
+            />
+            <Button size="sm" onClick={handleLogActivity} disabled={saving || !activityInput.description.trim()}>
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setActivityInput(null)} disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
       <div className="p-6 flex-1 overflow-y-auto">
         <h3 className="label text-gold text-[12px] mb-3">Activity</h3>
         <p className="text-[13px] text-muted">Last activity: {formatDate(contact.lastActivity)}</p>
-        <p className="text-[13px] text-muted mt-4">No activity timeline entries yet.</p>
       </div>
     </motion.div>
   );
@@ -907,6 +952,13 @@ function ActivityFeedView({
         ))}
       </div>
       <div className="divide-y divide-[#1e1e1e]">
+        {filtered.length === 0 && (
+          <div className="p-8 text-center">
+            <Activity className="w-8 h-8 text-muted/50 mx-auto mb-3" />
+            <p className="text-[13px] text-muted">No activity yet</p>
+            <p className="text-[11px] text-muted/60 mt-1">Log calls, emails, and notes to build your activity timeline</p>
+          </div>
+        )}
         {filtered.map((a, i) => {
           const Icon = (ACTIVITY_ICONS[a.type] ?? FileText) as React.ComponentType<{ className?: string }>;
           return (

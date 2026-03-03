@@ -382,14 +382,21 @@ export default function TenantDetailPage() {
   // Screening data
   const screening = tenant.screening_data;
 
-  // Mock extended tenant data
+  // Extended tenant data from DB (columns added in migration 007)
+  const tenantAny = tenant as unknown as Record<string, unknown>;
+  const emergencyContact = tenantAny.emergency_contact as { name?: string; phone?: string; relation?: string } | null;
+  const vehicleInfo = tenantAny.vehicle_info as { make?: string; model?: string; plate?: string } | null;
   const extendedData = {
-    emergencyContact: { name: 'Sarah Johnson', phone: '(555) 123-4567', relation: 'Sister' },
-    vehicle: { make: 'Toyota', model: 'Camry', plate: 'ABC-1234' },
+    emergencyContact: {
+      name: emergencyContact?.name || 'Not provided',
+      phone: emergencyContact?.phone || 'Not provided',
+      relation: emergencyContact?.relation || 'Not provided',
+    },
+    vehicle: vehicleInfo ? { make: vehicleInfo.make || '', model: vehicleInfo.model || '', plate: vehicleInfo.plate || '' } : null,
     rentersInsurance: true,
-    lateFeeAmount: 50,
-    graceDays: 5,
-    paymentMethod: 'Bank Transfer (ACH)',
+    lateFeeAmount: Number(tenantAny.late_fee_amount) || 50,
+    graceDays: Number(tenantAny.grace_days) || 5,
+    paymentMethod: (tenantAny.payment_method as string) || 'Bank Transfer',
     depositHeld: tenant.security_deposit || 0,
   };
 
