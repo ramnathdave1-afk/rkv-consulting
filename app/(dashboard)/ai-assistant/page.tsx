@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/lib/motion';
 import {
   BarChart3,
   DollarSign,
@@ -27,7 +29,7 @@ import { cn } from '@/lib/utils';
 import { FeatureGate } from '@/components/paywall/FeatureGate';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAnimatedText } from '@/components/ui/animated-text';
-import { AIInputWithSuggestions } from '@/components/ui/ai-input-with-suggestions';
+import { AIChatRevealPanel } from '@/components/ai/AIChatRevealPanel';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -99,7 +101,7 @@ const QUICK_COMMANDS = [
 /*  AI Input suggestion actions (themed for RKV)                       */
 /* ------------------------------------------------------------------ */
 
-const AI_SUGGESTION_ACTIONS = [
+const _AI_SUGGESTION_ACTIONS = [
   {
     text: 'Analyze Portfolio',
     icon: Building2,
@@ -370,6 +372,7 @@ function formatInline(text: string): React.ReactNode[] {
 /*  Message Bubble (inline)                                            */
 /* ------------------------------------------------------------------ */
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for reference, panel uses MessageBubble */
 function ChatBubble({
   role,
   content,
@@ -416,7 +419,7 @@ function ChatBubble({
           </div>
           <div className="relative">
             <div
-              className="px-4 py-3 text-sm leading-relaxed font-body text-white rounded sharp-lg"
+              className="px-4 py-3 text-sm leading-relaxed font-body text-white rounded sharp-lg border-r-2 border-r-transparent group-hover:border-r-[#00B4D8] transition-colors duration-150"
               style={{
                 background: 'rgba(0,180,216,0.12)',
                 border: '1px solid rgba(0,180,216,0.35)',
@@ -444,7 +447,7 @@ function ChatBubble({
     );
   }
 
-  // ATLAS message: high-tech monospace, terminal-style left accent
+  // Assistant message: monospace, terminal-style left accent
   return (
     <div className="group w-full">
       <div className="flex items-center gap-2 mb-1.5 px-1">
@@ -452,13 +455,13 @@ function ChatBubble({
           A
         </span>
         <span className="font-mono text-[10px] text-[#48CAE4] uppercase tracking-[0.2em]">
-          ATLAS
+          AI
         </span>
         <span className="font-mono text-[10px] text-white/30 tabular-nums">{formattedTime}</span>
       </div>
       <div className="relative">
         <div
-          className="atlas-bubble font-mono text-[13px] leading-[1.7] tracking-tight text-white/95 rounded-sm border border-white/[0.06] bg-[#08080C] pl-5 pr-4 py-3.5 border-l-2 border-l-[#00B4D8]/70"
+          className="atlas-bubble font-mono text-[13px] leading-[1.7] tracking-tight text-white/95 rounded-sm border border-white/[0.06] bg-[#08080C] pl-5 pr-4 py-3.5 border-l-2 border-l-[#00B4D8]/70 group-hover:border-l-[#00B4D8] transition-colors duration-150"
         >
           <button
             type="button"
@@ -484,6 +487,7 @@ function ChatBubble({
 /*  Streaming Response                                                 */
 /* ------------------------------------------------------------------ */
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for reference, panel uses StreamingResponse */
 function StreamingBubble({ content, isStreaming }: { content: string; isStreaming: boolean }) {
   const animatedContent = useAnimatedText(content, ' ');
 
@@ -494,7 +498,7 @@ function StreamingBubble({ content, isStreaming }: { content: string; isStreamin
           A
         </span>
         <span className="font-mono text-[10px] text-[#48CAE4] uppercase tracking-[0.2em]">
-          ATLAS
+          AI
         </span>
         {isStreaming && !content && (
           <span className="font-mono text-[10px] text-white/40 tracking-wider">PROCESSING</span>
@@ -697,6 +701,11 @@ export default function AIAssistantPage() {
   const [usageCount, setUsageCount] = useState(0);
   const [usageLimit, setUsageLimit] = useState(200);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [confidence, setConfidence] = useState(94);
+  const [confidenceFlash, setConfidenceFlash] = useState(false);
+  const [welcomeText, setWelcomeText] = useState('');
+  const [_welcomeDone, setWelcomeDone] = useState(false);
+  const reduced = useReducedMotion();
   const [portfolioContext, setPortfolioContext] = useState<PortfolioContext>({
     properties: [],
     tenants: [],
@@ -710,7 +719,7 @@ export default function AIAssistantPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isEmpty = messages.length === 0 && !isStreaming;
+  const _isEmpty = messages.length === 0 && !isStreaming;
 
   /* ---- Plan-based usage label ---- */
   const usageLabelMap: Record<string, string> = {
@@ -829,6 +838,16 @@ export default function AIAssistantPage() {
     fetchInitialData();
   }, [fetchInitialData]);
 
+  useEffect(() => {
+    const WELCOME_MSG = 'Institutional-grade real estate analysis. Ask for market analysis, deal underwriting, or opportunity scan.';
+    if (welcomeText.length >= WELCOME_MSG.length) {
+      setWelcomeDone(true);
+      return;
+    }
+    const t = setTimeout(() => setWelcomeText((prev) => WELCOME_MSG.slice(0, prev.length + 1)), reduced ? 0 : 20);
+    return () => clearTimeout(t);
+  }, [welcomeText, reduced]);
+
   /* ---- Scroll to bottom ---- */
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -855,6 +874,8 @@ export default function AIAssistantPage() {
     setMessages([]);
     setStreamingContent('');
     setIsStreaming(false);
+    setWelcomeText('');
+    setWelcomeDone(false);
   }
 
   async function handleDeleteConversation(id: string) {
@@ -1083,6 +1104,9 @@ GUIDELINES:
       }
 
       setUsageCount((prev) => prev + 1);
+      setConfidence((c) => Math.min(99.99, c + 0.01 + Math.random() * 0.02));
+      setConfidenceFlash(true);
+      setTimeout(() => setConfidenceFlash(false), 300);
 
       if (userId) {
         const now = new Date();
@@ -1162,9 +1186,14 @@ GUIDELINES:
 
       <div className="-m-8 flex flex-col bg-[#050508]" style={{ height: 'calc(100vh - 4rem)', backgroundImage: 'linear-gradient(rgba(0,180,216,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,0.02) 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
         {/* ============================================================ */}
-        {/*  TOP BAR - HEADER                                            */}
+        {/*  TOP BAR - HEADER (slide down 300ms)                          */}
         {/* ============================================================ */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-white/[0.08] bg-[#111118]">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="flex-shrink-0 flex items-center justify-between px-6 py-2.5 border-b border-white/[0.08] bg-[#111118]"
+        >
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
@@ -1182,9 +1211,8 @@ GUIDELINES:
 
             <div className="flex items-center gap-2">
               <span className="font-body font-semibold text-[13px] text-white uppercase tracking-wider">
-                ATLAS
+                AI Assistant
               </span>
-              <span className="font-mono text-[10px] text-white/40">v7.4</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1205,7 +1233,14 @@ GUIDELINES:
             </p>
             <div className="flex items-center gap-2 px-3 py-1 rounded sharp border border-white/[0.08] bg-[#12121A]">
               <span className="font-body text-[10px] text-white/40 uppercase tracking-wider">Confidence</span>
-              <span className="font-mono text-[10px] text-[#00B4D8] tabular-nums">94%</span>
+              <span
+                className={cn(
+                  'font-mono text-[10px] tabular-nums transition-colors duration-300',
+                  confidenceFlash ? 'text-[#48CAE4]' : 'text-[#00B4D8]'
+                )}
+              >
+                {confidence.toFixed(2)}%
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-16 h-1.5 bg-white/10 rounded overflow-hidden">
@@ -1219,7 +1254,7 @@ GUIDELINES:
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ============================================================ */}
         {/*  MAIN 3-PANEL LAYOUT                                         */}
@@ -1339,95 +1374,41 @@ GUIDELINES:
           </div>
 
           {/* ========================================================== */}
-          {/*  CENTER PANEL - CHAT INTERFACE                               */}
+          {/*  CENTER PANEL - CHAT (AI. Chat. Experience. + canvas)      */}
           {/* ========================================================== */}
           <div className="flex-1 flex flex-col min-w-0 bg-[#080808]">
-
-            {/* Messages area — high-tech viewport */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 bg-[#06060A]/50">
-              {isEmpty ? (
-                /* ---- Empty state ---- */
-                <div className="flex flex-col items-center justify-center h-full max-w-xl mx-auto text-center">
-                  <div className="w-14 h-14 rounded-sm flex items-center justify-center bg-[#00B4D8]/10 border border-[#00B4D8]/40 text-[#48CAE4] font-mono text-2xl font-bold tracking-widest mb-6">
-                    A
-                  </div>
-
-                  <h2 className="font-mono font-semibold text-sm text-[#48CAE4] mb-2 uppercase tracking-[0.25em]">
-                    ATLAS
-                  </h2>
-                  <p className="font-mono text-[12px] text-white/50 mb-8 leading-relaxed max-w-sm tracking-tight">
-                    Institutional-grade real estate analysis. Ask for market analysis, deal underwriting, or opportunity scan.
-                  </p>
-
-                  {/* Quick actions: 4 outlined pills (hide after first message is handled by isEmpty) */}
-                  <div className="flex flex-wrap justify-center gap-2 w-full">
-                    {QUICK_ACTIONS.map((action, idx) => {
-                      const Icon = action.icon;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSendMessage(action.prompt)}
-                          className={cn(
-                            'flex items-center gap-2 px-4 py-2 rounded-sm border border-white/[0.1]',
-                            'text-[12px] font-mono text-white/70 hover:text-[#48CAE4] hover:border-[#00B4D8]/40 hover:bg-[#00B4D8]/5',
-                            'transition-colors duration-150 tracking-tight',
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5 text-[#00B4D8]" strokeWidth={1.5} />
-                          {action.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+            <AIChatRevealPanel
+              messages={messages}
+              streamingContent={streamingContent}
+              isStreaming={isStreaming}
+              onSendMessage={handleSendMessage}
+              onNewConversation={handleNewConversation}
+              userInitials={userInitials}
+              emptyState={
+                <div className="flex flex-wrap justify-center gap-2 w-full">
+                  {QUICK_ACTIONS.map((action, idx) => {
+                    const Icon = action.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSendMessage(action.prompt)}
+                        disabled={isStreaming}
+                        className={cn(
+                          'flex items-center gap-2 px-4 py-2 rounded-sm border border-white/[0.1]',
+                          'text-[12px] font-mono text-white/70 hover:text-[#48CAE4] hover:border-[#00B4D8]/40 hover:bg-[#00B4D8]/5',
+                          'transition-colors duration-150 tracking-tight',
+                          isStreaming && 'opacity-50 cursor-not-allowed',
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5 text-[#00B4D8]" strokeWidth={1.5} />
+                        {action.label}
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                /* ---- Message list ---- */
-                <div className="space-y-6 max-w-3xl mx-auto">
-                  {messages.map((msg) => (
-                    <ChatBubble
-                      key={msg.id}
-                      role={msg.role}
-                      content={msg.content}
-                      timestamp={msg.timestamp}
-                      userInitials={userInitials}
-                    />
-                  ))}
-
-                  {isStreaming && (
-                    <StreamingBubble
-                      content={streamingContent}
-                      isStreaming={isStreaming}
-                    />
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
-
-            {/* ---- Input area ---- */}
-            <div className="flex-shrink-0 border-t border-white/[0.06] bg-[#08080C] px-2 sm:px-6 py-0">
-              <div className="max-w-3xl mx-auto">
-                {isStreaming ? (
-                  <div className="flex items-center justify-center gap-2 py-5">
-                    <span className="font-mono text-sm text-white/50">Processing...</span>
-                  </div>
-                ) : (
-                  <AIInputWithSuggestions
-                    placeholder="Ask about your portfolio, market data, deals..."
-                    actions={AI_SUGGESTION_ACTIONS}
-                    onSubmit={(text) => handleSendMessage(text)}
-                    minHeight={48}
-                    maxHeight={160}
-                  />
-                )}
-
-                <p className="font-mono text-[10px] text-white/30 text-center pb-2 tracking-wider">
-                  ATLAS v7.4  //  ADAPTIVE INTELLIGENCE  //  EVERY QUERY IMPROVES THE MODEL
-                </p>
-              </div>
-            </div>
+              }
+            />
           </div>
 
           {/* ========================================================== */}

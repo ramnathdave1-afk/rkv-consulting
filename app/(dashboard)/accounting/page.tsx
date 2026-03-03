@@ -665,10 +665,17 @@ function AccountingContent() {
   const ytdExpenses = ytdTransactions.filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0)
   const ytdProfit = ytdIncome - ytdExpenses
 
-  // Prior year comparison (mock: 90% of current)
-  const priorYearIncome = ytdIncome * 0.88
-  const priorYearExpenses = ytdExpenses * 0.92
+  // Prior year comparison (from transactions)
+  const priorYearStart = new Date(now.getFullYear() - 1, 0, 1)
+  const priorYearEnd = new Date(now.getFullYear() - 1, 11, 31)
+  const priorYearTransactions = transactions.filter((tx) => {
+    const txDate = new Date(tx.date)
+    return txDate >= priorYearStart && txDate <= priorYearEnd
+  })
+  const priorYearIncome = priorYearTransactions.filter((tx) => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0)
+  const priorYearExpenses = priorYearTransactions.filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0)
   const priorYearProfit = priorYearIncome - priorYearExpenses
+  const hasPriorYearData = priorYearIncome > 0 || priorYearExpenses > 0
 
   /* ---------------------------------------------------------------- */
   /*  Chart data                                                       */
@@ -1149,48 +1156,56 @@ function AccountingContent() {
                 <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Revenue</p>
                   <p className="text-xl font-bold text-green font-mono">{formatCurrency(ytdIncome)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="w-3 h-3 text-green" />
-                    <span className="text-xs text-green">
-                      +{((ytdIncome / priorYearIncome - 1) * 100).toFixed(1)}% vs prior year
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearIncome)}</span></p>
+                  {hasPriorYearData && priorYearIncome !== 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        {ytdIncome >= priorYearIncome ? <TrendingUp className="w-3 h-3 text-green" /> : <TrendingDown className="w-3 h-3 text-red" />}
+                        <span className={cn('text-xs', ytdIncome >= priorYearIncome ? 'text-green' : 'text-red')}>
+                          {((ytdIncome / priorYearIncome - 1) * 100).toFixed(1)}% vs prior year
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearIncome)}</span></p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted mt-1">No prior year data</p>
+                  )}
                 </div>
                 <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Expenses</p>
                   <p className="text-xl font-bold text-red font-mono">{formatCurrency(ytdExpenses)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <TrendingUp className="w-3 h-3 text-red" />
-                    <span className="text-xs text-red">
-                      +{((ytdExpenses / priorYearExpenses - 1) * 100).toFixed(1)}% vs prior year
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearExpenses)}</span></p>
+                  {hasPriorYearData && priorYearExpenses !== 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        {ytdExpenses >= priorYearExpenses ? <TrendingUp className="w-3 h-3 text-red" /> : <TrendingDown className="w-3 h-3 text-green" />}
+                        <span className={cn('text-xs', ytdExpenses >= priorYearExpenses ? 'text-red' : 'text-green')}>
+                          {((ytdExpenses / priorYearExpenses - 1) * 100).toFixed(1)}% vs prior year
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearExpenses)}</span></p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted mt-1">No prior year data</p>
+                  )}
                 </div>
                 <div className="bg-deep border border-border rounded-lg p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                   <p className="label mb-2">Net Income</p>
                   <p className={cn('text-xl font-bold font-mono', ytdProfit >= 0 ? 'text-gold' : 'text-red')}>
                     {formatCurrency(ytdProfit)}
                   </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    {ytdProfit >= priorYearProfit ? (
-                      <>
-                        <TrendingUp className="w-3 h-3 text-green" />
-                        <span className="text-xs text-green">
-                          +{((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <TrendingDown className="w-3 h-3 text-red" />
-                        <span className="text-xs text-red">
-                          {((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearProfit)}</span></p>
+                  {hasPriorYearData && priorYearProfit !== 0 ? (
+                    <>
+                      <div className="flex items-center gap-1 mt-1">
+                        {ytdProfit >= priorYearProfit ? (
+                          <><TrendingUp className="w-3 h-3 text-green" /><span className="text-xs text-green">+{((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year</span></>
+                        ) : (
+                          <><TrendingDown className="w-3 h-3 text-red" /><span className="text-xs text-red">{((ytdProfit / priorYearProfit - 1) * 100).toFixed(1)}% vs prior year</span></>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">Prior: <span className="font-mono">{formatCurrency(priorYearProfit)}</span></p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted mt-1">No prior year data</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1798,7 +1813,7 @@ function AccountingContent() {
             {/* Report Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {REPORT_CARDS.map((report) => {
-                const Icon = report.icon
+                const Icon = report.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>
                 return (
                   <div key={report.id} className="bg-card border border-border rounded-xl p-6 hover:border-gold/20 hover:shadow-glow-sm transition-all group rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                     <div className="flex items-start gap-4">

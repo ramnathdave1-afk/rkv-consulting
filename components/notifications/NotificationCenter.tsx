@@ -236,7 +236,7 @@ export default function NotificationCenter() {
               notifications.map((notif) => {
                 const config =
                   NOTIFICATION_TYPES[notif.type] || NOTIFICATION_TYPES.system;
-                const Icon = config.icon;
+                const Icon = config.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
                 return (
                   <button

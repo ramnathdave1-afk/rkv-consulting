@@ -73,7 +73,7 @@ const filterTabs: { key: FilterKey; label: string }[] = [
 function AlertCard({ alert }: { alert: Alert }) {
   const type = typeConfig[alert.type];
   const impact = impactConfig[alert.impact];
-  const Icon = type.icon;
+  const Icon = type.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
   const relativeTime = formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true });
 

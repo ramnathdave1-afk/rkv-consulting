@@ -333,7 +333,7 @@ function AutomationCard({
   onToggle: () => void;
   onExpand: () => void;
 }) {
-  const Icon = automation.icon;
+  const Icon = automation.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
   return (
     <div

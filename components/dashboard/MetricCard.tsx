@@ -1,6 +1,7 @@
 'use client';
 
 import { type LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import SparklineChart from './SparklineChart';
 
@@ -15,6 +16,10 @@ interface MetricCardProps {
   prefix?: string;
   suffix?: string;
   loading?: boolean;
+  /** Animate progress bar from 0 to target (1.2s, 500ms delay) */
+  animateProgress?: boolean;
+  /** Brief accent color flash (live data feel) */
+  flash?: boolean;
 }
 
 function formatValue(value: string | number): string {
@@ -39,9 +44,12 @@ export default function MetricCard({
   prefix = '',
   suffix = '',
   loading = false,
+  animateProgress = false,
+  flash = false,
 }: MetricCardProps) {
   const isPositive = change >= 0;
   const sparklineColor = trend === 'down' ? '#DC2626' : '#c9a84c';
+  const progressPct = Math.min(100, Math.abs(change) * 5);
 
   if (loading) {
     return (
@@ -80,35 +88,60 @@ export default function MetricCard({
         )}
       </div>
 
-      {/* Large value */}
+      {/* Large value (flash to accent 300ms then fade back) */}
       <div className="relative">
-        <span className="font-mono text-[28px] font-semibold text-white leading-none tracking-tight inline-block">
+        <span
+          className={cn(
+            'font-mono text-[28px] font-semibold leading-none tracking-tight inline-block transition-colors duration-300',
+            flash ? 'text-[#00B4D8]' : 'text-white'
+          )}
+        >
           {prefix}{formatValue(value)}{suffix}
         </span>
       </div>
 
-      {/* Bottom: change indicator */}
+      {/* Bottom: change indicator (— when no prior period) */}
       <div className="relative mt-3 flex items-center gap-2">
-        <span
-          className={cn(
-            'inline-flex items-center gap-1 font-mono text-[11px] font-medium',
-            isPositive ? 'text-green' : 'text-red',
-          )}
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={cn(!isPositive && 'rotate-180')}>
-            <path d="M5 1.5L8.5 6H1.5L5 1.5Z" fill="currentColor" />
-          </svg>
-          {isPositive ? '+' : ''}{change.toFixed(1)}%
-        </span>
-        <span className="font-mono text-[10px] text-muted-deep">{changeLabel}</span>
+        {change === 0 && changeLabel.toLowerCase().includes('no prior') ? (
+          <span className="font-mono text-[11px] text-muted-deep">— {changeLabel}</span>
+        ) : (
+          <>
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 font-mono text-[11px] font-medium',
+                isPositive ? 'text-green' : 'text-red',
+              )}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={cn(!isPositive && 'rotate-180')}>
+                <path d="M5 1.5L8.5 6H1.5L5 1.5Z" fill="currentColor" />
+              </svg>
+              {isPositive ? '+' : ''}{change.toFixed(1)}%
+            </span>
+            <span className="font-mono text-[10px] text-muted-deep">{changeLabel}</span>
+          </>
+        )}
       </div>
 
-      {/* Thin progress bar at bottom */}
+      {/* Thin progress bar at bottom (animate 0→target 1.2s, 500ms delay when animateProgress) */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-border/30">
-        <div
-          className="h-full bg-gold/30 transition-all duration-1000"
-          style={{ width: `${Math.min(100, Math.abs(change) * 5)}%` }}
-        />
+        {animateProgress ? (
+          <motion.div
+            className="h-full bg-gold/30"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{
+              type: 'tween',
+              duration: 1.2,
+              delay: 0.5,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+          />
+        ) : (
+          <div
+            className="h-full bg-gold/30 transition-all duration-1000"
+            style={{ width: `${progressPct}%` }}
+          />
+        )}
       </div>
     </div>
   );

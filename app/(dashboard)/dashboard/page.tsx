@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useReducedMotion, variantEntranceFromBelow, variantReduced, transitionEntrance, transitionReduced } from '@/lib/motion';
 import {
   DollarSign,
   TrendingUp,
@@ -17,6 +19,7 @@ import {
   ArrowRight,
   CalendarDays,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
@@ -28,6 +31,7 @@ const PortfolioChart = dynamic(() => import('@/components/dashboard/PortfolioCha
 import MetricCard from '@/components/dashboard/MetricCard';
 import AlertBanner, { type Alert } from '@/components/dashboard/AlertBanner';
 import ActivityFeed, { type Activity } from '@/components/dashboard/ActivityFeed';
+import LiveMarketPulse from '@/components/market/LiveMarketPulse';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
@@ -37,6 +41,7 @@ import type {
   Tenant,
   RentPayment,
   MaintenanceRequest,
+  Transaction,
 } from '@/types';
 
 /* ------------------------------------------------------------------ */
@@ -91,9 +96,16 @@ function getDealStageLabel(stage: string): string {
 export default function DashboardPage() {
   const supabase = createClient();
   const router = useRouter();
+  const reduced = useReducedMotion();
+  const [tickCardIndex, setTickCardIndex] = useState<number | null>(null);
 
-  // Loading state
+  const entranceVariant = reduced ? variantReduced : variantEntranceFromBelow;
+  const transition = reduced ? transitionReduced : { ...transitionEntrance, duration: 0.4 };
+  const staggerDelay = reduced ? 0 : 0.06;
+
+  // Loading and error state
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   // Data state
   const [properties, setProperties] = useState<Property[]>([]);
@@ -103,6 +115,8 @@ export default function DashboardPage() {
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [portfolioSnapshots, setPortfolioSnapshots] = useState<{ portfolio_value: number; equity: number; monthly_cash_flow: number; net_roi: number | null }[]>([]);
 
   // AI brief state
   const [aiBrief, setAiBrief] = useState<string>('');
@@ -113,13 +127,16 @@ export default function DashboardPage() {
   /* ---------------------------------------------------------------- */
 
   const fetchData = useCallback(async () => {
+    setError(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const userId = user.id;
 
-      // Parallel fetch all data
+      // Parallel fetch all data (transactions for last 24 months for charts)
+      const twoYearsAgo = new Date();
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
       const [
         propertiesRes,
         dealsRes,
@@ -127,6 +144,7 @@ export default function DashboardPage() {
         rentRes,
         maintenanceRes,
         activityRes,
+        transactionsRes,
       ] = await Promise.all([
         supabase
           .from('properties')
@@ -154,13 +172,18 @@ export default function DashboardPage() {
           .select('*')
           .eq('user_id', userId)
           .order('created_at', { ascending: false }),
-        // Recent activity from multiple sources
         supabase
           .from('agent_logs')
           .select('id, action, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(10),
+        supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('date', twoYearsAgo.toISOString().split('T')[0])
+          .order('date', { ascending: true }),
       ]);
 
       const propsData = (propertiesRes.data || []) as Property[];
@@ -168,12 +191,14 @@ export default function DashboardPage() {
       const tenantsData = (tenantsRes.data || []) as Tenant[];
       const rentData = (rentRes.data || []) as RentPayment[];
       const maintData = (maintenanceRes.data || []) as MaintenanceRequest[];
+      const txData = (transactionsRes.data || []) as Transaction[];
 
       setProperties(propsData);
       setDeals(dealsData);
       setTenants(tenantsData);
       setRentPayments(rentData);
       setMaintenanceRequests(maintData);
+      setTransactions(txData);
 
       // Build activity feed from multiple sources
       const activityItems: Activity[] = [];
@@ -296,6 +321,7 @@ export default function DashboardPage() {
       setAlerts(newAlerts);
     } catch (err) {
       console.error('Dashboard data fetch error:', err);
+      setError(err instanceof Error ? err : new Error('Failed to load dashboard'));
     } finally {
       setLoading(false);
     }
@@ -304,6 +330,38 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  /* Live tick: every 30–45s one metric card flashes (Bloomberg-style) */
+  useEffect(() => {
+    if (reduced || loading) return;
+    const delay = 30000 + Math.random() * 15000;
+    const t = setInterval(() => {
+      setTickCardIndex(Math.floor(Math.random() * 4));
+      setTimeout(() => setTickCardIndex(null), 300);
+    }, delay);
+    return () => clearInterval(t);
+  }, [reduced, loading]);
+
+  /* Portfolio snapshots: record today and fetch last 6 for sparklines */
+  useEffect(() => {
+    if (loading || properties.length === 0) return;
+    const pv = properties.reduce((s, p) => s + (p.current_value || 0), 0);
+    const tm = properties.reduce((s, p) => s + (p.monthly_rent || 0), 0);
+    const te = properties.reduce((s, p) => s + (p.mortgage_payment || 0) + (p.insurance_annual || 0) / 12 + (p.tax_annual || 0) / 12 + (p.hoa_monthly || 0), 0);
+    const cf = tm - te;
+    const eq = properties.reduce((s, p) => s + ((p.current_value || 0) - (p.mortgage_balance || 0)), 0);
+    const inv = properties.reduce((s, p) => s + (p.purchase_price || 0), 0);
+    const roi = inv > 0 ? ((eq - inv + cf * 12) / inv) * 100 : 0;
+    fetch('/api/portfolio/snapshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ portfolio_value: pv, equity: eq, monthly_cash_flow: cf, net_roi: roi }),
+    })
+      .then(() => fetch('/api/portfolio/snapshot'))
+      .then((r) => r.json())
+      .then((data) => setPortfolioSnapshots(Array.isArray(data) ? data : []))
+      .catch(() => setPortfolioSnapshots([]));
+  }, [loading, properties]);
 
   /* ---------------------------------------------------------------- */
   /*  Calculated metrics                                               */
@@ -344,30 +402,63 @@ export default function DashboardPage() {
   /*  Chart data                                                       */
   /* ---------------------------------------------------------------- */
 
-  // TODO: Calculate from historical data (transactions table, monthly snapshots)
-  // For now, generate mock trend data based on current values
-  const cashFlowChartData = MONTHS.map((month, _i) => {
-    const variance = 0.85 + Math.random() * 0.3;
-    return {
-      month,
-      cashFlow: Math.round(monthlyCashFlow * variance),
-    };
-  });
+  const chartNow = new Date();
+  // Cash flow from transactions (last 12 months); fallback to derived if no tx data
+  const cashFlowChartData = (() => {
+    const monthsWithNet = MONTHS.map((month, i) => {
+      const monthStart = new Date(chartNow.getFullYear(), i, 1);
+      const monthEnd = new Date(chartNow.getFullYear(), i + 1, 0);
+      const monthTx = transactions.filter((tx) => {
+        const d = new Date(tx.date);
+        return d >= monthStart && d <= monthEnd;
+      });
+      const income = monthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      return { month, cashFlow: Math.round(income - expense) };
+    });
+    const hasAnyTx = transactions.some((tx) => {
+      const d = new Date(tx.date);
+      return d.getFullYear() === chartNow.getFullYear();
+    });
+    if (hasAnyTx) return monthsWithNet;
+    return MONTHS.map((month, i) => {
+      const variance = 0.85 + ((i + 1) / 12) * 0.2;
+      return { month, cashFlow: Math.round(monthlyCashFlow * variance) };
+    });
+  })();
 
-  // Property breakdown — used by horizontal bar chart (per-property values)
+  // Sparkline: cash flow from last 6 months of transactions; others still derived (no historical snapshots)
+  const sparklineCashFlow = (() => {
+    const sixMonths: number[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(chartNow.getFullYear(), chartNow.getMonth() - i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      const monthTx = transactions.filter((tx) => {
+        const t = new Date(tx.date);
+        return t >= start && t <= end;
+      });
+      const income = monthTx.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+      const expense = monthTx.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+      sixMonths.push(Math.round(income - expense));
+    }
+    const hasAny = sixMonths.some((v) => v !== 0);
+    if (hasAny) return sixMonths;
+    return [70, 80, 75, 85, 90, 100].map((pct) => Math.round(monthlyCashFlow * (pct / 100)));
+  })();
 
-  // Sparkline data (last 6 months mock trend)
-  // TODO: calculate from historical data
-  const sparklinePortfolio = [85, 88, 90, 92, 95, 100].map(
-    (pct) => Math.round(totalPortfolioValue * (pct / 100)),
-  );
-  const sparklineCashFlow = [70, 80, 75, 85, 90, 100].map(
-    (pct) => Math.round(monthlyCashFlow * (pct / 100)),
-  );
-  const sparklineEquity = [60, 70, 75, 80, 88, 100].map(
-    (pct) => Math.round(totalEquity * (pct / 100)),
-  );
-  const sparklineROI = [5.2, 6.1, 5.8, 7.0, 7.5, netROI > 0 ? netROI : 8.2];
+  const sparklinePortfolio =
+    portfolioSnapshots.length >= 2
+      ? portfolioSnapshots.map((s) => Math.round(Number(s.portfolio_value)))
+      : [85, 88, 90, 92, 95, 100].map((pct) => Math.round(totalPortfolioValue * (pct / 100)));
+  const sparklineEquity =
+    portfolioSnapshots.length >= 2
+      ? portfolioSnapshots.map((s) => Math.round(Number(s.equity)))
+      : [60, 70, 75, 80, 88, 100].map((pct) => Math.round(totalEquity * (pct / 100)));
+  const sparklineROI =
+    portfolioSnapshots.length >= 2
+      ? portfolioSnapshots.map((s) => (s.net_roi != null ? Number(s.net_roi) : 0))
+      : [5.2, 6.1, 5.8, 7.0, 7.5, netROI > 0 ? netROI : 8.2];
 
   /* ---------------------------------------------------------------- */
   /*  Upcoming events                                                  */
@@ -491,6 +582,29 @@ export default function DashboardPage() {
   }
 
   /* ---------------------------------------------------------------- */
+  /*  Error state — retry                                              */
+  /* ---------------------------------------------------------------- */
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <EmptyState
+          icon={<AlertCircle className="size-10 text-red" />}
+          title="Something went wrong"
+          description={error.message}
+          action={{
+            label: 'Try again',
+            onClick: () => {
+              setError(null);
+              fetchData();
+            },
+          }}
+        />
+      </div>
+    );
+  }
+
+  /* ---------------------------------------------------------------- */
   /*  Empty state                                                      */
   /* ---------------------------------------------------------------- */
 
@@ -525,50 +639,41 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================ */}
-      {/*  ROW 1 - Metric Cards                                         */}
+      {/*  Live market pulse (day-to-day rates & indicators)            */}
+      {/* ============================================================ */}
+      <LiveMarketPulse compact />
+
+      {/* ============================================================ */}
+      {/*  ROW 1 - Metric Cards (stagger 60ms, 400ms from below)         */}
       {/* ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Portfolio Value"
-          value={formatCurrency(totalPortfolioValue)}
-          change={12.5}
-          changeLabel="vs last quarter"
-          icon={DollarSign}
-          trend="up"
-          sparklineData={sparklinePortfolio}
-          loading={loading}
-        />
-        <MetricCard
-          title="Monthly Cash Flow"
-          value={formatCurrency(monthlyCashFlow)}
-          change={monthlyCashFlow >= 0 ? 8.3 : -5.1}
-          changeLabel="vs last month"
-          icon={TrendingUp}
-          trend={monthlyCashFlow >= 0 ? 'up' : 'down'}
-          sparklineData={sparklineCashFlow}
-          loading={loading}
-        />
-        <MetricCard
-          title="Total Equity"
-          value={formatCurrency(totalEquity)}
-          change={15.2}
-          changeLabel="vs last quarter"
-          icon={BuildingIcon}
-          trend="up"
-          sparklineData={sparklineEquity}
-          loading={loading}
-        />
-        <MetricCard
-          title="Net ROI"
-          value={netROI.toFixed(1)}
-          suffix="%"
-          change={2.4}
-          changeLabel="vs last year"
-          icon={Percent}
-          trend="up"
-          sparklineData={sparklineROI}
-          loading={loading}
-        />
+        {[
+          { title: 'Total Portfolio Value', value: formatCurrency(totalPortfolioValue), change: 0, changeLabel: 'No prior period', icon: DollarSign, trend: 'up' as const, sparklineData: sparklinePortfolio },
+          { title: 'Monthly Cash Flow', value: formatCurrency(monthlyCashFlow), change: 0, changeLabel: 'No prior period', icon: TrendingUp, trend: monthlyCashFlow >= 0 ? ('up' as const) : ('down' as const), sparklineData: sparklineCashFlow },
+          { title: 'Total Equity', value: formatCurrency(totalEquity), change: 0, changeLabel: 'No prior period', icon: BuildingIcon, trend: 'up' as const, sparklineData: sparklineEquity },
+          { title: 'Net ROI', value: netROI.toFixed(1), suffix: '%', change: 0, changeLabel: 'No prior period', icon: Percent, trend: 'up' as const, sparklineData: sparklineROI },
+        ].map((card, i) => (
+          <motion.div
+            key={card.title}
+            initial={entranceVariant.hidden}
+            animate={loading ? entranceVariant.hidden : entranceVariant.visible}
+            transition={{ ...transition, delay: loading ? 0 : i * staggerDelay }}
+          >
+            <MetricCard
+              title={card.title}
+              value={card.value}
+              suffix={'suffix' in card ? card.suffix : ''}
+              change={card.change}
+              changeLabel={card.changeLabel}
+              icon={card.icon}
+              trend={card.trend}
+              sparklineData={card.sparklineData}
+              loading={loading}
+              animateProgress={!reduced}
+              flash={tickCardIndex === i}
+            />
+          </motion.div>
+        ))}
       </div>
 
       {/* ============================================================ */}
@@ -604,7 +709,13 @@ export default function DashboardPage() {
                   const value = property.current_value || 0;
                   const pct = totalValue > 0 ? (value / totalValue) * 100 : 0;
                   return (
-                    <div key={property.id} className="group">
+                    <motion.div
+                      key={property.id}
+                      initial={reduced ? false : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                      className="group"
+                    >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="font-body text-[13px] text-white truncate max-w-[55%]">
                           {property.address}
@@ -619,15 +730,17 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1e1e1e' }}>
-                        <div
-                          className="h-full rounded-full transition-all duration-700 ease-out"
+                        <motion.div
+                          className="h-full rounded-full"
+                          initial={reduced ? false : { width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.8, delay: index * 0.04, ease: [0.16, 1, 0.3, 1] }}
                           style={{
-                            width: `${pct}%`,
                             background: `linear-gradient(90deg, #c9a84c, ${PIE_COLORS[index % PIE_COLORS.length]})`,
                           }}
                         />
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 });
               })()}
@@ -666,14 +779,17 @@ export default function DashboardPage() {
               {deals
                 .filter((d) => d.status !== 'closed' && d.status !== 'dead')
                 .slice(0, 3)
-                .map((deal) => {
+                .map((deal, i) => {
                   const score = deal.analysis?.score
                     ? Math.round(deal.analysis.score / 10)
                     : null;
 
                   return (
-                    <div
+                    <motion.div
                       key={deal.id}
+                      initial={reduced ? false : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
                       className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
                       onClick={() => router.push(`/deal-analyzer?deal=${deal.id}`)}
                     >
@@ -700,7 +816,7 @@ export default function DashboardPage() {
                           {score}
                         </span>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               {deals.filter((d) => d.status !== 'closed' && d.status !== 'dead').length === 0 && (
@@ -742,7 +858,7 @@ export default function DashboardPage() {
           ) : upcomingEvents.length > 0 ? (
             <div className="space-y-1 max-h-[320px] overflow-y-auto">
               {upcomingEvents.slice(0, 8).map((event) => {
-                const EventIcon = event.icon;
+                const EventIcon = event.icon as React.ComponentType<{ className?: string }>;
                 const typeColors: Record<string, { bg: string; text: string }> = {
                   lease: { bg: 'bg-gold/10', text: 'text-gold' },
                   rent: { bg: 'bg-green/10', text: 'text-green' },
@@ -935,7 +1051,7 @@ export default function DashboardPage() {
                       {dayEvents.length > 0 && (
                         <div className="ml-2 pl-3 border-l border-border/50 space-y-1 mb-2">
                           {dayEvents.slice(0, 3).map((event) => {
-                            const EventIcon = event.icon;
+                            const EventIcon = event.icon as React.ComponentType<{ className?: string }>;
                             const colorMap: Record<string, string> = {
                               rent: 'text-green',
                               lease: 'text-gold',

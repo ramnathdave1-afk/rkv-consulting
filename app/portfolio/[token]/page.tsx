@@ -143,7 +143,7 @@ export default function PublicPortfolioPage() {
             { label: 'Cash Flow', value: `$${totalCashFlow.toLocaleString()}/mo`, icon: DollarSign, color: totalCashFlow >= 0 ? 'text-green' : 'text-red' },
             { label: 'Avg Cap Rate', value: `${avgCapRate.toFixed(1)}%`, icon: Percent, color: 'text-gold' },
           ].map((metric) => {
-            const Icon = metric.icon;
+            const Icon = metric.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
             return (
               <div key={metric.label} className="rounded-xl p-4" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                 <div className="flex items-center gap-2 mb-2">

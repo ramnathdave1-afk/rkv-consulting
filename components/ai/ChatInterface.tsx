@@ -369,7 +369,7 @@ export function ChatInterface({
                 {/* Suggested prompts 2x2 grid with left cyan border */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                   {SUGGESTED_PROMPTS.map((sp, idx) => {
-                    const Icon = sp.icon;
+                    const Icon = sp.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
                     return (
                       <button
                         key={idx}

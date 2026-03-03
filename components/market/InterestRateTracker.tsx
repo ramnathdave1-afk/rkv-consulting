@@ -62,7 +62,7 @@ function RateChange({ current, weekAgo }: { current: number; weekAgo: number }) 
   // For mortgage rates: down is green (good for borrowers), up is red
   const isGood = diff < 0;
   const color = isGood ? '#c9a84c' : '#DC2626';
-  const Icon = diff < 0 ? TrendingDown : TrendingUp;
+  const Icon = diff < 0 ? TrendingDown : TrendingUp as React.ComponentType<{ className?: string; strokeWidth?: number }>;
   const sign = diff > 0 ? '+' : '';
 
   return (

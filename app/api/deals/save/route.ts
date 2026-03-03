@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     // ── Insert into deals table ─────────────────────────────────────────
     const dealData = {
       user_id: user.id,
-      title: body.address,
+      name: body.address,
       address: body.address,
       city: body.city || '',
       state: body.state || '',
@@ -100,22 +100,16 @@ export async function POST(req: NextRequest) {
       asking_price: body.asking_price,
       offer_price: null,
       arv: body.arv_estimate || null,
-      repair_cost: null,
+      rehab_estimate: null,
       monthly_rent_estimate: body.rent_estimate || null,
       status: 'lead',
-      priority: 'medium',
       source: body.source || 'deal_feed',
-      agent_name: null,
-      agent_phone: null,
-      agent_email: null,
-      analysis: body.ai_score
+      analysis_data: body.ai_score
         ? { feed_ai_score: body.ai_score }
         : null,
       notes: body.feed_deal_id
         ? `Saved from deal feed (feed_deal_id: ${body.feed_deal_id})`
         : 'Saved from deal feed',
-      image_url: body.image_url || null,
-      close_date: null,
     }
 
     const { data: deal, error } = await supabase

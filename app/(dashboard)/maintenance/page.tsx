@@ -224,7 +224,7 @@ function StatCard({
   value,
   iconBg,
 }: {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | number;
   iconBg: string;
@@ -307,7 +307,7 @@ function KanbanCard({
   onClick: () => void;
 }) {
   const catConfig = CATEGORY_CONFIG[request.category] || CATEGORY_CONFIG.general;
-  const CatIcon = catConfig.icon;
+  const CatIcon = catConfig.icon as React.ComponentType<{ className?: string }>;
   const days = daysOpen(request.created_at);
 
   return (
@@ -489,7 +489,7 @@ function ListView({
             {requests.map((req) => {
               const days = daysOpen(req.created_at);
               const catConfig = CATEGORY_CONFIG[req.category] || CATEGORY_CONFIG.general;
-              const CatIcon = catConfig.icon;
+              const CatIcon = catConfig.icon as React.ComponentType<{ className?: string }>;
 
               return (
                 <tr
@@ -570,7 +570,7 @@ function DetailPanel({
   const [newCost, setNewCost] = useState('');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const catConfig = CATEGORY_CONFIG[request.category] || CATEGORY_CONFIG.general;
-  const CatIcon = catConfig.icon;
+  const CatIcon = catConfig.icon as React.ComponentType<{ className?: string }>;
 
   /* Timeline */
   const timelineSteps = [
@@ -1260,6 +1260,98 @@ function NewRequestModal({
 }
 
 /* ================================================================== */
+/*  Add Contractor Form (when no match results)                        */
+/* ================================================================== */
+
+function AddContractorForm({
+  category,
+  city,
+  state,
+  onAdded,
+  hasPropertyLocation,
+  geoHook,
+  locationLabel,
+}: {
+  category: string;
+  city: string;
+  state: string;
+  onAdded: (c: MatchedContractor) => void;
+  hasPropertyLocation: boolean;
+  geoHook: { requestLocation: () => void; loading: boolean; location: { city: string; state: string; zip: string } | null };
+  locationLabel: string | null;
+}) {
+  const [company, setCompany] = useState('');
+  const [contact, setContact] = useState('');
+  const [phone, setPhone] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!company.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/contractors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_name: company.trim(),
+          contact_name: contact.trim() || undefined,
+          phone: phone.trim() || undefined,
+          trade: category,
+          city: city || undefined,
+          state: state || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        onAdded({
+          id: data.id,
+          company_name: data.company_name || company.trim(),
+          contact_name: data.contact_name || contact.trim(),
+          phone: data.phone || phone.trim(),
+          trade: data.trade || category,
+          city: data.city || city,
+          state: data.state || state,
+          score_composite: 0.5,
+        });
+        setCompany('');
+        setContact('');
+        setPhone('');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg p-8 text-center" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
+      <Search className="w-8 h-8 text-muted-deep mx-auto mb-3" />
+      <p className="font-mono text-sm text-muted-deep">NO CONTRACTORS FOUND</p>
+      <p className="font-mono text-[11px] text-muted-deep mt-1">
+        No contractors matched for {category} in {locationLabel}
+      </p>
+      <form onSubmit={handleSubmit} className="mt-6 max-w-sm mx-auto text-left space-y-3">
+        <Input placeholder="Company name" value={company} onChange={(e) => setCompany(e.target.value)} className="bg-deep border-border" />
+        <Input placeholder="Contact name" value={contact} onChange={(e) => setContact(e.target.value)} className="bg-deep border-border" />
+        <Input placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="bg-deep border-border" />
+        <Button type="submit" disabled={saving} className="w-full">{saving ? 'Adding…' : 'Add this contractor'}</Button>
+      </form>
+      {hasPropertyLocation && !geoHook.location && (
+        <button
+          type="button"
+          onClick={geoHook.requestLocation}
+          disabled={geoHook.loading}
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-mono font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all uppercase tracking-wider"
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          Try Your Location Instead
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  Contractor Matching Section                                        */
 /* ================================================================== */
 
@@ -1457,23 +1549,15 @@ function ContractorMatching({
 
       {/* Empty results */}
       {selectedRequest && !loading && !matchError && activeLocation && contractors.length === 0 && (
-        <div className="rounded-lg p-8 text-center rounded-lg" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
-          <Search className="w-8 h-8 text-muted-deep mx-auto mb-3" />
-          <p className="font-mono text-sm text-muted-deep">NO CONTRACTORS FOUND</p>
-          <p className="font-mono text-[11px] text-muted-deep mt-1">
-            No contractors matched for {selectedRequest.category} in {locationLabel}
-          </p>
-          {hasPropertyLocation && !geoHook.location && (
-            <button
-              onClick={geoHook.requestLocation}
-              disabled={geoHook.loading}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-mono font-medium text-gold border border-gold/30 hover:bg-gold/10 transition-all uppercase tracking-wider"
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              Try Your Location Instead
-            </button>
-          )}
-        </div>
+        <AddContractorForm
+          category={selectedRequest.category || 'general'}
+          city={activeLocation.city}
+          state={activeLocation.state}
+          onAdded={(c) => setContractors((prev) => [...prev, c])}
+          hasPropertyLocation={!!hasPropertyLocation}
+          geoHook={geoHook}
+          locationLabel={locationLabel}
+        />
       )}
 
       {/* Contractor cards */}
@@ -1705,7 +1789,7 @@ function PreventiveScheduler({ properties }: { properties: Property[] }) {
                 const rec = getRecord(prop.id, item.id);
                 const daysUntil = getDaysUntilDue(rec?.last_completed || null, item.frequency);
                 const status = getStatusBadge(daysUntil);
-                const Icon = item.icon;
+                const Icon = item.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
                 return (
                   <div key={item.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.01]">

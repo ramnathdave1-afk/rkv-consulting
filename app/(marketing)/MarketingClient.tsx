@@ -3,6 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
+  transitionEntrance,
+  variantEntranceFromBelow,
+  variantScaleIn,
+  useReducedMotion,
+  transitionReduced,
+  variantReduced,
+} from '@/lib/motion';
+import {
   Calculator,
   DollarSign,
   Wrench,
@@ -30,28 +38,35 @@ import {
 function useCountUp(
   target: number,
   isInView: boolean,
-  duration: number = 2000,
-  decimals: number = 0
+  animDuration: number = 2000,
+  decimals: number = 0,
+  startDelay: number = 0
 ) {
   const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
   const hasAnimated = useRef(false);
 
   useEffect(() => {
     if (!isInView || hasAnimated.current) return;
-    hasAnimated.current = true;
+    const t = setTimeout(() => {
+      hasAnimated.current = true;
+      setStarted(true);
+    }, startDelay);
+    return () => clearTimeout(t);
+  }, [isInView, startDelay]);
 
+  useEffect(() => {
+    if (!started) return;
     const startTime = performance.now();
-
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      const progress = Math.min(elapsed / animDuration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(parseFloat((eased * target).toFixed(decimals)));
       if (progress < 1) requestAnimationFrame(animate);
     };
-
     requestAnimationFrame(animate);
-  }, [isInView, target, duration, decimals]);
+  }, [started, target, animDuration, decimals]);
 
   return count;
 }
@@ -824,11 +839,24 @@ function MetricCounter({
 /*  MAIN PAGE COMPONENT                                                */
 /* ================================================================== */
 export default function MarketingPage() {
+  const reduced = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const [agentActionIndex, setAgentActionIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<'features' | 'pricing' | 'about'>('features');
+
+  const entranceVariant = reduced ? variantReduced : variantEntranceFromBelow;
+  const scaleVariant = reduced ? variantReduced : variantScaleIn;
+  const transition = reduced ? transitionReduced : transitionEntrance;
+  const staggerMs = reduced ? 0 : 1;
+
+  const statsSectionRef = useRef<HTMLElement>(null);
+  const isStatsInView = useInView(statsSectionRef, { amount: 0.3, once: true });
+  const countMarkets = useCountUp(2847, isStatsInView, 1500, 0, 0);
+  const countTransactions = useCountUp(41, isStatsInView, 1500, 0, 100);
+  const countIRR = useCountUp(18.3, isStatsInView, 1500, 1, 200);
+  const countAccuracy = useCountUp(94.2, isStatsInView, 1500, 1, 300);
 
   /* -- Scroll listener for navbar ---------------------------------- */
   useEffect(() => {
@@ -1018,26 +1046,76 @@ export default function MarketingPage() {
 
       {/* ============================================================ */}
       {/* SECTION 2 -- HERO (Design system: institutional, ATLAS)       */}
+      {/* Staggered power-up: bg → logo → status pills → headline → subhead → CTAs */}
       {/* ============================================================ */}
-      <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 pt-20 pb-16 bg-[#0A0A0F]">
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: reduced ? 0.01 : 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 pt-20 pb-16 bg-[#0A0A0F]"
+      >
         <div className="max-w-4xl mx-auto w-full text-center">
-          {/* Logo / wordmark */}
-          <p className="font-body text-[11px] uppercase tracking-[0.25em] text-white/40 mb-8">
+          {/* Logo — 200ms */}
+          <motion.p
+            initial={entranceVariant.hidden}
+            animate={entranceVariant.visible}
+            transition={{ ...transition, delay: staggerMs * 0.2 }}
+            className="font-body text-[11px] uppercase tracking-[0.25em] text-white/40 mb-8"
+          >
             RKV CONSULTING
-          </p>
+          </motion.p>
 
-          {/* Headline */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-body font-semibold leading-tight text-white mb-4 tracking-tight">
+          {/* Status pills — 350ms + 60ms stagger (only looping animation: dot pulse) */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: reduced ? 0 : 0.06, delayChildren: reduced ? 0 : 0.35 } } }}
+            className="inline-flex flex-wrap items-center justify-center gap-6 md:gap-10 py-3 px-5 rounded sharp border border-white/[0.08] bg-[#111118] mb-8"
+          >
+            {[
+              { label: 'Markets', value: '2,847', color: 'text-[#00B4D8]' },
+              { label: 'Data points', value: '12.4B', color: 'text-[#00B4D8]' },
+              { label: 'Model accuracy', value: '94.2%', color: 'text-[#52B788]' },
+            ].map((item) => (
+              <motion.span
+                key={item.label}
+                variants={scaleVariant}
+                transition={transition}
+                className="font-mono text-[11px] text-white/60 uppercase tracking-wider flex items-center gap-2"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00B4D8] shrink-0 animate-status-pulse" aria-hidden />
+                {item.label} <span className={`font-semibold ${item.color}`}>{item.value}</span>
+              </motion.span>
+            ))}
+          </motion.div>
+
+          {/* Headline — 500ms */}
+          <motion.h1
+            initial={entranceVariant.hidden}
+            animate={entranceVariant.visible}
+            transition={{ ...transition, delay: staggerMs * 0.5 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-body font-semibold leading-tight text-white mb-4 tracking-tight"
+          >
             Institutional-grade intelligence for individual investors.
-          </h1>
+          </motion.h1>
 
-          {/* Subhead — ATLAS + data */}
-          <p className="text-white/60 font-body text-base md:text-lg max-w-2xl mx-auto mb-10">
+          {/* Subhead — 650ms */}
+          <motion.p
+            initial={entranceVariant.hidden}
+            animate={entranceVariant.visible}
+            transition={{ ...transition, delay: staggerMs * 0.65 }}
+            className="text-white/60 font-body text-base md:text-lg max-w-2xl mx-auto mb-10"
+          >
             Powered by ATLAS: real-time analysis across thousands of markets and billions of data points.
-          </p>
+          </motion.p>
 
-          {/* CTAs: Access Dashboard (primary blue), Talk to ATLAS (outlined red) */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+          {/* CTAs — 800ms */}
+          <motion.div
+            initial={entranceVariant.hidden}
+            animate={entranceVariant.visible}
+            transition={{ ...transition, delay: staggerMs * 0.8 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14"
+          >
             <a
               href="/signup"
               className="w-full sm:w-auto bg-[#00B4D8] text-[#0A0A0F] font-body font-semibold text-[13px] px-6 py-2.5 rounded sharp hover:bg-[#0096C7] transition-colors uppercase tracking-wider"
@@ -1050,27 +1128,12 @@ export default function MarketingPage() {
             >
               Talk to ATLAS
             </a>
-          </div>
-
-          {/* Terminal-style status (markets tracked, data points, model accuracy) */}
-          <div className="inline-flex flex-wrap items-center justify-center gap-6 md:gap-10 py-3 px-5 rounded sharp border border-white/[0.08] bg-[#111118]">
-            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
-              Markets <span className="text-[#00B4D8] font-semibold">2,847</span>
-            </span>
-            <span className="text-white/30">|</span>
-            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
-              Data points <span className="text-[#00B4D8] font-semibold">12.4B</span>
-            </span>
-            <span className="text-white/30">|</span>
-            <span className="font-mono text-[11px] text-white/60 uppercase tracking-wider">
-              Model accuracy <span className="text-[#52B788] font-semibold">94.2%</span>
-            </span>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================================ */}
-      {/* VALUE PROPOSITION — 3 cards                                  */}
+      {/* VALUE PROPOSITION — 3 cards (stagger 1000ms + 80ms, hover 4px) */}
       {/* ============================================================ */}
       <section id="features" className="py-20 px-6 border-t border-white/[0.08] bg-[#0A0A0F]">
         <div className="max-w-6xl mx-auto">
@@ -1091,10 +1154,15 @@ export default function MarketingPage() {
                 title: 'Predictive Modeling',
                 desc: 'Forward-looking projections with confidence intervals. ATLAS models factor in macro conditions and local dynamics.',
               },
-            ].map((card) => (
-              <div
+            ].map((card, i) => (
+              <motion.div
                 key={card.title}
-                className="rounded sharp-lg border border-white/[0.08] bg-[#12121A] p-6 transition-colors hover:border-white/[0.12]"
+                initial={entranceVariant.hidden}
+                animate={entranceVariant.visible}
+                transition={{ ...transition, delay: staggerMs * (1.0 + i * 0.08) }}
+                whileHover={reduced ? undefined : { y: -4, borderColor: 'rgba(0,180,216,0.3)', boxShadow: '0 8px 32px rgba(0,180,216,0.08)' }}
+                className="rounded sharp-lg border border-white/[0.06] bg-[#12121A] p-6 transition-[border-color,box-shadow] duration-200"
+                style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
               >
                 <card.icon className="w-5 h-5 text-[#00B4D8] mb-4" strokeWidth={1.5} />
                 <h3 className="font-body font-semibold text-[13px] uppercase tracking-wider text-white mb-2">
@@ -1103,41 +1171,56 @@ export default function MarketingPage() {
                 <p className="text-[13px] text-white/60 font-body leading-relaxed">
                   {card.desc}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/* SOCIAL PROOF — key stats (monospace, large numbers)           */}
+      {/* SOCIAL PROOF — key stats (count-up on scroll, 1.5s, 100ms stagger) */}
       {/* ============================================================ */}
-      <section className="py-16 px-6 border-t border-white/[0.08] bg-[#111118]">
+      <section ref={statsSectionRef} className="py-16 px-6 border-t border-white/[0.08] bg-[#111118]">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: '2,847', label: 'Markets tracked' },
-              { value: '41M', label: 'Transactions analyzed' },
-              { value: '+18.3%', label: 'Avg. portfolio IRR improvement' },
-              { value: '94.2%', label: 'Model accuracy' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
-                  {stat.value}
-                </p>
-                <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
+            <div>
+              <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
+                {countMarkets.toLocaleString()}
+              </p>
+              <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">Markets tracked</p>
+            </div>
+            <div>
+              <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
+                {countTransactions}M
+              </p>
+              <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">Transactions analyzed</p>
+            </div>
+            <div>
+              <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
+                +{countIRR}%
+              </p>
+              <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">Avg. portfolio IRR improvement</p>
+            </div>
+            <div>
+              <p className="font-mono text-2xl md:text-3xl font-semibold text-white">
+                {countAccuracy}%
+              </p>
+              <p className="font-body text-[11px] uppercase tracking-wider text-white/40 mt-1">Model accuracy</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 3 -- PROBLEM STATEMENT                               */}
+      {/* SECTION 3 -- PROBLEM STATEMENT (scroll 50%, 500ms + 60ms stagger) */}
       {/* ============================================================ */}
-      <section className="py-[120px] px-6">
+      <motion.section
+        className="py-[120px] px-6"
+        initial={reduced ? undefined : { opacity: 0, y: 30 }}
+        whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-[11px] font-body font-medium uppercase tracking-[0.15em] text-gold mb-3">
@@ -1145,9 +1228,9 @@ export default function MarketingPage() {
             </div>
           </div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduced ? undefined : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-display font-bold text-center mb-16 text-white"
           >
@@ -1158,10 +1241,10 @@ export default function MarketingPage() {
             {problems.map((problem, i) => (
               <motion.div
                 key={problem.headline}
-                initial={{ opacity: 0, y: 20 }}
+                initial={reduced ? undefined : { opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                 className="bg-[#111111] border border-[#1e1e1e] border-l-2 border-l-red rounded-xl p-6"
               >
                 <problem.icon className="w-5 h-5 text-red mb-4" />
@@ -1171,12 +1254,19 @@ export default function MarketingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================================ */}
-      {/* SECTION 4 -- SOLUTION OVERVIEW (Feature Showcase)            */}
+      {/* SECTION 4 -- SOLUTION OVERVIEW (scroll 50%, 500ms + 60ms stagger) */}
       {/* ============================================================ */}
-      <section id="features" className="py-[120px] px-6">
+      <motion.section
+        id="features"
+        className="py-[120px] px-6"
+        initial={reduced ? undefined : { opacity: 0, y: 30 }}
+        whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-4">
             <div className="text-[11px] font-body font-medium uppercase tracking-[0.15em] text-gold">
@@ -1184,9 +1274,9 @@ export default function MarketingPage() {
             </div>
           </div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduced ? undefined : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-display font-bold text-center mb-4 text-white"
           >
@@ -1241,7 +1331,7 @@ export default function MarketingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================================ */}
       {/* SECTION 5 -- METRICS                                         */}

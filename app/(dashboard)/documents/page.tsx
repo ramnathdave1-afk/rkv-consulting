@@ -627,7 +627,7 @@ export default function DocumentsPage() {
         /* ============================================================ */
         <div className="grid grid-cols-4 gap-4">
           {filtered.map((doc) => {
-            const Icon = getFileIcon(doc.mime_type, doc.signed);
+            const Icon = getFileIcon(doc.mime_type, doc.signed) as React.ComponentType<{ className?: string; strokeWidth?: number }>;
             const daysToExpiry = getDaysUntilExpiry(doc.expires_at);
             const propertyName = getPropertyName(doc.property_id);
             const tenantName = getTenantName(doc.tenant_id);
@@ -787,7 +787,7 @@ export default function DocumentsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((doc) => {
-                  const Icon = getFileIcon(doc.mime_type, doc.signed);
+                  const Icon = getFileIcon(doc.mime_type, doc.signed) as React.ComponentType<{ className?: string; strokeWidth?: number }>;
                   const daysToExpiry = getDaysUntilExpiry(doc.expires_at);
 
                   return (

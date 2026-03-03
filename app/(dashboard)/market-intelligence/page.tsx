@@ -13,13 +13,29 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { FeatureGate } from '@/components/paywall/FeatureGate'
 import { cn } from '@/lib/utils'
-import MapWrapper from '@/components/market/MapWrapper'
+import dynamic from 'next/dynamic'
 import DetailPanel from '@/components/market/DetailPanel'
 import InterestRateTracker from '@/components/market/InterestRateTracker'
+import LiveMarketPulse from '@/components/market/LiveMarketPulse'
 import EconomicIndicators from '@/components/market/EconomicIndicators'
 import MarketComparison from '@/components/market/MarketComparison'
 import BLSIndicators from '@/components/market/BLSIndicators'
 import AlertsConfig from '@/components/market/AlertsConfig'
+
+const USMarketMap = dynamic(() => import('@/components/market/USMarketMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full rounded-xl overflow-hidden" style={{ background: '#080808', border: '1px solid #1e1e1e', height: 540 }}>
+      <div className="h-[2px] bg-gradient-to-r from-gold/0 via-gold/40 to-gold/0" />
+      <div className="flex items-center justify-center h-full">
+        <div className="flex items-center gap-2">
+          <span className="pulse-dot" />
+          <span className="text-xs text-muted font-body uppercase tracking-wider">Loading market map...</span>
+        </div>
+      </div>
+    </div>
+  ),
+})
 import {
   MAJOR_METROS,
   fetchRentcastMarketData,
@@ -608,6 +624,11 @@ function MarketIntelligenceContent() {
       </div>
 
       {/* ============================================================ */}
+      {/*  Live market pulse (day-to-day rates & indicators)            */}
+      {/* ============================================================ */}
+      <LiveMarketPulse />
+
+      {/* ============================================================ */}
       {/*  Tracked Markets Chips                                        */}
       {/* ============================================================ */}
       <div>
@@ -669,29 +690,29 @@ function MarketIntelligenceContent() {
       </div>
 
       {/* ============================================================ */}
-      {/*  Main Content: Map (65%) + Detail Panel (35%)                 */}
+      {/*  Combined US Market Map + Detail Panel                        */}
       {/* ============================================================ */}
-      <div className="flex gap-0 rounded-xl overflow-hidden border border-border rounded-lg">
+      <div className="flex gap-0 rounded-xl overflow-hidden">
         {/* Map area */}
         <div
           className={cn(
             'transition-all duration-300',
             selectedCityData ? 'w-[65%]' : 'w-full',
           )}
-          style={{ height: 520 }}
         >
-          <MapWrapper
+          <USMarketMap
             marketData={marketData}
             selectedMetric={selectedMetric}
             selectedPropertyType="all"
             selectedCity={selectedCity}
             onCitySelect={setSelectedCity}
+            trackedMarkets={trackedMarkets}
           />
         </div>
 
         {/* Detail Panel — slide in from right */}
         {selectedCityData && (
-          <div className="w-[35%]" style={{ height: 520 }}>
+          <div className="w-[35%]" style={{ height: 542 }}>
             <DetailPanel
               city={selectedCityData}
               onClose={() => setSelectedCity(null)}
@@ -805,7 +826,7 @@ function MarketIntelligenceContent() {
                 below_market: AlertTriangle,
                 new_listing: MapPin,
               }
-              const Icon = iconMap[opp.type] || AlertTriangle
+              const Icon = (iconMap[opp.type] || AlertTriangle) as React.ComponentType<{ className?: string }>
 
               return (
                 <div

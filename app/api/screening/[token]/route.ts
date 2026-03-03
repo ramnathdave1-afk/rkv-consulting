@@ -26,7 +26,7 @@ export async function GET(
 
     const { data: application, error } = await supabase
       .from('screening_applications')
-      .select('id, property_address, status, expires_at, created_at')
+      .select('id, property_id, status, expires_at, created_at')
       .eq('token', token)
       .single()
 

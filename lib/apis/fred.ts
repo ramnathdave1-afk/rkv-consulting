@@ -39,8 +39,11 @@ interface FredSeriesResponse {
 
 const SERIES = {
   MORTGAGE_30YR: 'MORTGAGE30US',
+  TREASURY_10Y: 'DGS10', // 10-Year Treasury Constant Maturity Rate (daily, cap rate floor proxy)
   UNEMPLOYMENT_NATIONAL: 'UNRATE',
   CPI: 'CPIAUCSL',
+  HOUSING_PERMITS: 'PERMIT', // New private housing units authorized by building permits (monthly)
+  EXISTING_HOME_SALES: 'EXHOSLUSM495S', // Existing Home Sales (monthly, NAR)
   // State unemployment uses a pattern like "AZUR" for Arizona, "CAUR" for California, etc.
 } as const
 
@@ -143,4 +146,29 @@ export async function fetchUnemploymentRate(
  */
 export async function fetchCPI(): Promise<number | null> {
   return fetchLatestObservation(SERIES.CPI)
+}
+
+/**
+ * Fetch the 10-Year Treasury Constant Maturity Rate (daily).
+ * Key for cap rate floors and cost of capital. Series: DGS10.
+ * @returns The rate as a percentage (e.g. 4.25), or null on failure.
+ */
+export async function fetch10YearTreasury(): Promise<number | null> {
+  return fetchLatestObservation(SERIES.TREASURY_10Y)
+}
+
+/**
+ * Fetch the latest New Private Housing Permits (monthly). Series: PERMIT.
+ * @returns Thousands of units, or null on failure.
+ */
+export async function fetchHousingPermits(): Promise<number | null> {
+  return fetchLatestObservation(SERIES.HOUSING_PERMITS)
+}
+
+/**
+ * Fetch the latest Existing Home Sales (monthly, NAR). Series: EXHOSLUSM495S.
+ * @returns Millions of units (SAAR), or null on failure.
+ */
+export async function fetchExistingHomeSales(): Promise<number | null> {
+  return fetchLatestObservation(SERIES.EXISTING_HOME_SALES)
 }

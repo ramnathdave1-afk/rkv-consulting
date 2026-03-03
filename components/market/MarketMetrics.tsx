@@ -93,7 +93,7 @@ function formatValue(value: number, format: FormatType): string {
 /* ------------------------------------------------------------------ */
 
 function MetricTile({ config, value }: { config: MetricConfig; value: number }) {
-  const Icon = config.icon;
+  const Icon = config.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
   const isAbove = value > config.benchmark;
   const isFavorable = config.higherIsBetter ? isAbove : !isAbove;
   const isNeutral = Math.abs(value - config.benchmark) / config.benchmark < 0.02;

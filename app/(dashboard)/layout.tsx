@@ -10,7 +10,6 @@ import {
   Building2,
   Globe,
   Landmark,
-  Home,
   Users,
   Wrench,
   Shield,
@@ -29,6 +28,7 @@ import {
   DoorOpen,
   Workflow,
   Flame,
+  LayoutGrid,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -73,7 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Deal Feed', href: '/deal-feed', icon: Flame, featureKey: 'dealFeed', badge: 'New' },
       { label: 'Deal Analyzer', href: '/deals', icon: Calculator },
       { label: 'Deal Pipeline', href: '/pipeline', icon: GitBranch },
-      { label: 'My Portfolio', href: '/properties', icon: Building2 },
+      { label: 'Portfolio', href: '/properties', icon: Building2 },
       { label: 'Market Intelligence', href: '/market-intelligence', icon: Globe, featureKey: 'marketIntelligence' },
       { label: 'Financing Hub', href: '/financing-hub', icon: Landmark, featureKey: 'financingHub' },
     ],
@@ -81,8 +81,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Management',
     items: [
-      { label: 'Properties', href: '/properties', icon: Home },
       { label: 'Tenants', href: '/tenants', icon: Users },
+      { label: 'CRM', href: '/crm', icon: LayoutGrid },
       { label: 'Contacts', href: '/contacts', icon: Contact },
       { label: 'Maintenance', href: '/maintenance', icon: Wrench },
       { label: 'Vacancies', href: '/vacancies', icon: DoorOpen },
@@ -270,7 +270,7 @@ export default function DashboardLayout({
                 {group.items.map((item) => {
                   const isActive = pathname === item.href;
                   const isLocked = item.featureKey ? !hasFeature(item.featureKey) : false;
-                  const Icon = item.icon;
+                  const Icon = item.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
                   if (isLocked) {
                     return (
@@ -449,10 +449,8 @@ export default function DashboardLayout({
       {/* ============================================================ */}
       {/*  MAIN CONTENT                                                 */}
       {/* ============================================================ */}
-      <main className="ml-0 md:ml-[260px] mt-[52px] min-h-screen bg-[var(--bg-primary)] p-4 md:p-6 pb-24 md:pb-8" key={pathname}>
-        <PageTransition>
-          {children}
-        </PageTransition>
+      <main className="ml-0 md:ml-[260px] mt-[52px] min-h-screen bg-[var(--bg-primary)] p-4 md:p-6 pb-24 md:pb-8">
+        <PageTransition>{children}</PageTransition>
       </main>
 
       {/* ============================================================ */}
@@ -467,7 +465,7 @@ export default function DashboardLayout({
           { label: 'Settings', href: '/settings', icon: Settings },
         ].map((item) => {
           const isActive = pathname === item.href;
-          const Icon = item.icon;
+          const Icon = item.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
           return (
             <Link
               key={item.href}

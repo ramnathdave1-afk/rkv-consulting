@@ -187,7 +187,7 @@ export default function TenantPortalPage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto pb-px">
             {tabs.map((tab) => {
-              const Icon = tab.icon;
+              const Icon = tab.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
               return (
                 <button
                   key={tab.id}

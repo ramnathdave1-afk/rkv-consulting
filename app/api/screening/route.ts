@@ -20,11 +20,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { property_id, property_address } = body
+    const { property_id } = body
 
-    if (!property_address) {
+    if (!property_id) {
       return NextResponse.json(
-        { error: 'property_address is required' },
+        { error: 'property_id is required' },
         { status: 400 }
       )
     }

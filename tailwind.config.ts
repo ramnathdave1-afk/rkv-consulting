@@ -88,6 +88,10 @@ const config: Config = {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "status-pulse": {
+          "0%, 100%": { opacity: "0.5" },
+          "50%": { opacity: "1" },
+        },
         "background-gradient": {
           "0%, 100%": {
             transform: "translate(0, 0)",
@@ -120,6 +124,7 @@ const config: Config = {
         slideUp: "slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)",
         "slide-in-right": "slide-in-right 0.3s ease-out forwards",
         "fade-in": "fade-in 0.2s ease-out",
+        "status-pulse": "status-pulse 3s cubic-bezier(0.45, 0, 0.55, 1) infinite",
         shimmer: "shimmer 2s infinite",
         "background-gradient":
           "background-gradient var(--background-gradient-speed, 15s) cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite",

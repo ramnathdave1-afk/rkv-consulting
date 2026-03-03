@@ -18,13 +18,18 @@ function getSupabaseAdmin() {
 
 // Map Stripe price IDs to plan names
 function getPlanNameFromPriceId(priceId: string): PlanName | null {
-  const priceMap: Record<string, PlanName> = {
-    [process.env.STRIPE_PRICE_BASIC_MONTHLY!]: 'basic',
-    [process.env.STRIPE_PRICE_BASIC_ANNUAL!]: 'basic',
-    [process.env.STRIPE_PRICE_PRO_MONTHLY!]: 'pro',
-    [process.env.STRIPE_PRICE_PRO_ANNUAL!]: 'pro',
-    [process.env.STRIPE_PRICE_ELITE_MONTHLY!]: 'elite',
-    [process.env.STRIPE_PRICE_ELITE_ANNUAL!]: 'elite',
+  const priceMap: Record<string, PlanName> = {}
+  // Only add entries for env vars that are actually set
+  const entries: [string | undefined, PlanName][] = [
+    [process.env.STRIPE_PRICE_BASIC_MONTHLY, 'basic'],
+    [process.env.STRIPE_PRICE_BASIC_ANNUAL, 'basic'],
+    [process.env.STRIPE_PRICE_PRO_MONTHLY, 'pro'],
+    [process.env.STRIPE_PRICE_PRO_ANNUAL, 'pro'],
+    [process.env.STRIPE_PRICE_ELITE_MONTHLY, 'elite'],
+    [process.env.STRIPE_PRICE_ELITE_ANNUAL, 'elite'],
+  ]
+  for (const [key, plan] of entries) {
+    if (key) priceMap[key] = plan
   }
   return priceMap[priceId] || null
 }
@@ -88,7 +93,7 @@ export async function POST(req: NextRequest) {
             cancel_at_period_end: subscription.cancel_at_period_end as boolean,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'user_id' }
+          { onConflict: 'stripe_subscription_id' }
         )
 
         break

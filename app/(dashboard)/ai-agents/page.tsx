@@ -573,7 +573,7 @@ export default function AIAgentsPage() {
                   { label: 'SMS Sent', value: overviewStats.smsSent, icon: MessageSquare, color: 'text-purple-400', bg: 'bg-purple-500/10' },
                   { label: 'Tasks Completed', value: overviewStats.tasksCompleted, icon: CheckCircle, color: 'text-gold', bg: 'bg-gold/10' },
                 ].map((stat) => {
-                  const Icon = stat.icon;
+                  const Icon = stat.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
                   return (
                     <Card key={stat.label} className="rounded-lg">
                       <div className="flex items-center gap-4">

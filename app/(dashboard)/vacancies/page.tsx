@@ -374,7 +374,38 @@ export default function VacanciesPage() {
     return Math.round(total / properties.length);
   }, [properties]);
 
-  const inquiries = useMemo(() => generateInquiries(properties), [properties]);
+  const [apiInquiries, setApiInquiries] = useState<Inquiry[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/vacancy/inquiries');
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        const list = (data || []).map((row: { id: string; property_id: string; prospect_name: string; email: string | null; phone: string | null; message: string | null; source: string; interest_score: string; date_received: string }) => {
+          const prop = properties.find((p) => p.id === row.property_id);
+          return {
+            id: row.id,
+            prospectName: row.prospect_name,
+            email: row.email || '',
+            phone: row.phone || '',
+            message: row.message || '',
+            source: row.source as Inquiry['source'],
+            dateReceived: row.date_received,
+            interestScore: (row.interest_score || 'Medium') as 'High' | 'Medium' | 'Low',
+            propertyId: row.property_id,
+            propertyAddress: prop?.address || 'Unknown',
+          };
+        });
+        if (!cancelled) setApiInquiries(list);
+      } catch {
+        if (!cancelled) setApiInquiries([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [properties]);
+  const mockInquiries = useMemo(() => generateInquiries(properties), [properties]);
+  const inquiries = apiInquiries.length > 0 ? apiInquiries : mockInquiries;
   const showings = useMemo(() => generateShowings(properties), [properties]);
 
   // Per-property listing status & counts (deterministic from property id)
@@ -436,17 +467,34 @@ export default function VacanciesPage() {
     setListingModalOpen(true);
   }, []);
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     if (!selectedProperty) return;
     setIsGenerating(true);
-    // Simulate AI generation delay
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/ai/listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property_id: selectedProperty.id }),
+      });
+      if (res.ok) {
+        const listing = await res.json();
+        setGeneratedListing(listing);
+        setEditTitle(listing.title);
+        setEditDescription(listing.description);
+      } else {
+        const listing = generateListing(selectedProperty);
+        setGeneratedListing(listing);
+        setEditTitle(listing.title);
+        setEditDescription(listing.description);
+      }
+    } catch {
       const listing = generateListing(selectedProperty);
       setGeneratedListing(listing);
       setEditTitle(listing.title);
       setEditDescription(listing.description);
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
   }, [selectedProperty]);
 
   const handleCopyListing = useCallback(() => {

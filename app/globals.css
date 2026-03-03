@@ -259,3 +259,135 @@ body {
   display: none !important;
 }
 
+/* ── AI Chat reveal UI: gradient text + canvas effect keyframes ─────── */
+@keyframes gradient-foreground-1 {
+  from,
+  16.667%,
+  to {
+    opacity: 1;
+  }
+  33.333%,
+  83.333% {
+    opacity: 0;
+  }
+}
+
+.animate-gradient-foreground-1 {
+  animation: gradient-foreground-1 8s infinite;
+}
+
+@keyframes gradient-foreground-2 {
+  from,
+  to {
+    opacity: 0;
+  }
+  33.333%,
+  50% {
+    opacity: 1;
+  }
+  16.667%,
+  66.667% {
+    opacity: 0;
+  }
+}
+
+.animate-gradient-foreground-2 {
+  animation: gradient-foreground-2 8s infinite;
+}
+
+@keyframes gradient-foreground-3 {
+  from,
+  50%,
+  to {
+    opacity: 0;
+  }
+  66.667%,
+  83.333% {
+    opacity: 1;
+  }
+}
+
+.animate-gradient-foreground-3 {
+  animation: gradient-foreground-3 8s infinite;
+}
+
+@keyframes gradient-background-1 {
+  from,
+  16.667%,
+  to {
+    opacity: 0;
+  }
+  25%,
+  91.667% {
+    opacity: 1;
+  }
+}
+
+.before\:animate-gradient-background-1::before {
+  animation: gradient-background-1 8s infinite;
+}
+
+@keyframes gradient-background-2 {
+  from,
+  to {
+    opacity: 1;
+  }
+  33.333%,
+  50% {
+    opacity: 0;
+  }
+  25%,
+  58.333% {
+    opacity: 1;
+  }
+}
+
+.before\:animate-gradient-background-2::before {
+  animation: gradient-background-2 8s infinite;
+}
+
+@keyframes gradient-background-3 {
+  from,
+  58.333%,
+  91.667%,
+  to {
+    opacity: 1;
+  }
+  66.667%,
+  83.333% {
+    opacity: 0;
+  }
+}
+
+.before\:animate-gradient-background-3::before {
+  animation: gradient-background-3 8s infinite;
+}
+
+/* Gradient stops for AI chat header (cyan / accent aligned) */
+.from-gradient-1-start {
+  --tw-gradient-from: #0070c0;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 112, 192, 0));
+}
+
+.from-gradient-2-start {
+  --tw-gradient-from: #0096c7;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 150, 199, 0));
+}
+
+.from-gradient-3-start {
+  --tw-gradient-from: #00b4d8;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 180, 216, 0));
+}
+
+.to-gradient-1-end {
+  --tw-gradient-to: #00dfd8;
+}
+
+.to-gradient-2-end {
+  --tw-gradient-to: #48cae4;
+}
+
+.to-gradient-3-end {
+  --tw-gradient-to: #90e0ef;
+}
+

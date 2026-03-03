@@ -100,18 +100,18 @@ const faqItems = [
 /*  STRIPE PRICE IDS                                                   */
 /* ================================================================== */
 
-const STRIPE_PRICES: Record<string, Record<string, string>> = {
+const STRIPE_PRICES: Record<string, Record<string, string | undefined>> = {
   basic: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY || 'price_basic_monthly',
-    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_ANNUAL || 'price_basic_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_MONTHLY,
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_BASIC_ANNUAL,
   },
   pro: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
-    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL || 'price_pro_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY,
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL,
   },
   elite: {
-    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_MONTHLY || 'price_elite_monthly',
-    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_ANNUAL || 'price_elite_annual',
+    monthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_MONTHLY,
+    yearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ELITE_ANNUAL,
   },
 }
 
@@ -218,7 +218,10 @@ function PricingPageInner() {
       setLoadingPlan(planId)
       try {
         const priceId = STRIPE_PRICES[planId]?.[interval]
-        if (!priceId) return
+        if (!priceId) {
+          console.error(`[Pricing] Missing Stripe price ID for ${planId}/${interval}. Set NEXT_PUBLIC_STRIPE_PRICE_* env vars.`)
+          return
+        }
         const res = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

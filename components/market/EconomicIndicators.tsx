@@ -74,7 +74,7 @@ function IndicatorCard({
   }
 
   const TrendIcon = isNeutral ? Minus : isUp ? TrendingUp : TrendingDown;
-  const Icon = config.icon;
+  const Icon = config.icon as React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
   return (
     <div className="flex-1 min-w-[140px] rounded-lg p-3.5 hover:border-gold/20 transition-colors group relative overflow-hidden" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
