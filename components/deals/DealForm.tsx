@@ -128,56 +128,16 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
 
   const addressInputRef = useRef<HTMLInputElement>(null);
 
-  /* -- Google Maps Places Autocomplete -------------------------------- */
-  const pendingAutoFill = useRef(false);
-
-  useEffect(() => {
-    let autocomplete: google.maps.places.Autocomplete | null = null;
-
-    async function initAutocomplete() {
-      if (!addressInputRef.current) return;
-
-      try {
-        await loadGoogleMapsApi();
-
-        autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
-          types: ['address'],
-          componentRestrictions: { country: 'us' },
-          fields: ['formatted_address', 'address_components', 'geometry'],
-        });
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete?.getPlace();
-          if (place?.formatted_address) {
-            setPropertyAddress(place.formatted_address);
-            // Flag auto-fill to run after address state updates
-            pendingAutoFill.current = true;
-          }
-        });
-      } catch (err) {
-        console.error('[DealForm] Failed to initialize Google Maps autocomplete:', err);
-      }
-    }
-
-    initAutocomplete();
-
-    return () => {
-      if (autocomplete) {
-        google.maps.event.clearInstanceListeners(autocomplete);
-      }
-    };
-  }, []);
-
   /* -- Rentcast Auto-fill --------------------------------------------- */
-  const handleAutoFill = useCallback(async () => {
-    if (!propertyAddress.trim() || fetchingData) return;
+  const runAutoFill = useCallback(async (address: string) => {
+    if (!address.trim()) return;
 
     setFetchingData(true);
     try {
       const res = await fetch('/api/property/autofill', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: propertyAddress }),
+        body: JSON.stringify({ address }),
       });
 
       if (!res.ok) {
@@ -209,15 +169,45 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
     } finally {
       setFetchingData(false);
     }
-  }, [propertyAddress, fetchingData]);
+  }, []);
 
-  /* -- Auto-trigger Rentcast fill after Places selection --------------- */
+  /* -- Google Maps Places Autocomplete -------------------------------- */
   useEffect(() => {
-    if (pendingAutoFill.current && propertyAddress.trim()) {
-      pendingAutoFill.current = false;
-      handleAutoFill();
+    let autocomplete: google.maps.places.Autocomplete | null = null;
+
+    async function initAutocomplete() {
+      if (!addressInputRef.current) return;
+
+      try {
+        await loadGoogleMapsApi();
+
+        autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' },
+          fields: ['formatted_address', 'address_components', 'geometry'],
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete?.getPlace();
+          if (place?.formatted_address) {
+            setPropertyAddress(place.formatted_address);
+            // Auto-fill immediately with the selected address
+            runAutoFill(place.formatted_address);
+          }
+        });
+      } catch (err) {
+        console.error('[DealForm] Failed to initialize Google Maps autocomplete:', err);
+      }
     }
-  }, [propertyAddress, handleAutoFill]);
+
+    initAutocomplete();
+
+    return () => {
+      if (autocomplete) {
+        google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, [runAutoFill]);
 
   const atLimit = usageCount >= usageLimit;
   const usagePct = usageLimit > 0 ? Math.min((usageCount / usageLimit) * 100, 100) : 0;
@@ -285,20 +275,12 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
           icon={<MapPin className="w-4 h-4" />}
         />
 
-        <button
-          type="button"
-          disabled={!propertyAddress.trim() || fetchingData}
-          onClick={handleAutoFill}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-body',
-            'bg-gold/10 border border-gold/20 text-gold',
-            'hover:bg-gold/20 transition-colors duration-200',
-            'disabled:opacity-40 disabled:cursor-not-allowed',
-          )}
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          {fetchingData ? 'Fetching...' : 'Auto-fill with AI'}
-        </button>
+        {fetchingData && (
+          <p className="flex items-center gap-1.5 text-xs text-gold font-body animate-pulse">
+            <Sparkles className="w-3.5 h-3.5" />
+            Auto-filling property data...
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <DollarInput

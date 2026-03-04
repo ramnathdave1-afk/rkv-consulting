@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, Send } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -9,11 +8,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { MessageBubble } from '@/components/ai/MessageBubble';
 import { StreamingResponse } from '@/components/ai/StreamingResponse';
-
-const CanvasRevealEffectClient = dynamic(
-  () => import('@/components/ui/canvas-effect').then((m) => ({ default: m.CanvasRevealEffect })),
-  { ssr: false },
-);
 
 export interface AIChatRevealPanelMessage {
   id: string;
@@ -81,15 +75,10 @@ export function AIChatRevealPanel({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            >
-              <CanvasRevealEffectClient
-                animationSpeed={5}
-                containerClassName="bg-transparent opacity-20"
-                colors={[[0, 180, 216]]}
-                opacities={[1, 0.8, 1, 0.8, 0.5, 0.8, 1, 0.5, 1, 0.3]}
-                dotSize={2}
-              />
-            </motion.div>
+              style={{
+                background: 'radial-gradient(ellipse at 50% 40%, rgba(0,180,216,0.08) 0%, transparent 70%)',
+              }}
+            />
           )}
         </AnimatePresence>
 
