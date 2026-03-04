@@ -657,7 +657,7 @@ function PerformanceTab({ property }: { property: Property }) {
   const cashFlow = calcCashFlow(property);
   const equity = calcEquity(property);
 
-  /* -- Monthly cash flow line chart (12 months, mock trend) -- */
+  /* -- Monthly cash flow line chart (12 months) -- */
   const cashFlowData = useMemo(() => {
     const data: { month: string; cashFlow: number }[] = [];
     const now = new Date();
@@ -665,10 +665,9 @@ function PerformanceTab({ property }: { property: Property }) {
 
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const variation = 1 + Math.sin((12 - i) * 0.5) * 0.06;
       data.push({
         month: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-        cashFlow: Math.round(monthly * variation),
+        cashFlow: Math.round(monthly),
       });
     }
 
@@ -977,7 +976,7 @@ function TenantsTab({
         description="This unit is currently vacant. Add a tenant to start tracking payments."
         action={{
           label: 'Add Tenant',
-          onClick: () => {},
+          onClick: () => { window.location.href = '/tenants' },
           icon: <Plus />,
         }}
       />
@@ -1241,7 +1240,7 @@ function MaintenanceTab({ requests }: { requests: MaintenanceRequest[] }) {
         description="All clear -- no open maintenance requests for this property."
         action={{
           label: 'New Request',
-          onClick: () => {},
+          onClick: () => { window.location.href = '/maintenance' },
           icon: <Plus />,
         }}
       />

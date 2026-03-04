@@ -33,7 +33,7 @@ import {
   type LeadSource,
   type DealStage,
   type ActivityType,
-} from '@/lib/crm-data';
+} from '@/lib/types/crm';
 import { useCRMStore } from '@/lib/crm-store';
 
 const CRM_SUB_TABS = [
@@ -264,6 +264,7 @@ export default function CRMPage() {
         deal={dealDrawerDealId ? deals.find((d) => d.id === dealDrawerDealId) ?? null : null}
         open={dealDrawerDealId != null}
         onClose={() => setDealDrawerDealId(null)}
+        onDealUpdated={async () => { setDealDrawerDealId(null); await refetchCRM(); }}
         reduced={reduced}
       />
     </div>
@@ -820,13 +821,17 @@ function DealDrawer({
   deal,
   open,
   onClose,
+  onDealUpdated,
   reduced: _reduced,
 }: {
   deal: CRMDeal | null | undefined;
   open: boolean;
   onClose: () => void;
+  onDealUpdated: () => void;
   reduced: boolean;
 }) {
+  const [updating, setUpdating] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -835,6 +840,61 @@ function DealDrawer({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
+
+  const handleMoveToNextStage = useCallback(async () => {
+    if (!deal || updating) return;
+    const stages: DealStage[] = ['Prospect', 'Analysis', 'Due Diligence', 'Negotiation', 'Under Contract', 'Closed'];
+    const currentIdx = stages.indexOf(deal.stage as DealStage);
+    if (currentIdx < 0 || currentIdx >= stages.length - 1) return;
+    const nextStage = stages[currentIdx + 1];
+    setUpdating(true);
+    try {
+      const res = await fetch('/api/crm/deals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deal.id, stage: nextStage }),
+      });
+      if (res.ok) onDealUpdated();
+    } catch (err) {
+      console.error('[CRM DealDrawer] Move stage error:', err);
+    } finally {
+      setUpdating(false);
+    }
+  }, [deal, updating, onDealUpdated]);
+
+  const handleMarkDead = useCallback(async () => {
+    if (!deal || updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch('/api/crm/deals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deal.id, stage: 'Dead' }),
+      });
+      if (res.ok) onDealUpdated();
+    } catch (err) {
+      console.error('[CRM DealDrawer] Mark dead error:', err);
+    } finally {
+      setUpdating(false);
+    }
+  }, [deal, updating, onDealUpdated]);
+
+  const handleRunAnalysis = useCallback(async () => {
+    if (!deal || updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch('/api/deals/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deal_id: deal.id }),
+      });
+      if (res.ok) onDealUpdated();
+    } catch (err) {
+      console.error('[CRM DealDrawer] Analysis error:', err);
+    } finally {
+      setUpdating(false);
+    }
+  }, [deal, updating, onDealUpdated]);
 
   if (!open) return null;
 
@@ -891,10 +951,10 @@ function DealDrawer({
                   </ul>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm">Move to Next Stage</Button>
-                  <Button size="sm" variant="outline">Log Activity</Button>
-                  <Button size="sm" variant="outline">Run ATLAS Analysis</Button>
-                  <Button size="sm" variant="outline" className="text-red">Mark Dead</Button>
+                  <Button size="sm" loading={updating} onClick={handleMoveToNextStage} disabled={deal.stage === 'Closed' || deal.stage === 'Dead'}>Move to Next Stage</Button>
+                  <Button size="sm" variant="outline" onClick={() => { onClose(); /* open activity tab */ }}>Log Activity</Button>
+                  <Button size="sm" variant="outline" loading={updating} onClick={handleRunAnalysis}>Run ATLAS Analysis</Button>
+                  <Button size="sm" variant="outline" className="text-red" loading={updating} onClick={handleMarkDead} disabled={deal.stage === 'Dead'}>Mark Dead</Button>
                 </div>
               </>
             )}

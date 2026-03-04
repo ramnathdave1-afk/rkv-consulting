@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from '@/components/ui/Toast';
 import {
   Mail,
   Phone,
@@ -793,7 +794,7 @@ export default function AIAgentsPage() {
                           .eq('status', 'active')
                           .limit(1);
                         if (!tenants?.length) {
-                          alert('No active tenants found for test call');
+                          toast.error('No active tenants found for test call');
                           return;
                         }
                         try {
@@ -807,13 +808,13 @@ export default function AIAgentsPage() {
                           });
                           const data = await res.json();
                           if (res.ok) {
-                            alert('Test call initiated successfully');
+                            toast.success('Test call initiated successfully');
                             fetchData(); // Refresh activity logs
                           } else {
-                            alert(data.error || 'Failed to initiate test call');
+                            toast.error(data.error || 'Failed to initiate test call');
                           }
                         } catch {
-                          alert('Failed to connect to voice service');
+                          toast.error('Failed to connect to voice service');
                         }
                       }}
                     >

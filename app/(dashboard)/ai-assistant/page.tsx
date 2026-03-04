@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/lib/motion';
@@ -687,7 +687,7 @@ function LiveContextPanel({ context }: { context: PortfolioContext }) {
 /* ------------------------------------------------------------------ */
 
 export default function AIAssistantPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const { getLimit, planName } = useSubscription();
 
   // State
@@ -701,7 +701,6 @@ export default function AIAssistantPage() {
   const [usageCount, setUsageCount] = useState(0);
   const [usageLimit, setUsageLimit] = useState(200);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [confidence, setConfidence] = useState(94);
   const [confidenceFlash, setConfidenceFlash] = useState(false);
   const [welcomeText, setWelcomeText] = useState('');
   const [_welcomeDone, setWelcomeDone] = useState(false);
@@ -1104,7 +1103,6 @@ GUIDELINES:
       }
 
       setUsageCount((prev) => prev + 1);
-      setConfidence((c) => Math.min(99.99, c + 0.01 + Math.random() * 0.02));
       setConfidenceFlash(true);
       setTimeout(() => setConfidenceFlash(false), 300);
 
@@ -1232,14 +1230,14 @@ GUIDELINES:
               Data loaded: {portfolioContext.properties.length} props, {portfolioContext.tenants.length} tenants
             </p>
             <div className="flex items-center gap-2 px-3 py-1 rounded sharp border border-white/[0.08] bg-[#12121A]">
-              <span className="font-body text-[10px] text-white/40 uppercase tracking-wider">Confidence</span>
+              <span className="font-body text-[10px] text-white/40 uppercase tracking-wider">Status</span>
               <span
                 className={cn(
                   'font-mono text-[10px] tabular-nums transition-colors duration-300',
                   confidenceFlash ? 'text-[#48CAE4]' : 'text-[#00B4D8]'
                 )}
               >
-                {confidence.toFixed(2)}%
+                {isStreaming ? 'Analyzing...' : 'Ready'}
               </span>
             </div>
             <div className="flex items-center gap-2">

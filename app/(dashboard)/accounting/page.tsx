@@ -44,6 +44,7 @@ import { createClient } from '@/lib/supabase/client'
 import { FeatureGate } from '@/components/paywall/FeatureGate'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { cn } from '@/lib/utils'
+import { toast } from '@/components/ui/Toast'
 import type { Property, Tenant, Transaction } from '@/types'
 import { ScheduleETab } from '@/components/accounting/ScheduleETab'
 import { DepreciationTab } from '@/components/accounting/DepreciationTab'
@@ -261,6 +262,20 @@ function AddTransactionModal({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Upload receipt if provided
+      let receiptUrl: string | null = null
+      if (form.receipt) {
+        const ext = form.receipt.name.split('.').pop() || 'jpg'
+        const path = `receipts/${user.id}/${Date.now()}.${ext}`
+        const { error: uploadErr } = await supabase.storage
+          .from('documents')
+          .upload(path, form.receipt)
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
+          receiptUrl = urlData?.publicUrl || null
+        }
+      }
+
       const { error } = await supabase.from('transactions').insert({
         user_id: user.id,
         property_id: form.property_id || null,
@@ -272,6 +287,7 @@ function AddTransactionModal({
         date: form.date,
         tax_deductible: form.tax_deductible,
         notes: form.notes || null,
+        receipt_url: receiptUrl,
       })
 
       if (error) {
@@ -543,6 +559,9 @@ function AccountingContent() {
   const [exchangeForm, setExchangeForm] = useState({ property: '', salePrice: '', saleDate: '', notes: '' })
   const [savingExchange, setSavingExchange] = useState(false)
 
+  // Tax rate from profile (default 30%)
+  const [taxRate, setTaxRate] = useState(0.30)
+
   /* ---------------------------------------------------------------- */
   /*  Data fetching                                                    */
   /* ---------------------------------------------------------------- */
@@ -552,7 +571,7 @@ function AccountingContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [propertiesRes, tenantsRes] = await Promise.all([
+      const [propertiesRes, tenantsRes, profileRes] = await Promise.all([
         supabase
           .from('properties')
           .select('*')
@@ -563,6 +582,11 @@ function AccountingContent() {
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('effective_tax_rate')
+          .eq('id', user.id)
+          .single(),
       ])
 
       const propsData = (propertiesRes.data || []) as Property[]
@@ -570,6 +594,11 @@ function AccountingContent() {
 
       setProperties(propsData)
       setTenants(tenantsData)
+
+      // Set tax rate from profile
+      if (profileRes.data?.effective_tax_rate != null) {
+        setTaxRate(Number(profileRes.data.effective_tax_rate))
+      }
 
       // Fetch real transactions from database
       const { data: txData } = await supabase
@@ -761,12 +790,11 @@ function AccountingContent() {
   /*  Tax summary                                                      */
   /* ---------------------------------------------------------------- */
 
-  const TAX_RATE = 0.30
   const deductibleExpenses = ytdTransactions
     .filter((tx) => tx.type === 'expense')
     .reduce((sum, tx) => sum + tx.amount, 0)
 
-  const _estimatedTaxSavings = deductibleExpenses * TAX_RATE
+  const _estimatedTaxSavings = deductibleExpenses * taxRate
 
   const _deductibleByCategory = useMemo(() => {
     const map = new Map<string, number>()
@@ -940,13 +968,68 @@ function AccountingContent() {
   }
 
   function handleExportCPA() {
-    // Placeholder: generate CPA package
-    alert('CPA Package export coming soon. This will generate a comprehensive PDF with Schedule E, depreciation schedules, and supporting documentation.')
+    toast.info('CPA Package export will be available in a future update')
   }
 
-  function handleGenerateReport(reportId: string) {
-    // Placeholder: generate report PDF
-    alert(`Generating ${reportId.replace(/_/g, ' ')} report... PDF generation coming soon.`)
+  async function handleGenerateReport(reportId: string) {
+    const reportStart = new Date(reportDateRange.start)
+    const reportEnd = new Date(reportDateRange.end)
+    const filteredTx = transactions.filter((tx) => {
+      const d = new Date(tx.date)
+      return d >= reportStart && d <= reportEnd
+    })
+
+    try {
+      switch (reportId) {
+        case 'annual_summary': {
+          const { generateAnnualSummaryPDF } = await import('@/lib/pdf/annual-summary')
+          await generateAnnualSummaryPDF({ properties, transactions: filteredTx, year: reportStart.getFullYear() })
+          break
+        }
+        case 'property_pl': {
+          const { generatePropertyPLPDF } = await import('@/lib/pdf/property-pl')
+          const prop = (selectedPropertyId ? properties.find((p) => p.id === selectedPropertyId) : null) || properties[0]
+          if (!prop) { toast.error('No properties found'); return }
+          await generatePropertyPLPDF({
+            property: prop,
+            transactions: filteredTx.filter((tx) => tx.property_id === prop.id),
+            startDate: reportDateRange.start,
+            endDate: reportDateRange.end,
+          })
+          break
+        }
+        case 'cash_flow': {
+          const { generateCashFlowPDF } = await import('@/lib/pdf/cash-flow')
+          await generateCashFlowPDF({ properties, transactions: filteredTx, startDate: reportDateRange.start, endDate: reportDateRange.end })
+          break
+        }
+        case 'rent_roll': {
+          const { generateRentRollPDF } = await import('@/lib/pdf/rent-roll')
+          await generateRentRollPDF({ properties, tenants, transactions: filteredTx })
+          break
+        }
+        case 'owner_statement': {
+          const { generateOwnerStatementPDF } = await import('@/lib/pdf/owner-statement')
+          const prop = (selectedPropertyId ? properties.find((p) => p.id === selectedPropertyId) : null) || properties[0]
+          if (!prop) { toast.error('No properties found'); return }
+          await generateOwnerStatementPDF({
+            property: prop,
+            tenants: tenants.filter((t) => t.property_id === prop.id),
+            transactions: filteredTx.filter((tx) => tx.property_id === prop.id),
+            month: reportStart.getMonth(),
+            year: reportStart.getFullYear(),
+          })
+          break
+        }
+        default:
+          toast.info('Report type not yet available')
+          return
+      }
+      toast.success('PDF generated successfully')
+    } catch (err) {
+      console.error('[Accounting] PDF generation error:', err)
+      toast.error('Failed to generate PDF')
+    }
   }
 
   async function handleSaveExchange() {
@@ -1114,7 +1197,7 @@ function AccountingContent() {
                     <Percent className="h-4 w-4 text-gold" />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-gold font-mono">~{(TAX_RATE * 100).toFixed(0)}%</p>
+                <p className="text-2xl font-bold text-gold font-mono">~{(taxRate * 100).toFixed(0)}%</p>
                 <p className="text-xs text-muted mt-1">Estimated rate</p>
               </div>
             </div>
@@ -1907,12 +1990,12 @@ function AccountingContent() {
                 </div>
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5">
                   <Calculator className="w-3 h-3" />
-                  {(TAX_RATE * 100).toFixed(0)}% est. rate
+                  {(taxRate * 100).toFixed(0)}% est. rate
                 </span>
               </div>
               <div className="grid grid-cols-4 gap-4">
                 {['Q1 (Apr 15)', 'Q2 (Jun 15)', 'Q3 (Sep 15)', 'Q4 (Jan 15)'].map((q, i) => {
-                  const quarterlyEstimate = (ytdProfit * TAX_RATE) / 4
+                  const quarterlyEstimate = (ytdProfit * taxRate) / 4
                   return (
                     <div key={q} className="bg-deep border border-border rounded-lg p-4 text-center" style={{ background: '#111111', border: '1px solid #1e1e1e' }}>
                       <p className="text-xs text-muted mb-2 font-mono">{q}</p>

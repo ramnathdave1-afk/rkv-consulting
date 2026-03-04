@@ -128,14 +128,21 @@ export async function POST(req: NextRequest) {
 
     // ── Increment saves count on the feed deal if applicable ────────────
     if (body.feed_deal_id) {
-      await supabase.rpc('increment_field', {
-        table_name: 'feed_deals',
-        row_id: body.feed_deal_id,
-        field_name: 'saves',
-        amount: 1,
-      }).catch(() => {
-        // Non-critical: feed_deals may not have an RPC or saves column
-      })
+      try {
+        const { data: feedDeal } = await supabase
+          .from('feed_deals')
+          .select('saves')
+          .eq('id', body.feed_deal_id)
+          .single()
+        if (feedDeal) {
+          await supabase
+            .from('feed_deals')
+            .update({ saves: (feedDeal.saves || 0) + 1 })
+            .eq('id', body.feed_deal_id)
+        }
+      } catch {
+        // Non-critical: saves tracking is best-effort
+      }
     }
 
     return NextResponse.json({ deal }, { status: 201 })

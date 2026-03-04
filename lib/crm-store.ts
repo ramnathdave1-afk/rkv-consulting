@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import type { CRMDeal, DealStage } from './crm-data';
+import type { CRMDeal, DealStage } from './types/crm';
 
 interface CRMState {
   selectedContactId: string | null;

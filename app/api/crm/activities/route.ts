@@ -27,7 +27,10 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[CRM Activities] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to fetch activities' }, { status: 500 });
+    }
 
     const list = (data || []).map((row: ActivityRow) => ({
       id: row.id,
@@ -55,8 +58,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { type, description, contactId, dealId } = body;
 
+    const VALID_TYPES = ['call', 'email', 'meeting', 'note', 'stage_change', 'analysis', 'document'] as const;
     if (!type || !description) {
       return NextResponse.json({ error: 'type and description are required' }, { status: 400 });
+    }
+    if (!VALID_TYPES.includes(type)) {
+      return NextResponse.json({ error: `Invalid type. Must be one of: ${VALID_TYPES.join(', ')}` }, { status: 400 });
     }
     if (!contactId) {
       return NextResponse.json({ error: 'contactId is required' }, { status: 400 });
@@ -74,7 +81,10 @@ export async function POST(req: NextRequest) {
       .select('*, contacts(name), deals(address, city)')
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[CRM Activities] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
+    }
 
     const row = data as ActivityRow;
     return NextResponse.json({

@@ -17,10 +17,8 @@ function validateTwilioSignature(
 ): boolean {
   const authToken = process.env.TWILIO_AUTH_TOKEN
   if (!authToken) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[Twilio Webhook] TWILIO_AUTH_TOKEN not set in production!')
-    }
-    return true // dev mode bypass
+    console.error('[Twilio Webhook] TWILIO_AUTH_TOKEN not set — rejecting webhook')
+    return false
   }
 
   const signature = req.headers.get('x-twilio-signature')

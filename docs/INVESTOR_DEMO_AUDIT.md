@@ -1,6 +1,8 @@
-# Investor Demo — What Works, What Doesn’t
+# Investor Demo — What Works, What Doesn't
 
 *Audit from the perspective of an investor walking through the product. Based on code paths, data sources, and API wiring. No opinions—facts only.*
+
+*Last updated: March 2026*
 
 ---
 
@@ -20,16 +22,16 @@
 | Feature | Works? | Data source | Gaps |
 |---------|--------|-------------|------|
 | **Portfolio metrics** | ✅ | Supabase: `properties`, aggregated (value, equity, cash flow, ROI) | Real. |
-| **Metric cards (4)** | ✅ | Same properties + derived | Values real; **sparklines and “vs last quarter” are mock** (TODO: historical snapshots). |
-| **Live Market Pulse** | ✅* | `/api/market/pulse` → FRED (10Y, 30Y mtg, permits, existing sales) | *Requires `FRED_API_KEY`. Without it, strip shows “Live” but no numbers. |
-| **Portfolio chart** | ⚠️ | Properties real; **12‑month trend is mock** (random variance on current cash flow). |
+| **Metric cards (4)** | ✅ | Same properties + derived | Values real; sparklines populate from `portfolio_snapshots` over time. Change% computed from snapshots when >=2 exist. |
+| **Live Market Pulse** | ✅* | `/api/market/pulse` → FRED (10Y, 30Y mtg, permits, existing sales) | *Requires `FRED_API_KEY`. Without it, strip shows "Live" but no numbers. |
+| **Portfolio chart** | ✅ | Properties real; cash flow chart shows zeros when no transactions (no fake data). |
 | **Deals table / score** | ✅ | Supabase `deals` | Real. |
 | **Activity feed** | ✅ | Built from `rent_payments`, maintenance, **agent_logs** | Real. |
 | **AI Market Brief** | ✅ | POST `/api/ai/market-brief` (Claude) + portfolio summary | Real; plan-gated. |
 | **Alerts** | ✅ | Derived from tenants, rent, maintenance | Real. |
 | **Empty state** | ✅ | No properties → CTA to add first property | Correct. |
 
-**Summary:** Dashboard is usable and real for portfolio and activity. Trend/chart and comparison numbers are not yet backed by historical data.
+**Summary:** Dashboard is fully real. Sparklines and change% self-populate as `portfolio_snapshots` accumulate (daily on page visit).
 
 ---
 
@@ -40,7 +42,7 @@
 | **List / add / edit / delete** | ✅ | Supabase `properties`; forms and validation in place. |
 | **Property detail** | ✅ | Single property load, notes update, delete. |
 | **Bulk add (paste)** | ✅ | Parse paste → insert rows. |
-| **Cash flow chart (12 months)** | ⚠️ | **Mock trend** (comment: “12 months, mock trend”). |
+| **Cash flow chart (12 months)** | ✅ | Shows real transaction data or zeros. |
 
 ---
 
@@ -52,7 +54,8 @@
 | **Pipeline (Kanban-style)** | ✅ | Supabase `deals` (status: lead → closed/dead) | Real; drag-and-drop updates `deals`. |
 | **Deal Feed** | ✅* | `feed_deals` + `wholesale_submissions`; refresh calls Zillow + Attom | *Requires plan with `dealFeed` + **RAPIDAPI_KEY**, **ATTOM_API_KEY**. Without keys, feed is empty or wholesale-only. |
 | **Submit deal (wholesale)** | ✅ | POST to `wholesale_submissions`; approval can insert into `feed_deals` | Real. |
-| **Market averages on Deals** | ⚠️ | **Placeholder benchmarks** (comment in code). |
+| **Market benchmarks on Deals** | ✅ | Fetched from `/api/market/live` (Rentcast + FRED) per deal zip/city | Falls back to conservative defaults if API unavailable. |
+| **Deal usage limits** | ✅ | Read from subscription tier (Basic: 5, Pro: 50, Elite: unlimited) | Real. |
 
 ---
 
@@ -60,11 +63,11 @@
 
 | Feature | Works? | Data source | Notes |
 |---------|--------|-------------|-------|
-| **Contacts tab** | ⚠️ Mock | `lib/crm-data` (static) + `lib/crm-store` (Zustand) | **Not Supabase.** Add/edit/detail only affect in-memory state; refresh loses changes. |
-| **Deals tab (Kanban + list)** | ⚠️ Mock | Same; `getCRMDeals()`, `moveDealToStage` in store | Same as above. |
-| **Activity feed tab** | ⚠️ Mock | `getCRMActivities()` from crm-data | Static list. |
+| **Contacts tab** | ✅ | `/api/crm/contacts` → Supabase `contacts` + `deal_contacts` join | Real. dealCount and totalDealVolume computed from DB. |
+| **Deals tab (Kanban + list)** | ✅ | `/api/crm/deals` → Supabase `deals` + `deal_contacts` join | Real. ATLAS scores from `analysis_data`, daysInStage from `stage_entered_at`, dealType derived from deal data. |
+| **Activity feed tab** | ✅ | `/api/crm/activities` → Supabase `contact_activities` + joins | Real. POST endpoint for logging calls/notes. |
 
-**Important:** The **Contacts** page under a different nav path (`/contacts`) uses **Supabase** (`contacts`, `contact_activities`, `deal_contacts`). So there are two contact/deal experiences: **CRM = demo/mock**; **Contacts = real DB**.
+**Note:** Both CRM and Contacts pages now read from the same Supabase tables.
 
 ---
 
@@ -82,7 +85,7 @@
 | **Alerts (opportunity)** | ✅ | Derived from `liveDataMap` | Logic real; depends on Rentcast data. |
 | **Market comparison** | ✅ | From same market data | Real when data loaded. |
 
-**Summary:** Feature set is wired for production. All “live” and “daily” data depend on env keys (FRED, Rentcast, BLS).
+**Summary:** Feature set is wired for production. All "live" and "daily" data depend on env keys (FRED, Rentcast, BLS).
 
 ---
 
@@ -91,7 +94,7 @@
 | Feature | Works? | Notes |
 |---------|--------|-------|
 | **Tenants list** | ✅ | Supabase `tenants` + `properties`. |
-| **Tenant detail** | ✅ | Real tenant + property; **extended tenant data is mock** (comment in code). |
+| **Tenant detail** | ✅ | Real tenant + property; extended data (emergency contact, vehicle, payment method, etc.) from DB columns. |
 | **Rent payments** | ✅ | Supabase `rent_payments`. |
 | **Tenant screening (apply by token)** | ✅ | `screening_applications`; token-based apply flow. |
 | **Tenant portal (by property)** | ✅ | `tenant/[propertyId]`; maintenance message flow. |
@@ -103,8 +106,10 @@
 | Feature | Works? | Notes |
 |---------|--------|-------|
 | **Properties list** | ✅ | Supabase `properties`. |
-| **Inquiries / showings** | ❌ Mock | Generated from `PROSPECT_*`, `INQUIRY_*` arrays; not from DB. |
-| **AI listing generator** | ❌ Mock | `generateListing()` is local function; no AI API call. |
+| **Inquiries** | ✅ | `/api/vacancy/inquiries` → Supabase `vacancy_inquiries`. Empty state when no inquiries. |
+| **Showings** | ✅ | `/api/vacancy/showings` → Supabase `showing_appointments` (GET + POST). |
+| **Listing status** | ✅ | `/api/vacancy/listings` → Supabase `vacancy_listings`. Real per-property status. |
+| **AI listing generator** | ✅ | POST `/api/ai/listing` (Claude). Toast error on failure instead of silent fallback. |
 
 ---
 
@@ -114,7 +119,7 @@
 |---------|--------|-------|
 | **Requests list / create / update** | ✅ | Supabase (maintenance requests). |
 | **Kanban (by status)** | ✅ | Real. |
-| **Suggested contractors** | ⚠️ | **Placeholder data** (comment in code). |
+| **Suggested contractors** | ✅ | Live matching API (`/api/contractors/match`). |
 
 ---
 
@@ -124,9 +129,11 @@
 |---------|--------|-------|
 | **Transactions** | ✅ | Supabase `transactions`; income/expense. |
 | **YTD P&L, charts** | ✅ | From transactions. |
-| **Prior year comparison** | ⚠️ | **Mock** (e.g. 88%/92% of current YTD). |
-| **Depreciation** | ⚠️ | **Placeholder** (comment: “Depreciation data (placeholder)”). |
-| **1031 / Schedule E** | ✅ | UI and forms present; storage path not fully traced here. |
+| **Prior year comparison** | ✅ | Real — reads from transactions table, filters by prior year dates. Shows "No prior year data" when none exist. |
+| **Depreciation** | ✅ | Uses `land_value` column from properties (with 20% fallback marked as "est."). |
+| **Tax rate** | ✅ | Reads `effective_tax_rate` from user profile (configurable in Settings). Default 30%. |
+| **1031 Exchange Tracker** | ✅ | Full CRUD via `/api/exchanges`. Countdown timers, color-coded deadlines, modal for creating exchanges. |
+| **Schedule E** | ✅ | UI and forms present, real data from transactions. |
 
 ---
 
@@ -146,7 +153,7 @@
 |------|--------|-------|
 | **Documents** | ✅ | Supabase `documents` + storage; link to properties/tenants/deals. |
 | **Calendar** | ✅ | Events from `properties` + `deals`; Supabase. |
-| **Settings** | ✅ | Profile/preferences; typical form + Supabase. |
+| **Settings** | ✅ | Profile/preferences + tax rate input; typical form + Supabase. |
 | **Financing hub** | ✅ | Properties from Supabase; UI for financing views. |
 
 ---
@@ -157,7 +164,7 @@
 |---------|----------|------------|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Auth, all DB | App broken. |
 | `FRED_API_KEY` | Live pulse, rates, economic indicators | Pulse/rates empty or fallback. |
-| `RENTCAST_API_KEY` | Market Intelligence per-market data | Map/heat map no live data. |
+| `RENTCAST_API_KEY` | Market Intelligence per-market data, deal benchmarks | Map/heat map no live data; deal benchmarks use defaults. |
 | `BLS_API_KEY` | BLS labor/city data | BLS indicators fail. |
 | `ANTHROPIC_API_KEY` | ATLAS, market brief, other AI | AI routes fail. |
 | `RAPIDAPI_KEY` (Zillow), `ATTOM_API_KEY` | Deal Feed refresh | Feed empty or wholesale-only. |
@@ -171,30 +178,29 @@
 
 - Auth and session.
 - Properties CRUD and list.
-- Deals and Pipeline (Supabase `deals`).
-- Contacts (the Supabase-backed Contacts page, not CRM).
-- Tenant list, screening, apply flow, tenant portal.
-- Maintenance requests.
+- Deals, Pipeline, and Deal Analyzer (Supabase `deals`, market benchmarks from API).
+- CRM — contacts, deals, activities (all Supabase-backed).
+- Contacts page (Supabase-backed).
+- Tenant list, detail (with extended data), screening, apply flow, tenant portal.
+- Vacancies — inquiries, showings, listings, AI listing generator (all DB + API).
+- Maintenance requests and contractor matching.
+- Accounting — transactions, P&L, prior-year comparison, depreciation, tax estimates, 1031 tracker, Schedule E.
 - Documents and calendar.
+- Settings (including tax rate).
 - Market Intelligence *when FRED/Rentcast/BLS keys are set*.
 - Live Market Pulse *when FRED_API_KEY is set*.
 - ATLAS (AI Assistant) when plan + Anthropic key set.
-- Dashboard metrics and activity (excluding sparklines/trend).
+- Dashboard metrics, activity, and change%.
 
-**Runs with gaps or mock/placeholder:**
+**Minor gaps (self-resolving or API-key dependent):**
 
-- **Dashboard:** Sparklines and “vs last quarter” = mock; no historical series.
-- **CRM (sidebar CRM):** All data mock; not persisted.
-- **Vacancies:** Inquiries and AI listing = mock.
-- **Accounting:** Prior-year comparison = mock; depreciation = placeholder.
-- **Maintenance:** Suggested contractors = placeholder.
+- **Dashboard sparklines:** Populate as `portfolio_snapshots` accumulate (~30 days of visits).
 - **Deal Feed:** Depends on Zillow/Attom keys and plan.
-- **Deals page:** Market averages = placeholder.
 
 ---
 
 ## 15. ONE-LINE SUMMARY
 
-**Works:** Auth, properties, Supabase-backed deals/pipeline/contacts, tenants, screening, maintenance, documents, calendar, settings, financing hub, and (with keys) market intelligence, live pulse, and ATLAS.  
+**Works:** All core features — auth, properties, deals/pipeline, CRM, tenants, vacancies, maintenance, accounting (with tax rates, depreciation, 1031 tracker), documents, calendar, settings, financing hub, and (with API keys) market intelligence, live pulse, deal feed, and ATLAS.
 
-**Doesn’t (or mock/placeholder):** CRM (in-memory only), dashboard/chart trends, vacancies inquiries/AI listing, accounting prior-year and depreciation, maintenance contractor suggestions, and deal-feed external ingestion without API keys.
+**Self-resolving:** Dashboard sparklines (need ~30 days of snapshots to populate).

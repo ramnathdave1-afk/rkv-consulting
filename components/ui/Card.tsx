@@ -77,7 +77,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
               'border-b',
               paddingStyles[padding === 'none' ? 'md' : padding],
             )}
-            style={{ borderColor: '#1e1e1e' }}
+            style={{ borderColor: 'var(--border)' }}
           >
             {header}
           </div>
@@ -95,7 +95,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
               'border-t',
               paddingStyles[padding === 'none' ? 'md' : padding],
             )}
-            style={{ borderColor: '#1e1e1e' }}
+            style={{ borderColor: 'var(--border)' }}
           >
             {footer}
           </div>

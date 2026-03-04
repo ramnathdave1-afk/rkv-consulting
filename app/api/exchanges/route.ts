@@ -15,7 +15,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('sale_date', { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[1031 Exchanges] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to fetch exchanges' }, { status: 500 });
+    }
     return NextResponse.json(data || []);
   } catch (e) {
     console.error('[1031 Exchanges]', e);
@@ -49,7 +52,10 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[1031 Exchanges] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to create exchange' }, { status: 500 });
+    }
     return NextResponse.json(data);
   } catch (e) {
     console.error('[1031 Exchanges]', e);
@@ -81,10 +87,40 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[1031 Exchanges] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to update exchange' }, { status: 500 });
+    }
     return NextResponse.json(data);
   } catch (e) {
     console.error('[1031 Exchanges]', e);
     return NextResponse.json({ error: 'Failed to update exchange' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+
+    const { error } = await supabase
+      .from('exchanges_1031')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[1031 Exchanges] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to delete exchange' }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[1031 Exchanges]', e);
+    return NextResponse.json({ error: 'Failed to delete exchange' }, { status: 500 });
   }
 }

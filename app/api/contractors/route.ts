@@ -17,7 +17,7 @@ export async function GET() {
 
     if (error) {
       console.error('[Contractors]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch contractors' }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[Contractors]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to add contractor' }, { status: 500 });
     }
 
     return NextResponse.json(data);

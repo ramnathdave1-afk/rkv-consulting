@@ -166,11 +166,11 @@ function SignUpPageInner() {
     if (error) {
       setLoading(false);
       if (error.message.toLowerCase().includes('email')) {
-        setErrors({ email: error.message });
+        setErrors({ email: 'This email is already registered or invalid' });
       } else if (error.message.toLowerCase().includes('password')) {
-        setErrors({ password: error.message });
+        setErrors({ password: 'Password must be at least 6 characters' });
       } else {
-        setErrors({ general: error.message });
+        setErrors({ general: 'Unable to create account. Please try again.' });
       }
       return;
     }

@@ -360,7 +360,10 @@ export default function DashboardPage() {
       .then(() => fetch('/api/portfolio/snapshot'))
       .then((r) => r.json())
       .then((data) => setPortfolioSnapshots(Array.isArray(data) ? data : []))
-      .catch(() => setPortfolioSnapshots([]));
+      .catch((err) => {
+        console.error('[Dashboard] Failed to fetch portfolio snapshots:', err);
+        setPortfolioSnapshots([]);
+      });
   }, [loading, properties]);
 
   /* ---------------------------------------------------------------- */
@@ -589,7 +592,7 @@ export default function DashboardPage() {
         <EmptyState
           icon={<AlertCircle className="size-10 text-red" />}
           title="Something went wrong"
-          description={error.message}
+          description="Failed to load dashboard data. Please try again."
           action={{
             label: 'Try again',
             onClick: () => {

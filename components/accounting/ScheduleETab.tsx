@@ -162,8 +162,9 @@ export function ScheduleETab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyScheduleData, overrides])
 
-  function handlePrint() {
-    window.print()
+  async function handlePrint() {
+    const { generateScheduleEPDF } = await import('@/lib/pdf/schedule-e')
+    await generateScheduleEPDF({ properties, transactions, year: currentYear })
   }
 
   return (

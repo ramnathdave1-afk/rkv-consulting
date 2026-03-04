@@ -29,6 +29,7 @@ import {
   Workflow,
   Flame,
   LayoutGrid,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -76,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Portfolio', href: '/properties', icon: Building2 },
       { label: 'Market Intelligence', href: '/market-intelligence', icon: Globe, featureKey: 'marketIntelligence' },
       { label: 'Financing Hub', href: '/financing-hub', icon: Landmark, featureKey: 'financingHub' },
+      { label: 'Comps & ARV', href: '/comps', icon: BarChart3 },
     ],
   },
   {

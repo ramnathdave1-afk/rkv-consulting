@@ -173,7 +173,7 @@ function FinancingHubContent() {
             setCalcRate(rate30.toString())
           }
         }
-      } catch { /* use defaults */ }
+      } catch (err) { console.error('[Financing Hub] Failed to fetch rates:', err) }
       finally { setRatesLoading(false) }
     }
     fetchRates()

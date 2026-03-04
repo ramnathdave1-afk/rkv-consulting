@@ -325,8 +325,8 @@ function MarketIntelligenceContent() {
           if (data) {
             results[cityStr] = data
           }
-        } catch {
-          // silently skip failed fetches
+        } catch (err) {
+          console.error(`[Market Intelligence] Failed to fetch data for ${cityStr}:`, err)
         }
       })
     )

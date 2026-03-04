@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { PLANS, type PlanName, type FeatureKey } from '@/lib/stripe/plans'
@@ -97,7 +98,7 @@ export function useSubscription(): UseSubscriptionReturn {
 
   /* ---- Feature access ---- */
 
-  function hasFeature(featureKey: FeatureKey): boolean {
+  const hasFeature = useCallback((featureKey: FeatureKey): boolean => {
     if (isActive) {
       const value = plan.features[featureKey]
       // Boolean features: true = enabled
@@ -108,9 +109,9 @@ export function useSubscription(): UseSubscriptionReturn {
     if (PAID_FEATURES.has(featureKey)) return false
     const basicValue = PLANS.basic.features[featureKey]
     return typeof basicValue === 'boolean' ? basicValue : basicValue > 0
-  }
+  }, [isActive, plan])
 
-  function getLimit(featureKey: FeatureKey): number {
+  const getLimit = useCallback((featureKey: FeatureKey): number => {
     if (isActive) {
       const value = plan.features[featureKey]
       return typeof value === 'number' ? value : value ? Infinity : 0
@@ -119,13 +120,13 @@ export function useSubscription(): UseSubscriptionReturn {
     if (PAID_FEATURES.has(featureKey)) return 0
     const basicValue = PLANS.basic.features[featureKey]
     return typeof basicValue === 'number' ? basicValue : basicValue ? Infinity : 0
-  }
+  }, [isActive, plan])
 
-  function isAtLimit(featureKey: FeatureKey, currentCount: number): boolean {
+  const isAtLimit = useCallback((featureKey: FeatureKey, currentCount: number): boolean => {
     const limit = getLimit(featureKey)
     if (limit === Infinity) return false
     return currentCount >= limit
-  }
+  }, [getLimit])
 
   /* ---- Renewal / trial ---- */
 

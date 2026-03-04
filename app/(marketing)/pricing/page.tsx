@@ -316,7 +316,7 @@ function PricingPageInner() {
             plans={pricingPlans}
             defaultPlan="pro"
             defaultInterval="monthly"
-            onPlanSelect={(plan) => console.log('Selected:', plan)}
+            onPlanSelect={() => {}}
             isLoading={!!loadingPlan}
             onCheckout={(plan, interval) => handleCheckout(plan, interval)}
           />

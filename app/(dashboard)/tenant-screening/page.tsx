@@ -230,7 +230,7 @@ function ScreeningContent() {
 
   function handleGenerateLink() {
     const token = Math.random().toString(36).substring(2, 15);
-    setGeneratedLink(`https://app.rkvconsulting.com/apply/${token}`);
+    setGeneratedLink(`${window.location.origin}/apply/${token}`);
   }
 
   function handleCopyLink() {

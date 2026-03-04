@@ -239,8 +239,8 @@ export default function OnboardingPage() {
         if (!res.ok) throw new Error(data?.error || 'Autofill failed');
         if (cancelled) return;
 
-        const attomValue = data?.attom?.estimatedValue as number | null;
-        const rentValue = data?.rentcast?.estimatedRent as number | null;
+        const attomValue = (data?.estimatedValue ?? null) as number | null;
+        const rentValue = (data?.monthlyRent ?? null) as number | null;
 
         if (typeof attomValue === 'number' && attomValue > 0) {
           setPurchasePrice(attomValue.toLocaleString());

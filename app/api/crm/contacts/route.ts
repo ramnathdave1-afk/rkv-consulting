@@ -63,7 +63,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[CRM Contacts] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
+    }
     const list = (data || []).map(toCRMContact);
     return NextResponse.json(list);
   } catch (e) {
@@ -106,10 +109,40 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[CRM Contacts] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
+    }
     return NextResponse.json(toCRMContact(data));
   } catch (e) {
     console.error('[CRM Contacts]', e);
     return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[CRM Contacts] DB error:', error.message);
+      return NextResponse.json({ error: 'Failed to delete contact' }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[CRM Contacts]', e);
+    return NextResponse.json({ error: 'Failed to delete contact' }, { status: 500 });
   }
 }

@@ -99,11 +99,11 @@ export default function LoginPage() {
     if (error) {
       setLoading(false);
       if (error.message.toLowerCase().includes('email')) {
-        setErrors({ email: error.message });
+        setErrors({ email: 'Invalid email address' });
       } else if (error.message.toLowerCase().includes('password') || error.message.toLowerCase().includes('credentials')) {
         setErrors({ general: 'Invalid email or password. Please try again.' });
       } else {
-        setErrors({ general: error.message });
+        setErrors({ general: 'Unable to sign in. Please try again.' });
       }
       return;
     }

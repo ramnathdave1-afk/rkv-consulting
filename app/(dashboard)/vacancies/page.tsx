@@ -141,12 +141,6 @@ export default function VacanciesPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [copiedListing, setCopiedListing] = useState(false);
-  const [publishPlatforms, setPublishPlatforms] = useState<Record<string, boolean>>({
-    zillow: false,
-    facebook: false,
-    apartments: false,
-    craigslist: false,
-  });
 
   // Reply compose
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -285,7 +279,6 @@ export default function VacanciesPage() {
     setGeneratedListing(null);
     setIsEditing(false);
     setCopiedListing(false);
-    setPublishPlatforms({ zillow: false, facebook: false, apartments: false, craigslist: false });
     setListingModalOpen(true);
   }, []);
 
@@ -326,30 +319,62 @@ export default function VacanciesPage() {
   }, [generatedListing, isEditing, editTitle, editDescription]);
 
   const handlePublish = useCallback(() => {
-    const selected = Object.entries(publishPlatforms).filter(([, v]) => v);
-    if (selected.length === 0) {
-      toast.error('Select at least one platform');
-      return;
-    }
-    const platformNames: Record<string, string> = {
-      zillow: 'Zillow Rental Manager',
-      facebook: 'Facebook Marketplace',
-      apartments: 'Apartments.com',
-      craigslist: 'Craigslist',
-    };
-    selected.forEach(([key], i) => {
-      setTimeout(() => {
-        toast.success(`Published to ${platformNames[key]}`);
-      }, i * 600);
-    });
-  }, [publishPlatforms]);
+    if (!generatedListing) return;
+    const title = isEditing ? editTitle : generatedListing.title;
+    const desc = isEditing ? editDescription : generatedListing.description;
+    const text = `${title}\n\n${desc}\n\nHighlights:\n${generatedListing.highlights.map((h: string) => `- ${h}`).join('\n')}\n\nRental Terms:\nPrice: ${generatedListing.rentalTerms.price}\nDeposit: ${generatedListing.rentalTerms.deposit}\nLease: ${generatedListing.rentalTerms.leaseLength}`;
+    navigator.clipboard.writeText(text);
+    toast.success('Listing copied to clipboard — paste it into your listing platform');
+  }, [generatedListing, isEditing, editTitle, editDescription]);
 
-  const handleSendApplication = useCallback((name: string) => {
-    toast.success(`Application link sent to ${name}`);
+  const handleSendApplication = useCallback(async (inquiry: Inquiry) => {
+    try {
+      const res = await fetch('/api/screening', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ property_id: inquiry.propertyId }),
+      });
+      if (!res.ok) throw new Error('Failed to create screening link');
+      const data = await res.json();
+      const link = data.application?.link;
+      if (link) {
+        await navigator.clipboard.writeText(link);
+        toast.success(`Application link copied — send to ${inquiry.prospectName}`);
+      } else {
+        toast.success(`Application created for ${inquiry.prospectName}`);
+      }
+    } catch (err) {
+      console.error('[Vacancies] Send application error:', err);
+      toast.error('Failed to generate application link');
+    }
   }, []);
 
-  const handleScheduleShowing = useCallback((name: string) => {
-    toast.success(`Showing scheduled for ${name}`);
+  const handleScheduleShowing = useCallback(async (inquiry: Inquiry) => {
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const date = tomorrow.toISOString().split('T')[0];
+      const res = await fetch('/api/vacancy/showings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: inquiry.propertyId,
+          prospectName: inquiry.prospectName,
+          prospectEmail: inquiry.email,
+          prospectPhone: inquiry.phone,
+          date,
+          time: '14:00',
+          inquiryId: inquiry.id,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to schedule showing');
+      const newShowing = await res.json();
+      setShowings((prev) => [...prev, newShowing]);
+      toast.success(`Showing scheduled for ${inquiry.prospectName}`);
+    } catch (err) {
+      console.error('[Vacancies] Schedule showing error:', err);
+      toast.error('Failed to schedule showing');
+    }
   }, []);
 
   const handleSendReply = useCallback(() => {
@@ -359,12 +384,20 @@ export default function VacanciesPage() {
     setReplyMessage('');
   }, [replyMessage]);
 
-  const handleSendReminder = useCallback((name: string) => {
-    toast.success(`Reminder sent to ${name}`);
+  const handleSendReminder = useCallback((showing: Showing) => {
+    toast.success(`Reminder noted for ${showing.prospectName}`);
   }, []);
 
-  const handleCancelShowing = useCallback((name: string) => {
-    toast.success(`Showing with ${name} canceled`);
+  const handleCancelShowing = useCallback(async (showing: Showing) => {
+    try {
+      const supabase = createClient();
+      await supabase.from('showings').delete().eq('id', showing.id);
+      setShowings((prev) => prev.filter((s) => s.id !== showing.id));
+      toast.success(`Showing with ${showing.prospectName} canceled`);
+    } catch (err) {
+      console.error('[Vacancies] Cancel showing error:', err);
+      toast.error('Failed to cancel showing');
+    }
   }, []);
 
   const handleCopyShowingLink = useCallback((propertyId: string) => {
@@ -701,7 +734,7 @@ export default function VacanciesPage() {
                     size="sm"
                     variant="primary"
                     icon={<Send className="w-3 h-3" />}
-                    onClick={() => handleSendApplication(inquiry.prospectName)}
+                    onClick={() => handleSendApplication(inquiry)}
                   >
                     Send App
                   </Button>
@@ -709,7 +742,7 @@ export default function VacanciesPage() {
                     size="sm"
                     variant="outline"
                     icon={<Calendar className="w-3 h-3" />}
-                    onClick={() => handleScheduleShowing(inquiry.prospectName)}
+                    onClick={() => handleScheduleShowing(inquiry)}
                   >
                     Schedule
                   </Button>
@@ -855,14 +888,14 @@ export default function VacanciesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleSendReminder(showing.prospectName)}
+                        onClick={() => handleSendReminder(showing)}
                       >
                         Remind
                       </Button>
                       <Button
                         size="sm"
                         variant="danger"
-                        onClick={() => handleCancelShowing(showing.prospectName)}
+                        onClick={() => handleCancelShowing(showing)}
                       >
                         Cancel
                       </Button>
@@ -1274,51 +1307,16 @@ export default function VacanciesPage() {
               >
                 <h4 className="font-display font-semibold text-white text-sm mb-3 flex items-center gap-2">
                   <Megaphone className="w-4 h-4 text-gold" />
-                  Publish to Platforms
+                  Share Listing
                 </h4>
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {[
-                    { key: 'zillow', label: 'Zillow Rental Manager' },
-                    { key: 'facebook', label: 'Facebook Marketplace' },
-                    { key: 'apartments', label: 'Apartments.com' },
-                    { key: 'craigslist', label: 'Craigslist' },
-                  ].map((platform) => (
-                    <button
-                      key={platform.key}
-                      onClick={() =>
-                        setPublishPlatforms((prev) => ({
-                          ...prev,
-                          [platform.key]: !prev[platform.key],
-                        }))
-                      }
-                      className={cn(
-                        'flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-body transition-all',
-                        publishPlatforms[platform.key]
-                          ? 'bg-gold/10 text-gold border border-gold/30'
-                          : 'bg-black text-muted border border-border hover:border-muted-deep hover:text-white',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0',
-                          publishPlatforms[platform.key]
-                            ? 'bg-gold/20 border-gold/40 text-gold'
-                            : 'bg-transparent border-border',
-                        )}
-                      >
-                        {publishPlatforms[platform.key] && <Check className="w-2.5 h-2.5" />}
-                      </div>
-                      {platform.label}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-xs text-muted font-body mb-4">Copy your listing to paste into Zillow, Facebook Marketplace, Apartments.com, or other platforms.</p>
                 <Button
                   variant="solid"
                   fullWidth
                   icon={<ExternalLink className="w-4 h-4" />}
                   onClick={handlePublish}
                 >
-                  Publish Selected
+                  Copy Listing to Clipboard
                 </Button>
               </div>
             </div>

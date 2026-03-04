@@ -925,8 +925,8 @@ function ContactDetailPanel({
           }));
           setActivities(mapped);
         }
-      } catch {
-        // silently fail — empty activities is fine
+      } catch (err) {
+        console.error('[Contacts] Failed to fetch activities:', err);
       } finally {
         if (!cancelled) setActivitiesLoading(false);
       }

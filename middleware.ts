@@ -29,7 +29,10 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/api/health') ||
     pathname.startsWith('/api/integrations/status') ||
     pathname.startsWith('/api/leads/') ||
+    pathname.startsWith('/api/tenant/payment-info/') ||
+    pathname.startsWith('/api/stripe/rent-checkout') ||
     pathname.startsWith('/apply/') ||
+    pathname.startsWith('/pay/') ||
     pathname.startsWith('/portfolio/') ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/reset-password') ||

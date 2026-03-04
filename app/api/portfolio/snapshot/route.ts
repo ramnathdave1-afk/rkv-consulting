@@ -18,7 +18,7 @@ export async function GET() {
 
     if (error) {
       console.error('[Portfolio Snapshot]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch snapshots' }, { status: 500 });
     }
 
     const ordered = (data || []).reverse();
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[Portfolio Snapshot]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save snapshot' }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });

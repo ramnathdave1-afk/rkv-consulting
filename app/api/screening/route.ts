@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build the shareable application link
-    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin
+    const baseUrl = process.env.NEXT_PUBLIC_URL || req.nextUrl.origin
     const applicationLink = `${baseUrl}/apply/${token}`
 
     return NextResponse.json({

@@ -60,6 +60,57 @@ export async function POST(req: NextRequest) {
       // ── Checkout completed ─────────────────────────────────────
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+
+        // ── Handle rent payments ──
+        if (session.metadata?.type === 'rent_payment') {
+          const tenantId = session.metadata.tenant_id
+          const propertyId = session.metadata.property_id
+          const landlordUserId = session.metadata.landlord_user_id
+          const amount = Number(session.metadata.amount)
+
+          if (tenantId && propertyId && landlordUserId && amount) {
+            const supabase = getSupabaseAdmin()
+
+            // Record rent payment
+            await supabase.from('rent_payments').insert({
+              user_id: landlordUserId,
+              tenant_id: tenantId,
+              property_id: propertyId,
+              amount,
+              payment_date: new Date().toISOString().slice(0, 10),
+              status: 'paid',
+              payment_method: 'stripe',
+              stripe_payment_id: session.payment_intent as string || null,
+            })
+
+            // Record as transaction
+            await supabase.from('transactions').insert({
+              user_id: landlordUserId,
+              property_id: propertyId,
+              tenant_id: tenantId,
+              type: 'income',
+              category: 'rent',
+              amount,
+              date: new Date().toISOString().slice(0, 10),
+              description: `Online rent payment via Stripe`,
+              created_at: new Date().toISOString(),
+            })
+
+            // Notify landlord
+            await supabase.from('notifications').insert({
+              user_id: landlordUserId,
+              type: 'success',
+              title: 'Rent Payment Received',
+              message: `A rent payment of $${amount.toLocaleString()} was received via Stripe.`,
+              link: '/accounting',
+              read: false,
+            })
+          }
+
+          break
+        }
+
+        // ── Handle subscription checkouts ──
         const _customerId = session.customer as string
         const subscriptionId = session.subscription as string
         const userId = session.metadata?.user_id

@@ -222,8 +222,8 @@ const DEFAULT_FILTERS: Filters = {
 /* ================================================================== */
 
 interface AnalysisResult {
-  ai_score: number;
-  recommendation: 'buy' | 'pass' | 'negotiate';
+  ai_score: number | null;
+  recommendation: 'buy' | 'pass' | 'negotiate' | null;
   reasoning: string;
   cap_rate_estimate: number | null;
   rent_estimate: number | null;
@@ -788,7 +788,7 @@ function QuickAnalysisModal({
                 {/* Recommendation badge */}
                 {(() => {
                   const config =
-                    recommendationConfig[analysisResult.recommendation] ||
+                    (analysisResult.recommendation ? recommendationConfig[analysisResult.recommendation] : null) ||
                     recommendationConfig.negotiate;
                   return (
                     <div
@@ -1064,15 +1064,17 @@ export default function DealFeedPage() {
       const result = await res.json();
       setAnalysisResult(result);
     } catch {
-      // Fallback: generate a local analysis result
-      const score = deal.ai_score ?? Math.floor(Math.random() * 4) + 5;
-      const recommendation: 'buy' | 'pass' | 'negotiate' =
-        score >= 7 ? 'buy' : score >= 5 ? 'negotiate' : 'pass';
+      // Fallback: use existing scores if available, otherwise show what we have
+      const score = deal.ai_score ?? null;
+      const recommendation: 'buy' | 'pass' | 'negotiate' | null =
+        score !== null ? (score >= 7 ? 'buy' : score >= 5 ? 'negotiate' : 'pass') : null;
 
       setAnalysisResult({
         ai_score: score,
         recommendation,
-        reasoning: generateLocalReasoning(deal, score, recommendation),
+        reasoning: score !== null
+          ? generateLocalReasoning(deal, score, recommendation || 'negotiate')
+          : 'AI analysis unavailable. Please try again later.',
         cap_rate_estimate: deal.cap_rate_estimate,
         rent_estimate: deal.rent_estimate,
         arv_estimate: deal.arv_estimate,

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('[Vacancy Inquiries]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch inquiries' }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('[Vacancy Inquiries]', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to create inquiry' }, { status: 500 });
     }
 
     return NextResponse.json(data);

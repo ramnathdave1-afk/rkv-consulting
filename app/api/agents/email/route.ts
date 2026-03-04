@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { callClaude } from '@/lib/ai/claude'
 import { PLANS, type PlanName } from '@/lib/stripe/plans'
-import sgMail from '@sendgrid/mail'
+import { Resend } from 'resend'
 
 export async function POST(req: NextRequest) {
   try {
-    if (!process.env.SENDGRID_API_KEY) {
-      return NextResponse.json({ error: 'SendGrid API key not configured' }, { status: 503 })
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ error: 'Resend API key not configured' }, { status: 503 })
     }
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const supabase = createClient()
     const {
       data: { user },
@@ -151,25 +151,27 @@ ${customContent ? `Additional context: ${customContent}` : ''}`,
       )
     }
 
-    // Send via SendGrid
-    const msg = {
-      to: tenant.email,
-      from: {
-        email: process.env.SENDGRID_FROM_EMAIL || 'noreply@rkvconsulting.com',
-        name: senderName,
-      },
-      subject: emailContent.subject,
-      text: emailContent.text,
-      html: emailContent.html,
-    }
+    // Send via Resend
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@rkvconsulting.com'
 
     let messageId: string | undefined
 
     try {
-      const [sgResponse] = await sgMail.send(msg)
-      messageId = sgResponse.headers['x-message-id']
+      const { data: sendData, error: sendError } = await resend.emails.send({
+        from: `${senderName} <${fromEmail}>`,
+        to: [tenant.email],
+        subject: emailContent.subject,
+        text: emailContent.text,
+        html: emailContent.html,
+      })
+
+      if (sendError) {
+        throw sendError
+      }
+
+      messageId = sendData?.id
     } catch (sendError) {
-      console.error('[Email Agent] SendGrid error:', sendError)
+      console.error('[Email Agent] Resend error:', sendError)
       // Log the failed attempt
       await supabase.from('agent_logs').insert({
         user_id: user.id,

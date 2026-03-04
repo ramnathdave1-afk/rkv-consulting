@@ -20,6 +20,7 @@ import {
   Bot,
   Copy,
   ExternalLink,
+  Percent,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -77,14 +78,16 @@ function ToggleSwitch({
   onCheckedChange,
   label,
   description,
+  disabled,
 }: {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   label: string;
   description?: string;
+  disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-3">
+    <div className={cn('flex items-center justify-between py-3', disabled && 'opacity-50 pointer-events-none')}>
       <div>
         <p className="text-sm font-medium text-white">{label}</p>
         {description && (
@@ -247,6 +250,7 @@ function SettingsInner() {
   const [autopilot, setAutopilot] = useState(false);
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
   const [currency, setCurrency] = useState('USD');
+  const [effectiveTaxRate, setEffectiveTaxRate] = useState(30);
 
   // Security
   const [currentPassword, setCurrentPassword] = useState('');
@@ -255,7 +259,6 @@ function SettingsInner() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   // Sharing
   const [portfolioSharing, setPortfolioSharing] = useState(false);
@@ -285,7 +288,7 @@ function SettingsInner() {
   // Integration status
   const [integrationStatus, setIntegrationStatus] = useState({
     plaid: false,
-    sendgrid: false,
+    resend: false,
     twilio: false,
     google_maps: false,
     stripe: false,
@@ -318,6 +321,7 @@ function SettingsInner() {
       setEscalateToHuman(p.escalation_to_human || false);
       setCcLandlord(p.cc_landlord || false);
       setMaxCallsPerDay(p.max_calls_per_day || 3);
+      setEffectiveTaxRate(((p as unknown as Record<string, unknown>).effective_tax_rate as number ?? 0.30) * 100);
 
       // Parse notification preferences
       const np = p.notification_preferences || {};
@@ -363,7 +367,7 @@ function SettingsInner() {
     fetch('/api/integrations/status')
       .then((r) => r.json())
       .then((data) => setIntegrationStatus(data))
-      .catch(() => {});
+      .catch((err) => console.error('[Settings] Failed to fetch integration status:', err));
   }, [fetchProfile]);
 
   /* ---- Save profile --------------------------------------------- */
@@ -431,6 +435,7 @@ function SettingsInner() {
           calling_hours_start: callingStart,
           calling_hours_end: callingEnd,
           autopilot_enabled: autopilot,
+          effective_tax_rate: effectiveTaxRate / 100,
           updated_at: new Date().toISOString(),
         })
         .eq('id', profile.id);
@@ -949,10 +954,10 @@ function SettingsInner() {
                 onAction={handleManageBilling}
               />
               <IntegrationCard
-                name="SendGrid"
+                name="Resend"
                 description="Email delivery for notifications and AI agents"
-                connected={integrationStatus.sendgrid}
-                onAction={() => toast.info(integrationStatus.sendgrid ? 'SendGrid is connected' : 'Set SENDGRID_API_KEY in environment variables')}
+                connected={integrationStatus.resend}
+                onAction={() => toast.info(integrationStatus.resend ? 'Resend is connected' : 'Set RESEND_API_KEY in environment variables')}
               />
               <IntegrationCard
                 name="Twilio"
@@ -976,7 +981,7 @@ function SettingsInner() {
               </p>
               <div className="space-y-3">
                 {[
-                  { name: 'SENDGRID_API_KEY', masked: 'SG.****...****' },
+                  { name: 'RESEND_API_KEY', masked: 're_****...****' },
                   { name: 'TWILIO_AUTH_TOKEN', masked: '****...****' },
                   { name: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY', masked: 'AIza****...****' },
                   { name: 'STRIPE_SECRET_KEY', masked: 'sk_****...****' },
@@ -1081,13 +1086,11 @@ function SettingsInner() {
                 Add an extra layer of security to your account.
               </p>
               <ToggleSwitch
-                label="Enable 2FA"
-                description="Use an authenticator app for two-factor authentication"
-                checked={twoFactorEnabled}
-                onCheckedChange={(v) => {
-                  setTwoFactorEnabled(v);
-                  toast.info('Two-factor authentication setup coming soon');
-                }}
+                label="Enable 2FA (coming soon)"
+                description="Two-factor authentication will be available in a future update"
+                checked={false}
+                onCheckedChange={() => {}}
+                disabled
               />
             </Card>
 
@@ -1309,6 +1312,28 @@ function SettingsInner() {
                   <option value="GBP">GBP</option>
                   <option value="CAD">CAD</option>
                 </select>
+              </div>
+
+              {/* Effective Tax Rate */}
+              <div className="border-t border-border pt-4">
+                <label className="block text-sm text-muted font-body mb-1.5">
+                  Effective Tax Rate
+                </label>
+                <p className="text-xs text-muted/70 mb-3">
+                  Used for quarterly tax estimates and tax savings calculations in Accounting
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={effectiveTaxRate}
+                    onChange={(e) => setEffectiveTaxRate(Number(e.target.value))}
+                    className="w-24"
+                  />
+                  <Percent className="w-4 h-4 text-muted" />
+                </div>
               </div>
             </div>
 

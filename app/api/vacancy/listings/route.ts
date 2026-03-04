@@ -15,7 +15,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[Vacancy Listings]', error);
+      return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 });
+    }
 
     // Build a map of property_id -> listing status
     const statusMap: Record<string, string> = {};

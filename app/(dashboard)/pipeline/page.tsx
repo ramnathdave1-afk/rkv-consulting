@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { toast } from '@/components/ui/Toast';
 import AddressAutocomplete, { type AddressData } from '@/components/ui/AddressAutocomplete';
 import type { Deal, DealAnalysisResult } from '@/types';
+import PipelineAnalytics from '@/components/pipeline/PipelineAnalytics';
 import {
   Plus,
   Search,
@@ -1107,6 +1108,7 @@ export default function PipelinePage() {
   const [deals, setDeals] = useState<PipelineDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [viewTab, setViewTab] = useState<'pipeline' | 'analytics'>('pipeline');
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -1567,15 +1569,46 @@ export default function PipelinePage() {
             Track and manage your investment pipeline
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="solid"
-          onClick={() => setAddModalOpen(true)}
-          icon={<Plus className="w-4 h-4" />}
-        >
-          Add Deal
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg border border-slate-800 overflow-hidden">
+            <button
+              onClick={() => setViewTab('pipeline')}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewTab === 'pipeline'
+                  ? 'bg-[#c9a84c] text-black'
+                  : 'text-slate-400 hover:text-white bg-[#111111]'
+              }`}
+            >
+              Pipeline
+            </button>
+            <button
+              onClick={() => setViewTab('analytics')}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewTab === 'analytics'
+                  ? 'bg-[#c9a84c] text-black'
+                  : 'text-slate-400 hover:text-white bg-[#111111]'
+              }`}
+            >
+              Analytics
+            </button>
+          </div>
+          {viewTab === 'pipeline' && (
+            <Button
+              size="sm"
+              variant="solid"
+              onClick={() => setAddModalOpen(true)}
+              icon={<Plus className="w-4 h-4" />}
+            >
+              Add Deal
+            </Button>
+          )}
+        </div>
       </div>
+
+      {viewTab === 'analytics' ? (
+        <PipelineAnalytics />
+      ) : (
+      <>
 
       {/* ============================================================ */}
       {/*  ANALYTICS BAR                                                */}
@@ -1751,6 +1784,9 @@ export default function PipelinePage() {
             onChecklistToggle={handleChecklistToggle}
           />
         </>
+      )}
+
+      </>
       )}
 
       {/* ============================================================ */}

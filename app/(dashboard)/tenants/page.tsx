@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { toast } from '@/components/ui/Toast';
 import Link from 'next/link';
 import {
   Users,
@@ -21,6 +22,7 @@ import {
   X,
   Bot,
   Loader2,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -339,8 +341,9 @@ export default function TenantsPage() {
           body: JSON.stringify({ tenantId: id, templateType: 'late_rent' }),
         });
       }
-    } catch {
-      // silently handle
+    } catch (err) {
+      console.error('[Tenants] Collection email error:', err);
+      toast.error('Failed to send collection emails');
     }
     setRunningSequence(false);
   }
@@ -414,7 +417,9 @@ export default function TenantsPage() {
       setTimeout(() => {
         setEmailModal({ open: false, tenant: null, subject: '', body: '', generating: false, sending: false, sent: false });
       }, 1500);
-    } catch {
+    } catch (err) {
+      console.error('[Tenants] Email send error:', err);
+      toast.error('Failed to send email');
       setEmailModal((prev) => ({ ...prev, sending: false }));
     }
   }
@@ -431,6 +436,30 @@ export default function TenantsPage() {
     }
   }
 
+  async function handleSendPaymentLink(tenant: TenantWithProperty) {
+    if (!tenant.property_id || !tenant.monthly_rent) {
+      toast.error('Tenant must have a property and monthly rent set');
+      return;
+    }
+    try {
+      const res = await fetch('/api/tenant/payment-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant_id: tenant.id,
+          property_id: tenant.property_id,
+          amount_due: tenant.monthly_rent,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      await navigator.clipboard.writeText(data.link);
+      toast.success('Payment link copied to clipboard');
+    } catch {
+      toast.error('Failed to generate payment link');
+    }
+  }
+
   async function handleAICall() {
     if (!callModal.tenant) return;
     setCallModal((prev) => ({ ...prev, callingAI: true }));
@@ -444,8 +473,9 @@ export default function TenantsPage() {
           purpose: 'general',
         }),
       });
-    } catch {
-      // silently handle
+    } catch (err) {
+      console.error('[Tenants] Voice call error:', err);
+      toast.error('Failed to connect to voice service');
     }
     setCallModal((prev) => ({ ...prev, callingAI: false }));
   }
@@ -909,6 +939,21 @@ export default function TenantsPage() {
                       >
                         <Phone className="h-3.5 w-3.5" />
                         Call
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSendPaymentLink(tenant);
+                        }}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium',
+                          'text-muted hover:text-white hover:bg-white/5',
+                          'transition-colors duration-150',
+                        )}
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Pay Link
                       </button>
                       <Link
                         href={`/tenants/${tenant.id}`}

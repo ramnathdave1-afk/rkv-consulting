@@ -15,7 +15,10 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('date', { ascending: true });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[Vacancy Showings]', error);
+      return NextResponse.json({ error: 'Failed to fetch showings' }, { status: 500 });
+    }
 
     const list = (data || []).map((row: {
       id: string;
@@ -75,7 +78,10 @@ export async function POST(req: NextRequest) {
       .select('*, properties(address)')
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[Vacancy Showings]', error);
+      return NextResponse.json({ error: 'Failed to create showing' }, { status: 500 });
+    }
 
     return NextResponse.json({
       id: data.id,

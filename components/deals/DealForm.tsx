@@ -495,7 +495,7 @@ function DealForm({ onAnalyze, isLoading, usageCount, usageLimit }: DealFormProp
             fullWidth
             size="lg"
             onClick={() => {
-              /* TODO: open upgrade modal */
+              window.location.href = '/settings';
             }}
           >
             Upgrade for More Analyses
