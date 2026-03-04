@@ -85,7 +85,7 @@ function formatInline(text: string): React.ReactNode[] {
 export function StreamingResponse({ content, isStreaming }: StreamingResponseProps) {
   return (
     <>
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scanLine {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(400%); }
@@ -94,7 +94,7 @@ export function StreamingResponse({ content, isStreaming }: StreamingResponsePro
           0%, 100% { background-position: 0% 0%; }
           50% { background-position: 0% 100%; }
         }
-      `}</style>
+      ` }} />
 
       <div className="w-full">
         {/* AI label with processing indicator */}
