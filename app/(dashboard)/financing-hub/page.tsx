@@ -158,12 +158,8 @@ function FinancingHubContent() {
   useEffect(() => {
     async function fetchRates() {
       try {
-        // Use the first property's location, or fall back to a default for the FRED rates call
-        const firstProp = properties[0]
-        const zip = firstProp?.zip || '10001'
-        const city = firstProp?.city || 'New York'
-        const state = firstProp?.state || 'NY'
-        const res = await fetch(`/api/market?zip=${encodeURIComponent(zip)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`)
+        // FRED mortgage rates are national — location is only used for Rentcast market data
+        const res = await fetch('/api/market?zip=10001&city=New+York&state=NY')
         if (res.ok) {
           const json = await res.json()
           const rate30 = json.market?.economics?.mortgage_rate_30yr
@@ -182,7 +178,8 @@ function FinancingHubContent() {
       finally { setRatesLoading(false) }
     }
     fetchRates()
-  }, [properties])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* ---------- mortgage calculator ---------- */
   const calcResults = useMemo(() => {

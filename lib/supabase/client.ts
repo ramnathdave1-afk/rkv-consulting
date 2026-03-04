@@ -1,6 +1,13 @@
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 
+// Singleton: reuse the same client instance to prevent unstable references
+// that cause infinite useEffect re-runs across all dashboard pages.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedClient: any = null
+
 export const createClient = () => {
+  if (cachedClient) return cachedClient
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -32,9 +39,11 @@ export const createClient = () => {
         return undefined
       },
     }
+    // Don't cache the mock — it should be recreated if env vars appear later
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new Proxy({} as Record<string, unknown>, handler) as any
   }
 
-  return createBrowserClient(url, key)
+  cachedClient = createBrowserClient(url, key)
+  return cachedClient
 }
