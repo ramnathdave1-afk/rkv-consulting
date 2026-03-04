@@ -158,7 +158,12 @@ function FinancingHubContent() {
   useEffect(() => {
     async function fetchRates() {
       try {
-        const res = await fetch('/api/market?zip=85001&city=Phoenix&state=AZ')
+        // Use the first property's location, or fall back to a default for the FRED rates call
+        const firstProp = properties[0]
+        const zip = firstProp?.zip || '10001'
+        const city = firstProp?.city || 'New York'
+        const state = firstProp?.state || 'NY'
+        const res = await fetch(`/api/market?zip=${encodeURIComponent(zip)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`)
         if (res.ok) {
           const json = await res.json()
           const rate30 = json.market?.economics?.mortgage_rate_30yr
@@ -177,7 +182,7 @@ function FinancingHubContent() {
       finally { setRatesLoading(false) }
     }
     fetchRates()
-  }, [])
+  }, [properties])
 
   /* ---------- mortgage calculator ---------- */
   const calcResults = useMemo(() => {

@@ -28,7 +28,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Input, Textarea, Select } from '@/components/ui/Input';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
-import toast from 'react-hot-toast';
+import { toast } from '@/components/ui/Toast';
 
 /* ================================================================== */
 /*  TYPE DEFINITIONS                                                    */
