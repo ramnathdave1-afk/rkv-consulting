@@ -73,9 +73,19 @@ export default function PipelineAnalytics() {
 
   useEffect(() => {
     fetch('/api/crm/analytics')
-      .then((r) => r.json())
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || json.error) {
+          throw new Error(json.error || 'Failed to load analytics');
+        }
+        return json;
+      })
       .then(setData)
-      .catch(() => toast.error('Failed to load analytics'))
+      .catch((err) => {
+        console.error('[PipelineAnalytics]', err);
+        toast.error('Failed to load analytics');
+        setData(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -1172,7 +1172,26 @@ export default function PipelinePage() {
         console.error('Error fetching deals:', error);
         toast.error('Failed to load deals');
       } else {
-        setDeals((data || []) as PipelineDeal[]);
+        const rows = (data || []) as Record<string, unknown>[];
+        const mapped: PipelineDeal[] = rows.map((row) => {
+          const status = row.status as string;
+          const pipelineStatus: PipelineStage =
+            status === 'lead' || status === 'analyzing' || status === 'offer_sent' ||
+            status === 'under_contract' || status === 'due_diligence' || status === 'closed' || status === 'dead'
+              ? (status as PipelineStage)
+              : status === 'closing'
+                ? 'closing'
+                : 'lead';
+          return {
+            ...row,
+            title: (row.title as string) ?? (row.name as string) ?? '',
+            analysis: (row.analysis as DealAnalysisResult | null) ?? (row.analysis_data as DealAnalysisResult | null) ?? null,
+            status: pipelineStatus,
+            asking_price: Number(row.asking_price) ?? 0,
+            priority: ((row.priority as string) || 'medium') as 'low' | 'medium' | 'high',
+          } as PipelineDeal;
+        });
+        setDeals(mapped);
       }
       setLoading(false);
     }
@@ -1748,6 +1767,23 @@ export default function PipelinePage() {
             icon: <Plus className="w-4 h-4" />,
           }}
         />
+      ) : filteredDeals.length === 0 ? (
+        <div className="rounded-lg border border-gold/20 bg-gold/5 p-8 text-center">
+          <p className="font-body text-white font-medium mb-1">No deals match your filters</p>
+          <p className="text-sm text-muted font-body mb-4">Try clearing filters or adding new deals.</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterPropertyType('');
+              setFilterSource('');
+              setFilterPriority('');
+            }}
+          >
+            Clear filters
+          </Button>
+        </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1">
           {PIPELINE_COLUMNS.map((column) => (

@@ -391,7 +391,7 @@ export default function VacanciesPage() {
   const handleCancelShowing = useCallback(async (showing: Showing) => {
     try {
       const supabase = createClient();
-      await supabase.from('showings').delete().eq('id', showing.id);
+      await supabase.from('showing_appointments').delete().eq('id', showing.id);
       setShowings((prev) => prev.filter((s) => s.id !== showing.id));
       toast.success(`Showing with ${showing.prospectName} canceled`);
     } catch (err) {

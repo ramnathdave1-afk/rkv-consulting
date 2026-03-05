@@ -300,58 +300,51 @@ export default function AIAssistantPage() {
   /* ---------------------------------------------------------------- */
 
   const fetchInitialData = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    setUserId(user.id);
+      setUserId(user.id);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, email')
-      .eq('id', user.id)
-      .single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single();
 
-    if (profile) {
-      const initials = profile.full_name
-        ? profile.full_name
-            .split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2)
-        : profile.email?.charAt(0).toUpperCase() || 'U';
-      setUserInitials(initials);
-    }
+      if (profile) {
+        const name = profile.full_name ?? '';
+        const initials = name
+          ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+          : (profile.email && profile.email.charAt(0).toUpperCase()) || 'U';
+        setUserInitials(initials);
+      }
 
-    const { data: convos } = await supabase
-      .from('ai_conversations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
+      const { data: convos } = await supabase
+        .from('ai_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
 
-    if (convos) {
-      setConversations(convos as Conversation[]);
-    }
+      if (convos && Array.isArray(convos)) {
+        setConversations(convos as Conversation[]);
+      }
 
-    const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-    const { data: usage } = await supabase
-      .from('ai_usage')
-      .select('queries_used, queries_limit')
-      .eq('user_id', user.id)
-      .gte('period_start', periodStart)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      const { data: usage } = await supabase
+        .from('ai_usage')
+        .select('ai_messages_used')
+        .eq('user_id', user.id)
+        .eq('month', currentMonth)
+        .single();
 
-    if (usage) {
-      setUsageCount(usage.queries_used || 0);
-      setUsageLimit(usage.queries_limit || 200);
-    } else {
+      if (usage != null) {
+        setUsageCount(Number(usage.ai_messages_used) || 0);
+      }
       const limit = getLimit('aiMessagesLimit');
-      setUsageLimit(limit === Infinity ? 9999 : limit);
-    }
+      const safeLimit = limit === Infinity || limit === undefined || limit === null ? 9999 : Math.max(1, Number(limit) || 200);
+      setUsageLimit(safeLimit);
 
     // Fetch portfolio context for right panel
     const [propertiesRes, tenantsRes, dealsRes, maintenanceRes] = await Promise.all([
@@ -386,7 +379,7 @@ export default function AIAssistantPage() {
     const maintenance = maintenanceRes.data || [];
 
     const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
-    const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
+    const totalRent = tenants.reduce((s: number, t: Record<string, any>) => s + (t.monthly_rent || 0), 0);
     const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.mortgage_payment || 0) + (p.insurance_annual || 0)/12 + (p.tax_annual || 0)/12 + (p.hoa_monthly || 0), 0);
 
     setPortfolioContext({
@@ -398,6 +391,9 @@ export default function AIAssistantPage() {
       totalRent,
       totalExpenses,
     });
+    } catch (err) {
+      console.error('[AI Assistant] fetchInitialData error:', err);
+    }
   }, [supabase, getLimit]);
 
   useEffect(() => {
@@ -512,7 +508,7 @@ export default function AIAssistantPage() {
     const maintenance = maintenanceRes.data || [];
 
     const totalValue = properties.reduce((s: number, p: Record<string, any>) => s + (p.current_value || 0), 0);
-    const totalRent = properties.reduce((s: number, p: Record<string, any>) => s + (p.monthly_rent || 0), 0);
+    const totalRent = tenants.reduce((s: number, t: Record<string, any>) => s + (t.monthly_rent || 0), 0);
     const totalExpenses = properties.reduce((s: number, p: Record<string, any>) => s + (p.mortgage_payment || 0) + (p.insurance_annual || 0)/12 + (p.tax_annual || 0)/12 + (p.hoa_monthly || 0), 0);
 
     return `You are RKV AI Assistant, a professional real estate investment advisor for RKV Consulting.
@@ -674,33 +670,29 @@ GUIDELINES:
       setTimeout(() => setConfidenceFlash(false), 300);
 
       if (userId) {
-        const now = new Date();
-        const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
         const { data: existing } = await supabase
           .from('ai_usage')
-          .select('id, queries_used')
+          .select('id, ai_messages_used')
           .eq('user_id', userId)
-          .gte('period_start', periodStart)
-          .limit(1)
+          .eq('month', currentMonth)
           .single();
 
         if (existing) {
           await supabase
             .from('ai_usage')
-            .update({ queries_used: (existing.queries_used || 0) + 1 })
+            .update({
+              ai_messages_used: (existing.ai_messages_used || 0) + 1,
+              updated_at: new Date().toISOString(),
+            })
             .eq('id', existing.id);
         } else {
           await supabase.from('ai_usage').insert({
             user_id: userId,
-            period_start: periodStart,
-            period_end: periodEnd,
-            queries_used: 1,
-            queries_limit: usageLimit,
-            tokens_used: 0,
-            tokens_limit: 100000,
-            cost_usd: 0,
+            month: currentMonth,
+            ai_messages_used: 1,
+            deal_analyses_used: 0,
           });
         }
       }
@@ -810,8 +802,8 @@ GUIDELINES:
             <div className="flex items-center gap-2">
               <div className="w-16 h-1.5 bg-white/10 rounded overflow-hidden">
                 <div
-                  className={cn('h-full rounded transition-all', usageCount / usageLimit > 0.9 ? 'bg-[#C1121F]' : 'bg-[#00B4D8]')}
-                  style={{ width: `${Math.min((usageCount / usageLimit) * 100, 100)}%` }}
+                  className={cn('h-full rounded transition-all', usageLimit > 0 && usageCount / usageLimit > 0.9 ? 'bg-[#C1121F]' : 'bg-[#00B4D8]')}
+                  style={{ width: usageLimit > 0 ? `${Math.min((usageCount / usageLimit) * 100, 100)}%` : '0%' }}
                 />
               </div>
               <span className="font-mono text-[10px] text-white/40 tabular-nums">
