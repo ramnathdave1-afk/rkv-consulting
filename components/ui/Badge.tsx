@@ -3,113 +3,63 @@
 import React, { type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-export type BadgeVariant =
-  | 'default'
-  | 'success'
-  | 'danger'
-  | 'warning'
-  | 'info'
-  | 'violet'
-  | 'muted'
-  | 'plan';
-
+export type BadgeVariant = 'default' | 'success' | 'danger' | 'warning' | 'info' | 'violet' | 'muted' | 'accent';
 export type BadgeSize = 'sm' | 'md';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
   size?: BadgeSize;
   dot?: boolean;
-  /** Plan color - only used when variant is "plan" */
-  planColor?: string;
+  color?: string;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Style maps                                                         */
-/* ------------------------------------------------------------------ */
-
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-[#1a1a1a] text-[#888] border-[#333]',
-  success: 'bg-[rgba(201,168,76,0.08)] text-[#c9a84c] border-[rgba(201,168,76,0.25)]',
-  danger: 'bg-[rgba(220,38,38,0.08)] text-[#DC2626] border-[rgba(220,38,38,0.25)]',
-  warning: 'bg-[rgba(217,119,6,0.08)] text-[#D97706] border-[rgba(217,119,6,0.25)]',
-  info: 'bg-[#1a1a1a] text-[#888] border-[#333]',
-  violet: 'bg-[rgba(201,168,76,0.08)] text-[#c9a84c] border-[rgba(201,168,76,0.25)]',
-  muted: 'bg-[#1a1a1a] text-[#888] border-[#333]',
-  plan: '',
+  default: 'bg-bg-elevated text-text-secondary border-border',
+  success: 'bg-success-muted text-success border-[rgba(34,197,94,0.25)]',
+  danger: 'bg-danger-muted text-danger border-[rgba(239,68,68,0.25)]',
+  warning: 'bg-warning-muted text-warning border-[rgba(245,158,11,0.25)]',
+  info: 'bg-blue-muted text-blue border-[rgba(59,130,246,0.25)]',
+  violet: 'bg-violet-muted text-violet border-[rgba(138,0,255,0.25)]',
+  muted: 'bg-bg-elevated text-text-muted border-border',
+  accent: 'bg-accent-muted text-accent border-border-accent',
+};
+
+const dotColors: Record<BadgeVariant, string> = {
+  default: '#8B95A5',
+  success: '#22C55E',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  violet: '#8A00FF',
+  muted: '#4A5568',
+  accent: '#00D4AA',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
-  sm: 'px-2 py-0.5',
-  md: 'px-2.5 py-1',
+  sm: 'px-2 py-0.5 text-[10px]',
+  md: 'px-2.5 py-1 text-[11px]',
 };
 
-function hexToRgba(hex: string, alpha: number) {
-  const raw = hex.replace('#', '').trim();
-  const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
-  const n = Number.parseInt(full, 16);
-  // eslint-disable-next-line no-restricted-syntax
-  if (Number.isNaN(n) || full.length !== 6) return hex;
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Badge                                                              */
-/* ------------------------------------------------------------------ */
-
-function Badge({
-  variant = 'default',
-  size = 'md',
-  dot = false,
-  planColor,
-  className,
-  children,
-  ...props
-}: BadgeProps) {
-  const planStyle =
-    variant === 'plan' && planColor
-      ? {
-          backgroundColor: hexToRgba(planColor, 0.08),
-          color: planColor,
-          borderColor: hexToRgba(planColor, 0.25),
-        }
-      : undefined;
+function Badge({ variant = 'default', size = 'md', dot = false, color, className, children, style, ...props }: BadgeProps) {
+  const customStyle = color
+    ? { backgroundColor: `${color}20`, color, borderColor: `${color}40`, ...style }
+    : style;
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-2 font-body font-semibold text-[11px] rounded-full border',
-        'whitespace-nowrap select-none',
-        variantStyles[variant],
+        'inline-flex items-center gap-1.5 font-semibold rounded-full border whitespace-nowrap select-none',
+        !color && variantStyles[variant],
         sizeStyles[size],
         className,
       )}
-      style={planStyle}
+      style={customStyle}
       {...props}
     >
       {dot && (
         <span
           className="h-1.5 w-1.5 rounded-full"
-          style={{
-            background:
-              variant === 'plan' && planColor
-                ? planColor
-                : variant === 'danger'
-                  ? '#DC2626'
-                  : variant === 'warning'
-                    ? '#D97706'
-                    : variant === 'violet'
-                      ? '#c9a84c'
-                      : variant === 'success'
-                        ? '#c9a84c'
-                        : '#888',
-          }}
+          style={{ background: color || dotColors[variant] }}
         />
       )}
       {children}
@@ -118,6 +68,5 @@ function Badge({
 }
 
 Badge.displayName = 'Badge';
-
 export { Badge };
 export default Badge;

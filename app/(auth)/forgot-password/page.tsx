@@ -1,69 +1,98 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { toast } from '@/components/ui/Toast';
+import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
-  const supabase = createClient();
   const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
-    const origin = window.location.origin;
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/reset-password`,
+    setError('');
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
     });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
       return;
     }
-    toast.success('Password reset email sent.');
-  };
+
+    setSent(true);
+    setLoading(false);
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-[var(--bg-secondary)] border border-border rounded-lg p-8">
-        <h1 className="font-display font-bold text-3xl text-white">Reset your password</h1>
-        <p className="mt-2 text-muted font-body">
-          Enter your email and we’ll send you a secure reset link.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <h1 className="font-display text-3xl font-bold text-text-primary">
+            Meridian Node
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Reset your password
+          </p>
+        </div>
 
-        {error && (
-          <div className="mt-6 p-3 rounded-lg bg-[#DC262610] border border-[#DC262640]">
-            <p className="text-[13px] text-red font-body">{error}</p>
+        {sent ? (
+          <div className="glass-card p-6 text-center">
+            <p className="text-sm text-text-primary mb-4">
+              Check your email for a password reset link.
+            </p>
+            <Link href="/login" className="text-sm text-accent hover:text-accent-hover transition-colors">
+              Back to sign in
+            </Link>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
+            {error && (
+              <div className="rounded-lg bg-danger-muted px-3 py-2 text-sm text-danger">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-text-secondary">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                placeholder="you@company.com"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-bg-primary transition-colors hover:bg-accent-hover disabled:opacity-50"
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </button>
+
+            <div className="text-center">
+              <Link href="/login" className="text-xs text-text-secondary hover:text-accent transition-colors">
+                Back to sign in
+              </Link>
+            </div>
+          </form>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <Input
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-          />
-          <Button type="submit" fullWidth loading={loading}>
-            Send reset link
-          </Button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <Link href="/login" className="text-[13px] font-body text-gold hover:underline">
-            Back to login
-          </Link>
-        </div>
+        <p className="mt-6 text-center text-xs text-text-muted">
+          Meridian Node by RKV Consulting LLC
+        </p>
       </div>
     </div>
   );
 }
-

@@ -1,53 +1,28 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
-const dmSerif = DM_Serif_Display({
+const inter = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-display",
-  display: "swap",
 });
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   variable: "--font-mono",
-  display: "swap",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "RKV Consulting | The Intelligent Real Estate Operating System",
+  title: "Meridian Node | Autonomous Data Center Site Intelligence",
   description:
-    "AI-powered real estate investment platform. Analyze deals, manage properties, screen tenants, and optimize your portfolio with institutional-grade intelligence.",
-  metadataBase: new URL("https://rkv-consulting.vercel.app"),
-  openGraph: {
-    title: "RKV Consulting | The Intelligent Real Estate Operating System",
-    description:
-      "AI-powered real estate investment platform. Analyze deals, manage properties, screen tenants, and automate your entire portfolio.",
-    url: "https://rkv-consulting.vercel.app",
-    siteName: "RKV Consulting",
-    type: "website",
-    locale: "en_US",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "RKV Consulting | AI-Powered Real Estate OS",
-    description:
-      "The operating system for serious real estate investors. Deal analysis, live market intelligence, AI agents, and more.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+    "AI-powered multi-agent platform for data center site selection and grid intelligence across the PJM Interconnection territory.",
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
@@ -58,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${dmSerif.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased bg-bg-primary text-text-primary`}
       >
         <Providers>{children}</Providers>
       </body>

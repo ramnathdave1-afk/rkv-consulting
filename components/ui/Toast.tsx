@@ -1,167 +1,24 @@
 'use client';
 
-import React from 'react';
-import toast, { Toaster as HotToaster, type ToastOptions } from 'react-hot-toast';
-import { cn } from '@/lib/utils';
-
-/* ------------------------------------------------------------------ */
-/*  Theme tokens                                                       */
-/* ------------------------------------------------------------------ */
-
-const toastBaseStyle: React.CSSProperties = {
-  background: '#111111',
-  color: '#f5f5f5',
-  border: '1px solid #1e1e1e',
-  borderRadius: '8px',
-  padding: '12px 16px',
-  fontSize: '13px',
-  fontFamily: 'var(--font-body), Inter, system-ui, sans-serif',
-};
-
-/* ------------------------------------------------------------------ */
-/*  Custom toast functions                                             */
-/* ------------------------------------------------------------------ */
+import toast from 'react-hot-toast';
 
 const customToast = {
-  success: (message: string, options?: ToastOptions) =>
+  success: (message: string) =>
     toast.success(message, {
-      style: {
-        ...toastBaseStyle,
-        background: '#c9a84c',
-        borderColor: '#c9a84c',
-        color: '#FFFFFF',
-      },
-      iconTheme: {
-        primary: '#FFFFFF',
-        secondary: '#c9a84c',
-      },
-      ...options,
+      style: { background: '#0C1017', color: '#F0F2F5', border: '1px solid rgba(255,255,255,0.08)' },
+      iconTheme: { primary: '#00D4AA', secondary: '#0C1017' },
     }),
-
-  error: (message: string, options?: ToastOptions) =>
+  error: (message: string) =>
     toast.error(message, {
-      style: {
-        ...toastBaseStyle,
-        background: '#DC2626',
-        borderColor: '#DC2626',
-        color: '#FFFFFF',
-      },
-      iconTheme: {
-        primary: '#FFFFFF',
-        secondary: '#DC2626',
-      },
-      ...options,
+      style: { background: '#0C1017', color: '#F0F2F5', border: '1px solid rgba(255,255,255,0.08)' },
+      iconTheme: { primary: '#EF4444', secondary: '#0C1017' },
     }),
-
-  warning: (message: string, options?: ToastOptions) =>
-    toast(message, {
-      style: {
-        ...toastBaseStyle,
-        background: '#D97706',
-        borderColor: '#D97706',
-        color: '#FFFFFF',
-      },
-      iconTheme: {
-        primary: '#FFFFFF',
-        secondary: '#D97706',
-      },
-      ...options,
-    }),
-
-  info: (message: string, options?: ToastOptions) =>
-    toast(message, {
-      style: {
-        ...toastBaseStyle,
-      },
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#c9a84c"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4" />
-          <path d="M12 8h.01" />
-        </svg>
-      ),
-      ...options,
-    }),
-
-  loading: (message: string, options?: ToastOptions) =>
+  loading: (message: string) =>
     toast.loading(message, {
-      style: toastBaseStyle,
-      ...options,
+      style: { background: '#0C1017', color: '#F0F2F5', border: '1px solid rgba(255,255,255,0.08)' },
     }),
-
   dismiss: toast.dismiss,
-  promise: toast.promise,
 };
 
-/* ------------------------------------------------------------------ */
-/*  Pre-configured Toaster component                                   */
-/* ------------------------------------------------------------------ */
-
-interface ToasterProps {
-  className?: string;
-}
-
-function Toaster({ className }: ToasterProps) {
-  return (
-    <div className={cn(className)}>
-      <HotToaster
-        position="bottom-right"
-        gutter={8}
-        containerStyle={{
-          bottom: 24,
-          right: 24,
-        }}
-        toastOptions={{
-          duration: 3000,
-          style: toastBaseStyle,
-          success: {
-            style: {
-              ...toastBaseStyle,
-              background: '#c9a84c',
-              borderColor: '#c9a84c',
-              color: '#FFFFFF',
-            },
-            iconTheme: {
-              primary: '#FFFFFF',
-              secondary: '#c9a84c',
-            },
-          },
-          error: {
-            style: {
-              ...toastBaseStyle,
-              background: '#DC2626',
-              borderColor: '#DC2626',
-              color: '#FFFFFF',
-            },
-            iconTheme: {
-              primary: '#FFFFFF',
-              secondary: '#DC2626',
-            },
-          },
-        }}
-      />
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Display names                                                      */
-/* ------------------------------------------------------------------ */
-
-Toaster.displayName = 'Toaster';
-
-/* ------------------------------------------------------------------ */
-/*  Exports                                                            */
-/* ------------------------------------------------------------------ */
-
-export { Toaster, customToast as toast };
-export default Toaster;
+export { customToast as toast };
+export default customToast;
