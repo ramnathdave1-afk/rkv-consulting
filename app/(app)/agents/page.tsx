@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { motion } from 'framer-motion';
-import { Bot, Terminal, RefreshCw } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { MissionsTable } from '@/components/agents/MissionsTable';
+import { ReviewInbox } from '@/components/agents/ReviewInbox';
+import { AgentTerminal } from '@/components/agents/AgentTerminal';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Target, Inbox, Terminal } from 'lucide-react';
 import { AGENTS } from '@/lib/constants';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface LogEntry {
   id: string;
@@ -19,8 +21,6 @@ interface LogEntry {
 export default function AgentsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('all');
-  const feedRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function AgentsPage() {
         .from('agent_activity_log')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(200);
 
       setLogs(data || []);
       setLoading(false);
@@ -37,14 +37,13 @@ export default function AgentsPage() {
 
     fetchLogs();
 
-    // Real-time subscription
     const channel = supabase
       .channel('agent_logs')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'agent_activity_log' },
         (payload: { new: Record<string, unknown> }) => {
-          setLogs((prev) => [payload.new as unknown as LogEntry, ...prev].slice(0, 100));
+          setLogs((prev) => [payload.new as unknown as LogEntry, ...prev].slice(0, 200));
         },
       )
       .subscribe();
@@ -52,86 +51,60 @@ export default function AgentsPage() {
     return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
-  const filteredLogs = filter === 'all' ? logs : logs.filter((l) => l.agent_name === filter);
+  const agentCounts: Record<string, number> = {};
+  logs.forEach((l) => { agentCounts[l.agent_name] = (agentCounts[l.agent_name] || 0) + 1; });
 
-  const agentColor: Record<string, string> = {
-    alpha: '#00D4AA',
-    beta: '#3B82F6',
-    gamma: '#F59E0B',
-    delta: '#8A00FF',
-  };
+  const agentColors: Record<string, string> = { alpha: '#00D4AA', beta: '#3B82F6', gamma: '#F59E0B', delta: '#8A00FF' };
+
+  if (loading) {
+    return (
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 space-y-4">
+      {/* Header with agent status chips */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Agents</h1>
-          <p className="text-sm text-text-secondary">Autonomous agent activity feed</p>
+          <h1 className="font-display text-lg font-bold text-text-primary">Intelligence Hub</h1>
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">Agent Command & Control</p>
         </div>
-      </div>
-
-      {/* Agent cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {AGENTS.map((agent, i) => {
-          const count = logs.filter((l) => l.agent_name === agent.name).length;
-          return (
-            <motion.div
-              key={agent.name}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.06 }}
-              className={cn(
-                'glass-card p-4 cursor-pointer transition-colors',
-                filter === agent.name && 'border-accent/30',
-              )}
-              onClick={() => setFilter(filter === agent.name ? 'all' : agent.name)}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: agentColor[agent.name] }}
-                />
-                <span className="text-sm font-semibold text-text-primary">{agent.label}</span>
-              </div>
-              <p className="text-xs text-text-muted">{agent.description}</p>
-              <p className="mt-2 text-lg font-mono font-bold text-text-primary">{count}</p>
-              <p className="text-[10px] text-text-muted">logged actions</p>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Terminal-style feed */}
-      <div className="glass-card overflow-hidden">
-        <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-          <Terminal size={14} className="text-accent" />
-          <span className="text-xs font-mono font-medium text-text-primary">Activity Feed</span>
-          <span className="text-[10px] text-text-muted">({filteredLogs.length} entries)</span>
-        </div>
-        <div
-          ref={feedRef}
-          className="h-[400px] overflow-y-auto bg-bg-primary/50 p-3 font-mono text-xs space-y-1"
-        >
-          {loading && <p className="text-text-muted">Loading agent logs...</p>}
-          {!loading && filteredLogs.length === 0 && (
-            <p className="text-text-muted py-8 text-center">No agent activity yet. Agents will log their actions here.</p>
-          )}
-          {filteredLogs.map((log) => (
-            <div key={log.id} className="flex items-start gap-2 py-0.5 hover:bg-bg-elevated/30 px-1 rounded">
-              <span className="text-text-muted shrink-0 w-28 text-[10px]">
-                {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-              </span>
-              <span
-                className="shrink-0 font-semibold uppercase text-[10px] w-12"
-                style={{ color: agentColor[log.agent_name] || '#8B95A5' }}
-              >
-                {log.agent_name}
-              </span>
-              <span className="text-text-secondary">{log.action}</span>
+        <div className="flex items-center gap-2">
+          {AGENTS.map((agent) => (
+            <div key={agent.name} className="flex items-center gap-1.5 glass-card px-2 py-1">
+              <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: agentColors[agent.name] }} />
+              <span className="text-[10px] font-semibold uppercase" style={{ color: agentColors[agent.name] }}>{agent.name}</span>
+              <span className="text-[9px] font-mono text-text-muted">{agentCounts[agent.name] || 0}</span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="missions">
+        <TabsList>
+          <TabsTrigger value="missions" icon={<Target size={12} />}>Active Missions</TabsTrigger>
+          <TabsTrigger value="inbox" icon={<Inbox size={12} />}>Review Inbox</TabsTrigger>
+          <TabsTrigger value="terminal" icon={<Terminal size={12} />}>Terminal</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="missions">
+          <MissionsTable agentCounts={agentCounts} />
+        </TabsContent>
+
+        <TabsContent value="inbox">
+          <ReviewInbox findings={logs.slice(0, 50)} />
+        </TabsContent>
+
+        <TabsContent value="terminal">
+          <AgentTerminal logs={logs} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

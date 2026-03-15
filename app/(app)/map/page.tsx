@@ -4,6 +4,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { MapFilters, type MapFilterValues } from '@/components/map/MapFilters';
+import { LayerControl, type LayerVisibility } from '@/components/map/LayerControl';
+import { DiscoveryFeed } from '@/components/map/DiscoveryFeed';
 import { SiteReportPanel } from '@/components/reports/SiteReportPanel';
 import { Skeleton } from '@/components/ui/Skeleton';
 import type { SiteMapData, Substation } from '@/lib/types';
@@ -21,10 +23,19 @@ const defaultFilters: MapFilterValues = {
   maxDistance: null,
 };
 
+const defaultLayers: LayerVisibility = {
+  substations: true,
+  gridLines: false,
+  fiberRoutes: false,
+  wetlands: false,
+  floodplains: false,
+};
+
 export default function MapPage() {
   const [sites, setSites] = useState<SiteMapData[]>([]);
   const [substations, setSubstations] = useState<Substation[]>([]);
   const [filters, setFilters] = useState<MapFilterValues>(defaultFilters);
+  const [layers, setLayers] = useState<LayerVisibility>(defaultLayers);
   const [loading, setLoading] = useState(true);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const supabase = createClient();
@@ -78,7 +89,6 @@ export default function MapPage() {
     fetchMapData();
   }, [supabase]);
 
-  // Apply client-side filters
   const filteredSites = sites.filter((site) => {
     if (filters.minCapacity && (site.target_mw || 0) < filters.minCapacity) return false;
     if (filters.maxCapacity && (site.target_mw || 0) > filters.maxCapacity) return false;
@@ -87,6 +97,8 @@ export default function MapPage() {
     if (filters.maxDistance && (site.distance_to_substation_mi || Infinity) > filters.maxDistance) return false;
     return true;
   });
+
+  const visibleSubstations = layers.substations ? substations : [];
 
   const handleSiteClick = useCallback((siteId: string) => {
     setSelectedSiteId(siteId);
@@ -100,9 +112,11 @@ export default function MapPage() {
     <div className="relative h-[calc(100vh-3.5rem)] w-full">
       <MapContainer
         sites={filteredSites}
-        substations={substations}
+        substations={visibleSubstations}
         onSiteClick={handleSiteClick}
       />
+      <DiscoveryFeed />
+      <LayerControl layers={layers} onChange={setLayers} />
       <MapFilters filters={filters} onChange={setFilters} />
       <SiteReportPanel siteId={selectedSiteId} onClose={() => setSelectedSiteId(null)} />
     </div>
