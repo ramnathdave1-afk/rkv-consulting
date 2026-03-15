@@ -5,13 +5,14 @@
  * to produce a structured feasibility verdict.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  { auth: { autoRefreshToken: false, persistSession: false } },
-);
+function getSupabase(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase credentials not configured');
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
 
 export interface FeasibilityDimension {
   name: string;
@@ -108,7 +109,7 @@ export async function analyzeFeasibility(site: FeasibilitySite): Promise<Feasibi
 }
 
 async function analyzeZoning(site: FeasibilitySite, vertical: string): Promise<FeasibilityDimension> {
-  const { data: zones } = await supabase
+  const { data: zones } = await getSupabase()
     .from('zoning_districts')
     .select('zone_code, zone_name, zone_category, permitted_uses, conditional_uses')
     .eq('state', site.state)
@@ -144,7 +145,7 @@ async function analyzeZoning(site: FeasibilitySite, vertical: string): Promise<F
 }
 
 async function analyzeEnvironmental(site: FeasibilitySite): Promise<FeasibilityDimension> {
-  const { data: envLayers } = await supabase
+  const { data: envLayers } = await getSupabase()
     .from('environmental_layers')
     .select('layer_type, severity, designation')
     .eq('state', site.state)
@@ -173,7 +174,7 @@ async function analyzeGridAccess(site: FeasibilitySite, vertical: string): Promi
   let availableMw: number | null = null;
 
   if (site.nearest_substation_id) {
-    const { data: sub } = await supabase
+    const { data: sub } = await getSupabase()
       .from('substations')
       .select('available_mw')
       .eq('id', site.nearest_substation_id)
@@ -201,7 +202,7 @@ async function analyzeGridAccess(site: FeasibilitySite, vertical: string): Promi
 }
 
 async function analyzeInfrastructure(site: FeasibilitySite, vertical: string): Promise<FeasibilityDimension> {
-  const { data: infra } = await supabase
+  const { data: infra } = await getSupabase()
     .from('market_intelligence')
     .select('metric, value')
     .eq('state', site.state)
