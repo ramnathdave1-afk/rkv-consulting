@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { Search, Bell, LogOut } from 'lucide-react';
+import { Search, LogOut } from 'lucide-react';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { cn } from '@/lib/utils';
 
 interface TopbarProps {
@@ -34,10 +35,7 @@ export function Topbar({ sidebarCollapsed, onOpenCommandBar }: TopbarProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-3">
-        <button className="relative rounded-lg p-2 text-text-muted hover:bg-bg-elevated hover:text-text-primary transition-colors">
-          <Bell size={16} />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" />
-        </button>
+        <NotificationDropdown />
 
         {profile && (
           <div className="flex items-center gap-3 border-l border-border pl-3">

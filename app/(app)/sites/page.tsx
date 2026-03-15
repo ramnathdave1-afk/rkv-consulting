@@ -29,8 +29,8 @@ export default function SitesPage() {
       if (!profile) return;
 
       const { data } = await supabase
-        .from('ghost_sites')
-        .select('id, name, state, county, target_mw, acreage, zoning, pipeline_stage, distance_to_substation_mi, site_scores(composite_score, risk_score)')
+        .from('sites')
+        .select('id, name, state, county, target_capacity, acreage, zoning, pipeline_stage, distance_to_substation_mi, site_scores(composite_score, risk_score)')
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false });
 
@@ -39,7 +39,7 @@ export default function SitesPage() {
         name: s.name as string,
         state: s.state as string,
         county: s.county as string | null,
-        target_mw: s.target_mw as number | null,
+        target_capacity: s.target_capacity as number | null,
         acreage: s.acreage as number | null,
         zoning: s.zoning as string | null,
         pipeline_stage: s.pipeline_stage as PipelineStage,

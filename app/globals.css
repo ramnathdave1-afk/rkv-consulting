@@ -105,6 +105,39 @@ body {
 .mapboxgl-canvas { outline: none; }
 .mapboxgl-ctrl-attrib { display: none !important; }
 
+/* Ticker */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker-scroll 30s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* Digital Twin Popup */
+.digital-twin-popup .mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.digital-twin-popup .mapboxgl-popup-tip {
+  border-top-color: rgba(12, 16, 23, 0.95) !important;
+}
+
+/* SVG draw-in */
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Status pulse */
+.status-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* cmdk overrides */
 [cmdk-root] { font-family: var(--font-body); }
 [cmdk-input] { font-family: var(--font-body); }

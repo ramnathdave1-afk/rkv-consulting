@@ -15,7 +15,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
+  ChevronDown,
+  Database,
+  Key,
+  Search,
+  Server,
+  Sun,
+  Wind,
+  BatteryCharging,
+  Factory,
+  Home,
+  Building2 as Building2Alt,
 } from 'lucide-react';
+import { ALL_VERTICALS } from '@/lib/verticals';
+import type { Vertical } from '@/lib/types';
 
 const navItems = [
   { href: '/map', label: 'Command Center', icon: Map },
@@ -23,6 +36,9 @@ const navItems = [
   { href: '/sites', label: 'Site Portfolio', icon: Building2 },
   { href: '/pipeline', label: 'Project Pipeline', icon: Kanban },
   { href: '/market', label: 'Market Analytics', icon: BarChart3 },
+  { href: '/data-sources', label: 'Data Sources', icon: Database },
+  { href: '/feasibility', label: 'Feasibility', icon: Search },
+  { href: '/api-keys', label: 'API Keys', icon: Key },
 ];
 
 const bottomItems = [
@@ -43,9 +59,21 @@ interface SidebarProps {
   onMobileClose?: () => void;
 }
 
+const verticalIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  data_center: Server,
+  solar: Sun,
+  wind: Wind,
+  ev_charging: BatteryCharging,
+  industrial: Factory,
+  residential: Home,
+  mixed_use: Building2Alt,
+};
+
 export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const [agentStatuses, setAgentStatuses] = useState<AgentStatus[]>([]);
+  const [activeVertical, setActiveVertical] = useState<Vertical>('data_center');
+  const [verticalDropdownOpen, setVerticalDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/agents/status')
@@ -85,6 +113,47 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             </span>
           )}
         </div>
+
+        {/* Vertical Selector */}
+        {!collapsed && (
+          <div className="px-2 py-2 border-b border-border">
+            <div className="relative">
+              <button
+                onClick={() => setVerticalDropdownOpen(!verticalDropdownOpen)}
+                className="flex w-full items-center gap-2 rounded-lg bg-bg-elevated/50 border border-border/50 px-2.5 py-1.5 text-xs font-medium text-text-primary hover:bg-bg-elevated transition-colors"
+              >
+                {(() => {
+                  const Icon = verticalIcons[activeVertical] || Server;
+                  return <Icon size={13} className="text-accent shrink-0" />;
+                })()}
+                <span className="flex-1 text-left truncate">
+                  {ALL_VERTICALS.find((v) => v.id === activeVertical)?.label || 'Data Centers'}
+                </span>
+                <ChevronDown size={12} className={cn('text-text-muted transition-transform', verticalDropdownOpen && 'rotate-180')} />
+              </button>
+              {verticalDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-border bg-bg-secondary shadow-lg py-1">
+                  {ALL_VERTICALS.map((v) => {
+                    const Icon = verticalIcons[v.id] || Server;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => { setActiveVertical(v.id); setVerticalDropdownOpen(false); }}
+                        className={cn(
+                          'flex w-full items-center gap-2 px-2.5 py-1.5 text-xs transition-colors',
+                          activeVertical === v.id ? 'text-accent bg-accent/5' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary',
+                        )}
+                      >
+                        <Icon size={13} className="shrink-0" />
+                        <span>{v.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">

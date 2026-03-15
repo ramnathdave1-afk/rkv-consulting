@@ -61,7 +61,7 @@ export default function MarketAnalyticsPage() {
     <div className="p-4 space-y-4">
       <div>
         <h1 className="font-display text-lg font-bold text-text-primary">Market Analytics</h1>
-        <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">PJM Interconnection Territory — Real-Time Intelligence</p>
+        <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">Infrastructure Market Intelligence — Real-Time Data</p>
       </div>
 
       <CongestionChart data={substationData} />

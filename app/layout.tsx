@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Meridian Node | Autonomous Data Center Site Intelligence",
   description:
-    "AI-powered multi-agent platform for data center site selection and grid intelligence across the PJM Interconnection territory.",
+    "AI-powered land infrastructure intelligence platform for site selection across data centers, solar, wind, EV charging, and land development.",
   icons: { icon: "/favicon.ico" },
 };
 

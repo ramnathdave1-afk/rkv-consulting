@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js';
 
-type AgentName = 'alpha' | 'beta' | 'gamma' | 'delta';
+type AgentName = 'alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta';
 
 export async function logActivity(
   agentName: AgentName,

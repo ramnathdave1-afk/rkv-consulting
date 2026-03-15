@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!profile) return NextResponse.json({ error: 'No profile' }, { status: 403 });
 
   const { data, error } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .select('*, site_scores(composite_score, grid_score, land_score, risk_score, market_score, connectivity_score)')
     .eq('org_id', profile.org_id)
     .order('created_at', { ascending: false });
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const { data, error } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .insert({ ...body, org_id: profile.org_id, created_by: user.id })
     .select()
     .single();

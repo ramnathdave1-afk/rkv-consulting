@@ -1,7 +1,7 @@
-import type { GhostSite, SiteScore, Substation } from '@/lib/types';
+import type { Site, SiteScore, Substation } from '@/lib/types';
 
 interface ReportData {
-  site: GhostSite;
+  site: Site;
   score: SiteScore | null;
   substation: Substation | null;
   generatedAt: string;
@@ -29,7 +29,7 @@ function scoreBar(value: number, color: string): string {
 export function generateReportHTML(data: ReportData): string {
   const { site, score, substation, generatedAt } = data;
   const stageLabels: Record<string, string> = {
-    ghost_site: 'Ghost Site',
+    prospect: 'Prospect',
     due_diligence: 'Due Diligence',
     loi: 'LOI',
     under_contract: 'Under Contract',
@@ -174,7 +174,7 @@ export function generateReportHTML(data: ReportData): string {
 
     <div class="card">
       <div class="card-title">Target Capacity</div>
-      <div class="card-value" style="font-size:28px;font-weight:800;">${site.target_mw || '—'} <span style="font-size:13px;color:#8B95A5;">MW</span></div>
+      <div class="card-value" style="font-size:28px;font-weight:800;">${site.target_capacity || '—'} <span style="font-size:13px;color:#8B95A5;">MW</span></div>
     </div>
   </div>
 

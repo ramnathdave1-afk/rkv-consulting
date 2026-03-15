@@ -20,7 +20,7 @@ function generateMissions(agentCounts: Record<string, number>): Mission[] {
     { id: 'M-001', agent: 'alpha', region: 'Virginia', params: { min_mw: 50, voltage_kv: 230 }, status: 'active', matches: agentCounts.alpha || 0, created_at: '2025-01-15' },
     { id: 'M-002', agent: 'beta', region: 'Pennsylvania', params: { min_acres: 40, max_distance_mi: 10 }, status: 'active', matches: agentCounts.beta || 0, created_at: '2025-01-20' },
     { id: 'M-003', agent: 'gamma', region: 'Ohio', params: { scoring_model: 'v2', threshold: 60 }, status: 'active', matches: agentCounts.gamma || 0, created_at: '2025-02-01' },
-    { id: 'M-004', agent: 'delta', region: 'All PJM', params: { metrics: ['power_cost', 'land_cost', 'incentives'] }, status: 'active', matches: agentCounts.delta || 0, created_at: '2025-02-10' },
+    { id: 'M-004', agent: 'delta', region: 'All Regions', params: { metrics: ['power_cost', 'land_cost', 'incentives'] }, status: 'active', matches: agentCounts.delta || 0, created_at: '2025-02-10' },
     { id: 'M-005', agent: 'alpha', region: 'West Virginia', params: { min_mw: 100, voltage_kv: 500 }, status: 'paused', matches: 0, created_at: '2025-01-10' },
   ];
   return missions;

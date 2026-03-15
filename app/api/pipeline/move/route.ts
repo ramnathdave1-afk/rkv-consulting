@@ -27,7 +27,7 @@ export async function PATCH(request: NextRequest) {
 
   // Get current site
   const { data: site, error: siteError } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .select('id, pipeline_stage, org_id')
     .eq('id', site_id)
     .eq('org_id', profile.org_id)
@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest) {
 
   // Update site
   const { error: updateError } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .update({ pipeline_stage: to_stage, updated_at: new Date().toISOString() })
     .eq('id', site_id);
 

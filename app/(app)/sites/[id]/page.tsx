@@ -14,11 +14,11 @@ import { RegulatoryTab } from '@/components/sites/RegulatoryTab';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { PIPELINE_STAGES } from '@/lib/constants';
 import Link from 'next/link';
-import type { GhostSite, SiteScore, Substation } from '@/lib/types';
+import type { Site, SiteScore, Substation } from '@/lib/types';
 
 export default function SiteDetailPage() {
   const { id } = useParams();
-  const [site, setSite] = useState<GhostSite | null>(null);
+  const [site, setSite] = useState<Site | null>(null);
   const [score, setScore] = useState<SiteScore | null>(null);
   const [substation, setSubstation] = useState<Substation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function SiteDetailPage() {
   useEffect(() => {
     async function fetchSite() {
       const { data: siteData } = await supabase
-        .from('ghost_sites')
+        .from('sites')
         .select('*')
         .eq('id', id)
         .single();
@@ -85,7 +85,7 @@ export default function SiteDetailPage() {
             <div className="flex items-center gap-2 text-[10px] text-text-muted mt-0.5">
               <span>{site.state}{site.county ? `, ${site.county}` : ''}</span>
               {stage && <Badge color={stage.color} size="sm">{stage.label}</Badge>}
-              {site.target_mw && <span className="font-mono">{site.target_mw} MW</span>}
+              {site.target_capacity && <span className="font-mono">{site.target_capacity} MW</span>}
             </div>
           </div>
         </div>

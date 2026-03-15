@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { GhostSite, Substation } from '@/lib/types';
+import type { Site, Substation } from '@/lib/types';
 
 interface NearbySubstation {
   id: string;
@@ -15,7 +15,7 @@ interface NearbySubstation {
 }
 
 interface TechnicalTabProps {
-  site: GhostSite;
+  site: Site;
   substation: Substation | null;
 }
 

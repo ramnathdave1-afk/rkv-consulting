@@ -6,11 +6,12 @@ import { motion } from 'framer-motion';
 import { MapPin, Zap, Shield, TrendingUp, Wifi } from 'lucide-react';
 import { ScoreGauge } from '@/components/reports/ScoreGauge';
 import { ScoreBreakdown } from '@/components/reports/ScoreBreakdown';
+import { ScoreRadarChart } from '@/components/dashboard/ScoreRadarChart';
 import { formatDistanceToNow } from 'date-fns';
-import type { GhostSite, SiteScore, Substation } from '@/lib/types';
+import type { Site, SiteScore, Substation } from '@/lib/types';
 
 interface OverviewTabProps {
-  site: GhostSite;
+  site: Site;
   score: SiteScore | null;
   substation: Substation | null;
 }
@@ -60,6 +61,19 @@ export function OverviewTab({ site, score, substation }: OverviewTabProps) {
         </div>
       )}
 
+      {/* Radar Chart */}
+      {score && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="glass-card p-4"
+        >
+          <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider mb-2">Dimension Analysis</p>
+          <ScoreRadarChart score={score} />
+        </motion.div>
+      )}
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <div className="glass-card p-3">
@@ -84,7 +98,7 @@ export function OverviewTab({ site, score, substation }: OverviewTabProps) {
 
         <div className="glass-card p-3">
           <p className="text-[10px] text-text-muted uppercase tracking-wider">Target Capacity</p>
-          <p className="text-xl font-display font-bold text-text-primary mt-1">{site.target_mw || '—'}<span className="text-[10px] text-text-muted ml-1">MW</span></p>
+          <p className="text-xl font-display font-bold text-text-primary mt-1">{site.target_capacity || '—'}<span className="text-[10px] text-text-muted ml-1">MW</span></p>
         </div>
 
         {score && scoreCards.map((sc) => {

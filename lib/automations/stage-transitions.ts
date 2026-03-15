@@ -13,7 +13,7 @@ export async function handleStageTransition(
 
   // Get site name
   const { data: site } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .select('name')
     .eq('id', siteId)
     .single();

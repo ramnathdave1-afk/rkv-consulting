@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { CheckCircle2, Clock, AlertTriangle, Circle } from 'lucide-react';
-import type { GhostSite } from '@/lib/types';
+import type { Site } from '@/lib/types';
 
 interface RegulatoryTabProps {
-  site: GhostSite;
+  site: Site;
 }
 
 type StepStatus = 'complete' | 'in_progress' | 'pending' | 'blocked';
@@ -24,7 +24,7 @@ const statusConfig: Record<StepStatus, { icon: React.ComponentType<{ size?: numb
   blocked: { icon: AlertTriangle, color: '#EF4444', bg: 'rgba(239, 68, 68, 0.1)', label: 'Blocked' },
 };
 
-function getSteps(site: GhostSite): PermitStep[] {
+function getSteps(site: Site): PermitStep[] {
   const hasZoning = site.zoning && site.zoning !== 'Unknown';
   const stage = site.pipeline_stage;
   const isPastDD = ['loi', 'under_contract', 'closed'].includes(stage);
@@ -46,7 +46,7 @@ function getSteps(site: GhostSite): PermitStep[] {
     },
     {
       title: 'Utility Interconnection Agreement',
-      description: 'File interconnection request with PJM. System impact study, facilities study, and interconnection agreement execution.',
+      description: 'File interconnection request with grid operator. System impact study, facilities study, and interconnection agreement execution.',
       status: isPastLOI ? 'complete' : (isPastDD ? 'in_progress' : 'pending'),
       timeline: '12-24 months',
     },
@@ -122,7 +122,7 @@ export function RegulatoryTab({ site }: RegulatoryTabProps) {
         {[
           { label: 'Zoning', value: site.zoning || 'Unknown' },
           { label: 'Jurisdiction', value: `${site.county || '—'} County, ${site.state}` },
-          { label: 'PJM Queue', value: 'Not Filed' },
+          { label: 'Grid Queue', value: 'Not Filed' },
           { label: 'Est. Total Timeline', value: '18-36 months' },
         ].map((item) => (
           <div key={item.label} className="glass-card p-3">

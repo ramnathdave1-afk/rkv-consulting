@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 import { Cpu, Map, Shield, TrendingUp, Zap, BarChart3 } from 'lucide-react';
 
 const features = [
-  { icon: Zap, title: 'Agent Alpha', desc: 'Autonomous grid scanning — finds substations with available MW headroom across PJM territory.' },
-  { icon: Map, title: 'Agent Beta', desc: 'Parcel analysis — locates optimal parcels near substations with zoning and acreage checks.' },
-  { icon: Shield, title: 'Agent Gamma', desc: 'Risk scoring — composite 0-100 scores across grid, land, risk, market, and connectivity.' },
-  { icon: TrendingUp, title: 'Agent Delta', desc: 'Market intelligence — regional power costs, land prices, and tax incentive tracking.' },
-  { icon: Cpu, title: '3D Grid Map', desc: 'Full 3D Mapbox visualization with terrain, buildings, and real-time site markers.' },
-  { icon: BarChart3, title: 'Pipeline & Reports', desc: 'Kanban pipeline management with automated PDF report generation at every stage.' },
+  { icon: Zap, title: 'Infrastructure Scanner', desc: 'Autonomous grid scanning — discovers substations and infrastructure capacity across all US ISO regions.' },
+  { icon: Map, title: 'Site Discovery', desc: 'AI parcel analysis — locates optimal parcels near infrastructure with zoning, acreage, and environmental checks.' },
+  { icon: Shield, title: 'Multi-Dimension Scoring', desc: 'Composite 0-100 scores across configurable dimensions per vertical — grid, land, risk, market, and more.' },
+  { icon: TrendingUp, title: 'Market Intelligence', desc: 'Regional power costs, land prices, tax incentives, and infrastructure density tracking.' },
+  { icon: Cpu, title: '3D Infrastructure Map', desc: 'Full 3D Mapbox visualization with terrain, substations, environmental layers, and real-time site markers.' },
+  { icon: BarChart3, title: 'Pipeline & Reports', desc: 'Kanban pipeline management with AI-powered feasibility analysis and automated PDF reports.' },
 ];
 
 export default function LandingPage() {
@@ -56,13 +56,13 @@ export default function LandingPage() {
           >
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent-muted px-4 py-1.5 text-xs font-medium text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-              Autonomous Multi-Agent Platform
+              AI-Powered Land Intelligence
             </div>
             <h1 className="font-display text-5xl font-bold leading-tight tracking-tight text-text-primary sm:text-6xl lg:text-7xl">
               Meridian Node
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-text-secondary">
-              AI-powered data center site selection and grid intelligence across the PJM Interconnection territory.
+              AI-powered land infrastructure intelligence for developers, energy companies, and infrastructure investors.
             </p>
           </motion.div>
 
@@ -145,7 +145,7 @@ export default function LandingPage() {
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
           <p className="text-xs text-text-muted">
-            &copy; {new Date().getFullYear()} RKV Consulting LLC. All rights reserved.
+            &copy; {new Date().getFullYear()} MeridianNode by RKV. All rights reserved.
           </p>
           <p className="text-xs text-text-muted">meridiannode.io</p>
         </div>

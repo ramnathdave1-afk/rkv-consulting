@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import type { GhostSite } from '@/lib/types';
+import type { Site } from '@/lib/types';
 
 interface ProFormaTabProps {
-  site: GhostSite;
+  site: Site;
 }
 
 export function ProFormaTab({ site }: ProFormaTabProps) {
@@ -15,7 +15,7 @@ export function ProFormaTab({ site }: ProFormaTabProps) {
 
   const calc = useMemo(() => {
     const acreage = site.acreage || 100;
-    const mw = site.target_mw || 50;
+    const mw = site.target_capacity || 50;
     const landTotal = landCostPerAcre * acreage;
     const infraTotal = infraCostPerMW * mw;
     const totalCapex = landTotal + infraTotal + gridInterconnect + permitting;
@@ -25,7 +25,7 @@ export function ProFormaTab({ site }: ProFormaTabProps) {
     const payback = annualRevenue > 0 ? totalCapex / annualRevenue : 0;
 
     return { landTotal, infraTotal, totalCapex, costPerMW, annualRevenue, irr, payback };
-  }, [site.acreage, site.target_mw, landCostPerAcre, infraCostPerMW, gridInterconnect, permitting]);
+  }, [site.acreage, site.target_capacity, landCostPerAcre, infraCostPerMW, gridInterconnect, permitting]);
 
   function fmtUsd(n: number) {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
@@ -44,7 +44,7 @@ export function ProFormaTab({ site }: ProFormaTabProps) {
           <div className="space-y-2">
             {[
               { label: 'Land Cost ($/acre)', value: landCostPerAcre, set: setLandCostPerAcre, sub: `${site.acreage || 100} acres × $${landCostPerAcre.toLocaleString()} = ${fmtUsd(calc.landTotal)}` },
-              { label: 'Infrastructure ($/MW)', value: infraCostPerMW, set: setInfraCostPerMW, sub: `${site.target_mw || 50} MW × $${infraCostPerMW.toLocaleString()} = ${fmtUsd(calc.infraTotal)}` },
+              { label: 'Infrastructure ($/MW)', value: infraCostPerMW, set: setInfraCostPerMW, sub: `${site.target_capacity || 50} MW × $${infraCostPerMW.toLocaleString()} = ${fmtUsd(calc.infraTotal)}` },
               { label: 'Grid Interconnection ($)', value: gridInterconnect, set: setGridInterconnect, sub: `Based on ${site.distance_to_substation_mi?.toFixed(1) || '—'} mi to substation` },
               { label: 'Permitting & Legal ($)', value: permitting, set: setPermitting, sub: 'Fixed estimate' },
             ].map((input) => (
@@ -105,8 +105,8 @@ export function ProFormaTab({ site }: ProFormaTabProps) {
           <div className="glass-card p-3">
             <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Revenue Assumptions</p>
             <div className="space-y-0.5 text-[10px] text-text-secondary">
-              <p>Capacity: {site.target_mw || 50} MW at 85% utilization</p>
-              <p>Power rate: $0.06/kWh (PJM wholesale)</p>
+              <p>Capacity: {site.target_capacity || 50} MW at 85% utilization</p>
+              <p>Power rate: $0.06/kWh (wholesale)</p>
               <p>Est. annual revenue: {fmtUsd(calc.annualRevenue)}</p>
             </div>
           </div>

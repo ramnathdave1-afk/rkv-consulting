@@ -33,7 +33,7 @@ export function CongestionChart({ data }: CongestionChartProps) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">Substation Congestion Trends</h3>
-          <p className="text-[10px] text-text-muted mt-0.5">% utilization by PJM zone — 12 month view</p>
+          <p className="text-[10px] text-text-muted mt-0.5">% utilization by ISO zone — 12 month view</p>
         </div>
       </div>
       <ResponsiveContainer width="100%" height={280}>

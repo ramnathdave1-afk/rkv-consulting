@@ -13,7 +13,7 @@ export async function GET(
 
   // Fetch site data
   const { data: site } = await supabase
-    .from('ghost_sites')
+    .from('sites')
     .select('*')
     .eq('id', siteId)
     .single();

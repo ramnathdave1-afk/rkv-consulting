@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ScoreGauge } from './ScoreGauge';
 import { ScoreBreakdown } from './ScoreBreakdown';
-import type { GhostSite, SiteScore, Substation } from '@/lib/types';
+import type { Site, SiteScore, Substation } from '@/lib/types';
 
 interface SiteReportPanelProps {
   siteId: string | null;
@@ -25,7 +25,7 @@ const dimensionIcons: Record<string, React.ElementType> = {
 };
 
 export function SiteReportPanel({ siteId, onClose }: SiteReportPanelProps) {
-  const [site, setSite] = useState<GhostSite | null>(null);
+  const [site, setSite] = useState<Site | null>(null);
   const [score, setScore] = useState<SiteScore | null>(null);
   const [substation, setSubstation] = useState<Substation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ export function SiteReportPanel({ siteId, onClose }: SiteReportPanelProps) {
       setLoading(true);
 
       const { data: siteData } = await supabase
-        .from('ghost_sites')
+        .from('sites')
         .select('*')
         .eq('id', siteId)
         .single();
@@ -243,7 +243,7 @@ export function SiteReportPanel({ siteId, onClose }: SiteReportPanelProps) {
                   <div className="glass-card p-4">
                     <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Target Capacity</h3>
                     <p className="text-3xl font-display font-bold text-text-primary">
-                      {site.target_mw || '—'}<span className="text-sm text-text-muted ml-1">MW</span>
+                      {site.target_capacity || '—'}<span className="text-sm text-text-muted ml-1">MW</span>
                     </p>
                   </div>
 

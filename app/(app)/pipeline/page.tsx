@@ -12,7 +12,7 @@ interface PipelineSite {
   id: string;
   name: string;
   state: string;
-  target_mw: number | null;
+  target_capacity: number | null;
   pipeline_stage: PipelineStage;
   composite_score: number | null;
 }
@@ -39,8 +39,8 @@ export default function PipelinePage() {
       if (!profile) return;
 
       const { data } = await supabase
-        .from('ghost_sites')
-        .select('id, name, state, target_mw, pipeline_stage, site_scores(composite_score)')
+        .from('sites')
+        .select('id, name, state, target_capacity, pipeline_stage, site_scores(composite_score)')
         .eq('org_id', profile.org_id)
         .order('updated_at', { ascending: false });
 
@@ -48,7 +48,7 @@ export default function PipelinePage() {
         id: s.id as string,
         name: s.name as string,
         state: s.state as string,
-        target_mw: s.target_mw as number | null,
+        target_capacity: s.target_capacity as number | null,
         pipeline_stage: s.pipeline_stage as PipelineStage,
         composite_score: (s.site_scores as Record<string, unknown>[] | null)?.[0]?.composite_score as number | null ?? null,
       }));
@@ -156,7 +156,7 @@ export default function PipelinePage() {
                         <p className="text-sm font-medium text-text-primary truncate">{site.name}</p>
                         <div className="mt-1 flex items-center gap-2 text-[10px] text-text-muted">
                           <span>{site.state}</span>
-                          {site.target_mw && <span>· {site.target_mw}MW</span>}
+                          {site.target_capacity && <span>· {site.target_capacity}MW</span>}
                           {site.composite_score !== null && (
                             <span className="ml-auto font-mono text-accent">{site.composite_score}</span>
                           )}
