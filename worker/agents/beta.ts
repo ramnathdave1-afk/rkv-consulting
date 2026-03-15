@@ -91,31 +91,9 @@ export async function runBeta() {
         }
       }
 
-      // Simulate discovering a new parcel (synthetic for demo)
-      if (Math.random() > 0.4) {
-        const acreage = 20 + Math.floor(Math.random() * 200);
-        const zoning = ZONING_TYPES[Math.floor(Math.random() * ZONING_TYPES.length)];
-        const latOffset = (Math.random() - 0.5) * 0.12;
-        const lngOffset = (Math.random() - 0.5) * 0.12;
-
-        const { error: insertErr } = await supabase.from('parcels').insert({
-          acreage,
-          zoning,
-          state: sub.state,
-          county: sub.county || 'Unknown',
-          lat: sub.lat + latOffset,
-          lng: sub.lng + lngOffset,
-          owner: 'Private Owner',
-        });
-
-        if (!insertErr) {
-          totalCreated++;
-          await logActivity('beta',
-            `Discovered parcel near ${sub.name}: ${acreage} acres, ${zoning} in ${sub.state}`,
-            { near_substation: sub.name, acreage, zoning, state: sub.state, distance_mi: 'nearby' },
-          );
-        }
-      }
+      // Note: Synthetic parcel generation removed.
+      // Real parcel data should come from data ingestion connectors (Regrid, county APIs).
+      // Beta now focuses on analyzing existing parcels from the database.
     }
 
     await logActivity('beta',

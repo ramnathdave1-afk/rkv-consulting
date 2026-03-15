@@ -19,10 +19,27 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Meridian Node | Autonomous Data Center Site Intelligence",
+  title: "Meridian Node | AI-Powered Land Infrastructure Intelligence",
   description:
-    "AI-powered land infrastructure intelligence platform for site selection across data centers, solar, wind, EV charging, and land development.",
+    "AI-powered land infrastructure intelligence platform for site selection across data centers, solar, wind, EV charging, and land development. Autonomous agents score, analyze, and discover sites.",
   icons: { icon: "/favicon.ico" },
+  metadataBase: new URL("https://meridiannode.io"),
+  openGraph: {
+    title: "Meridian Node — AI Land Intelligence",
+    description: "Autonomous AI agents for infrastructure site discovery, scoring, and feasibility analysis.",
+    url: "https://meridiannode.io",
+    siteName: "Meridian Node",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Meridian Node — AI Land Intelligence",
+    description: "Autonomous AI agents for infrastructure site discovery, scoring, and feasibility analysis.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

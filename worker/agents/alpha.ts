@@ -37,31 +37,28 @@ export async function runAlpha() {
       states_covered: [...new Set(substations?.map((s) => s.state) || [])],
     });
 
-    // Simulate discovering updated capacity data
-    const statesToScan = SCAN_STATES.filter((state) =>
-      (substations || []).some((s) => s.state === state),
-    ).slice(0, 5);
+    // Note: Synthetic capacity fluctuation removed.
+    // Real capacity data should come from EIA API or utility interconnection queues.
+    // Alpha now focuses on reporting existing infrastructure state.
 
-    for (const state of statesToScan) {
-      const stateSubstations = (substations || []).filter((s) => s.state === state);
-      if (stateSubstations.length > 0) {
-        // Simulate small capacity fluctuations
-        const sub = stateSubstations[Math.floor(Math.random() * stateSubstations.length)];
-        const delta = Math.floor(Math.random() * 40) - 20; // -20 to +20 MW
-        const newAvailable = Math.max(0, (sub.available_mw || 0) + delta);
+    // Report capacity distribution by state
+    const stateCapacity: Record<string, { count: number; totalMw: number }> = {};
+    for (const sub of substations || []) {
+      if (!stateCapacity[sub.state]) stateCapacity[sub.state] = { count: 0, totalMw: 0 };
+      stateCapacity[sub.state].count++;
+      stateCapacity[sub.state].totalMw += sub.available_mw || 0;
+    }
 
-        await supabase
-          .from('substations')
-          .update({ available_mw: newAvailable })
-          .eq('id', sub.id);
+    const topStates = Object.entries(stateCapacity)
+      .sort((a, b) => b[1].totalMw - a[1].totalMw)
+      .slice(0, 5);
 
-        await logActivity('alpha', `Updated ${sub.name} available capacity: ${newAvailable}MW (${delta >= 0 ? '+' : ''}${delta}MW)`, {
-          substation: sub.name,
-          previous: sub.available_mw,
-          new: newAvailable,
-          delta,
-        });
-      }
+    for (const [state, info] of topStates) {
+      await logActivity('alpha', `${state}: ${info.count} substations, ${info.totalMw}MW total available capacity`, {
+        state,
+        substations: info.count,
+        total_available_mw: info.totalMw,
+      });
     }
 
     await logActivity('alpha', 'Infrastructure scan complete');

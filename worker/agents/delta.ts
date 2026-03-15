@@ -73,24 +73,20 @@ export async function runDelta() {
 
     const hasIngestionData = (dbMarket?.length || 0) > 0;
 
-    // Upsert hardcoded baseline data with small fluctuations
+    // Upsert baseline market data (static reference data, no random fluctuation)
     for (const market of MARKET_DATA) {
-      const powerDelta = (Math.random() - 0.5) * 0.004;
-      const landDelta = (Math.random() - 0.5) * 5000;
-
       await supabase.from('market_intelligence').upsert(
         {
           region: market.region,
           state: market.state,
-          avg_power_cost_kwh: Math.round((market.avg_power_cost_kwh + powerDelta) * 1000) / 1000,
-          avg_land_cost_acre: Math.round(market.avg_land_cost_acre + landDelta),
+          avg_power_cost_kwh: market.avg_power_cost_kwh,
+          avg_land_cost_acre: market.avg_land_cost_acre,
           tax_incentive_score: market.tax_incentive_score,
           fiber_density_score: market.fiber_density_score,
           collected_at: new Date().toISOString(),
           data: {
-            source: 'delta_agent',
-            has_ingestion_data: hasIngestionData,
-            iteration: Date.now(),
+            source: hasIngestionData ? 'delta_agent+ingestion' : 'delta_agent_baseline',
+            updated_at: new Date().toISOString(),
           },
         },
         { onConflict: 'region' },
