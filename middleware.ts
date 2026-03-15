@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/api/waitlist', '/api/webhooks'];
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -19,6 +19,8 @@ import {
   Database,
   Key,
   Search,
+  CreditCard,
+  FileText,
   Server,
   Sun,
   Wind,
@@ -39,9 +41,11 @@ const navItems = [
   { href: '/data-sources', label: 'Data Sources', icon: Database },
   { href: '/feasibility', label: 'Feasibility', icon: Search },
   { href: '/api-keys', label: 'API Keys', icon: Key },
+  { href: '/api-docs', label: 'API Docs', icon: FileText },
 ];
 
 const bottomItems = [
+  { href: '/settings/billing', label: 'Billing', icon: CreditCard },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/settings/team', label: 'Team', icon: Users },
 ];

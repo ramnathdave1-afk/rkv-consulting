@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkLimit, incrementUsage } from '@/lib/billing/usage';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -39,6 +40,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
 
+  // Check usage limit before creating
+  const usageCheck = await checkLimit(profile.org_id, 'sites');
+  if (!usageCheck.allowed) {
+    return NextResponse.json({
+      error: 'Site limit reached',
+      usage: usageCheck,
+      upgrade_url: '/settings/billing',
+    }, { status: 402 });
+  }
+
   const body = await request.json();
   const { data, error } = await supabase
     .from('sites')
@@ -47,5 +58,9 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Increment usage after successful creation
+  await incrementUsage(profile.org_id, 'sites');
+
   return NextResponse.json({ site: data }, { status: 201 });
 }
