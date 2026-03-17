@@ -1,0 +1,20 @@
+{
+  "name": "kalshi-bot",
+  "version": "1.0.0",
+  "description": "Kalshi bet picking Telegram bot with AI analysis",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
+    "axios": "^1.13.6",
+    "dotenv": "^17.3.1",
+    "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.67.0"
+  }
+}
