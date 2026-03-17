@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { Topbar } from '@/components/navigation/Topbar';
 import { CommandBar } from '@/components/command-bar/CommandBar';
@@ -16,6 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const commandBarOpen = useAppStore((s) => s.commandBarOpen);
   const setCommandBarOpen = useAppStore((s) => s.setCommandBarOpen);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useNotificationSubscription();
 
@@ -24,15 +25,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
       />
       <Topbar
         sidebarCollapsed={sidebarCollapsed}
         onOpenCommandBar={() => setCommandBarOpen(true)}
+        onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
       <main
         className={cn(
           'min-h-screen pt-14 transition-all duration-200',
-          sidebarCollapsed ? 'pl-16' : 'pl-56',
+          'max-lg:pl-0',
+          sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56',
         )}
       >
         {children}

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/email/send';
+import { invitationEmail } from '@/lib/email/templates';
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -8,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('org_id, role')
+    .select('org_id, role, full_name')
     .eq('user_id', user.id)
     .single();
 
@@ -38,7 +42,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // TODO: Send invitation email via Resend
+  // Fetch org name and send invitation email
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', profile.org_id)
+    .single();
+
+  const inviteUrl = `${BASE_URL}/signup?token=${invitation.token}`;
+  const { subject, html } = invitationEmail(
+    profile.full_name || 'A team member',
+    org?.name || 'your organization',
+    inviteUrl,
+  );
+
+  await sendEmail({ to: email, subject, html });
 
   return NextResponse.json({ invitation }, { status: 201 });
 }
