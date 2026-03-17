@@ -1,0 +1,30 @@
+name: ATLAS Picks - Daily Kalshi Bot
+
+on:
+  schedule:
+    # 8 AM EST = 1 PM UTC (during EDT) / 1 PM UTC (during EST)
+    - cron: '0 13 * * *'
+  workflow_dispatch: # Manual trigger from GitHub UI
+
+jobs:
+  send-picks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/kalshi-bot
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install
+
+      - name: Send daily picks via Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node send-picks.js
