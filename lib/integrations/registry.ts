@@ -12,6 +12,8 @@ import { RentManagerConnector } from './rent-manager';
 import { DoorLoopConnector } from './doorloop';
 import { RealPageConnector } from './realpage';
 import { EntrataConnector } from './entrata';
+import { PropertywareConnector } from './propertyware';
+import { ResManConnector } from './resman';
 
 export interface IntegrationInfo {
   id: string;
@@ -95,6 +97,26 @@ export const INTEGRATION_REGISTRY: IntegrationInfo[] = [
       { key: 'api_key', label: 'API Key', type: 'password' },
     ],
   },
+  {
+    id: 'propertyware',
+    label: 'Propertyware',
+    description: 'Single-family and HOA property management',
+    authType: 'api_key',
+    status: 'coming_soon',
+    credentialFields: [
+      { key: 'api_key', label: 'API Key', type: 'password' },
+    ],
+  },
+  {
+    id: 'resman',
+    label: 'ResMan',
+    description: 'Multifamily property management and accounting',
+    authType: 'api_key',
+    status: 'coming_soon',
+    credentialFields: [
+      { key: 'api_key', label: 'API Key', type: 'password' },
+    ],
+  },
 ];
 
 export function getConnector(platform: string): PMConnector {
@@ -106,6 +128,8 @@ export function getConnector(platform: string): PMConnector {
     doorloop: () => new DoorLoopConnector(),
     realpage: () => new RealPageConnector(),
     entrata: () => new EntrataConnector(),
+    propertyware: () => new PropertywareConnector(),
+    resman: () => new ResManConnector(),
   };
 
   const factory = connectors[platform];

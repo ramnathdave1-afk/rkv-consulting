@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/showing-followups",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/variance-alerts",
+      "schedule": "0 8 * * *"
     }
   ]
 }

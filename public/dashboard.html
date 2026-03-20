@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeridianNode — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #050505; --surface: #0a0a0a; --card: #111; --elevated: #1a1a1a;
+      --border: #1d1d1d; --border-h: #2a2a2a; --text: #f5f5f5;
+      --text2: rgba(255,255,255,0.55); --text3: rgba(255,255,255,0.3);
+      --accent: #10B981; --accent-dim: rgba(16,185,129,0.15);
+      --sidebar-w: 240px; --topbar-h: 56px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+
+    /* SIDEBAR */
+    .sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:transform 0.3s;}
+    .sidebar-logo{padding:20px 20px 24px;font-size:16px;font-weight:700;letter-spacing:-0.4px;border-bottom:1px solid var(--border);}
+    .sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:2px;}
+    .nav-item:hover{background:rgba(255,255,255,0.04);color:#fff;}
+    .nav-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600;}
+    .nav-item i{width:18px;height:18px;flex-shrink:0;}
+    .sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sidebar-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent);}
+    .sidebar-name{font-size:13px;font-weight:600;}
+    .sidebar-org{font-size:11px;color:var(--text3);}
+    .sidebar-toggle{display:none;position:fixed;top:14px;left:14px;z-index:50;background:var(--card);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;cursor:pointer;color:#fff;align-items:center;justify-content:center;}
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .sidebar-toggle{display:flex;}
+      .main{margin-left:0!important;}
+      .topbar{left:0!important;}
+    }
+
+    /* TOPBAR */
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:rgba(5,5,5,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:30;}
+    .topbar-title{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .topbar-btn{width:34px;height:34px;border-radius:8px;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+    .topbar-btn:hover{background:rgba(255,255,255,0.04);color:#fff;border-color:var(--border-h);}
+    .topbar-btn i{width:16px;height:16px;}
+
+    /* MAIN */
+    .main{margin-left:var(--sidebar-w);padding:calc(var(--topbar-h)+24px) 28px 28px;}
+
+    /* CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;transition:border-color 0.2s;}
+    .stat-card:hover{border-color:var(--border-h);}
+    .stat-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+    .stat-value{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+    .stat-change{font-size:11px;margin-top:4px;font-weight:500;}
+    .stat-up{color:var(--accent);}
+    .stat-down{color:#EF4444;}
+    @media(max-width:900px){.stat-grid{grid-template-columns:1fr 1fr;}}
+    @media(max-width:480px){.stat-grid{grid-template-columns:1fr;}}
+
+    /* CHART */
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;}
+    .chart-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:20px;}
+    .bar-chart{display:flex;align-items:flex-end;gap:8px;height:160px;}
+    .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .bar{width:100%;border-radius:6px 6px 0 0;background:var(--accent);opacity:0.7;transition:opacity 0.2s;}
+    .bar:hover{opacity:1;}
+    .bar-label{font-size:10px;color:var(--text3);}
+
+    /* TABLE */
+    .table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .table-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .table-header h3{font-size:14px;font-weight:600;}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:12px 22px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+    td{padding:14px 22px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(255,255,255,0.02);}
+
+    /* BADGE */
+    .badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;}
+    .badge-green{background:rgba(16,185,129,0.15);color:#10B981;}
+    .badge-yellow{background:rgba(234,179,8,0.15);color:#EAB308;}
+    .badge-red{background:rgba(239,68,68,0.15);color:#EF4444;}
+    .badge-blue{background:rgba(59,130,246,0.15);color:#3B82F6;}
+
+    /* KANBAN */
+    .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;min-height:300px;}
+    .kanban-col-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+    .kanban-count{background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:50px;font-size:11px;color:var(--text2);}
+    .kanban-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;cursor:grab;transition:all 0.15s;}
+    .kanban-card:hover{border-color:var(--border-h);transform:translateY(-1px);}
+    .kanban-card h4{font-size:13px;font-weight:600;margin-bottom:4px;}
+    .kanban-card p{font-size:12px;color:var(--text3);margin-bottom:8px;}
+    @media(max-width:768px){.kanban{grid-template-columns:1fr;}}
+
+    /* GRID LAYOUTS */
+    .grid-2{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+    @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+    /* ACTIVITY FEED */
+    .activity-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+    .activity-card h3{font-size:14px;font-weight:600;margin-bottom:16px;}
+    .activity-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+    .activity-text{font-size:13px;color:var(--text2);line-height:1.5;}
+    .activity-time{font-size:11px;color:var(--text3);margin-top:2px;}
+
+    /* PROPERTY CARDS */
+    .property-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .property-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.2s;cursor:pointer;}
+    .property-card:hover{border-color:var(--border-h);transform:translateY(-2px);}
+    .property-img{width:100%;height:160px;object-fit:cover;border-bottom:1px solid var(--border);}
+    .property-info{padding:16px;}
+    .property-info h4{font-size:14px;font-weight:600;margin-bottom:4px;}
+    .property-info p{font-size:12px;color:var(--text3);}
+    .property-meta{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text2);}
+    @media(max-width:768px){.property-grid{grid-template-columns:1fr;}}
+
+    /* SKELETON */
+    .skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--elevated) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+    @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+    /* PAGE SECTIONS */
+    .page{display:none;}
+    .page.active{display:block;}
+
+    /* DONUT */
+    .donut{width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--accent) 0% 96%,var(--border) 96% 100%);display:flex;align-items:center;justify-content:center;margin:0 auto;}
+    .donut-inner{width:100px;height:100px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;flex-direction:column;}
+    .donut-value{font-size:24px;font-weight:700;}
+    .donut-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR TOGGLE (mobile) -->
+  <button class="sidebar-toggle" id="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    <i data-lucide="menu" style="width:18px;height:18px;"></i>
+  </button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">MeridianNode</div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="overview" onclick="showPage('overview',this)"><i data-lucide="layout-dashboard"></i>Overview</a>
+      <a class="nav-item" data-page="properties" onclick="showPage('properties',this)"><i data-lucide="building-2"></i>Properties</a>
+      <a class="nav-item" data-page="tenants" onclick="showPage('tenants',this)"><i data-lucide="users"></i>Tenants</a>
+      <a class="nav-item" data-page="financials" onclick="showPage('financials',this)"><i data-lucide="trending-up"></i>Rent & Financials</a>
+      <a class="nav-item" data-page="maintenance" onclick="showPage('maintenance',this)"><i data-lucide="wrench"></i>Maintenance</a>
+      <a class="nav-item" data-page="leases" onclick="showPage('leases',this)"><i data-lucide="file-text"></i>Leases</a>
+      <a class="nav-item" data-page="vacancies" onclick="showPage('vacancies',this)"><i data-lucide="home"></i>Vacancies</a>
+      <a class="nav-item" data-page="notifications" onclick="showPage('notifications',this)"><i data-lucide="bell"></i>Notifications</a>
+      <a class="nav-item" data-page="settings" onclick="showPage('settings',this)"><i data-lucide="settings"></i>Settings</a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">DR</div>
+      <div><div class="sidebar-name">Dave Ramnath</div><div class="sidebar-org">RKV Consulting LLC</div></div>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title" id="topbar-title">Overview</div>
+    <div class="topbar-right">
+      <button class="topbar-btn"><i data-lucide="search"></i></button>
+      <button class="topbar-btn" style="position:relative;"><i data-lucide="bell"></i><span style="position:absolute;top:4px;right:4px;width:7px;height:7px;background:#EF4444;border-radius:50%;border:1.5px solid var(--bg);"></span></button>
+      <div class="sidebar-avatar" style="width:30px;height:30px;font-size:11px;cursor:pointer;">DR</div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Total Units</div><div class="stat-value">248</div><div class="stat-change stat-up">+12 this month</div></div>
+        <div class="stat-card"><div class="stat-label">Occupancy Rate</div><div class="stat-value">96.2%</div><div class="stat-change stat-up">+2.1%</div></div>
+        <div class="stat-card"><div class="stat-label">Rent Collected</div><div class="stat-value">$412K</div><div class="stat-change stat-up">+8.3% vs last month</div></div>
+        <div class="stat-card"><div class="stat-label">Open Work Orders</div><div class="stat-value">7</div><div class="stat-change stat-down">3 urgent</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-card">
+          <div class="chart-title">Revenue — Last 6 Months</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:55%;"></div><div class="bar-label">Oct</div></div>
+            <div class="bar-col"><div class="bar" style="height:62%;"></div><div class="bar-label">Nov</div></div>
+            <div class="bar-col"><div class="bar" style="height:58%;"></div><div class="bar-label">Dec</div></div>
+            <div class="bar-col"><div class="bar" style="height:70%;"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-col"><div class="bar" style="height:75%;"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-col"><div class="bar" style="height:88%;"></div><div class="bar-label">Mar</div></div>
+          </div>
+        </div>
+        <div class="activity-card">
+          <h3>Recent Activity</h3>
+          <div class="activity-item"><div class="activity-dot" style="background:var(--accent);"></div><div><div class="activity-text">AI responded to tenant inquiry — Unit 204</div><div class="activity-time">2 min ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#3B82F6;"></div><div><div class="activity-text">Work order dispatched to AZ Plumbing</div><div class="activity-time">18 min ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#EAB308;"></div><div><div class="activity-text">Lease renewal sent — Unit 112</div><div class="activity-time">1 hr ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:var(--accent);"></div><div><div class="activity-text">Rent payment received — $1,450</div><div class="activity-time">3 hrs ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot" style="background:#EF4444;"></div><div><div class="activity-text">Maintenance escalated to P1 — Unit 308</div><div class="activity-time">5 hrs ago</div></div></div>
+        </div>
+      </div>
+      <div class="grid-2" style="grid-template-columns:1fr 1fr;">
+        <div class="chart-card" style="text-align:center;">
+          <div class="chart-title">Occupancy Rate</div>
+          <div class="donut"><div class="donut-inner"><div class="donut-value">96%</div><div class="donut-label">Occupied</div></div></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Rent Collection Progress</div>
+          <div style="margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px;"><span>Collected</span><span>$412,000 / $428,000</span></div>
+            <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;"><div style="width:96%;height:100%;background:var(--accent);border-radius:5px;"></div></div>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px;"><span>Lease Renewals</span><span>18 / 22</span></div>
+            <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;"><div style="width:82%;height:100%;background:#3B82F6;border-radius:5px;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTIES -->
+    <div class="page" id="page-properties">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <input type="text" placeholder="Search properties..." style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 16px;color:#fff;font-size:13px;font-family:inherit;outline:none;width:300px;">
+        <button class="topbar-btn" style="padding:8px 16px;width:auto;font-size:12px;font-weight:600;gap:6px;color:var(--accent);border-color:rgba(16,185,129,0.3);"><i data-lucide="plus" style="width:14px;height:14px;"></i> Add Property</button>
+      </div>
+      <div class="property-grid">
+        <div class="property-card"><img src="images/property-apartments.jpg" class="property-img" alt="Apartments"><div class="property-info"><h4>Scottsdale Apartments</h4><p>4821 N Scottsdale Rd</p><div class="property-meta"><span>48 units</span><span class="badge badge-green">96% occupied</span></div></div></div>
+        <div class="property-card"><img src="images/property-townhouses.jpg" class="property-img" alt="Townhouses"><div class="property-info"><h4>Phoenix Townhomes</h4><p>1200 W Camelback Rd</p><div class="property-meta"><span>12 units</span><span class="badge badge-green">100% occupied</span></div></div></div>
+        <div class="property-card"><img src="images/property-midrise.jpg" class="property-img" alt="Midrise"><div class="property-info"><h4>Tempe Mid-Rise</h4><p>800 S Mill Ave</p><div class="property-meta"><span>96 units</span><span class="badge badge-yellow">92% occupied</span></div></div></div>
+        <div class="property-card"><img src="images/property-duplex.jpg" class="property-img" alt="Duplex"><div class="property-info"><h4>Mesa Duplex</h4><p>2340 E Main St</p><div class="property-meta"><span>2 units</span><span class="badge badge-green">100% occupied</span></div></div></div>
+        <div class="property-card"><img src="images/property-hero.jpg" class="property-img" alt="Luxury"><div class="property-info"><h4>Chandler Luxury</h4><p>3100 W Chandler Blvd</p><div class="property-meta"><span>64 units</span><span class="badge badge-green">98% occupied</span></div></div></div>
+        <div class="property-card"><img src="images/property-apartments.jpg" class="property-img" alt="Apartments"><div class="property-info"><h4>Gilbert Gardens</h4><p>450 N Gilbert Rd</p><div class="property-meta"><span>26 units</span><span class="badge badge-yellow">88% occupied</span></div></div></div>
+      </div>
+    </div>
+
+    <!-- TENANTS -->
+    <div class="page" id="page-tenants">
+      <div class="table-card">
+        <div class="table-header"><h3>All Tenants</h3><span style="font-size:12px;color:var(--text3);">248 total</span></div>
+        <table>
+          <thead><tr><th>Name</th><th>Unit</th><th>Property</th><th>Lease End</th><th>Rent</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#fff;font-weight:500;">Maria Garcia</td><td>Unit 204</td><td>Scottsdale Apartments</td><td>Aug 2026</td><td>$1,450</td><td><span class="badge badge-green">Current</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">James Wilson</td><td>Unit 112</td><td>Scottsdale Apartments</td><td>Jun 2026</td><td>$1,350</td><td><span class="badge badge-yellow">Renewing</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Sarah Chen</td><td>Unit 308</td><td>Tempe Mid-Rise</td><td>Sep 2026</td><td>$1,680</td><td><span class="badge badge-green">Current</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Michael Brown</td><td>Unit A</td><td>Mesa Duplex</td><td>Apr 2026</td><td>$1,200</td><td><span class="badge badge-red">Late</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Emily Davis</td><td>Unit 505</td><td>Tempe Mid-Rise</td><td>Dec 2026</td><td>$1,550</td><td><span class="badge badge-green">Current</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Robert Kim</td><td>Unit 3B</td><td>Phoenix Townhomes</td><td>Jul 2026</td><td>$1,800</td><td><span class="badge badge-green">Current</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Lisa Thompson</td><td>Unit 201</td><td>Chandler Luxury</td><td>May 2026</td><td>$2,100</td><td><span class="badge badge-yellow">Renewing</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FINANCIALS -->
+    <div class="page" id="page-financials">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-label">Collected</div><div class="stat-value" style="color:var(--accent);">$412,000</div></div>
+        <div class="stat-card"><div class="stat-label">Expected</div><div class="stat-value">$428,000</div></div>
+        <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value" style="color:#EF4444;">$16,000</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Rent Collected — 12 Months</div>
+        <div class="bar-chart" style="height:180px;">
+          <div class="bar-col"><div class="bar" style="height:60%;"></div><div class="bar-label">Apr</div></div>
+          <div class="bar-col"><div class="bar" style="height:58%;"></div><div class="bar-label">May</div></div>
+          <div class="bar-col"><div class="bar" style="height:65%;"></div><div class="bar-label">Jun</div></div>
+          <div class="bar-col"><div class="bar" style="height:62%;"></div><div class="bar-label">Jul</div></div>
+          <div class="bar-col"><div class="bar" style="height:70%;"></div><div class="bar-label">Aug</div></div>
+          <div class="bar-col"><div class="bar" style="height:68%;"></div><div class="bar-label">Sep</div></div>
+          <div class="bar-col"><div class="bar" style="height:72%;"></div><div class="bar-label">Oct</div></div>
+          <div class="bar-col"><div class="bar" style="height:75%;"></div><div class="bar-label">Nov</div></div>
+          <div class="bar-col"><div class="bar" style="height:78%;"></div><div class="bar-label">Dec</div></div>
+          <div class="bar-col"><div class="bar" style="height:80%;"></div><div class="bar-label">Jan</div></div>
+          <div class="bar-col"><div class="bar" style="height:85%;"></div><div class="bar-label">Feb</div></div>
+          <div class="bar-col"><div class="bar" style="height:92%;"></div><div class="bar-label">Mar</div></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Recent Payments</h3></div>
+        <table>
+          <thead><tr><th>Tenant</th><th>Amount</th><th>Date</th><th>Method</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#fff;font-weight:500;">Maria Garcia</td><td>$1,450</td><td>Mar 1, 2026</td><td>ACH</td><td><span class="badge badge-green">Paid</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Sarah Chen</td><td>$1,680</td><td>Mar 1, 2026</td><td>ACH</td><td><span class="badge badge-green">Paid</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Michael Brown</td><td>$1,200</td><td>—</td><td>—</td><td><span class="badge badge-red">Overdue</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Robert Kim</td><td>$1,800</td><td>Mar 2, 2026</td><td>Credit Card</td><td><span class="badge badge-green">Paid</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE -->
+    <div class="page" id="page-maintenance">
+      <div class="kanban">
+        <div class="kanban-col">
+          <div class="kanban-col-title">Open <span class="kanban-count">3</span></div>
+          <div class="kanban-card"><h4>Leaking faucet</h4><p>Unit 308 · Tempe Mid-Rise</p><span class="badge badge-red">P1 Emergency</span></div>
+          <div class="kanban-card"><h4>AC not cooling</h4><p>Unit 204 · Scottsdale Apartments</p><span class="badge badge-yellow">P2 Urgent</span></div>
+          <div class="kanban-card"><h4>Broken blinds</h4><p>Unit 3B · Phoenix Townhomes</p><span class="badge badge-blue">P3 Routine</span></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-title">In Progress <span class="kanban-count">2</span></div>
+          <div class="kanban-card"><h4>Replace water heater</h4><p>Unit A · Mesa Duplex</p><span class="badge badge-yellow">P2 Urgent</span><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vendor: AZ Plumbing · ETA: Today</div></div>
+          <div class="kanban-card"><h4>Repaint hallway</h4><p>Common area · Scottsdale Apartments</p><span class="badge badge-blue">P3 Routine</span><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vendor: ProPaint LLC · ETA: Mar 22</div></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-title">Resolved <span class="kanban-count">2</span></div>
+          <div class="kanban-card" style="opacity:0.6;"><h4>Garbage disposal jam</h4><p>Unit 112 · Scottsdale Apartments</p><span class="badge badge-green">Resolved</span></div>
+          <div class="kanban-card" style="opacity:0.6;"><h4>Smoke detector battery</h4><p>Unit 505 · Tempe Mid-Rise</p><span class="badge badge-green">Resolved</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEASES -->
+    <div class="page" id="page-leases">
+      <div class="table-card">
+        <div class="table-header"><h3>All Leases</h3></div>
+        <table>
+          <thead><tr><th>Tenant</th><th>Unit</th><th>Start</th><th>End</th><th>Monthly</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#fff;font-weight:500;">Maria Garcia</td><td>Unit 204</td><td>Sep 2025</td><td>Aug 2026</td><td>$1,450</td><td><span class="badge badge-green">Active</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">James Wilson</td><td>Unit 112</td><td>Jul 2025</td><td>Jun 2026</td><td>$1,350</td><td><span class="badge badge-yellow">Expiring Soon</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Michael Brown</td><td>Unit A</td><td>May 2025</td><td>Apr 2026</td><td>$1,200</td><td><span class="badge badge-red">Expiring</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Lisa Thompson</td><td>Unit 201</td><td>Jun 2025</td><td>May 2026</td><td>$2,100</td><td><span class="badge badge-yellow">Renewal Sent</span></td></tr>
+            <tr><td style="color:#fff;font-weight:500;">Emily Davis</td><td>Unit 505</td><td>Jan 2026</td><td>Dec 2026</td><td>$1,550</td><td><span class="badge badge-green">Active</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VACANCIES -->
+    <div class="page" id="page-vacancies">
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-label">Vacant Units</div><div class="stat-value">10</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Days Vacant</div><div class="stat-value">14</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue Loss / Mo</div><div class="stat-value" style="color:#EF4444;">$14,200</div></div>
+      </div>
+      <div class="property-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="property-card"><div class="property-info"><h4>Unit 301</h4><p>Tempe Mid-Rise</p><div class="property-meta"><span>2BR / 1BA</span><span>$1,550/mo</span></div><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vacant 8 days</div></div></div>
+        <div class="property-card"><div class="property-info"><h4>Unit 415</h4><p>Tempe Mid-Rise</p><div class="property-meta"><span>1BR / 1BA</span><span>$1,280/mo</span></div><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vacant 12 days</div></div></div>
+        <div class="property-card"><div class="property-info"><h4>Unit 8C</h4><p>Chandler Luxury</p><div class="property-meta"><span>3BR / 2BA</span><span>$2,400/mo</span></div><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vacant 22 days</div></div></div>
+        <div class="property-card"><div class="property-info"><h4>Unit 6A</h4><p>Gilbert Gardens</p><div class="property-meta"><span>2BR / 1BA</span><span>$1,350/mo</span></div><div style="margin-top:8px;font-size:11px;color:var(--text3);">Vacant 5 days</div></div></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <div class="activity-card">
+        <h3>Notifications</h3>
+        <div class="activity-item"><div class="activity-dot" style="background:#EF4444;"></div><div><div class="activity-text"><strong>P1 Emergency:</strong> Leaking faucet reported at Unit 308, Tempe Mid-Rise. AI dispatched AZ Plumbing.</div><div class="activity-time">2 min ago</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--accent);"></div><div><div class="activity-text"><strong>Rent received:</strong> Maria Garcia paid $1,450 via ACH for Unit 204.</div><div class="activity-time">18 min ago</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:#EAB308;"></div><div><div class="activity-text"><strong>Lease renewal:</strong> 90-day notice sent to James Wilson, Unit 112. Proposed rent: $1,395/mo (+3.3%).</div><div class="activity-time">1 hr ago</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:#3B82F6;"></div><div><div class="activity-text"><strong>Showing scheduled:</strong> Prospect John Martinez booked a tour of Unit 301, Tempe Mid-Rise for Mar 22 at 2pm.</div><div class="activity-time">3 hrs ago</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--accent);"></div><div><div class="activity-text"><strong>AI response:</strong> Tenant inquiry handled for Unit 505. Question about pet policy answered automatically.</div><div class="activity-time">5 hrs ago</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:#EAB308;"></div><div><div class="activity-text"><strong>Delinquency alert:</strong> Michael Brown (Unit A, Mesa Duplex) is 15 days past due. $1,200 outstanding.</div><div class="activity-time">Yesterday</div></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="chart-card">
+        <div class="chart-title" style="margin-bottom:24px;">Organization Settings</div>
+        <div style="max-width:480px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">Company Name</label>
+          <input type="text" value="RKV Consulting LLC" style="width:100%;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">Contact Email</label>
+          <input type="email" value="dave@rkvconsulting.com" style="width:100%;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">Twilio Phone Number</label>
+          <input type="text" value="+1 (480) 555-0142" style="width:100%;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;">AI Response Tone</label>
+          <select style="width:100%;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:24px;cursor:pointer;-webkit-appearance:none;"><option>Professional</option><option>Friendly</option><option>Concise</option></select>
+          <button style="background:var(--accent);color:#fff;border:none;padding:11px 28px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    function showPage(page, el) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      const titles = { overview:'Overview', properties:'Properties', tenants:'Tenants', financials:'Rent & Financials', maintenance:'Maintenance', leases:'Leases', vacancies:'Vacancies', notifications:'Notifications', settings:'Settings' };
+      document.getElementById('topbar-title').textContent = titles[page] || page;
+      // Close mobile sidebar
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  </script>
+</body>
+</html>
