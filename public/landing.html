@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MeridianNode</title>
-  <meta name="description" content="AI-powered property management infrastructure for modern operators.">
+  <title>MeridianNode — AI Property Management</title>
+  <meta name="description" content="AI-powered property management for modern operators. Automate tenant communication, rent collection, maintenance, and reporting.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,510 +13,555 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
     html{scroll-behavior:smooth;}
     body{font-family:'Inter',-apple-system,sans-serif;background:#000;color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-    .wrap{max-width:1200px;margin:0 auto;padding:0 40px;}
-    @media(max-width:768px){.wrap{padding:0 20px;}}
+    a{color:inherit;}
+    .w{max-width:1200px;margin:0 auto;padding:0 40px;}
+    @media(max-width:768px){.w{padding:0 20px;}}
 
-    /* NAV */
-    nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:18px 0;transition:all .35s;}
-    nav.scrolled{background:rgba(0,0,0,.78);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid #1d1d1d;}
-    .nav-inner{display:flex;align-items:center;justify-content:space-between;}
-    .logo{font-size:17px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.4px;}
-    .nav-links{display:flex;gap:36px;}
-    .nav-links a{font-size:13px;font-weight:500;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;}
-    .nav-links a:hover{color:#fff;}
-    .pill{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;font-weight:600;padding:9px 22px;border-radius:50px;cursor:pointer;text-decoration:none;border:none;transition:all .25s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;}
-    .pill:focus-visible{outline:2px solid #09f;outline-offset:2px;}
-    .pill-w{background:#fff;color:#000;}
-    .pill-w:hover{transform:scale(1.06);box-shadow:0 6px 28px rgba(255,255,255,.15);}
-    .pill-w:active{transform:scale(.95);transition-duration:.1s;}
-    .pill-g{background:rgba(255,255,255,.08);color:#09f;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);}
-    .pill-g:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.2);transform:scale(1.04);}
-    .pill-g:active{transform:scale(.95);transition-duration:.1s;}
-    .burger{display:none;background:none;border:none;color:#fff;cursor:pointer;}
-    @media(max-width:768px){.nav-links{display:none;}.burger{display:block;}}
+    /* ── NAV ── */
+    nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:16px 0;transition:all .4s cubic-bezier(.22,1,.36,1);}
+    nav.s{background:rgba(0,0,0,.72);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.06);}
+    .ni{display:flex;align-items:center;justify-content:space-between;}
+    .lo{font-size:17px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.4px;display:flex;align-items:center;gap:8px;}
+    .lo-icon{width:24px;height:24px;background:linear-gradient(135deg,#09f,#0066cc);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+    .lo-icon i{width:14px;height:14px;color:#fff;}
+    .nl{display:flex;gap:32px;}
+    .nl a{font-size:13px;font-weight:500;color:rgba(255,255,255,.4);text-decoration:none;transition:color .2s;position:relative;}
+    .nl a:hover{color:#fff;}
+    .nl a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:#09f;transition:width .3s cubic-bezier(.22,1,.36,1);}
+    .nl a:hover::after{width:100%;}
+    .p{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:13px;font-weight:600;padding:9px 22px;border-radius:50px;cursor:pointer;text-decoration:none;border:none;transition:all .25s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;}
+    .p:focus-visible{outline:2px solid #09f;outline-offset:2px;}
+    .pw{background:#fff;color:#000;}
+    .pw:hover{transform:scale(1.06);box-shadow:0 6px 28px rgba(255,255,255,.15);}
+    .pw:active{transform:scale(.95);transition-duration:.08s;}
+    .pg{background:rgba(255,255,255,.07);color:#09f;border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);}
+    .pg:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16);transform:scale(1.04);}
+    .pg:active{transform:scale(.95);transition-duration:.08s;}
+    /* Ripple */
+    .p .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.2);transform:scale(0);animation:rip .5s ease-out forwards;pointer-events:none;}
+    @keyframes rip{to{transform:scale(4);opacity:0;}}
+    .bur{display:none;background:none;border:none;color:#fff;cursor:pointer;}
+    @media(max-width:768px){.nl{display:none;}.bur{display:block;}}
 
-    /* HERO */
+    /* ── HERO ── */
     .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 0 60px;overflow:hidden;}
-    .hero-grad{position:absolute;inset:0;background:linear-gradient(180deg,#000 0%,#1a1816 55%,#2f2c2a 100%);opacity:.35;z-index:0;}
-    .hero-blob{position:absolute;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0;}
-    .hero-blob-1{width:800px;height:800px;background:#2f2c2a;top:-350px;left:-250px;opacity:.2;}
-    .hero-blob-2{width:600px;height:600px;background:#3d3630;bottom:-300px;right:-200px;opacity:.14;}
+    .hero-g{position:absolute;inset:0;background:linear-gradient(180deg,#000 0%,#161412 50%,#2f2c2a 100%);opacity:.4;z-index:0;}
+    .hero-b{position:absolute;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0;will-change:transform;}
+    .hero-b1{width:900px;height:900px;background:radial-gradient(circle,#2f2c2a,#1a1715);top:-400px;left:-300px;opacity:.25;animation:blobFloat 20s ease-in-out infinite alternate;}
+    .hero-b2{width:700px;height:700px;background:radial-gradient(circle,#3d3630,#1a1715);bottom:-350px;right:-250px;opacity:.18;animation:blobFloat 18s ease-in-out infinite alternate-reverse;}
+    .hero-b3{width:400px;height:400px;background:radial-gradient(circle,rgba(0,153,255,.08),transparent);top:20%;right:10%;opacity:.5;animation:blobFloat 15s ease-in-out infinite alternate;}
+    @keyframes blobFloat{0%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,-20px) scale(1.05);}100%{transform:translate(-20px,30px) scale(.95);}}
     .hero-inner{position:relative;z-index:2;width:100%;}
-    .hero-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:50px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);font-size:11px;font-weight:500;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:2px;margin-bottom:36px;}
-    .hero h1{font-size:76px;font-weight:300;letter-spacing:-2.5px;line-height:.92;margin-bottom:24px;}
-    .hero h1 strong{font-weight:600;}
-    .hero-sub{font-size:18px;font-weight:400;color:rgba(255,255,255,.45);line-height:1.65;max-width:480px;margin:0 auto 44px;}
-    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:72px;}
-    .hero-btns .pill{font-size:14px;padding:13px 30px;}
-    @media(max-width:768px){.hero h1{font-size:40px;letter-spacing:-1.5px;}.hero-sub{font-size:16px;}.hero-btns{margin-bottom:48px;}}
-    @media(max-width:480px){.hero h1{font-size:32px;}}
+    .hero-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 18px;border-radius:50px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);backdrop-filter:blur(8px);font-size:11px;font-weight:500;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:2px;margin-bottom:36px;}
+    .hero-badge i{color:#09f;}
+    .hero h1{font-size:78px;font-weight:300;letter-spacing:-3px;line-height:.9;margin-bottom:28px;}
+    .hero h1 strong{font-weight:600;background:linear-gradient(135deg,#fff,rgba(255,255,255,.7));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero-sub{font-size:19px;font-weight:400;color:rgba(255,255,255,.42);line-height:1.65;max-width:500px;margin:0 auto 48px;}
+    .hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:80px;}
+    .hero-ctas .p{font-size:15px;padding:14px 32px;}
+    @media(max-width:768px){.hero h1{font-size:42px;letter-spacing:-1.5px;}.hero-sub{font-size:16px;}.hero-ctas{margin-bottom:48px;}}
+    @media(max-width:480px){.hero h1{font-size:34px;}}
 
-    /* HERO DASHBOARD MOCKUP */
-    .hero-mockup{
-      max-width:1000px;margin:0 auto;
-      border-radius:16px;overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-      background:#0a0a0a;
-      box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 80px rgba(0,153,255,.04);
-      position:relative;
-    }
-    .mock-bar{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid #1d1d1d;background:#0d0d0d;}
-    .mock-dot{width:8px;height:8px;border-radius:50%;}
-    .mock-body{display:grid;grid-template-columns:180px 1fr;min-height:380px;}
-    .mock-side{border-right:1px solid #1d1d1d;padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
-    .mock-nav{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:500;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:8px;cursor:default;}
-    .mock-nav.act{background:rgba(0,153,255,.1);color:#09f;}
-    .mock-nav i{width:14px;height:14px;}
-    .mock-main{padding:20px;display:grid;gap:14px;grid-template-columns:1fr 1fr 1fr 1fr;grid-template-rows:auto auto auto;}
-    .mock-stat{background:#111;border:1px solid #1d1d1d;border-radius:10px;padding:14px;grid-column:span 1;}
-    .mock-stat-label{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
-    .mock-stat-val{font-size:20px;font-weight:700;letter-spacing:-.3px;}
-    .mock-stat-chg{font-size:9px;margin-top:3px;}
-    .mock-chart{background:#111;border:1px solid #1d1d1d;border-radius:10px;padding:16px;grid-column:span 3;grid-row:span 1;}
-    .mock-chart-title{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
-    .mock-activity{background:#111;border:1px solid #1d1d1d;border-radius:10px;padding:16px;grid-column:span 1;}
-    .mock-activity-title{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
-    .mock-activity-item{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #1a1a1a;}
-    .mock-activity-item:last-child{border-bottom:none;}
-    .mock-activity-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0;}
-    .mock-activity-text{font-size:10px;color:rgba(255,255,255,.4);line-height:1.4;}
-    /* SVG chart bars */
-    .chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px;}
-    .chart-bar{flex:1;border-radius:3px 3px 0 0;background:#09f;opacity:.5;transition:opacity .2s;}
-    .chart-bar:hover{opacity:.9;}
-    /* SVG line chart */
-    .line-chart{width:100%;height:100px;}
-    .line-path{fill:none;stroke:#09f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:600;stroke-dashoffset:600;animation:drawLine 2s ease-out forwards;}
-    .line-fill{fill:url(#lineGrad);opacity:.3;}
-    @keyframes drawLine{to{stroke-dashoffset:0;}}
+    /* ── HERO MOCKUP ── */
+    .hm{max-width:1060px;margin:0 auto;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.07);background:#080808;box-shadow:0 60px 120px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.03),0 0 100px rgba(0,153,255,.03);position:relative;transition:transform .6s cubic-bezier(.22,1,.36,1);}
+    .hm:hover{transform:translateY(-4px);}
+    .hm-bar{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06);background:#0a0a0a;}
+    .hm-dot{width:8px;height:8px;border-radius:50%;}
+    .hm-body{display:grid;grid-template-columns:170px 1fr;min-height:420px;}
+    .hm-side{border-right:1px solid rgba(255,255,255,.06);padding:14px 10px;display:flex;flex-direction:column;gap:1px;}
+    .hm-n{padding:7px 10px;border-radius:6px;font-size:11px;font-weight:500;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:8px;cursor:default;transition:all .15s;}
+    .hm-n:hover{color:rgba(255,255,255,.5);background:rgba(255,255,255,.02);}
+    .hm-n.a{background:rgba(0,153,255,.08);color:#09f;}
+    .hm-n i{width:14px;height:14px;}
+    .hm-main{padding:18px;display:grid;gap:12px;grid-template-columns:repeat(4,1fr);grid-auto-rows:min-content;}
+    /* Stat cards */
+    .ms{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px;transition:border-color .2s;}
+    .ms:hover{border-color:rgba(255,255,255,.1);}
+    .ms-l{font-size:9px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+    .ms-v{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+    .ms-c{font-size:9px;margin-top:3px;}
+    /* Chart areas */
+    .mc{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px;grid-column:span 3;transition:border-color .2s;}
+    .mc:hover{border-color:rgba(255,255,255,.1);}
+    .mc2{grid-column:span 2;}
+    .mc4{grid-column:span 4;}
+    .mc-t{font-size:9px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+    .ma{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px;grid-column:span 1;transition:border-color .2s;}
+    .ma:hover{border-color:rgba(255,255,255,.1);}
+    /* SVG Line chart */
+    .lc{width:100%;height:90px;}
+    .lp{fill:none;stroke:#09f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:600;stroke-dashoffset:600;animation:dl 2.5s cubic-bezier(.22,1,.36,1) forwards;}
+    .lf{fill:url(#lg);opacity:.25;}
+    @keyframes dl{to{stroke-dashoffset:0;}}
+    /* Bar chart */
+    .bars{display:flex;align-items:flex-end;gap:5px;height:80px;}
+    .bar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#09f,rgba(0,153,255,.4));transition:all .2s;cursor:default;}
+    .bar:hover{filter:brightness(1.3);transform:scaleY(1.05);transform-origin:bottom;}
+    .bar-lb{text-align:center;font-size:8px;color:rgba(255,255,255,.2);margin-top:4px;}
     /* Donut */
-    .mock-donut-wrap{display:flex;align-items:center;gap:16px;}
-    .mock-donut{width:70px;height:70px;border-radius:50%;background:conic-gradient(#09f 0% 96%,#1d1d1d 96% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .mock-donut-inner{width:48px;height:48px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
-    .mock-donut-legend{display:flex;flex-direction:column;gap:4px;}
-    .mock-donut-row{font-size:10px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:6px;}
-    .mock-donut-sq{width:8px;height:8px;border-radius:2px;}
-    /* Notification */
-    .mock-notif{position:absolute;bottom:60px;right:20px;background:rgba(0,153,255,.12);border:1px solid rgba(0,153,255,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:#09f;display:flex;align-items:center;gap:8px;animation:notifSlide 6s ease-in-out infinite;z-index:3;}
-    .mock-notif i{width:14px;height:14px;flex-shrink:0;}
-    @keyframes notifSlide{0%,65%{transform:translateX(120%);opacity:0;}75%{transform:translateX(0);opacity:1;}92%{transform:translateX(0);opacity:1;}100%{transform:translateX(120%);opacity:0;}}
-    @media(max-width:768px){.mock-body{grid-template-columns:1fr;}.mock-side{display:none;}.mock-main{grid-template-columns:1fr 1fr;}.mock-chart{grid-column:span 2;}.mock-activity{grid-column:span 2;}}
+    .dn-w{display:flex;align-items:center;gap:14px;margin-top:6px;}
+    .dn{width:64px;height:64px;border-radius:50%;background:conic-gradient(#09f 0% 96%,rgba(255,255,255,.06) 96% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+    .dn::after{content:'';position:absolute;inset:0;border-radius:50%;box-shadow:0 0 20px rgba(0,153,255,.15);}
+    .dn-i{width:44px;height:44px;border-radius:50%;background:#0a0a0a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#09f;}
+    .dn-leg{display:flex;flex-direction:column;gap:3px;}
+    .dn-r{font-size:9px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px;}
+    .dn-sq{width:7px;height:7px;border-radius:2px;}
+    /* Activity */
+    .ma-t{font-size:9px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+    .ma-i{display:flex;gap:7px;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+    .ma-i:last-child{border-bottom:none;}
+    .ma-d{width:5px;height:5px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+    .ma-tx{font-size:9px;color:rgba(255,255,255,.35);line-height:1.4;}
+    /* Notification toast */
+    .hm-notif{position:absolute;bottom:16px;right:16px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border:1px solid rgba(0,153,255,.15);border-radius:10px;padding:10px 14px;font-size:10px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:8px;z-index:3;animation:notSlide 7s ease-in-out infinite;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+    .hm-notif i{width:14px;height:14px;color:#09f;flex-shrink:0;}
+    @keyframes notSlide{0%,60%{transform:translateX(140%);opacity:0;}70%{transform:translateX(0);opacity:1;}90%{transform:translateX(0);opacity:1;}100%{transform:translateX(140%);opacity:0;}}
+    /* Progress bar */
+    .pb{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:8px;}
+    .pb-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#09f,#3db8ff);transition:width 1.5s cubic-bezier(.22,1,.36,1);}
+    @media(max-width:768px){.hm-body{grid-template-columns:1fr;}.hm-side{display:none;}.hm-main{grid-template-columns:1fr 1fr;}.mc{grid-column:span 2;}.mc2{grid-column:span 2;}.mc4{grid-column:span 2;}.ma{grid-column:span 2;}}
 
-    /* SECTIONS */
+    /* ── SECTIONS ── */
     .sec{padding:140px 0;}
-    .sec-border{border-top:1px solid #1d1d1d;}
-    .sec-head{text-align:center;margin-bottom:72px;}
-    .sec-title{font-size:52px;font-weight:300;letter-spacing:-1.5px;line-height:1.08;margin-bottom:18px;}
-    .sec-title strong{font-weight:600;}
-    .sec-sub{font-size:17px;color:rgba(255,255,255,.4);max-width:440px;margin:0 auto;line-height:1.6;}
-    @media(max-width:768px){.sec{padding:100px 0;}.sec-title{font-size:34px;}.sec-head{margin-bottom:48px;}}
+    .sec-b{border-top:1px solid rgba(255,255,255,.06);}
+    .sh{text-align:center;margin-bottom:72px;}
+    .st{font-size:52px;font-weight:300;letter-spacing:-1.8px;line-height:1.06;margin-bottom:18px;}
+    .st strong{font-weight:600;}
+    .ss{font-size:17px;color:rgba(255,255,255,.38);max-width:460px;margin:0 auto;line-height:1.6;}
+    @media(max-width:768px){.sec{padding:100px 0;}.st{font-size:34px;letter-spacing:-1px;}.sh{margin-bottom:48px;}}
 
-    /* FEATURE ROW */
-    .feat-row{display:flex;gap:2px;}
-    .feat-card{flex:1;padding:36px 28px;background:rgba(255,255,255,.02);border-radius:4px;transition:all .3s;cursor:default;}
-    .feat-card:hover{background:rgba(255,255,255,.05);transform:translateY(-4px);}
-    .feat-card i{width:22px;height:22px;color:rgba(255,255,255,.25);margin-bottom:18px;display:block;transition:color .3s;}
-    .feat-card:hover i{color:#09f;}
-    .feat-card h3{font-size:15px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.85);}
-    .feat-card p{font-size:13px;color:rgba(255,255,255,.3);line-height:1.6;}
-    @media(max-width:768px){.feat-row{flex-direction:column;}}
+    /* ── FEATURE CARDS ── */
+    .fc-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.04);border-radius:16px;overflow:hidden;}
+    .fc{background:#000;padding:40px 28px;transition:all .3s;cursor:default;position:relative;}
+    .fc::before{content:'';position:absolute;inset:0;background:radial-gradient(300px circle at var(--mx,50%) var(--my,50%),rgba(0,153,255,.04),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none;}
+    .fc:hover::before{opacity:1;}
+    .fc:hover{background:rgba(255,255,255,.02);}
+    .fc-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;margin-bottom:20px;transition:all .3s;}
+    .fc-icon i{width:20px;height:20px;color:rgba(255,255,255,.25);transition:color .3s;}
+    .fc:hover .fc-icon{background:rgba(0,153,255,.1);border:1px solid rgba(0,153,255,.15);}
+    .fc:hover .fc-icon i{color:#09f;}
+    .fc h3{font-size:15px;font-weight:600;margin-bottom:8px;color:rgba(255,255,255,.85);}
+    .fc p{font-size:13px;color:rgba(255,255,255,.3);line-height:1.65;}
+    .fc-stat{margin-top:16px;font-size:11px;font-weight:600;color:#09f;opacity:.6;transition:opacity .3s;}
+    .fc:hover .fc-stat{opacity:1;}
+    @media(max-width:900px){.fc-row{grid-template-columns:1fr 1fr;}}
+    @media(max-width:480px){.fc-row{grid-template-columns:1fr;}}
 
-    /* BENTO SHOWCASE */
-    .bento{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-    .bento-card{background:#0a0a0a;border:1px solid #1d1d1d;border-radius:14px;overflow:hidden;transition:all .3s;position:relative;}
-    .bento-card:hover{border-color:rgba(0,153,255,.2);transform:translateY(-3px);box-shadow:0 0 40px rgba(0,153,255,.05);}
-    .bento-card img{width:100%;display:block;}
-    .bento-card-text{padding:24px;}
-    .bento-card-text h3{font-size:16px;font-weight:600;margin-bottom:6px;}
-    .bento-card-text p{font-size:13px;color:rgba(255,255,255,.35);line-height:1.6;}
-    .bento-full{grid-column:span 2;}
-    .bento-full img{height:320px;object-fit:cover;}
-    @media(max-width:768px){.bento{grid-template-columns:1fr;}.bento-full{grid-column:span 1;}.bento-full img{height:200px;}}
+    /* ── BENTO SHOWCASE ── */
+    .bento{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .bc{background:#080808;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;transition:all .35s cubic-bezier(.22,1,.36,1);position:relative;}
+    .bc:hover{border-color:rgba(0,153,255,.18);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(0,153,255,.04);}
+    .bc img{width:100%;display:block;transition:transform .6s cubic-bezier(.22,1,.36,1);}
+    .bc:hover img{transform:scale(1.03);}
+    .bc-t{padding:24px;}
+    .bc-t h3{font-size:16px;font-weight:600;margin-bottom:6px;}
+    .bc-t p{font-size:13px;color:rgba(255,255,255,.32);line-height:1.6;}
+    .bc-full{grid-column:span 2;}
+    .bc-full img{height:340px;object-fit:cover;}
+    @media(max-width:768px){.bento{grid-template-columns:1fr;}.bc-full{grid-column:span 1;}.bc-full img{height:200px;}}
 
-    /* EDITORIAL BLOCKS */
-    .edit-block{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;padding:80px 0;}
-    .edit-block+.edit-block{border-top:1px solid #1d1d1d;}
-    .edit-block.rev .edit-text{order:2;}
-    .edit-text h3{font-size:40px;font-weight:300;letter-spacing:-1px;line-height:1.12;margin-bottom:20px;}
-    .edit-text h3 strong{font-weight:600;}
-    .edit-text p{font-size:15px;color:rgba(255,255,255,.4);line-height:1.7;margin-bottom:20px;}
-    .edit-text a{color:#09f;font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px;transition:color .2s;}
-    .edit-text a:hover{color:#3db8ff;}
-    .edit-img{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);}
-    .edit-img img{width:100%;display:block;}
-    @media(max-width:768px){.edit-block{grid-template-columns:1fr;gap:40px;}.edit-block.rev .edit-text{order:0;}.edit-text h3{font-size:28px;}}
+    /* ── STATS BAND ── */
+    .sb{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+    .si{padding:52px 32px;text-align:center;border-right:1px solid rgba(255,255,255,.06);transition:background .3s;}
+    .si:last-child{border-right:none;}
+    .si:hover{background:rgba(255,255,255,.015);}
+    .si-n{font-size:48px;font-weight:300;letter-spacing:-1.5px;margin-bottom:6px;}
+    .si-n strong{font-weight:700;color:#09f;}
+    .si-l{font-size:11px;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:2px;}
+    @media(max-width:768px){.sb{grid-template-columns:1fr 1fr;}.si{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}.si:nth-child(odd){border-right:1px solid rgba(255,255,255,.06);}.si-n{font-size:32px;}}
 
-    /* STATS BAND */
-    .stats-band{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid #1d1d1d;border-bottom:1px solid #1d1d1d;}
-    .stat-item{padding:48px 32px;text-align:center;border-right:1px solid #1d1d1d;}
-    .stat-item:last-child{border-right:none;}
-    .stat-num{font-size:44px;font-weight:300;letter-spacing:-1px;margin-bottom:6px;}
-    .stat-num strong{font-weight:700;color:#09f;}
-    .stat-label{font-size:12px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:2px;}
-    @media(max-width:768px){.stats-band{grid-template-columns:1fr 1fr;}.stat-item{border-right:none;border-bottom:1px solid #1d1d1d;}.stat-item:nth-child(odd){border-right:1px solid #1d1d1d;}.stat-num{font-size:32px;}}
+    /* ── EDITORIAL BLOCKS ── */
+    .eb{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;padding:80px 0;}
+    .eb+.eb{border-top:1px solid rgba(255,255,255,.06);}
+    .eb.rev .et{order:2;}
+    .et h3{font-size:40px;font-weight:300;letter-spacing:-1.2px;line-height:1.1;margin-bottom:20px;}
+    .et h3 strong{font-weight:600;}
+    .et p{font-size:15px;color:rgba(255,255,255,.38);line-height:1.7;margin-bottom:12px;}
+    .et ul{list-style:none;margin:16px 0 24px;display:flex;flex-direction:column;gap:10px;}
+    .et ul li{font-size:14px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:10px;}
+    .et ul li i{width:16px;height:16px;color:#09f;flex-shrink:0;}
+    .et a{color:#09f;font-size:14px;font-weight:500;text-decoration:underline;text-underline-offset:3px;transition:color .2s;}
+    .et a:hover{color:#3db8ff;}
+    .ei{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.06);position:relative;}
+    .ei img{width:100%;display:block;transition:transform .8s cubic-bezier(.22,1,.36,1);}
+    .ei:hover img{transform:scale(1.04);}
+    .ei::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.4));pointer-events:none;}
+    @media(max-width:768px){.eb{grid-template-columns:1fr;gap:40px;}.eb.rev .et{order:0;}.et h3{font-size:28px;}}
 
-    /* TESTIMONIAL */
-    .quote-sec{text-align:center;}
-    .quote-text{font-size:22px;font-weight:300;font-style:italic;color:rgba(255,255,255,.55);line-height:1.65;max-width:600px;margin:0 auto 32px;letter-spacing:-.3px;}
-    .quote-author{font-size:14px;color:rgba(255,255,255,.35);}
-    .quote-author strong{color:rgba(255,255,255,.6);font-weight:600;}
-    @media(max-width:768px){.quote-text{font-size:18px;}}
+    /* ── INTEGRATIONS ── */
+    .int-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+    .int-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:20px;text-align:center;transition:all .25s;cursor:default;}
+    .int-card:hover{border-color:rgba(0,153,255,.15);background:rgba(255,255,255,.04);transform:translateY(-2px);}
+    .int-card i{width:24px;height:24px;color:rgba(255,255,255,.2);margin-bottom:8px;display:block;margin:0 auto 8px;transition:color .25s;}
+    .int-card:hover i{color:#09f;}
+    .int-card span{font-size:11px;font-weight:600;color:rgba(255,255,255,.3);display:block;}
+    @media(max-width:768px){.int-grid{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:480px){.int-grid{grid-template-columns:repeat(2,1fr);}}
 
-    /* CTA */
-    .cta{padding:160px 0;text-align:center;position:relative;}
-    .cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(47,44,42,.2) 0%,transparent 70%);filter:blur(80px);pointer-events:none;}
-    .cta h2{font-size:52px;font-weight:300;letter-spacing:-1.5px;line-height:1.08;margin-bottom:18px;position:relative;z-index:1;}
+    /* ── TESTIMONIALS ── */
+    .tg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .tc{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:28px;transition:all .3s;}
+    .tc:hover{border-color:rgba(0,153,255,.15);transform:translateY(-3px);}
+    .tc-q{font-size:14px;color:rgba(255,255,255,.5);line-height:1.7;font-style:italic;margin-bottom:24px;}
+    .tc-a{display:flex;align-items:center;gap:12px;}
+    .tc-av{width:36px;height:36px;border-radius:50%;background:rgba(0,153,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#09f;}
+    .tc-nm{font-size:13px;font-weight:600;}
+    .tc-rl{font-size:11px;color:rgba(255,255,255,.25);}
+    @media(max-width:768px){.tg{grid-template-columns:1fr;}}
+
+    /* ── CTA ── */
+    .cta{padding:180px 0;text-align:center;position:relative;overflow:hidden;}
+    .cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(47,44,42,.18) 0%,transparent 65%);filter:blur(80px);pointer-events:none;}
+    .cta-glow2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(0,153,255,.06) 0%,transparent 70%);filter:blur(60px);pointer-events:none;}
+    .cta h2{font-size:56px;font-weight:300;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;position:relative;z-index:1;}
     .cta h2 strong{font-weight:600;}
-    .cta p{font-size:17px;color:rgba(255,255,255,.4);margin-bottom:44px;position:relative;z-index:1;}
-    .cta .pill{position:relative;z-index:1;font-size:14px;padding:14px 36px;}
-    @media(max-width:768px){.cta h2{font-size:32px;}.cta{padding:100px 0;}}
+    .cta p{font-size:18px;color:rgba(255,255,255,.38);margin-bottom:48px;position:relative;z-index:1;}
+    .cta .p{position:relative;z-index:1;font-size:15px;padding:16px 40px;}
+    @media(max-width:768px){.cta h2{font-size:34px;}.cta{padding:120px 0;}}
 
-    /* FOOTER */
-    footer{border-top:1px solid #1d1d1d;padding:56px 0 36px;}
-    .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px;}
-    .foot-brand{font-size:17px;font-weight:700;margin-bottom:10px;letter-spacing:-.4px;}
-    .foot-tag{font-size:13px;color:rgba(255,255,255,.35);line-height:1.6;max-width:220px;}
-    .foot-col h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.25);margin-bottom:14px;}
-    .foot-col a{display:block;font-size:13px;color:rgba(255,255,255,.4);text-decoration:none;margin-bottom:9px;transition:color .15s;}
-    .foot-col a:hover{color:#fff;}
-    .foot-bottom{border-top:1px solid #1d1d1d;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-    .foot-copy{font-size:12px;color:rgba(255,255,255,.2);}
-    @media(max-width:768px){.foot-grid{grid-template-columns:1fr 1fr;}}
-    @media(max-width:480px){.foot-grid{grid-template-columns:1fr;}}
+    /* ── FOOTER ── */
+    footer{border-top:1px solid rgba(255,255,255,.06);padding:56px 0 36px;}
+    .fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px;}
+    .fb{font-size:17px;font-weight:700;margin-bottom:10px;letter-spacing:-.4px;display:flex;align-items:center;gap:8px;}
+    .ft{font-size:13px;color:rgba(255,255,255,.3);line-height:1.6;max-width:220px;}
+    .fh{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.2);margin-bottom:14px;}
+    .fl a{display:block;font-size:13px;color:rgba(255,255,255,.35);text-decoration:none;margin-bottom:9px;transition:color .15s;}
+    .fl a:hover{color:#fff;}
+    .fbot{border-top:1px solid rgba(255,255,255,.06);padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+    .fcpy{font-size:12px;color:rgba(255,255,255,.15);}
+    @media(max-width:768px){.fg{grid-template-columns:1fr 1fr;}}
+    @media(max-width:480px){.fg{grid-template-columns:1fr;}}
 
-    /* MODAL */
-    .modal-bg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
-    .modal-bg.on{opacity:1;pointer-events:all;}
-    .modal{background:#111;border:1px solid #1d1d1d;border-radius:20px;padding:36px;width:100%;max-width:400px;margin:20px;position:relative;transform:translateY(10px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
-    .modal-bg.on .modal{transform:translateY(0) scale(1);}
-    .modal h3{font-size:20px;font-weight:600;margin-bottom:22px;}
-    .modal label{display:block;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);margin-bottom:5px;}
-    .modal input,.modal select{width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;transition:border-color .15s;-webkit-appearance:none;}
-    .modal input:focus,.modal select:focus{border-color:#09f;}
-    .modal select{cursor:pointer;}
-    .modal option{background:#1a1a1a;}
-    .modal-x{position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;}
-    .modal-x:hover{color:#fff;}
+    /* ── MODAL ── */
+    .mbg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .mbg.on{opacity:1;pointer-events:all;}
+    .mod{background:#0d0d0d;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px;width:100%;max-width:400px;margin:20px;position:relative;transform:translateY(10px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+    .mbg.on .mod{transform:translateY(0) scale(1);}
+    .mod h3{font-size:20px;font-weight:600;margin-bottom:22px;}
+    .mod label{display:block;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);margin-bottom:5px;}
+    .mod input,.mod select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px;transition:border-color .15s;-webkit-appearance:none;}
+    .mod input:focus,.mod select:focus{border-color:#09f;}
+    .mod select{cursor:pointer;}
+    .mod option{background:#0d0d0d;}
+    .mx{position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;transition:color .15s;}
+    .mx:hover{color:#fff;}
 
-    /* CHAT */
-    .chat-btn{position:fixed;bottom:24px;right:24px;z-index:80;width:50px;height:50px;border-radius:50%;background:#111;border:1px solid #1d1d1d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 6px 20px rgba(0,0,0,.4);}
-    .chat-btn:hover{transform:scale(1.1);border-color:#2a2a2a;box-shadow:0 8px 30px rgba(0,153,255,.08);}
-    .chat-btn i{width:20px;height:20px;color:#09f;}
-    .chat-btn .dot{position:absolute;top:-1px;right:-1px;width:10px;height:10px;background:#ef4444;border-radius:50%;border:2px solid #000;display:none;}
-    .chat-box{position:fixed;bottom:86px;right:24px;z-index:80;width:340px;height:460px;background:rgba(11,11,11,.95);backdrop-filter:blur(20px);border:1px solid #1d1d1d;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(10px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);}
-    .chat-box.open{opacity:1;transform:translateY(0);pointer-events:all;}
-    .chat-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1d1d1d;}
-    .chat-top-left{display:flex;align-items:center;gap:10px;}
-    .chat-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#09f,#0066cc);display:flex;align-items:center;justify-content:center;}
-    .chat-av i{width:13px;height:13px;color:#fff;}
-    .chat-nm{font-size:13px;font-weight:600;}
-    .chat-st{font-size:10px;color:#09f;font-weight:500;}
-    .chat-x{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;}
-    .chat-x:hover{color:#fff;}
-    .chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
-    .chat-m{max-width:80%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;}
-    .chat-m.ai{background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);align-self:flex-start;border-bottom-left-radius:4px;}
-    .chat-m.u{background:#09f;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
-    .chat-bar{padding:10px 14px;border-top:1px solid #1d1d1d;display:flex;gap:8px;}
-    .chat-in{flex:1;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:9px 12px;color:#fff;font-size:13px;font-family:inherit;outline:none;}
-    .chat-in:focus{border-color:#09f;}
-    .chat-snd{width:34px;height:34px;border-radius:9px;background:#09f;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-    .chat-snd:hover{background:#0077cc;transform:scale(1.08);}
-    .chat-snd i{width:14px;height:14px;color:#fff;}
-    .typing span{width:5px;height:5px;background:rgba(255,255,255,.25);border-radius:50%;display:inline-block;margin:0 2px;animation:tb 1.4s ease-in-out infinite;}
-    .typing span:nth-child(2){animation-delay:.2s;}
-    .typing span:nth-child(3){animation-delay:.4s;}
+    /* ── CHAT ── */
+    .cb{position:fixed;bottom:24px;right:24px;z-index:80;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+    .cb:hover{transform:scale(1.12);background:rgba(0,153,255,.08);border-color:rgba(0,153,255,.2);box-shadow:0 8px 32px rgba(0,153,255,.1);}
+    .cb i{width:20px;height:20px;color:#09f;}
+    .cb .dot{position:absolute;top:-1px;right:-1px;width:10px;height:10px;background:#ef4444;border-radius:50%;border:2px solid #000;display:none;animation:dotPulse 2s ease-in-out infinite;}
+    @keyframes dotPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
+    .cx{position:fixed;bottom:88px;right:24px;z-index:80;width:360px;height:480px;background:rgba(8,8,8,.96);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.06);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(12px);pointer-events:none;transition:all .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 24px 64px rgba(0,0,0,.5);}
+    .cx.open{opacity:1;transform:translateY(0);pointer-events:all;}
+    .cx-top{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);}
+    .cx-tl{display:flex;align-items:center;gap:10px;}
+    .cx-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#09f,#0055aa);display:flex;align-items:center;justify-content:center;}
+    .cx-av i{width:14px;height:14px;color:#fff;}
+    .cx-nm{font-size:13px;font-weight:600;}
+    .cx-st{font-size:10px;color:#09f;font-weight:500;}
+    .cx-x{background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;transition:color .15s;}
+    .cx-x:hover{color:#fff;}
+    .cx-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+    .cm{max-width:82%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.55;animation:cmIn .25s cubic-bezier(.22,1,.36,1);}
+    .cm.ai{background:rgba(255,255,255,.05);color:rgba(255,255,255,.65);align-self:flex-start;border-bottom-left-radius:4px;}
+    .cm.u{background:linear-gradient(135deg,#09f,#0077cc);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+    @keyframes cmIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .cx-bar{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;}
+    .cx-in{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+    .cx-in:focus{border-color:#09f;}
+    .cx-snd{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#09f,#0077cc);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+    .cx-snd:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(0,153,255,.25);}
+    .cx-snd i{width:15px;height:15px;color:#fff;}
+    .typ span{width:5px;height:5px;background:rgba(255,255,255,.2);border-radius:50%;display:inline-block;margin:0 2px;animation:tb 1.4s ease-in-out infinite;}
+    .typ span:nth-child(2){animation-delay:.2s;}
+    .typ span:nth-child(3){animation-delay:.4s;}
     @keyframes tb{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-4px);}}
-    @media(max-width:480px){.chat-box{width:calc(100vw - 32px);right:16px;height:400px;}}
+    @media(max-width:480px){.cx{width:calc(100vw - 32px);right:16px;height:420px;}}
 
-    /* SCROLL REVEAL */
-    .r{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
+    /* ── SCROLL ANIMATIONS ── */
+    .r{opacity:0;transform:translateY(32px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);}
     .r.v{opacity:1;transform:translateY(0);}
-    .r-left{opacity:0;transform:translateX(-32px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
-    .r-left.v{opacity:1;transform:translateX(0);}
-    .r-right{opacity:0;transform:translateX(32px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
-    .r-right.v{opacity:1;transform:translateX(0);}
-    .r-scale{opacity:0;transform:scale(.94);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);}
-    .r-scale.v{opacity:1;transform:scale(1);}
-    @media(prefers-reduced-motion:reduce){.r,.r-left,.r-right,.r-scale{opacity:1!important;transform:none!important;transition:none!important;}.hero-blob,.hero-grad,.cta-glow{display:none;}}
+    .rl{opacity:0;transform:translateX(-40px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);}
+    .rl.v{opacity:1;transform:translateX(0);}
+    .rr{opacity:0;transform:translateX(40px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1);}
+    .rr.v{opacity:1;transform:translateX(0);}
+    .rs{opacity:0;transform:scale(.92);transition:opacity 1s cubic-bezier(.22,1,.36,1),transform 1s cubic-bezier(.22,1,.36,1);}
+    .rs.v{opacity:1;transform:scale(1);}
+    @media(prefers-reduced-motion:reduce){.r,.rl,.rr,.rs{opacity:1!important;transform:none!important;transition:none!important;}.hero-b,.hero-g,.cta-glow,.cta-glow2{display:none;}}
 
-    /* Counter animation target */
-    .count{display:inline-block;}
+    /* Counter */
+    .cnt{display:inline-block;}
   </style>
 </head>
 <body>
 
   <!-- NAV -->
   <nav id="nav">
-    <div class="wrap nav-inner">
-      <a href="#" class="logo">MeridianNode</a>
-      <div class="nav-links">
+    <div class="w ni">
+      <a href="#" class="lo"><div class="lo-icon"><i data-lucide="zap"></i></div>MeridianNode</a>
+      <div class="nl">
         <a href="#features">Features</a>
-        <a href="#showcase">Platform</a>
-        <a href="#proof">Testimonials</a>
+        <a href="#platform">Platform</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#testimonials">Testimonials</a>
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <button class="pill pill-g" onclick="openM()" style="font-size:12px;padding:8px 18px;">Book a Demo</button>
-        <a href="dashboard.html" class="pill pill-w">Get Started</a>
+        <button class="p pg" onclick="openM()" style="font-size:12px;padding:8px 18px;">Book a Demo</button>
+        <a href="dashboard.html" class="p pw">Get Started</a>
       </div>
-      <button class="burger" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'" aria-label="Menu">
-        <i data-lucide="menu" style="width:22px;height:22px;"></i>
-      </button>
+      <button class="bur" onclick="document.querySelector('.nl').style.display=document.querySelector('.nl').style.display==='flex'?'none':'flex'" aria-label="Menu"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
     </div>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-grad"></div>
-    <div class="hero-blob hero-blob-1"></div>
-    <div class="hero-blob hero-blob-2"></div>
-    <div class="hero-inner wrap">
-      <div class="hero-badge r">AI Property Management</div>
-      <h1 class="r" style="transition-delay:80ms;">A beautifully simple<br>way to <strong>manage.</strong></h1>
-      <p class="hero-sub r" style="transition-delay:160ms;">We automate tenant communication, rent collection, and maintenance — and build the reports in seconds, not hours.</p>
-      <div class="hero-btns r" style="transition-delay:240ms;">
-        <a href="dashboard.html" class="pill pill-w">Get Started Free</a>
-        <button class="pill pill-g" onclick="openM()">Book a Demo</button>
+    <div class="hero-g"></div>
+    <div class="hero-b hero-b1"></div>
+    <div class="hero-b hero-b2"></div>
+    <div class="hero-b hero-b3"></div>
+    <div class="hero-inner w">
+      <div class="hero-badge r"><i data-lucide="sparkles" style="width:14px;height:14px;"></i> AI Property Management</div>
+      <h1 class="r" style="transition-delay:100ms;">A beautifully simple<br>way to <strong>manage.</strong></h1>
+      <p class="hero-sub r" style="transition-delay:200ms;">We automate tenant communication, rent collection, and maintenance — and build the reports in seconds, not hours.</p>
+      <div class="hero-ctas r" style="transition-delay:300ms;">
+        <a href="dashboard.html" class="p pw" onclick="ripple(event)">Get Started Free</a>
+        <button class="p pg" onclick="ripple(event);openM()">Book a Demo</button>
       </div>
-
       <!-- LIVE DASHBOARD MOCKUP -->
-      <div class="hero-mockup r-scale" style="transition-delay:400ms;">
-        <div class="mock-bar">
-          <div class="mock-dot" style="background:#ff5f57;"></div>
-          <div class="mock-dot" style="background:#ffbd2e;"></div>
-          <div class="mock-dot" style="background:#28c840;"></div>
-          <span style="margin-left:12px;font-size:11px;color:rgba(255,255,255,.25);">MeridianNode Dashboard</span>
-        </div>
-        <div class="mock-body">
-          <div class="mock-side">
-            <div class="mock-nav act"><i data-lucide="layout-dashboard"></i>Overview</div>
-            <div class="mock-nav"><i data-lucide="building-2"></i>Properties</div>
-            <div class="mock-nav"><i data-lucide="users"></i>Tenants</div>
-            <div class="mock-nav"><i data-lucide="trending-up"></i>Financials</div>
-            <div class="mock-nav"><i data-lucide="wrench"></i>Maintenance</div>
-            <div class="mock-nav"><i data-lucide="file-text"></i>Leases</div>
-            <div class="mock-nav"><i data-lucide="home"></i>Vacancies</div>
-            <div class="mock-nav"><i data-lucide="bell"></i>Notifications</div>
+      <div class="hm rs" style="transition-delay:500ms;">
+        <div class="hm-bar"><div class="hm-dot" style="background:#ff5f57;"></div><div class="hm-dot" style="background:#ffbd2e;"></div><div class="hm-dot" style="background:#28c840;"></div><span style="margin-left:12px;font-size:10px;color:rgba(255,255,255,.2);">MeridianNode Dashboard</span></div>
+        <div class="hm-body">
+          <div class="hm-side">
+            <div class="hm-n a"><i data-lucide="layout-dashboard"></i>Overview</div>
+            <div class="hm-n"><i data-lucide="building-2"></i>Properties</div>
+            <div class="hm-n"><i data-lucide="users"></i>Tenants</div>
+            <div class="hm-n"><i data-lucide="trending-up"></i>Financials</div>
+            <div class="hm-n"><i data-lucide="wrench"></i>Maintenance</div>
+            <div class="hm-n"><i data-lucide="file-text"></i>Leases</div>
+            <div class="hm-n"><i data-lucide="home"></i>Vacancies</div>
+            <div class="hm-n"><i data-lucide="bell"></i>Alerts</div>
+            <div class="hm-n"><i data-lucide="settings"></i>Settings</div>
           </div>
-          <div class="mock-main">
-            <div class="mock-stat"><div class="mock-stat-label">Total Units</div><div class="mock-stat-val" id="mu">248</div><div class="mock-stat-chg" style="color:#09f;">+12 this month</div></div>
-            <div class="mock-stat"><div class="mock-stat-label">Occupancy</div><div class="mock-stat-val" style="color:#09f;">96.2%</div><div class="mock-stat-chg" style="color:#09f;">+2.1%</div></div>
-            <div class="mock-stat"><div class="mock-stat-label">Collected</div><div class="mock-stat-val">$412K</div><div class="mock-stat-chg" style="color:#09f;">+8.3%</div></div>
-            <div class="mock-stat"><div class="mock-stat-label">Open WOs</div><div class="mock-stat-val" style="color:#ef4444;">7</div><div class="mock-stat-chg" style="color:#ef4444;">3 urgent</div></div>
-            <!-- Revenue Chart -->
-            <div class="mock-chart">
-              <div class="mock-chart-title">Revenue — Last 6 Months</div>
-              <svg class="line-chart" viewBox="0 0 500 100" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#09f" stop-opacity=".2"/>
-                    <stop offset="100%" stop-color="#09f" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path class="line-fill" d="M0,85 L80,70 L160,75 L240,50 L320,55 L400,30 L500,20 L500,100 L0,100 Z"/>
-                <polyline class="line-path" points="0,85 80,70 160,75 240,50 320,55 400,30 500,20"/>
-                <circle cx="500" cy="20" r="3" fill="#09f"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>
+          <div class="hm-main">
+            <div class="ms"><div class="ms-l">Total Units</div><div class="ms-v" id="mu">248</div><div class="ms-c" style="color:#09f;">+12 this month</div></div>
+            <div class="ms"><div class="ms-l">Occupancy</div><div class="ms-v" style="color:#09f;">96.2%</div><div class="ms-c" style="color:#09f;">+2.1%</div></div>
+            <div class="ms"><div class="ms-l">Collected</div><div class="ms-v">$412K</div><div class="ms-c" style="color:#09f;">+8.3%</div></div>
+            <div class="ms"><div class="ms-l">Open WOs</div><div class="ms-v" style="color:#ef4444;">7</div><div class="ms-c" style="color:#ef4444;">3 urgent</div></div>
+            <div class="mc">
+              <div class="mc-t">Revenue — Last 6 Months</div>
+              <svg class="lc" viewBox="0 0 500 90" preserveAspectRatio="none">
+                <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#09f" stop-opacity=".2"/><stop offset="100%" stop-color="#09f" stop-opacity="0"/></linearGradient></defs>
+                <path class="lf" d="M0,78 L60,68 L120,72 L200,48 L280,52 L370,28 L440,22 L500,18 L500,90 L0,90 Z"/>
+                <polyline class="lp" points="0,78 60,68 120,72 200,48 280,52 370,28 440,22 500,18"/>
+                <circle cx="500" cy="18" r="3" fill="#09f"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>
               </svg>
             </div>
-            <!-- Occupancy Donut -->
-            <div class="mock-activity">
-              <div class="mock-activity-title">Occupancy</div>
-              <div class="mock-donut-wrap" style="margin-top:8px;">
-                <div class="mock-donut"><div class="mock-donut-inner">96%</div></div>
-                <div class="mock-donut-legend">
-                  <div class="mock-donut-row"><div class="mock-donut-sq" style="background:#09f;"></div>Occupied — 238</div>
-                  <div class="mock-donut-row"><div class="mock-donut-sq" style="background:#1d1d1d;"></div>Vacant — 10</div>
-                </div>
+            <div class="ma">
+              <div class="ma-t">Occupancy</div>
+              <div class="dn-w"><div class="dn"><div class="dn-i">96%</div></div><div class="dn-leg"><div class="dn-r"><div class="dn-sq" style="background:#09f;"></div>Occupied 238</div><div class="dn-r"><div class="dn-sq" style="background:rgba(255,255,255,.08);"></div>Vacant 10</div></div></div>
+            </div>
+            <div class="mc mc2">
+              <div class="mc-t">Rent by Property</div>
+              <div class="bars">
+                <div><div class="bar" style="height:82px;"></div><div class="bar-lb">SC</div></div>
+                <div><div class="bar" style="height:96px;"></div><div class="bar-lb">PH</div></div>
+                <div><div class="bar" style="height:68px;"></div><div class="bar-lb">TM</div></div>
+                <div><div class="bar" style="height:54px;"></div><div class="bar-lb">ME</div></div>
+                <div><div class="bar" style="height:90px;"></div><div class="bar-lb">CH</div></div>
+                <div><div class="bar" style="height:74px;"></div><div class="bar-lb">GL</div></div>
               </div>
             </div>
-            <!-- Bar chart -->
-            <div class="mock-chart" style="grid-column:span 2;">
-              <div class="mock-chart-title">Rent Collection by Property</div>
-              <div class="chart-bars">
-                <div class="chart-bar" style="height:85%;"></div>
-                <div class="chart-bar" style="height:100%;"></div>
-                <div class="chart-bar" style="height:72%;"></div>
-                <div class="chart-bar" style="height:60%;"></div>
-                <div class="chart-bar" style="height:92%;"></div>
-                <div class="chart-bar" style="height:78%;"></div>
-                <div class="chart-bar" style="height:88%;"></div>
-                <div class="chart-bar" style="height:95%;"></div>
-              </div>
+            <div class="ma" style="grid-column:span 2;">
+              <div class="ma-t">Live Activity</div>
+              <div class="ma-i"><div class="ma-d" style="background:#09f;"></div><div class="ma-tx">AI responded to tenant — Unit 204</div></div>
+              <div class="ma-i"><div class="ma-d" style="background:#ef4444;"></div><div class="ma-tx">P1 Emergency — Unit 308 leak dispatched</div></div>
+              <div class="ma-i"><div class="ma-d" style="background:#eab308;"></div><div class="ma-tx">Lease renewal sent — Unit 112 (+3.3%)</div></div>
+              <div class="ma-i"><div class="ma-d" style="background:#09f;"></div><div class="ma-tx">Rent payment received — $1,450 ACH</div></div>
+              <div class="ma-i"><div class="ma-d" style="background:#3b82f6;"></div><div class="ma-tx">Showing booked — Unit 301, Mar 22 2pm</div></div>
             </div>
-            <!-- Activity feed -->
-            <div class="mock-activity" style="grid-column:span 2;">
-              <div class="mock-activity-title">Live Activity</div>
-              <div class="mock-activity-item"><div class="mock-activity-dot" style="background:#09f;"></div><div class="mock-activity-text">AI responded to tenant — Unit 204</div></div>
-              <div class="mock-activity-item"><div class="mock-activity-dot" style="background:#ef4444;"></div><div class="mock-activity-text">P1 Emergency — Unit 308 leak</div></div>
-              <div class="mock-activity-item"><div class="mock-activity-dot" style="background:#eab308;"></div><div class="mock-activity-text">Lease renewal sent — Unit 112</div></div>
-              <div class="mock-activity-item"><div class="mock-activity-dot" style="background:#09f;"></div><div class="mock-activity-text">Rent received — $1,450</div></div>
+            <div class="mc4">
+              <div class="mc-t">Collection Progress</div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:4px;"><span>$412,000 / $428,000</span><span>96%</span></div>
+              <div class="pb"><div class="pb-fill" style="width:96%;"></div></div>
             </div>
           </div>
         </div>
-        <!-- Floating notification -->
-        <div class="mock-notif"><i data-lucide="bell"></i>New maintenance request — Unit 204 — AI triaged as P2 Urgent</div>
+        <div class="hm-notif"><i data-lucide="bell"></i>New maintenance request — Unit 204 — AI triaged P2 Urgent</div>
       </div>
     </div>
   </section>
 
   <!-- STATS BAND -->
-  <div class="stats-band">
-    <div class="stat-item r"><div class="stat-num"><strong class="count" data-target="2400">0</strong>+</div><div class="stat-label">Units Managed</div></div>
-    <div class="stat-item r" style="transition-delay:100ms;"><div class="stat-num"><strong class="count" data-target="98">0</strong>%</div><div class="stat-label">Response Rate</div></div>
-    <div class="stat-item r" style="transition-delay:200ms;"><div class="stat-num">$<strong class="count" data-target="14.2" data-dec="1">0</strong>M</div><div class="stat-label">Rent Collected</div></div>
-    <div class="stat-item r" style="transition-delay:300ms;"><div class="stat-num">&lt;<strong class="count" data-target="90">0</strong>s</div><div class="stat-label">AI Response Time</div></div>
+  <div class="sb">
+    <div class="si r"><div class="si-n"><strong class="cnt" data-t="2400">0</strong>+</div><div class="si-l">Units Managed</div></div>
+    <div class="si r" style="transition-delay:100ms;"><div class="si-n"><strong class="cnt" data-t="98">0</strong>%</div><div class="si-l">Response Rate</div></div>
+    <div class="si r" style="transition-delay:200ms;"><div class="si-n">$<strong class="cnt" data-t="14.2" data-d="1">0</strong>M</div><div class="si-l">Rent Collected</div></div>
+    <div class="si r" style="transition-delay:300ms;"><div class="si-n">&lt;<strong class="cnt" data-t="90">0</strong>s</div><div class="si-l">AI Response</div></div>
   </div>
 
   <!-- FEATURES -->
-  <section class="sec sec-border" id="features">
-    <div class="wrap">
-      <div class="sec-head r">
-        <h2 class="sec-title">Designed to work,<br><strong>built to scale.</strong></h2>
-        <p class="sec-sub">Four core modules that replace your busiest workflows.</p>
-      </div>
-      <div class="feat-row r" style="transition-delay:120ms;">
-        <div class="feat-card"><i data-lucide="message-square"></i><h3>AI Communication</h3><p>24/7 tenant responses via SMS, email, and web chat. Fair housing compliant.</p></div>
-        <div class="feat-card"><i data-lucide="credit-card"></i><h3>Rent Collection</h3><p>Automated reminders, delinquency tracking, and payment reconciliation.</p></div>
-        <div class="feat-card"><i data-lucide="wrench"></i><h3>Maintenance AI</h3><p>Urgency triage, vendor matching, auto-dispatch within 2-hour SLA.</p></div>
-        <div class="feat-card"><i data-lucide="trending-up"></i><h3>Portfolio Analytics</h3><p>Real-time dashboards and AI-generated owner reports in 30 seconds.</p></div>
+  <section class="sec sec-b" id="features">
+    <div class="w">
+      <div class="sh r"><h2 class="st">Designed to work,<br><strong>built to scale.</strong></h2><p class="ss">Four core modules that replace your busiest workflows.</p></div>
+      <div class="fc-row r" style="transition-delay:150ms;">
+        <div class="fc" onmousemove="trackCard(event,this)"><div class="fc-icon"><i data-lucide="message-square"></i></div><h3>AI Communication</h3><p>24/7 tenant responses via SMS, email, and web chat. Fair housing compliant. Leads qualified automatically.</p><div class="fc-stat">50% less manual work</div></div>
+        <div class="fc" onmousemove="trackCard(event,this)"><div class="fc-icon"><i data-lucide="credit-card"></i></div><h3>Rent Collection</h3><p>Automated reminders, delinquency aging (0-30, 30-60, 60-90), and payment reconciliation.</p><div class="fc-stat">12+ hrs/week recovered</div></div>
+        <div class="fc" onmousemove="trackCard(event,this)"><div class="fc-icon"><i data-lucide="wrench"></i></div><h3>Maintenance AI</h3><p>Urgency triage (P1-P4), vendor matching by skill and proximity, auto-dispatch within 2hr SLA.</p><div class="fc-stat">$4,200/mo saved</div></div>
+        <div class="fc" onmousemove="trackCard(event,this)"><div class="fc-icon"><i data-lucide="trending-up"></i></div><h3>Portfolio Analytics</h3><p>Real-time dashboards, AI-generated owner PDF reports, variance alerts, and NOI tracking.</p><div class="fc-stat">Reports in 30 seconds</div></div>
       </div>
     </div>
   </section>
 
-  <!-- SHOWCASE BENTO -->
-  <section class="sec sec-border" id="showcase">
-    <div class="wrap">
-      <div class="sec-head r">
-        <h2 class="sec-title">See it in <strong>action.</strong></h2>
-        <p class="sec-sub">Real dashboards. Real data. Real automation.</p>
-      </div>
-      <div class="bento r" style="transition-delay:100ms;">
-        <div class="bento-card bento-full"><img src="images/dash-kanban.jpg" alt="Dashboard with kanban and charts"><div class="bento-card-text"><h3>Command Center</h3><p>Maintenance kanban, revenue charts, and occupancy tracking — all in one view.</p></div></div>
-        <div class="bento-card"><img src="images/ai-chat-demo.jpg" alt="AI chat interface" style="height:240px;object-fit:cover;"><div class="bento-card-text"><h3>AI Conversations</h3><p>Tenants get instant responses. You get full conversation history.</p></div></div>
-        <div class="bento-card"><img src="images/financials-dash.jpg" alt="Financial analytics" style="height:240px;object-fit:cover;"><div class="bento-card-text"><h3>Financial Analytics</h3><p>Rent collection, delinquency aging, and owner reports — automated.</p></div></div>
+  <!-- PLATFORM SHOWCASE -->
+  <section class="sec sec-b" id="platform">
+    <div class="w">
+      <div class="sh r"><h2 class="st">See it in <strong>action.</strong></h2><p class="ss">Real dashboards. Real data. Real automation.</p></div>
+      <div class="bento r" style="transition-delay:120ms;">
+        <div class="bc bc-full"><img src="images/dash-kanban.jpg" alt="Dashboard" loading="lazy"><div class="bc-t"><h3>Command Center</h3><p>Maintenance kanban, revenue charts, occupancy tracking, and live activity — all in one view.</p></div></div>
+        <div class="bc"><img src="images/ai-chat-demo.jpg" alt="AI Chat" style="height:260px;object-fit:cover;" loading="lazy"><div class="bc-t"><h3>AI Conversations</h3><p>Tenants get instant responses 24/7. You get full history and human takeover controls.</p></div></div>
+        <div class="bc"><img src="images/financials-dash.jpg" alt="Financials" style="height:260px;object-fit:cover;" loading="lazy"><div class="bc-t"><h3>Financial Analytics</h3><p>Rent collection, delinquency aging, and owner reports — fully automated.</p></div></div>
+        <div class="bc"><img src="images/lease-dash.jpg" alt="Leases" style="height:260px;object-fit:cover;" loading="lazy"><div class="bc-t"><h3>Lease Management</h3><p>90/60/30-day renewal sequences. Track expirations and reduce vacancy gaps.</p></div></div>
+        <div class="bc"><img src="images/mobile-app.jpg" alt="Mobile" style="height:260px;object-fit:cover;" loading="lazy"><div class="bc-t"><h3>Mobile Ready</h3><p>Manage your portfolio from anywhere. Notifications, approvals, and reports on the go.</p></div></div>
       </div>
     </div>
   </section>
 
-  <!-- DEEP DIVES -->
-  <section class="sec sec-border">
-    <div class="wrap">
-      <div class="edit-block">
-        <div class="edit-text r-left">
+  <!-- EDITORIAL DEEP DIVES -->
+  <section class="sec sec-b">
+    <div class="w">
+      <div class="eb">
+        <div class="et rl">
           <h3>Your entire portfolio,<br><strong>one dashboard.</strong></h3>
-          <p>Manage multiple properties, LLCs, and bank accounts from a single view. Real-time occupancy, revenue tracking, and AI-generated owner reports that write themselves.</p>
+          <p>Manage multiple properties, LLCs, and bank accounts from a single view with real-time data.</p>
+          <ul>
+            <li><i data-lucide="check-circle"></i>Multi-property portfolio overview</li>
+            <li><i data-lucide="check-circle"></i>AI-generated owner PDF reports</li>
+            <li><i data-lucide="check-circle"></i>Variance alerts and NOI tracking</li>
+            <li><i data-lucide="check-circle"></i>CSV import from any PM platform</li>
+          </ul>
           <a href="#" onclick="openM();return false;">Learn more &rarr;</a>
         </div>
-        <div class="edit-img r-right" style="transition-delay:150ms;">
-          <img src="images/property-aerial.jpg" alt="Aerial property view" loading="lazy">
-        </div>
+        <div class="ei rr" style="transition-delay:150ms;"><img src="images/property-aerial.jpg" alt="Aerial view" loading="lazy"></div>
       </div>
-      <div class="edit-block rev">
-        <div class="edit-text r-right">
+      <div class="eb rev">
+        <div class="et rr">
           <h3>AI that dispatches faster than<br><strong>your best coordinator.</strong></h3>
-          <p>Every maintenance request is triaged by urgency, matched to a vendor by skill and proximity, and dispatched automatically. Tenants get real-time status updates.</p>
+          <p>Every maintenance request is triaged, matched, and dispatched automatically — with tenant updates at every stage.</p>
+          <ul>
+            <li><i data-lucide="check-circle"></i>P1-P4 urgency classification</li>
+            <li><i data-lucide="check-circle"></i>Vendor matching by skill + proximity</li>
+            <li><i data-lucide="check-circle"></i>2-hour dispatch SLA</li>
+            <li><i data-lucide="check-circle"></i>Photo upload + tenant sign-off</li>
+          </ul>
           <a href="#" onclick="openM();return false;">Learn more &rarr;</a>
         </div>
-        <div class="edit-img r-left" style="transition-delay:150ms;">
-          <img src="images/hero-dashboard.jpg" alt="AI dashboard" loading="lazy">
-        </div>
+        <div class="ei rl" style="transition-delay:150ms;"><img src="images/property-night.jpg" alt="Property at night" loading="lazy"></div>
       </div>
     </div>
   </section>
 
-  <!-- SOCIAL PROOF -->
-  <section class="sec sec-border quote-sec" id="proof">
-    <div class="wrap">
-      <div class="sec-head r">
-        <h2 class="sec-title">Trusted by operators<br>who <strong>scale.</strong></h2>
+  <!-- INTEGRATIONS -->
+  <section class="sec sec-b" id="integrations">
+    <div class="w">
+      <div class="sh r"><h2 class="st">Plugs into your<br><strong>existing stack.</strong></h2><p class="ss">No rip-and-replace. MeridianNode adds the AI layer your tools are missing.</p></div>
+      <div class="int-grid r" style="transition-delay:120ms;">
+        <div class="int-card"><i data-lucide="database"></i><span>AppFolio</span></div>
+        <div class="int-card"><i data-lucide="database"></i><span>Buildium</span></div>
+        <div class="int-card"><i data-lucide="database"></i><span>Yardi</span></div>
+        <div class="int-card"><i data-lucide="database"></i><span>Rent Manager</span></div>
+        <div class="int-card"><i data-lucide="database"></i><span>DoorLoop</span></div>
+        <div class="int-card"><i data-lucide="phone"></i><span>Twilio</span></div>
+        <div class="int-card"><i data-lucide="credit-card"></i><span>Stripe</span></div>
+        <div class="int-card"><i data-lucide="mail"></i><span>Gmail</span></div>
+        <div class="int-card"><i data-lucide="calendar"></i><span>Google Cal</span></div>
+        <div class="int-card"><i data-lucide="calculator"></i><span>QuickBooks</span></div>
       </div>
-      <blockquote class="r" style="transition-delay:100ms;">
-        <p class="quote-text">"We cut our response time from 12 hours to under 90 seconds. Tenants think they're talking to a real person. Our retention went up 18% in the first quarter."</p>
-        <div class="quote-author"><strong>Sarah Rodriguez</strong> &mdash; Ops Director, 200 units, Scottsdale</div>
-      </blockquote>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="sec sec-b" id="testimonials">
+    <div class="w">
+      <div class="sh r"><h2 class="st">Trusted by operators<br>who <strong>scale.</strong></h2><p class="ss">Property managers who switched don't look back.</p></div>
+      <div class="tg r" style="transition-delay:120ms;">
+        <div class="tc"><p class="tc-q">"We cut response time from 12 hours to under 90 seconds. Tenants think they're talking to a real person. Retention went up 18% in Q1."</p><div class="tc-a"><div class="tc-av">SR</div><div><div class="tc-nm">Sarah Rodriguez</div><div class="tc-rl">Ops Director · 200 units · Scottsdale</div></div></div></div>
+        <div class="tc"><p class="tc-q">"The maintenance AI saved us $4,200/month in overtime and vendor markups. It dispatches faster than my best coordinator ever could."</p><div class="tc-a"><div class="tc-av">MJ</div><div><div class="tc-nm">Marcus Johnson</div><div class="tc-rl">Portfolio Owner · 340 units · Phoenix</div></div></div></div>
+        <div class="tc"><p class="tc-q">"Owner reports used to take all Sunday. Now they generate automatically with AI summaries my owners actually read."</p><div class="tc-a"><div class="tc-av">LP</div><div><div class="tc-nm">Lisa Park</div><div class="tc-rl">PM Founder · 85 units · Tempe</div></div></div></div>
+      </div>
     </div>
   </section>
 
   <!-- CTA -->
-  <section class="cta sec-border">
+  <section class="cta sec-b">
     <div class="cta-glow"></div>
-    <div class="wrap">
+    <div class="cta-glow2"></div>
+    <div class="w">
       <h2 class="r">Experience a new standard<br>in <strong>property management.</strong></h2>
-      <p class="r" style="transition-delay:60ms;">See how MeridianNode runs your portfolio on autopilot.</p>
-      <div class="r" style="transition-delay:120ms;">
-        <a href="dashboard.html" class="pill pill-w" style="font-size:14px;padding:14px 36px;">Get Started</a>
+      <p class="r" style="transition-delay:80ms;">See how MeridianNode runs your portfolio on autopilot.</p>
+      <div class="r" style="transition-delay:160ms;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="dashboard.html" class="p pw" onclick="ripple(event)" style="font-size:15px;padding:16px 40px;">Get Started Free</a>
+        <button class="p pg" onclick="ripple(event);openM()" style="font-size:15px;padding:16px 40px;">Book a Demo</button>
       </div>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer>
-    <div class="wrap">
-      <div class="foot-grid">
-        <div><div class="foot-brand">MeridianNode</div><p class="foot-tag">AI infrastructure for property management. Let a 5-person team run like 20.</p></div>
-        <div class="foot-col"><h4>Product</h4><a href="#features">Features</a><a href="#showcase">Platform</a><a href="dashboard.html">Live Demo</a></div>
-        <div class="foot-col"><h4>Company</h4><a href="#" onclick="openM();return false;">Book a Demo</a><a href="#">About</a></div>
-        <div class="foot-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a></div>
+    <div class="w">
+      <div class="fg">
+        <div><div class="fb"><div class="lo-icon" style="width:20px;height:20px;border-radius:5px;"><i data-lucide="zap" style="width:12px;height:12px;"></i></div>MeridianNode</div><p class="ft">AI infrastructure for property management. Let a 5-person team run like 20.</p></div>
+        <div class="fl"><div class="fh">Product</div><a href="#features">Features</a><a href="#platform">Platform</a><a href="#integrations">Integrations</a><a href="dashboard.html">Live Demo</a></div>
+        <div class="fl"><div class="fh">Company</div><a href="#" onclick="openM();return false;">Book a Demo</a><a href="#">About</a><a href="#">Blog</a></div>
+        <div class="fl"><div class="fh">Legal</div><a href="#">Privacy</a><a href="#">Terms</a></div>
       </div>
-      <div class="foot-bottom">
-        <span class="foot-copy">&copy; 2025 RKV Consulting LLC</span>
-        <span class="foot-copy">MeridianNode by RKV Consulting LLC</span>
-      </div>
+      <div class="fbot"><span class="fcpy">&copy; 2025 RKV Consulting LLC</span><span class="fcpy">MeridianNode by RKV Consulting LLC</span></div>
     </div>
   </footer>
 
   <!-- MODAL -->
-  <div class="modal-bg" id="mbg" onclick="if(event.target===this)closeM()">
-    <div class="modal">
-      <button class="modal-x" onclick="closeM()"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
-      <h3>Book a Demo</h3>
+  <div class="mbg" id="mbg" onclick="if(event.target===this)closeM()">
+    <div class="mod"><button class="mx" onclick="closeM()"><i data-lucide="x" style="width:18px;height:18px;"></i></button><h3>Book a Demo</h3>
       <form onsubmit="event.preventDefault();subM()">
         <label>Full Name</label><input type="text" required placeholder="John Smith">
         <label>Email</label><input type="email" required placeholder="john@company.com">
         <label>Company</label><input type="text" required placeholder="Acme Property Management">
-        <label>Units</label>
-        <select required><option value="">Select</option><option>50-100</option><option>100-250</option><option>250-500</option><option>500+</option></select>
-        <button type="submit" class="pill pill-w" id="mbtn" style="width:100%;justify-content:center;margin-top:4px;">Request Demo</button>
+        <label>Units</label><select required><option value="">Select</option><option>50-100</option><option>100-250</option><option>250-500</option><option>500+</option></select>
+        <button type="submit" class="p pw" id="mbtn" onclick="ripple(event)" style="width:100%;justify-content:center;margin-top:4px;">Request Demo</button>
       </form>
     </div>
   </div>
 
   <!-- CHAT -->
-  <button class="chat-btn" onclick="togC()" aria-label="Chat"><i data-lucide="sparkles"></i><div class="dot" id="dot"></div></button>
-  <div class="chat-box" id="cbox">
-    <div class="chat-top">
-      <div class="chat-top-left"><div class="chat-av"><i data-lucide="sparkles"></i></div><div><div class="chat-nm">MeridianNode AI</div><div class="chat-st">Online</div></div></div>
-      <button class="chat-x" onclick="togC()"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
-    </div>
-    <div class="chat-msgs" id="cms"></div>
-    <div class="chat-bar">
-      <form onsubmit="event.preventDefault();sndC()" style="display:flex;gap:8px;width:100%;">
-        <input type="text" class="chat-in" id="cin" placeholder="Ask anything...">
-        <button type="submit" class="chat-snd"><i data-lucide="send"></i></button>
-      </form>
-    </div>
+  <button class="cb" onclick="togC()" aria-label="Chat"><i data-lucide="sparkles"></i><div class="dot" id="dot"></div></button>
+  <div class="cx" id="cx">
+    <div class="cx-top"><div class="cx-tl"><div class="cx-av"><i data-lucide="sparkles"></i></div><div><div class="cx-nm">MeridianNode AI</div><div class="cx-st">Online</div></div></div><button class="cx-x" onclick="togC()"><i data-lucide="x" style="width:16px;height:16px;"></i></button></div>
+    <div class="cx-msgs" id="cms"></div>
+    <div class="cx-bar"><form onsubmit="event.preventDefault();sndC()" style="display:flex;gap:8px;width:100%;"><input type="text" class="cx-in" id="cin" placeholder="Ask anything..."><button type="submit" class="cx-snd"><i data-lucide="send"></i></button></form></div>
   </div>
 
   <script>
     lucide.createIcons();
 
     // Nav scroll
-    addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>20));
+    addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('s',scrollY>20));
 
-    // Scroll reveal (multiple directions)
-    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');io.unobserve(e.target);}});},{threshold:.06,rootMargin:'0px 0px -40px 0px'});
-    document.querySelectorAll('.r,.r-left,.r-right,.r-scale').forEach(el=>io.observe(el));
+    // Scroll reveal
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('v');io.unobserve(e.target);}});},{threshold:.05,rootMargin:'0px 0px -50px 0px'});
+    document.querySelectorAll('.r,.rl,.rr,.rs').forEach(el=>io.observe(el));
 
-    // Animated counters
-    const cio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){
-      const el=e.target,t=parseFloat(el.dataset.target),d=parseInt(el.dataset.dec||'0'),dur=1500,st=performance.now();
-      function tick(now){const p=Math.min((now-st)/dur,1),ease=1-Math.pow(1-p,3),v=t*ease;el.textContent=d>0?v.toFixed(d):Math.floor(v).toLocaleString();if(p<1)requestAnimationFrame(tick);}
-      requestAnimationFrame(tick);cio.unobserve(el);
-    }});},{threshold:.5});
-    document.querySelectorAll('.count').forEach(el=>cio.observe(el));
+    // Counters
+    const cio=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const el=e.target,t=parseFloat(el.dataset.t),d=parseInt(el.dataset.d||'0'),dur=1600,s=performance.now();function tick(n){const p=Math.min((n-s)/dur,1),ease=1-Math.pow(1-p,3),v=t*ease;el.textContent=d>0?v.toFixed(d):Math.floor(v).toLocaleString();if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);cio.unobserve(el);}});},{threshold:.5});
+    document.querySelectorAll('.cnt').forEach(el=>cio.observe(el));
 
-    // Mock unit ticker
+    // Mock ticker
     let mu=248;setInterval(()=>{mu+=Math.floor(Math.random()*2);const e=document.getElementById('mu');if(e)e.textContent=mu;},4000);
+
+    // Feature card mouse tracking for glow
+    function trackCard(e,el){const r=el.getBoundingClientRect();el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');}
+
+    // Ripple effect on buttons
+    function ripple(e){const btn=e.currentTarget;const r=document.createElement('span');r.className='ripple';const rect=btn.getBoundingClientRect();const sz=Math.max(rect.width,rect.height);r.style.width=r.style.height=sz+'px';r.style.left=(e.clientX-rect.left-sz/2)+'px';r.style.top=(e.clientY-rect.top-sz/2)+'px';btn.appendChild(r);setTimeout(()=>r.remove(),500);}
 
     // Modal
     function openM(){document.getElementById('mbg').classList.add('on');}
@@ -525,10 +570,10 @@
 
     // Chat
     let co=false;
-    function togC(){co=!co;document.getElementById('cbox').classList.toggle('open',co);document.getElementById('dot').style.display='none';}
-    function addM(t,c){const d=document.createElement('div');d.className='chat-m '+c;d.textContent=t;const m=document.getElementById('cms');m.appendChild(d);m.scrollTop=m.scrollHeight;}
-    function sndC(){const i=document.getElementById('cin');if(!i.value.trim())return;addM(i.value.trim(),'u');i.value='';const dots=document.createElement('div');dots.className='typing';dots.innerHTML='<span></span><span></span><span></span>';document.getElementById('cms').appendChild(dots);setTimeout(()=>{dots.remove();addM("Thanks for reaching out. I can help with tenant inquiries, maintenance status, or portfolio analytics. What would you like to know?",'ai');},1100);}
-    setTimeout(()=>{if(!co){document.getElementById('dot').style.display='block';addM("Your occupancy dropped 4% this month. Want me to follow up with vacant units and suggest listing optimizations?",'ai');}},5000);
+    function togC(){co=!co;document.getElementById('cx').classList.toggle('open',co);document.getElementById('dot').style.display='none';}
+    function addM(t,c){const d=document.createElement('div');d.className='cm '+c;d.textContent=t;const m=document.getElementById('cms');m.appendChild(d);m.scrollTop=m.scrollHeight;}
+    function sndC(){const i=document.getElementById('cin');if(!i.value.trim())return;addM(i.value.trim(),'u');i.value='';const dots=document.createElement('div');dots.className='typ';dots.innerHTML='<span></span><span></span><span></span>';document.getElementById('cms').appendChild(dots);setTimeout(()=>{dots.remove();addM("Thanks for reaching out. I can help with tenant inquiries, maintenance status, financial reports, or portfolio analytics. What would you like to know?",'ai');},1200);}
+    setTimeout(()=>{if(!co){document.getElementById('dot').style.display='block';addM("Your occupancy dropped 4% this month across Tempe Mid-Rise. Want me to follow up with vacant units and suggest listing optimizations?",'ai');}},5000);
   </script>
 </body>
 </html>
