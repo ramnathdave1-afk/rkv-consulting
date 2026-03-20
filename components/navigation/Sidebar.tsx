@@ -1,47 +1,41 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  Map,
+  LayoutDashboard,
   Building2,
-  Kanban,
-  Bot,
-  BarChart3,
-  Settings,
   Users,
+  FileText,
+  Wrench,
+  MessageSquare,
+  HardHat,
+  BarChart3,
+  Link2,
+  CalendarDays,
+  Upload,
+  Target,
+  Settings,
+  CreditCard,
   ChevronLeft,
   ChevronRight,
-  Activity,
-  ChevronDown,
-  Database,
-  Key,
-  Search,
-  CreditCard,
-  FileText,
-  Server,
-  Sun,
-  Wind,
-  BatteryCharging,
-  Factory,
-  Home,
-  Building2 as Building2Alt,
 } from 'lucide-react';
-import { ALL_VERTICALS } from '@/lib/verticals';
-import type { Vertical } from '@/lib/types';
 
 const navItems = [
-  { href: '/map', label: 'Command Center', icon: Map },
-  { href: '/agents', label: 'Intelligence Hub', icon: Bot },
-  { href: '/sites', label: 'Site Portfolio', icon: Building2 },
-  { href: '/pipeline', label: 'Project Pipeline', icon: Kanban },
-  { href: '/market', label: 'Market Analytics', icon: BarChart3 },
-  { href: '/data-sources', label: 'Data Sources', icon: Database },
-  { href: '/feasibility', label: 'Feasibility', icon: Search },
-  { href: '/api-keys', label: 'API Keys', icon: Key },
-  { href: '/api-docs', label: 'API Docs', icon: FileText },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/properties', label: 'Properties', icon: Building2 },
+  { href: '/tenants', label: 'Tenants', icon: Users },
+  { href: '/leases', label: 'Leases', icon: FileText },
+  { href: '/work-orders', label: 'Work Orders', icon: Wrench },
+  { href: '/conversations', label: 'Conversations', icon: MessageSquare },
+  { href: '/vendors', label: 'Vendors', icon: HardHat },
+  { href: '/showings', label: 'Showings', icon: CalendarDays },
+  { href: '/acquisitions', label: 'Acquisitions', icon: Target },
+  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/integrations', label: 'Integrations', icon: Link2 },
+  { href: '/import', label: 'Import', icon: Upload },
 ];
 
 const bottomItems = [
@@ -50,12 +44,6 @@ const bottomItems = [
   { href: '/settings/team', label: 'Team', icon: Users },
 ];
 
-interface AgentStatus {
-  name: string;
-  actions_24h: number;
-  status: string;
-}
-
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -63,31 +51,8 @@ interface SidebarProps {
   onMobileClose?: () => void;
 }
 
-const verticalIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  data_center: Server,
-  solar: Sun,
-  wind: Wind,
-  ev_charging: BatteryCharging,
-  industrial: Factory,
-  residential: Home,
-  mixed_use: Building2Alt,
-};
-
 export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const [agentStatuses, setAgentStatuses] = useState<AgentStatus[]>([]);
-  const [activeVertical, setActiveVertical] = useState<Vertical>('data_center');
-  const [verticalDropdownOpen, setVerticalDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/agents/status')
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (data?.agents) setAgentStatuses(data.agents); })
-      .catch(() => {});
-  }, []);
-
-  const activeCount = agentStatuses.filter((a) => a.status === 'running').length;
-  const agentColors: Record<string, string> = { alpha: '#00D4AA', beta: '#3B82F6', gamma: '#F59E0B', delta: '#8A00FF' };
 
   return (
     <>
@@ -113,51 +78,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
           </div>
           {!collapsed && (
             <span className="font-display text-sm font-bold text-text-primary truncate">
-              Meridian Node
+              MeridianNode
             </span>
           )}
         </div>
-
-        {/* Vertical Selector */}
-        {!collapsed && (
-          <div className="px-2 py-2 border-b border-border">
-            <div className="relative">
-              <button
-                onClick={() => setVerticalDropdownOpen(!verticalDropdownOpen)}
-                className="flex w-full items-center gap-2 rounded-lg bg-bg-elevated/50 border border-border/50 px-2.5 py-1.5 text-xs font-medium text-text-primary hover:bg-bg-elevated transition-colors"
-              >
-                {(() => {
-                  const Icon = verticalIcons[activeVertical] || Server;
-                  return <Icon size={13} className="text-accent shrink-0" />;
-                })()}
-                <span className="flex-1 text-left truncate">
-                  {ALL_VERTICALS.find((v) => v.id === activeVertical)?.label || 'Data Centers'}
-                </span>
-                <ChevronDown size={12} className={cn('text-text-muted transition-transform', verticalDropdownOpen && 'rotate-180')} />
-              </button>
-              {verticalDropdownOpen && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-border bg-bg-secondary shadow-lg py-1">
-                  {ALL_VERTICALS.map((v) => {
-                    const Icon = verticalIcons[v.id] || Server;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => { setActiveVertical(v.id); setVerticalDropdownOpen(false); }}
-                        className={cn(
-                          'flex w-full items-center gap-2 px-2.5 py-1.5 text-xs transition-colors',
-                          activeVertical === v.id ? 'text-accent bg-accent/5' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary',
-                        )}
-                      >
-                        <Icon size={13} className="shrink-0" />
-                        <span>{v.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
@@ -182,33 +106,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose
             );
           })}
         </nav>
-
-        {/* Agent Status Footer */}
-        {!collapsed && agentStatuses.length > 0 && (
-          <div className="border-t border-border px-3 py-2 space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Activity size={10} className="text-text-muted" />
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">Agents</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {agentStatuses.map((a) => (
-                <div
-                  key={a.name}
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: a.status === 'running' ? agentColors[a.name] : '#4A5568' }}
-                  title={`${a.name}: ${a.actions_24h} actions`}
-                />
-              ))}
-              <span className="text-[10px] text-text-muted ml-1">
-                {activeCount > 0 ? `${activeCount} active` : 'idle'}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-success" />
-              <span className="text-[10px] text-text-muted">Systems Operational</span>
-            </div>
-          </div>
-        )}
 
         {/* Bottom */}
         <div className="border-t border-border px-2 py-2 space-y-0.5">

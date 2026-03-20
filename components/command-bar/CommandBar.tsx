@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Command } from 'cmdk';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, MapPin, Zap, Building2, Bot, FileText, Plus, Map, Kanban, BarChart3, Settings } from 'lucide-react';
+import { Search, Loader2, Building2, Users, FileText, Plus, Wrench, MessageSquare, HardHat, BarChart3, Settings, LayoutDashboard, Link2 } from 'lucide-react';
 
 interface SearchResult {
   id: string;
-  type: 'site' | 'substation' | 'parcel';
+  type: 'property' | 'tenant' | 'work_order';
   name: string;
   subtitle: string;
-  score?: number;
 }
 
 interface CommandBarProps {
@@ -19,18 +18,22 @@ interface CommandBarProps {
 }
 
 const navCommands = [
-  { label: 'Command Center', href: '/map', icon: Map },
-  { label: 'Intelligence Hub', href: '/agents', icon: Bot },
-  { label: 'Site Portfolio', href: '/sites', icon: Building2 },
-  { label: 'Project Pipeline', href: '/pipeline', icon: Kanban },
-  { label: 'Market Analytics', href: '/market', icon: BarChart3 },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Properties', href: '/properties', icon: Building2 },
+  { label: 'Tenants', href: '/tenants', icon: Users },
+  { label: 'Leases', href: '/leases', icon: FileText },
+  { label: 'Work Orders', href: '/work-orders', icon: Wrench },
+  { label: 'Conversations', href: '/conversations', icon: MessageSquare },
+  { label: 'Vendors', href: '/vendors', icon: HardHat },
+  { label: 'Reports', href: '/reports', icon: BarChart3 },
+  { label: 'Integrations', href: '/integrations', icon: Link2 },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
 const actionCommands = [
-  { label: 'New Site', action: () => window.location.href = '/sites?new=1', icon: Plus },
-  { label: 'Trigger Agent', action: () => window.location.href = '/agents?trigger=1', icon: Bot },
-  { label: 'Export PDF', action: () => {}, icon: FileText },
+  { label: 'New Property', action: () => window.location.href = '/properties?new=1', icon: Plus },
+  { label: 'New Work Order', action: () => window.location.href = '/work-orders?new=1', icon: Wrench },
+  { label: 'New Tenant', action: () => window.location.href = '/tenants?new=1', icon: Users },
 ];
 
 export function CommandBar({ open, onOpenChange }: CommandBarProps) {
@@ -75,12 +78,16 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
 
   function handleSelect(result: SearchResult) {
     onOpenChange(false);
-    if (result.type === 'site') window.location.href = `/sites/${result.id}`;
-    else window.location.href = `/map?focus=${result.id}`;
+    const routes: Record<string, string> = {
+      property: '/properties',
+      tenant: '/tenants',
+      work_order: '/work-orders',
+    };
+    window.location.href = `${routes[result.type] || '/dashboard'}/${result.id}`;
   }
 
   const typeIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-    site: Building2, substation: Zap, parcel: MapPin,
+    property: Building2, tenant: Users, work_order: Wrench,
   };
 
   return (
@@ -114,7 +121,7 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
                 <Command.Input
                   value={query}
                   onValueChange={setQuery}
-                  placeholder="Search sites, substations, or ask a question..."
+                  placeholder="Search properties, tenants, work orders..."
                   className="flex-1 bg-transparent text-xs text-text-primary placeholder:text-text-muted outline-none"
                 />
                 <kbd className="rounded border border-border bg-bg-elevated px-1 py-0.5 text-[9px] font-mono text-text-muted">
@@ -124,13 +131,13 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
 
               <Command.List className="max-h-72 overflow-y-auto p-1.5">
                 <Command.Empty className="px-3 py-6 text-center text-xs text-text-muted">
-                  {query ? 'No results found' : 'Try "substations near Ashburn" or "sites >100MW"'}
+                  {query ? 'No results found' : 'Search or navigate with commands'}
                 </Command.Empty>
 
                 {results.length > 0 && (
                   <Command.Group heading="Results" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-[9px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-text-muted">
                     {results.map((result) => {
-                      const Icon = typeIcons[result.type] || MapPin;
+                      const Icon = typeIcons[result.type] || Building2;
                       return (
                         <Command.Item
                           key={result.id}
@@ -142,9 +149,6 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
                             <p className="text-xs font-medium truncate">{result.name}</p>
                             <p className="text-[10px] text-text-muted truncate">{result.subtitle}</p>
                           </div>
-                          {result.score !== undefined && (
-                            <span className="text-[10px] font-mono text-accent">{result.score}</span>
-                          )}
                         </Command.Item>
                       );
                     })}

@@ -5,7 +5,7 @@
 import { createClient } from '@/lib/supabase/server';
 
 export type PlanTier = 'explorer' | 'pro' | 'enterprise';
-export type Feature = 'sites' | 'api_calls' | 'feasibility' | 'chat_messages' | 'team_members' | 'pdf_reports';
+export type Feature = 'sites' | 'api_calls' | 'feasibility' | 'chat_messages' | 'team_members' | 'pdf_reports' | 'properties' | 'units' | 'work_orders' | 'conversations' | 'showings';
 
 export interface UsageCheck {
   allowed: boolean;
@@ -90,14 +90,14 @@ export async function getSubscription(orgId: string): Promise<SubscriptionInfo> 
 
 /** Get all usage records for an org in the current period. */
 export async function getUsage(orgId: string): Promise<Record<Feature, UsageCheck>> {
-  const features: Feature[] = ['sites', 'api_calls', 'feasibility', 'chat_messages', 'team_members', 'pdf_reports'];
+  const features: Feature[] = ['sites', 'api_calls', 'feasibility', 'chat_messages', 'team_members', 'pdf_reports', 'properties', 'units', 'work_orders', 'conversations'];
   const results = await Promise.all(features.map((f) => checkLimit(orgId, f)));
   return Object.fromEntries(features.map((f, i) => [f, results[i]])) as Record<Feature, UsageCheck>;
 }
 
 /** Plan display metadata. */
 export const PLAN_DETAILS: Record<PlanTier, { name: string; price: number; annualPrice: number; description: string }> = {
-  explorer: { name: 'Explorer', price: 0, annualPrice: 0, description: 'For individuals exploring the platform' },
-  pro: { name: 'Pro', price: 199, annualPrice: 159, description: 'For teams and growing companies' },
-  enterprise: { name: 'Enterprise', price: -1, annualPrice: -1, description: 'Custom pricing for large organizations' },
+  explorer: { name: 'Starter', price: 0, annualPrice: 0, description: 'For PM companies with 50–100 units' },
+  pro: { name: 'Growth', price: 0, annualPrice: 0, description: 'For established operators with 100–250 units' },
+  enterprise: { name: 'Pro', price: 0, annualPrice: 0, description: 'For investor-operators with 250–500 units' },
 };

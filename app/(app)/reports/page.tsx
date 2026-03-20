@@ -2,264 +2,213 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { KPICard } from '@/components/dashboard/KPICard';
+import { RevenueChart } from '@/components/reports/RevenueChart';
+import { ExpenseBreakdown } from '@/components/reports/ExpenseBreakdown';
+import { PropertyRevenue } from '@/components/reports/PropertyRevenue';
+import {
+  DollarSign,
+  TrendingDown,
+  BarChart3,
+  Percent,
+  Home,
+  AlertTriangle,
+  FileText,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
-import { FileText, Download, MapPin, Calendar, Filter, BarChart3, ArrowUpDown } from 'lucide-react';
-import { AIInsightsPanel } from '@/components/reports/AIInsightsPanel';
-import { ScoreGauge } from '@/components/reports/ScoreGauge';
-import { formatDistanceToNow } from 'date-fns';
+import type { FinancialKPIs } from '@/lib/types';
 
-interface SiteWithScore {
-  id: string;
-  name: string;
-  state: string;
-  county: string | null;
-  target_capacity: number | null;
-  pipeline_stage: string;
-  created_at: string;
-  composite_score: number | null;
-  scored_at: string | null;
+type Tab = 'overview' | 'rent_roll' | 'expirations';
+
+interface FinancialData {
+  kpis: FinancialKPIs;
+  monthly_trend: { month: string; income: number; expenses: number }[];
+  expense_breakdown: { category: string; amount: number }[];
+  revenue_by_property: { property_name: string; amount: number }[];
+  expiring_leases: ExpiringLease[];
+  rent_roll: RentRollEntry[];
 }
 
-type SortField = 'name' | 'composite_score' | 'scored_at';
+interface ExpiringLease {
+  id: string;
+  lease_end: string;
+  monthly_rent: number;
+  status: string;
+  units: { unit_number: string; properties: { name: string } | null } | null;
+  tenants: { first_name: string; last_name: string } | null;
+}
+
+interface RentRollEntry {
+  monthly_rent: number;
+}
 
 export default function ReportsPage() {
-  const [sites, setSites] = useState<SiteWithScore[]>([]);
+  const [data, setData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'scored' | 'unscored'>('all');
-  const [sortField, setSortField] = useState<SortField>('composite_score');
-  const [sortAsc, setSortAsc] = useState(false);
-  const [exportingId, setExportingId] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('overview');
+  const [reports, setReports] = useState<{ id: string; report_type: string; period_start: string; period_end: string; pdf_url: string | null; created_at: string; properties: { name: string } | null }[]>([]);
+
   const supabase = createClient();
 
   useEffect(() => {
-    async function fetchSites() {
-      const { data: sitesData } = await supabase
-        .from('sites')
-        .select('id, name, state, county, target_capacity, pipeline_stage, created_at');
+    async function fetchAll() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
+      if (!profile) return;
 
-      if (!sitesData) { setLoading(false); return; }
+      const [financialsRes, reportsRes] = await Promise.all([
+        fetch('/api/reports/financials').then((r) => r.json()),
+        supabase.from('owner_reports').select('id, report_type, period_start, period_end, pdf_url, created_at, properties(name)').eq('org_id', profile.org_id).order('created_at', { ascending: false }).limit(10),
+      ]);
 
-      const { data: scores } = await supabase
-        .from('site_scores')
-        .select('site_id, composite_score, scored_at')
-        .order('scored_at', { ascending: false });
-
-      const scoreMap = new Map<string, { composite_score: number; scored_at: string }>();
-      scores?.forEach((s: { site_id: string; composite_score: number; scored_at: string }) => {
-        if (!scoreMap.has(s.site_id)) {
-          scoreMap.set(s.site_id, { composite_score: s.composite_score, scored_at: s.scored_at });
-        }
-      });
-
-      const combined = sitesData.map((site: { id: string; name: string; state: string; county: string | null; target_capacity: number | null; pipeline_stage: string; created_at: string }) => ({
-        ...site,
-        composite_score: scoreMap.get(site.id)?.composite_score ?? null,
-        scored_at: scoreMap.get(site.id)?.scored_at ?? null,
-      }));
-
-      setSites(combined);
+      setData(financialsRes);
+      setReports((reportsRes.data || []) as typeof reports);
       setLoading(false);
     }
-    fetchSites();
+    fetchAll();
   }, [supabase]);
 
-  const filtered = sites.filter((s) => {
-    if (filter === 'scored') return s.composite_score !== null;
-    if (filter === 'unscored') return s.composite_score === null;
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a, b) => {
-    const aVal = a[sortField];
-    const bVal = b[sortField];
-    if (aVal === null && bVal === null) return 0;
-    if (aVal === null) return 1;
-    if (bVal === null) return -1;
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-    }
-    return sortAsc ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
-  });
-
-  function toggleSort(field: SortField) {
-    if (sortField === field) setSortAsc(!sortAsc);
-    else { setSortField(field); setSortAsc(false); }
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
+        </div>
+        <Skeleton className="h-72" />
+      </div>
+    );
   }
 
-  async function handleExport(format: 'csv' | 'json') {
-    const res = await fetch(`/api/export?format=${format}&type=sites`);
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `meridian-node-sites.${format}`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  if (!data) return null;
+
+  const kpis = [
+    { title: 'Revenue (MTD)', numericValue: data.kpis.total_revenue_mtd, value: `$${data.kpis.total_revenue_mtd.toLocaleString()}`, icon: DollarSign, color: '#22C55E', sparklineData: [] as number[] },
+    { title: 'Expenses (MTD)', numericValue: data.kpis.total_expenses_mtd, value: `$${data.kpis.total_expenses_mtd.toLocaleString()}`, icon: TrendingDown, color: '#EF4444', sparklineData: [] as number[] },
+    { title: 'NOI (MTD)', numericValue: data.kpis.noi_mtd, value: `$${data.kpis.noi_mtd.toLocaleString()}`, icon: BarChart3, color: '#00D4AA', sparklineData: [] as number[] },
+    { title: 'Occupancy', numericValue: data.kpis.occupancy_rate, value: `${data.kpis.occupancy_rate}%`, icon: Percent, color: '#3B82F6', sparklineData: [] as number[] },
+    { title: 'Avg Rent / Unit', numericValue: data.kpis.avg_rent_per_unit, value: `$${data.kpis.avg_rent_per_unit.toLocaleString()}`, icon: Home, color: '#8A00FF', sparklineData: [] as number[] },
+    { title: 'Delinquency', numericValue: data.kpis.delinquency_rate, value: `${data.kpis.delinquency_rate}%`, icon: AlertTriangle, color: '#F59E0B', sparklineData: [] as number[] },
+  ];
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'rent_roll', label: 'Rent Roll' },
+    { key: 'expirations', label: 'Expirations' },
+  ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Reports</h1>
-          <p className="text-sm text-text-secondary">AI-powered portfolio analysis and site reports</p>
+          <h1 className="font-display text-xl font-bold text-text-primary">Financial Reports</h1>
+          <p className="text-sm text-text-secondary">Portfolio financial overview</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleExport('csv')}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-accent hover:text-accent transition-colors"
-          >
-            <Download size={12} /> Export CSV
-          </button>
-          <button
-            onClick={() => handleExport('json')}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-accent hover:text-accent transition-colors"
-          >
-            <Download size={12} /> Export JSON
-          </button>
-        </div>
+        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors">
+          <FileText size={16} />
+          Generate PDF Report
+        </button>
       </div>
 
-      {/* AI Insights */}
-      <AIInsightsPanel />
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {kpis.map((kpi, i) => (
+          <KPICard key={kpi.title} {...kpi} index={i} />
+        ))}
+      </div>
 
-      {/* Site Reports Table */}
-      <div className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={14} className="text-accent" />
-            <span className="text-xs font-semibold text-text-primary">Site Reports</span>
-            <span className="text-[10px] text-text-muted">({filtered.length} sites)</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Filter size={10} className="text-text-muted" />
-            {(['all', 'scored', 'unscored'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                  filter === f
-                    ? 'bg-accent/10 text-accent'
-                    : 'text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {f === 'all' ? 'All' : f === 'scored' ? 'Scored' : 'Unscored'}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-text-muted hover:text-text-primary'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs text-text-muted mt-2">Loading sites...</p>
+      {/* Tab content */}
+      {tab === 'overview' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+          <RevenueChart data={data.monthly_trend} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ExpenseBreakdown data={data.expense_breakdown} />
+            <PropertyRevenue data={data.revenue_by_property} />
           </div>
-        ) : sorted.length === 0 ? (
-          <div className="p-8 text-center">
-            <FileText size={24} className="text-text-muted mx-auto mb-3" />
-            <p className="text-xs text-text-primary mb-1">No sites found</p>
-            <p className="text-[10px] text-text-muted">Add sites to generate reports</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border text-[10px] uppercase tracking-wider text-text-muted">
-                  <th className="text-left py-2 px-4">
-                    <button onClick={() => toggleSort('name')} className="flex items-center gap-1 hover:text-accent transition-colors">
-                      Site <ArrowUpDown size={9} />
-                    </button>
-                  </th>
-                  <th className="text-center py-2 px-4">
-                    <button onClick={() => toggleSort('composite_score')} className="flex items-center gap-1 mx-auto hover:text-accent transition-colors">
-                      Score <ArrowUpDown size={9} />
-                    </button>
-                  </th>
-                  <th className="text-left py-2 px-4">Location</th>
-                  <th className="text-right py-2 px-4">Capacity</th>
-                  <th className="text-left py-2 px-4">
-                    <button onClick={() => toggleSort('scored_at')} className="flex items-center gap-1 hover:text-accent transition-colors">
-                      Last Scored <ArrowUpDown size={9} />
-                    </button>
-                  </th>
-                  <th className="text-right py-2 px-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((site, i) => (
-                  <motion.tr
-                    key={site.id}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="border-b border-border/30 hover:bg-white/[0.02] transition-colors"
-                  >
-                    <td className="py-2.5 px-4">
-                      <a href={`/sites/${site.id}`} className="font-medium text-text-primary hover:text-accent transition-colors">
-                        {site.name}
-                      </a>
-                    </td>
-                    <td className="py-2.5 px-4 text-center">
-                      {site.composite_score !== null ? (
-                        <div className="flex justify-center">
-                          <ScoreGauge score={site.composite_score} size={32} strokeWidth={3} />
-                        </div>
-                      ) : (
-                        <span className="text-text-muted">—</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-4 text-text-secondary">
-                      <div className="flex items-center gap-1">
-                        <MapPin size={10} className="text-text-muted shrink-0" />
-                        <span className="truncate">{site.state}{site.county ? `, ${site.county}` : ''}</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-4 text-right font-mono text-text-secondary">
-                      {site.target_capacity ? `${site.target_capacity} MW` : '—'}
-                    </td>
-                    <td className="py-2.5 px-4 text-text-muted">
-                      {site.scored_at ? (
-                        <div className="flex items-center gap-1">
-                          <Calendar size={10} />
-                          {formatDistanceToNow(new Date(site.scored_at), { addSuffix: true })}
-                        </div>
-                      ) : '—'}
-                    </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <a
-                          href={`/sites/${site.id}`}
-                          className="rounded px-2 py-1 text-[10px] font-medium text-text-secondary border border-border hover:border-accent hover:text-accent transition-colors"
-                        >
-                          View
-                        </a>
-                        <button
-                          onClick={async () => {
-                            setExportingId(site.id);
-                            const res = await fetch(`/api/reports/${site.id}/pdf`);
-                            const blob = await res.blob();
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${site.name.replace(/\s+/g, '-').toLowerCase()}-report.${res.headers.get('content-type')?.includes('pdf') ? 'pdf' : 'html'}`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                            setExportingId(null);
-                          }}
-                          disabled={exportingId === site.id}
-                          className="rounded px-2 py-1 text-[10px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
-                        >
-                          {exportingId === site.id ? 'Generating...' : 'PDF'}
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
+
+          {/* Recent PDF Reports */}
+          {reports.length > 0 && (
+            <div className="glass-card p-4">
+              <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Generated Reports</h3>
+              <div className="space-y-2">
+                {reports.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
+                    <div>
+                      <p className="text-sm text-text-primary">{r.properties?.name || 'Portfolio'} — {r.report_type}</p>
+                      <p className="text-[10px] text-text-muted">{r.period_start} to {r.period_end}</p>
+                    </div>
+                    {r.pdf_url && (
+                      <a href={r.pdf_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">Download PDF</a>
+                    )}
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {tab === 'expirations' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div className="glass-card overflow-hidden">
+            {data.expiring_leases.length === 0 ? (
+              <div className="p-8 text-center text-text-muted text-sm">No leases expiring in the next 90 days.</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Tenant</th>
+                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
+                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Rent</th>
+                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Expires</th>
+                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Days Left</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.expiring_leases.map((l) => {
+                    const daysLeft = Math.ceil((new Date(l.lease_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    const urgency = daysLeft <= 14 ? 'text-red-500' : daysLeft <= 30 ? 'text-yellow-500' : 'text-text-secondary';
+                    return (
+                      <tr key={l.id} className="border-b border-border/50 hover:bg-bg-elevated/50">
+                        <td className="px-4 py-3 text-text-primary">{l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}` : '—'}</td>
+                        <td className="px-4 py-3 text-text-secondary">{l.units?.properties?.name || '—'} / {l.units?.unit_number || '—'}</td>
+                        <td className="px-4 py-3 text-text-secondary">${Number(l.monthly_rent).toLocaleString()}/mo</td>
+                        <td className="px-4 py-3 text-text-secondary">{l.lease_end}</td>
+                        <td className={`px-4 py-3 font-medium ${urgency}`}>{daysLeft}d</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
-        )}
-      </div>
+        </motion.div>
+      )}
+
+      {tab === 'rent_roll' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div className="glass-card p-6 text-center text-text-muted text-sm">
+            Rent roll details will populate once lease and financial transaction data is available.
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

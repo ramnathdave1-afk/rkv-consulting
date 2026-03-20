@@ -10,8 +10,7 @@ import { cn } from '@/lib/utils';
 export function ChatPanel() {
   const chatOpen = useAppStore((s) => s.chatOpen);
   const setChatOpen = useAppStore((s) => s.setChatOpen);
-  const activeVertical = useAppStore((s) => s.activeVertical);
-  const selectedSiteId = useAppStore((s) => s.selectedSiteId);
+  const selectedPropertyId = useAppStore((s) => s.selectedPropertyId);
 
   const messages = useChatStore((s) => s.messages);
   const isStreaming = useChatStore((s) => s.isStreaming);
@@ -55,7 +54,7 @@ export function ChatPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: allMessages,
-          context: { ...context, vertical: activeVertical, siteId: selectedSiteId },
+          context: { ...context, propertyId: selectedPropertyId },
         }),
       });
 
@@ -103,7 +102,7 @@ export function ChatPanel() {
       setStreaming(false);
       setStreamingText('');
     }
-  }, [input, isStreaming, messages, context, activeVertical, selectedSiteId, addMessage, setStreaming, setStreamingText, finalizeStreaming]);
+  }, [input, isStreaming, messages, context, selectedPropertyId, addMessage, setStreaming, setStreamingText, finalizeStreaming]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -129,9 +128,9 @@ export function ChatPanel() {
                 <Sparkles size={16} className="text-accent" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-text-primary">Meridian AI</h3>
+                <h3 className="text-sm font-semibold text-text-primary">MeridianNode AI</h3>
                 <p className="text-[10px] text-text-muted">
-                  {activeVertical.replace('_', ' ')} intelligence
+                  Property management assistant
                 </p>
               </div>
             </div>

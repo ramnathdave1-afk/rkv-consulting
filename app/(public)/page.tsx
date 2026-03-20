@@ -3,30 +3,29 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Cpu, Map, Shield, TrendingUp, Zap, BarChart3, ArrowRight, Bot, CheckCircle2 } from 'lucide-react';
+import { MessageSquare, Wrench, BarChart3, ArrowRight, Bot, CheckCircle2, Building2, FileText, Users, Clock, Shield, Zap } from 'lucide-react';
+import { GlowyWavesHero } from '@/components/ui/GlowyWavesHero';
 
-const features = [
-  { icon: Zap, title: 'Infrastructure Scanner', desc: 'Autonomous grid scanning — discovers substations and infrastructure capacity across all US ISO regions.' },
-  { icon: Map, title: 'Site Discovery', desc: 'AI parcel analysis — locates optimal parcels near infrastructure with zoning, acreage, and environmental checks.' },
-  { icon: Shield, title: 'Multi-Dimension Scoring', desc: 'Composite 0-100 scores across configurable dimensions per vertical — grid, land, risk, market, and more.' },
-  { icon: TrendingUp, title: 'Market Intelligence', desc: 'Regional power costs, land prices, tax incentives, and infrastructure density tracking.' },
-  { icon: Cpu, title: '3D Infrastructure Map', desc: 'Full 3D Mapbox visualization with terrain, substations, environmental layers, and real-time site markers.' },
-  { icon: BarChart3, title: 'Pipeline & Reports', desc: 'Kanban pipeline management with AI-powered feasibility analysis and automated PDF reports.' },
+const modules = [
+  { icon: MessageSquare, title: 'AI Leasing Agent', desc: 'Automated SMS, email, and web responses. Qualify leads, schedule showings, and handle lease renewals — 24/7 with <90s response times.' },
+  { icon: Wrench, title: 'Maintenance Coordination', desc: 'AI triage classifies urgency, matches vendors by category and proximity, auto-dispatches, and keeps tenants updated at every stage.' },
+  { icon: BarChart3, title: 'Financial Reporting', desc: 'Real-time portfolio dashboards with automated owner reports. Track occupancy, NOI, delinquency, and maintenance spend per property.' },
+  { icon: Building2, title: 'Portfolio Management', desc: 'Manage all your properties, units, tenants, and leases in one place. Sync data from AppFolio, Buildium, or Yardi.' },
+  { icon: Shield, title: 'Fair Housing Compliant', desc: 'Every AI message is screened through our compliance filter before delivery. Full audit log on every tenant interaction.' },
+  { icon: Zap, title: 'PM Platform Integrations', desc: 'Connect your AppFolio or Buildium account and sync properties, units, tenants, leases, and work orders automatically.' },
 ];
 
 const steps = [
-  { step: '01', title: 'Add Your Sites', description: 'Input site coordinates or let our AI agents discover optimal parcels automatically.' },
-  { step: '02', title: 'Analyze & Score', description: 'Our five-dimension scoring engine evaluates grid access, land, risk, market, and connectivity.' },
-  { step: '03', title: 'Act with Confidence', description: 'Get feasibility verdicts, risk assessments, and actionable recommendations backed by real data.' },
+  { step: '01', title: 'Connect Your PM Platform', description: 'Link your AppFolio or Buildium account. We sync your properties, units, tenants, and leases in minutes.' },
+  { step: '02', title: 'AI Starts Working', description: 'Our AI leasing agent handles inbound inquiries. Maintenance requests are triaged and dispatched automatically.' },
+  { step: '03', title: 'Run Like a 20-Person Team', description: 'Your 5-person team operates at 4x capacity. Owner reports generate themselves. Work orders close faster.' },
 ];
 
-const verticals = [
-  { name: 'Data Centers', color: '#3B82F6' },
-  { name: 'Solar', color: '#F59E0B' },
-  { name: 'Wind', color: '#22C55E' },
-  { name: 'EV Charging', color: '#8A00FF' },
-  { name: 'Industrial', color: '#EF4444' },
-  { name: 'Residential', color: '#06B6D4' },
+const personas = [
+  { name: 'Ops Directors', desc: '70% reduction in staff communication time', icon: Users },
+  { name: 'Property Owners', desc: 'Automated monthly reports delivered on schedule', icon: FileText },
+  { name: 'Maintenance Teams', desc: '80% reduction in triage time with AI dispatch', icon: Wrench },
+  { name: 'Leasing Teams', desc: '<90 second response to every prospect, 24/7', icon: Clock },
 ];
 
 export default function LandingPage() {
@@ -59,16 +58,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Nav */}
-      <nav className="border-b border-border bg-bg-secondary/50 backdrop-blur-md sticky top-0 z-50">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 bg-bg-secondary/30 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">MeridianNode</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/pricing" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Pricing</Link>
             <Link href="/about" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors hidden sm:block">About</Link>
             <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
             <Link href="/signup" className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-bg-primary hover:bg-accent-hover transition-colors">
@@ -78,43 +76,49 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,212,170,0.08)_0%,_transparent_60%)]" />
-        <div className="relative mx-auto max-w-5xl px-6 pt-20 pb-24 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent-muted px-4 py-1.5 text-xs font-medium text-accent">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-              AI-Powered Land Intelligence
-            </div>
-            <h1 className="font-display text-5xl font-bold leading-tight tracking-tight text-text-primary sm:text-6xl lg:text-7xl">
-              Meridian Node
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-text-secondary">
-              AI-powered land infrastructure intelligence for developers, energy companies, and infrastructure investors.
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-bg-primary hover:bg-accent-hover transition-colors">
-                Start Free <ArrowRight size={14} />
-              </Link>
-              <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors">
-                View Pricing
-              </Link>
-            </div>
-          </motion.div>
+      {/* Hero with Glowy Waves */}
+      <GlowyWavesHero
+        badge="AI-Powered Property Management"
+        title={
+          <>
+            Your 5-person team,{' '}
+            <span className="bg-gradient-to-r from-accent via-accent/60 to-text-primary/80 bg-clip-text text-transparent">
+              running like 20
+            </span>
+          </>
+        }
+        subtitle="MeridianNode gives mid-size property management companies plug-in AI infrastructure for leasing, maintenance, reporting, and operations."
+        primaryCTA={{ label: 'Get Started', href: '/signup' }}
+        secondaryCTA={{ label: 'See How It Works', href: '#how-it-works' }}
+        pills={['AI Leasing Agent', 'Maintenance Dispatch', 'Owner Reports', 'PM Integrations']}
+        stats={[
+          { label: 'Response time', value: '<90s' },
+          { label: 'Communication reduction', value: '70%' },
+          { label: 'Triage time saved', value: '80%' },
+        ]}
+      />
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-            {verticals.map((v) => (
-              <span key={v.name} className="rounded-full px-3 py-1 text-[10px] font-medium border border-border/50" style={{ color: v.color, borderColor: `${v.color}30` }}>
-                {v.name}
-              </span>
-            ))}
-          </motion.div>
+      {/* Who It's For */}
+      <div className="mx-auto max-w-5xl px-6 py-20">
+        <h2 className="font-display text-2xl font-bold text-text-primary text-center mb-3">Built for PM Teams That Do More With Less</h2>
+        <p className="text-sm text-text-secondary text-center max-w-2xl mx-auto mb-10">
+          Companies managing 50–500 units across residential and mixed-use properties. Small teams, big portfolios, zero AI expertise required.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {personas.map((p, i) => (
+            <motion.div key={p.name} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="glass-card p-5 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 mx-auto mb-3">
+                <p.icon size={20} className="text-accent" />
+              </div>
+              <h3 className="font-display text-sm font-semibold text-text-primary">{p.name}</h3>
+              <p className="mt-1.5 text-xs text-text-secondary leading-relaxed">{p.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </div>
 
       {/* How It Works */}
-      <div className="mx-auto max-w-5xl px-6 pb-20">
+      <div id="how-it-works" className="mx-auto max-w-5xl px-6 pb-20">
         <h2 className="font-display text-2xl font-bold text-text-primary text-center mb-10">How It Works</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {steps.map((s, i) => (
@@ -127,11 +131,11 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Grid */}
+      {/* Modules Grid */}
       <div className="mx-auto max-w-5xl px-6 pb-20">
         <h2 className="font-display text-2xl font-bold text-text-primary text-center mb-10">Platform Capabilities</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f, i) => (
+          {modules.map((f, i) => (
             <motion.div key={f.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.06 }} className="glass-card p-5 hover:border-border-hover transition-colors">
               <f.icon className="mb-3 h-5 w-5 text-accent" />
               <h3 className="font-display text-sm font-semibold text-text-primary">{f.title}</h3>
@@ -141,22 +145,22 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* AI Agents */}
+      {/* AI Section */}
       <div className="mx-auto max-w-4xl px-6 pb-20">
         <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="glass-card p-8 text-center" style={{ borderColor: 'rgba(0,212,170,0.15)' }}>
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 mx-auto mb-4">
             <Bot size={24} className="text-accent" />
           </div>
-          <h2 className="font-display text-xl font-bold text-text-primary mb-2">6 Autonomous AI Agents</h2>
+          <h2 className="font-display text-xl font-bold text-text-primary mb-2">AI That Works Out of the Box</h2>
           <p className="text-sm text-text-secondary max-w-lg mx-auto mb-4">
-            Our agents work continuously — scanning infrastructure, discovering sites, scoring parcels, analyzing markets, and running feasibility checks.
+            No engineers needed. MeridianNode&apos;s AI handles tenant communications, triages maintenance requests, and generates reports — all with fair housing compliance built in.
           </p>
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            {['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta'].map((agentName, i) => {
-              const colors = ['#00D4AA', '#3B82F6', '#F59E0B', '#8A00FF', '#A855F7', '#06B6D4'];
+            {['Leasing AI', 'Maintenance Triage', 'Compliance Filter', 'Report Generation', 'Vendor Dispatch'].map((label, i) => {
+              const colors = ['#00D4AA', '#3B82F6', '#F59E0B', '#8A00FF', '#22C55E'];
               return (
-                <span key={agentName} className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ color: colors[i], backgroundColor: `${colors[i]}15` }}>
-                  {agentName}
+                <span key={label} className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ color: colors[i], backgroundColor: `${colors[i]}15` }}>
+                  {label}
                 </span>
               );
             })}
@@ -195,7 +199,6 @@ export default function LandingPage() {
             <div>
               <p className="text-xs font-semibold text-text-primary mb-3">Product</p>
               <div className="space-y-2">
-                <Link href="/pricing" className="block text-xs text-text-muted hover:text-text-secondary transition-colors">Pricing</Link>
                 <Link href="/about" className="block text-xs text-text-muted hover:text-text-secondary transition-colors">About</Link>
                 <Link href="/security" className="block text-xs text-text-muted hover:text-text-secondary transition-colors">Security</Link>
               </div>
@@ -223,7 +226,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-border pt-6 flex items-center justify-between">
-            <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV. All rights reserved.</p>
+            <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV Consulting LLC. All rights reserved.</p>
             <p className="text-xs text-text-muted">meridiannode.io</p>
           </div>
         </div>

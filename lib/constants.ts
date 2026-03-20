@@ -1,87 +1,59 @@
-import type { PipelineStage, AgentName, Vertical } from '@/lib/types';
-import { getVerticalConfig } from '@/lib/verticals';
-
-// ── Pipeline Stages (default — use getVerticalConfig for vertical-specific) ──
-export const PIPELINE_STAGES: { value: PipelineStage; label: string; color: string }[] = [
-  { value: 'prospect', label: 'Prospect', color: '#8B95A5' },
-  { value: 'due_diligence', label: 'Due Diligence', color: '#3B82F6' },
-  { value: 'loi', label: 'LOI', color: '#8A00FF' },
-  { value: 'under_contract', label: 'Under Contract', color: '#F59E0B' },
-  { value: 'closed', label: 'Closed', color: '#22C55E' },
-];
-
-export const STAGE_ORDER: PipelineStage[] = [
-  'prospect',
-  'due_diligence',
-  'loi',
-  'under_contract',
-  'closed',
-];
-
-// ── Agents ──
-export const AGENTS: { name: AgentName; label: string; description: string; icon: string }[] = [
-  { name: 'alpha', label: 'Agent Alpha', description: 'Infrastructure Scanner — finds substations with available capacity headroom', icon: 'Zap' },
-  { name: 'beta', label: 'Agent Beta', description: 'Site Discovery — locates optimal parcels near infrastructure', icon: 'Map' },
-  { name: 'gamma', label: 'Agent Gamma', description: 'Multi-Dimension Scorer — calculates composite site scores', icon: 'Shield' },
-  { name: 'delta', label: 'Agent Delta', description: 'Market Intel — regional power, land, and tax data', icon: 'TrendingUp' },
-  { name: 'epsilon', label: 'Agent Epsilon', description: 'Feasibility Analyzer — AI-powered zoning and buildability analysis', icon: 'Search' },
-  { name: 'zeta', label: 'Agent Zeta', description: 'Data Ingestion — orchestrates external data source pipelines', icon: 'Database' },
-];
-
-// ── Default Map Bounds (US-wide, configurable per org) ──
-export const DEFAULT_BOUNDS = {
-  center: { lat: 39.5, lng: -98.5 },
-  zoom: 4,
-  bounds: {
-    north: 49.0,
-    south: 24.5,
-    east: -66.9,
-    west: -125.0,
-  },
-} as const;
-
-/** @deprecated Use DEFAULT_BOUNDS instead */
-export const PJM_BOUNDS = DEFAULT_BOUNDS;
-
-// ── Map Config ──
-export const MAP_CONFIG = {
-  style: 'mapbox://styles/mapbox/dark-v11',
-  initialViewState: {
-    longitude: DEFAULT_BOUNDS.center.lng,
-    latitude: DEFAULT_BOUNDS.center.lat,
-    zoom: DEFAULT_BOUNDS.zoom,
-    pitch: 45,
-    bearing: -15,
-  },
-  terrain: {
-    source: 'mapbox-dem',
-    exaggeration: 1.5,
-  },
-  buildingsMinZoom: 14,
-} as const;
-
 // ── Roles ──
 export const ROLES = {
-  admin: { label: 'Admin', description: 'Full access — manage team, override pipeline, configure agents' },
-  analyst: { label: 'Analyst', description: 'View/edit sites, move pipeline stages, generate reports' },
+  admin: { label: 'Admin', description: 'Full access — manage team, integrations, and all property data' },
+  analyst: { label: 'Manager', description: 'Manage properties, tenants, work orders, and reports' },
   viewer: { label: 'Viewer', description: 'Read-only access to all data' },
 } as const;
 
-// ── Score Dimensions (default — use getVerticalConfig for vertical-specific) ──
-export const SCORE_DIMENSIONS = [
-  { key: 'grid_score', label: 'Grid', color: '#3B82F6' },
-  { key: 'land_score', label: 'Land', color: '#22C55E' },
-  { key: 'risk_score', label: 'Risk', color: '#EF4444' },
-  { key: 'market_score', label: 'Market', color: '#F59E0B' },
-  { key: 'connectivity_score', label: 'Connectivity', color: '#8A00FF' },
+// ── Work Order Categories ──
+export const WORK_ORDER_CATEGORIES = [
+  { value: 'plumbing', label: 'Plumbing', color: '#3B82F6' },
+  { value: 'electrical', label: 'Electrical', color: '#F59E0B' },
+  { value: 'hvac', label: 'HVAC', color: '#8B5CF6' },
+  { value: 'appliance', label: 'Appliance', color: '#06B6D4' },
+  { value: 'pest', label: 'Pest Control', color: '#EF4444' },
+  { value: 'structural', label: 'Structural', color: '#78716C' },
+  { value: 'cosmetic', label: 'Cosmetic', color: '#EC4899' },
+  { value: 'safety', label: 'Safety', color: '#DC2626' },
+  { value: 'general', label: 'General', color: '#6B7280' },
+  { value: 'turnover', label: 'Turnover', color: '#22C55E' },
 ] as const;
 
-// ── Helper: get pipeline stages for a vertical ──
-export function getPipelineStages(vertical: Vertical) {
-  return getVerticalConfig(vertical).pipelineStages;
-}
+// ── Work Order Priorities ──
+export const WORK_ORDER_PRIORITIES = [
+  { value: 'emergency', label: 'Emergency', color: '#DC2626' },
+  { value: 'high', label: 'High', color: '#F97316' },
+  { value: 'medium', label: 'Medium', color: '#F59E0B' },
+  { value: 'low', label: 'Low', color: '#22C55E' },
+] as const;
 
-// ── Helper: get score dimensions for a vertical ──
-export function getScoreDimensions(vertical: Vertical) {
-  return getVerticalConfig(vertical).scoreDimensions;
-}
+// ── Work Order Statuses ──
+export const WORK_ORDER_STATUSES = [
+  { value: 'open', label: 'Open', color: '#EF4444' },
+  { value: 'assigned', label: 'Assigned', color: '#F59E0B' },
+  { value: 'in_progress', label: 'In Progress', color: '#3B82F6' },
+  { value: 'parts_needed', label: 'Parts Needed', color: '#8B5CF6' },
+  { value: 'completed', label: 'Completed', color: '#22C55E' },
+  { value: 'closed', label: 'Closed', color: '#6B7280' },
+  { value: 'cancelled', label: 'Cancelled', color: '#9CA3AF' },
+] as const;
+
+// ── Tenant Statuses ──
+export const TENANT_STATUSES = [
+  { value: 'prospect', label: 'Prospect', color: '#3B82F6' },
+  { value: 'applicant', label: 'Applicant', color: '#F59E0B' },
+  { value: 'approved', label: 'Approved', color: '#10B981' },
+  { value: 'active', label: 'Active', color: '#22C55E' },
+  { value: 'notice', label: 'Notice', color: '#F97316' },
+  { value: 'past', label: 'Past', color: '#6B7280' },
+  { value: 'denied', label: 'Denied', color: '#EF4444' },
+] as const;
+
+// ── Property Types ──
+export const PROPERTY_TYPES = [
+  { value: 'multifamily', label: 'Multifamily' },
+  { value: 'single_family', label: 'Single Family' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'mixed_use', label: 'Mixed Use' },
+  { value: 'hoa', label: 'HOA' },
+] as const;

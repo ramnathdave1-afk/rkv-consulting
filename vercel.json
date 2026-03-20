@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/lease-renewals",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/showing-reminders",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/showing-followups",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
