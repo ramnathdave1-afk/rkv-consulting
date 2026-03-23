@@ -7,7 +7,7 @@ import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, 
 import { HeroSection } from '@/components/ui/hero-section';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
-import { Features9 } from '@/components/blocks/features-9';
+import CombinedFeatures from '@/components/blocks/combined-features';
 
 const propertyImages = [
   { id: 1, type: 'image', title: 'Modern Apartment Complex', desc: 'Multi-unit residential, 48 units, Scottsdale AZ', url: '/images/property-apartments.jpg', span: 'md:col-span-2 md:row-span-3 sm:col-span-2 sm:row-span-2' },
@@ -238,8 +238,8 @@ export default function LandingPage() {
       {/* Features Bento (Features-8 component) */}
       <Features8 />
 
-      {/* Automation Showcase — Map, Chat, Analytics */}
-      <Features9 />
+      {/* Combined Features — Map, Notifications, Chart, Cards */}
+      <CombinedFeatures />
 
       {/* How It Works */}
       <section className="py-24 border-t border-white/5">
