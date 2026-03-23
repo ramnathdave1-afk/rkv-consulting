@@ -1,7 +1,6 @@
 'use client'
 
 import { Activity, ArrowRight, Building2, MapPin, MessageSquare, Wrench } from 'lucide-react'
-import DottedMap from 'dotted-map'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import * as React from 'react'
 import * as RechartsPrimitive from 'recharts'
@@ -120,73 +119,79 @@ function FeatureCard({ icon, title, subtitle, description }: { icon: React.React
   )
 }
 
-// ── Animated Map ──
-const map = new DottedMap({ height: 55, grid: 'diagonal' })
-const points = map.getPoints()
-
-// Property locations (approximate US city positions on the dotted map)
-const propertyPins = [
-  { cx: 25, cy: 28, label: 'Phoenix', units: 48 },
-  { cx: 27, cy: 25, label: 'Scottsdale', units: 64 },
-  { cx: 23, cy: 30, label: 'Tempe', units: 32 },
-  { cx: 30, cy: 32, label: 'Mesa', units: 24 },
-  { cx: 80, cy: 26, label: 'Austin', units: 36 },
-  { cx: 85, cy: 22, label: 'Dallas', units: 44 },
+// ── Animated US Map ──
+// US city positions (viewBox 0 0 960 600 — standard US map projection)
+const cities = [
+  { cx: 215, cy: 395, label: 'Phoenix, AZ', units: 48 },
+  { cx: 220, cy: 385, label: 'Scottsdale, AZ', units: 64 },
+  { cx: 205, cy: 405, label: 'Tempe, AZ', units: 32 },
+  { cx: 230, cy: 410, label: 'Mesa, AZ', units: 24 },
+  { cx: 520, cy: 430, label: 'Austin, TX', units: 36 },
+  { cx: 540, cy: 390, label: 'Dallas, TX', units: 44 },
+  { cx: 830, cy: 440, label: 'Miami, FL', units: 28 },
+  { cx: 770, cy: 340, label: 'Atlanta, GA', units: 18 },
+  { cx: 150, cy: 280, label: 'Las Vegas, NV', units: 22 },
+  { cx: 100, cy: 220, label: 'San Francisco, CA', units: 30 },
 ]
 
-// Connection lines between nearby properties
-const connections = [
-  { x1: 25, y1: 28, x2: 27, y2: 25 },
-  { x1: 27, y1: 25, x2: 23, y2: 30 },
-  { x1: 23, y1: 30, x2: 30, y2: 32 },
-  { x1: 80, y1: 26, x2: 85, y2: 22 },
-  { x1: 30, y1: 32, x2: 80, y2: 26 },
+const routes = [
+  { x1: 215, y1: 395, x2: 520, y2: 430 }, // Phoenix → Austin
+  { x1: 520, y1: 430, x2: 540, y2: 390 }, // Austin → Dallas
+  { x1: 540, y1: 390, x2: 770, y2: 340 }, // Dallas → Atlanta
+  { x1: 770, y1: 340, x2: 830, y2: 440 }, // Atlanta → Miami
+  { x1: 215, y1: 395, x2: 150, y2: 280 }, // Phoenix → Vegas
+  { x1: 150, y1: 280, x2: 100, y2: 220 }, // Vegas → SF
+  { x1: 100, y1: 220, x2: 215, y2: 395 }, // SF → Phoenix
+  { x1: 540, y1: 390, x2: 215, y2: 395 }, // Dallas → Phoenix (long route)
 ]
 
 const Map = () => (
-  <svg viewBox="0 0 120 60" className="w-full h-auto">
+  <svg viewBox="0 0 960 600" className="w-full h-auto" style={{ maxHeight: '220px' }}>
     <style>{`
-      @keyframes mapDot { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.22; } }
-      @keyframes pinPulse { 0%, 100% { r: 0.6; opacity: 0.9; } 50% { r: 0.8; opacity: 1; } }
-      @keyframes pinRing { 0% { r: 0.8; opacity: 0.5; } 100% { r: 2.5; opacity: 0; } }
-      @keyframes dashFlow { 0% { stroke-dashoffset: 8; } 100% { stroke-dashoffset: 0; } }
-      @keyframes travelDot { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+      @keyframes pinPulse2 { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+      @keyframes ringExpand { 0% { r: 6; opacity: 0.6; } 100% { r: 20; opacity: 0; } }
+      @keyframes dashMove { 0% { stroke-dashoffset: 20; } 100% { stroke-dashoffset: 0; } }
+      @keyframes travelDot2 { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
     `}</style>
-    {/* Base dots with subtle animation */}
-    {points.map((point, i) => (
-      <circle key={i} cx={point.x} cy={point.y} r={0.15} fill="rgba(255,255,255,0.12)"
-        style={{ animation: `mapDot ${3 + (i % 5) * 0.8}s ease-in-out ${(i % 20) * 0.15}s infinite` }} />
+
+    {/* US outline — simplified continental US shape */}
+    <path d="M100,180 L130,140 L200,120 L280,110 L360,100 L440,90 L500,95 L560,100 L620,110 L680,120 L740,130 L790,150 L830,180 L850,220 L860,260 L870,300 L860,340 L840,370 L810,400 L780,420 L740,440 L700,450 L660,455 L620,460 L580,465 L540,460 L500,450 L460,445 L420,450 L380,460 L340,465 L300,460 L260,450 L230,440 L200,430 L180,420 L160,400 L140,370 L120,340 L110,300 L100,260 L95,220 Z"
+      fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+
+    {/* State-like internal lines */}
+    <line x1="300" y1="100" x2="300" y2="460" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+    <line x1="500" y1="90" x2="500" y2="460" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+    <line x1="700" y1="120" x2="700" y2="455" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+    <line x1="100" y1="250" x2="870" y2="250" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+    <line x1="100" y1="350" x2="870" y2="350" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+
+    {/* Animated route lines */}
+    {routes.map((r, i) => (
+      <line key={`route-${i}`} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2}
+        stroke="rgba(16,185,129,0.12)" strokeWidth="1"
+        strokeDasharray="6 4"
+        style={{ animation: `dashMove ${2.5 + i * 0.3}s linear infinite` }} />
     ))}
-    {/* Connection lines with flowing dashes */}
-    {connections.map((c, i) => (
-      <line key={`conn-${i}`} x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
-        stroke="rgba(16,185,129,0.15)" strokeWidth="0.2"
-        strokeDasharray="1 1"
-        style={{ animation: `dashFlow ${2 + i * 0.5}s linear infinite` }} />
-    ))}
-    {/* Traveling dots along connections */}
-    {connections.map((c, i) => (
-      <circle key={`travel-${i}`} r="0.3" fill="#10B981"
+
+    {/* Traveling dots along routes */}
+    {routes.map((r, i) => (
+      <circle key={`td-${i}`} r="3" fill="#10B981"
         style={{
-          offsetPath: `path('M${c.x1},${c.y1} L${c.x2},${c.y2}')`,
-          animation: `travelDot ${3 + i * 1.2}s ease-in-out ${i * 0.8}s infinite`,
-          filter: 'drop-shadow(0 0 1px rgba(16,185,129,0.6))',
+          offsetPath: `path('M${r.x1},${r.y1} L${r.x2},${r.y2}')`,
+          animation: `travelDot2 ${4 + i * 0.8}s ease-in-out ${i * 0.6}s infinite`,
+          filter: 'drop-shadow(0 0 4px rgba(16,185,129,0.7))',
         }} />
     ))}
-    {/* Property pins with pulse */}
-    {propertyPins.map((pin, i) => (
-      <g key={`pin-${i}`}>
-        {/* Expanding ring */}
-        <circle cx={pin.cx} cy={pin.cy} r="0.8" fill="none" stroke="#10B981" strokeWidth="0.15"
-          style={{ animation: `pinRing 2.5s ease-out ${i * 0.4}s infinite` }} />
-        {/* Core dot */}
-        <circle cx={pin.cx} cy={pin.cy} fill="#10B981"
-          style={{
-            animation: `pinPulse 2s ease-in-out ${i * 0.3}s infinite`,
-            filter: 'drop-shadow(0 0 1.5px rgba(16,185,129,0.8))',
-          }} r="0.6" />
-        {/* Glow */}
-        <circle cx={pin.cx} cy={pin.cy} r="1.5" fill="rgba(16,185,129,0.08)" />
+
+    {/* City pins */}
+    {cities.map((c, i) => (
+      <g key={`city-${i}`}>
+        <circle cx={c.cx} cy={c.cy} r="6" fill="none" stroke="#10B981" strokeWidth="1"
+          style={{ animation: `ringExpand 3s ease-out ${i * 0.35}s infinite` }} />
+        <circle cx={c.cx} cy={c.cy} r="4" fill="#10B981"
+          style={{ animation: `pinPulse2 2s ease-in-out ${i * 0.25}s infinite`, filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.6))' }} />
+        <circle cx={c.cx} cy={c.cy} r="12" fill="rgba(16,185,129,0.06)" />
+        <text x={c.cx} y={c.cy - 14} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="monospace">{c.label}</text>
       </g>
     ))}
   </svg>

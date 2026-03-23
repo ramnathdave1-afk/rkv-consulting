@@ -1,62 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
+import { Building2, Home, Landmark, KeyRound, DoorOpen, LayoutGrid, Phone, CreditCard, Mail, Calendar, Calculator, Send } from "lucide-react";
 
-interface Logo {
-  id: number;
-  name: string;
-}
+const integrations = [
+  { name: 'AppFolio', icon: Building2 },
+  { name: 'Buildium', icon: Home },
+  { name: 'Yardi', icon: Landmark },
+  { name: 'Rent Manager', icon: KeyRound },
+  { name: 'DoorLoop', icon: DoorOpen },
+  { name: 'RealPage', icon: LayoutGrid },
+  { name: 'Twilio', icon: Phone },
+  { name: 'Stripe', icon: CreditCard },
+  { name: 'Gmail', icon: Mail },
+  { name: 'Google Cal', icon: Calendar },
+  { name: 'QuickBooks', icon: Calculator },
+  { name: 'Resend', icon: Send },
+];
 
-function LogoColumn({ logos, columnIndex, currentTime }: { logos: Logo[]; columnIndex: number; currentTime: number }) {
-  const CYCLE_DURATION = 2000;
-  const columnDelay = columnIndex * 200;
-  const adjustedTime = (currentTime + columnDelay) % (CYCLE_DURATION * logos.length);
-  const currentIndex = Math.floor(adjustedTime / CYCLE_DURATION);
-  const currentLogo = logos[currentIndex];
-
+export function LogoCarousel() {
   return (
-    <motion.div
-      className="relative h-14 w-28 overflow-hidden md:h-20 md:w-40"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: columnIndex * 0.1, duration: 0.5, ease: "easeOut" }}
-    >
-      <AnimatePresence mode="wait">
+    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-4">
+      {integrations.map((item, i) => (
         <motion.div
-          key={`${currentLogo.id}-${currentIndex}`}
-          className="absolute inset-0 flex items-center justify-center"
-          initial={{ y: "10%", opacity: 0 }}
-          animate={{ y: "0%", opacity: 1, transition: { type: "spring", stiffness: 300, damping: 20 } }}
-          exit={{ y: "-20%", opacity: 0, transition: { duration: 0.3 } }}
+          key={item.name}
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.04, duration: 0.4 }}
+          className="group flex flex-col items-center gap-2 py-3 cursor-default"
         >
-          <span className="text-sm md:text-base font-bold text-white/25 tracking-tight">{currentLogo.name}</span>
+          <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center group-hover:bg-white/[0.08] group-hover:border-white/10 group-hover:-translate-y-1 transition-all duration-200">
+            <item.icon className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
+          </div>
+          <span className="text-[9px] text-white/20 group-hover:text-white/40 transition-colors font-medium text-center leading-tight">{item.name}</span>
         </motion.div>
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-export function LogoCarousel({ columns = 5, logos }: { columns?: number; logos: Logo[] }) {
-  const [logoColumns, setLogoColumns] = useState<Logo[][]>([]);
-  const [time, setTime] = useState(0);
-
-  const distributeLogos = useCallback((logos: Logo[]) => {
-    const shuffled = [...logos].sort(() => Math.random() - 0.5);
-    const result: Logo[][] = Array.from({ length: columns }, () => []);
-    shuffled.forEach((logo, index) => { result[index % columns].push(logo); });
-    const maxLength = Math.max(...result.map((col) => col.length));
-    result.forEach((col) => { while (col.length < maxLength) { col.push(shuffled[Math.floor(Math.random() * shuffled.length)]); } });
-    return result;
-  }, [columns]);
-
-  useEffect(() => { setLogoColumns(distributeLogos(logos)); }, [logos, distributeLogos]);
-  useEffect(() => { const interval = setInterval(() => { setTime((prev) => prev + 100); }, 100); return () => clearInterval(interval); }, []);
-
-  return (
-    <div className="flex justify-center gap-4 py-8 flex-wrap">
-      {logoColumns.map((columnLogos, index) => (
-        <LogoColumn key={index} logos={columnLogos} columnIndex={index} currentTime={time} />
       ))}
     </div>
   );

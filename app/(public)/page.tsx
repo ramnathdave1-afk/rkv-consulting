@@ -21,12 +21,6 @@ const propertyImages = [
 ];
 
 
-const pmLogos = [
-  { id: 1, name: 'AppFolio' }, { id: 2, name: 'Buildium' }, { id: 3, name: 'Yardi' },
-  { id: 4, name: 'Rent Manager' }, { id: 5, name: 'DoorLoop' }, { id: 6, name: 'RealPage' },
-  { id: 7, name: 'Entrata' }, { id: 8, name: 'QuickBooks' }, { id: 9, name: 'Twilio' },
-  { id: 10, name: 'Stripe' }, { id: 11, name: 'Supabase' }, { id: 12, name: 'Resend' },
-];
 
 const steps = [
   { num: '01', title: 'Connect Your Properties', desc: 'Import via CSV or connect AppFolio, Buildium, Yardi. Properties, units, and leases sync automatically.' },
@@ -295,7 +289,7 @@ export default function LandingPage() {
           <div className="text-center mb-8">
             <p className="text-xs font-medium tracking-widest text-neutral-500 uppercase">Integrates with the platforms you already use</p>
           </div>
-          <LogoCarousel columns={5} logos={pmLogos} />
+          <LogoCarousel />
         </div>
       </section>
 
