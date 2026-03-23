@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, Shield, TrendingUp, CreditCard, Home, FileText, Users, Sparkles } from 'lucide-react';
 import HeroAscii from '@/components/ui/hero-ascii';
+import { HeroSection } from '@/components/ui/hero-section';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
 import { Features9 } from '@/components/blocks/features-9';
@@ -85,7 +86,10 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Animated Company Header */}
+      <HeroSection />
+
+      {/* Interactive Hero */}
       <HeroAscii onBookCall={() => {/* scroll to waitlist */
         document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' });
       }} />
