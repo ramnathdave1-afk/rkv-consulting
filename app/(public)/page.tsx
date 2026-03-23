@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, Shield, TrendingUp, CreditCard, Home, FileText, Users, Sparkles } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
 import { LogoCarousel } from '@/components/ui/logo-carousel';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
-import { Features8 } from '@/components/blocks/features-8';
+import { FeatureComparison } from '@/components/blocks/feature-comparison';
 import CombinedFeatures from '@/components/blocks/combined-features';
 
 const propertyImages = [
@@ -20,16 +20,6 @@ const propertyImages = [
   { id: 7, type: 'image', title: 'Building Lobby', desc: 'Premium interior finishes', url: '/images/lobby.jpg', span: 'md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2' },
 ];
 
-const features = [
-  { icon: MessageSquare, title: 'AI Tenant Communication', desc: '24/7 responses via SMS, email, and web chat. Leads qualified, showings scheduled — all under 90 seconds.' },
-  { icon: CreditCard, title: 'Automated Rent Collection', desc: 'Smart reminders, delinquency aging (0-30, 30-60, 60-90), and automated follow-up sequences.' },
-  { icon: Wrench, title: 'Maintenance AI Triage', desc: 'AI classifies urgency P1-P4, matches vendors by skill and proximity, auto-dispatches within 2hr SLA.' },
-  { icon: FileText, title: 'Lease Management', desc: 'Automated 90/60/30-day renewal sequences. Track expirations and reduce vacancy gaps.' },
-  { icon: TrendingUp, title: 'Portfolio Analytics', desc: 'Real-time dashboards, AI-generated owner PDF reports, variance alerts, and NOI tracking.' },
-  { icon: Home, title: 'Vacancy Management', desc: 'Automated listing syndication, lead tracking, and showing scheduling. Fill units faster.' },
-  { icon: Building2, title: 'Acquisitions CRM', desc: 'Deal pipeline kanban, multi-agent AI scoring (ARV + Market + Risk), MAO calculator.' },
-  { icon: Shield, title: 'Fair Housing Compliance', desc: 'Every AI message passes through compliance filters before sending. Full audit log.' },
-];
 
 const pmLogos = [
   { id: 1, name: 'AppFolio' }, { id: 2, name: 'Buildium' }, { id: 3, name: 'Yardi' },
@@ -218,33 +208,8 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Grid */}
-      <section id="features" className="py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-neutral-400 mb-6">
-              <Sparkles className="w-3.5 h-3.5" /> Platform Capabilities
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">Everything your portfolio needs</h2>
-            <p className="text-neutral-500 max-w-xl mx-auto">Eight modules powered by AI. Each one replaces hours of manual work every week.</p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                className="group p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default">
-                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center mb-4 group-hover:bg-white group-hover:-translate-y-1 transition-all duration-200">
-                  <f.icon className="w-4 h-4 text-neutral-500 group-hover:text-black transition-colors" />
-                </div>
-                <h3 className="text-sm font-semibold text-white mb-1.5">{f.title}</h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Bento (Features-8 component) */}
-      <Features8 />
+      {/* Feature Comparison — Before/After slider + feature grid */}
+      <FeatureComparison />
 
       {/* Combined Features — Map, Notifications, Chart, Cards */}
       <CombinedFeatures />
