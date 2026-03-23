@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { SelectField, Input } from '@/components/ui/Input';
+import { Pagination } from '@/components/ui/Pagination';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import ShowingFormModal from '@/components/showings/ShowingFormModal';
 import toast from 'react-hot-toast';
@@ -92,6 +93,10 @@ export default function ShowingsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const fetchShowings = useCallback(async () => {
     try {
       const res = await fetch('/api/showings');
@@ -151,7 +156,7 @@ export default function ShowingsPage() {
   };
 
   // Apply filters
-  const filtered = showings.filter((s) => {
+  const filtered = useMemo(() => showings.filter((s) => {
     if (statusFilter && s.status !== statusFilter) return false;
     if (dateFrom) {
       const from = startOfDay(parseISO(dateFrom));
@@ -162,16 +167,33 @@ export default function ShowingsPage() {
       if (isAfter(parseISO(s.scheduled_at), to)) return false;
     }
     return true;
-  });
+  }), [showings, statusFilter, dateFrom, dateTo]);
 
-  // Split into upcoming vs past
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [statusFilter, dateFrom, dateTo]);
+
+  // Split into upcoming vs past, then paginate
   const now = new Date();
-  const upcoming = filtered
-    .filter((s) => ['requested', 'scheduled', 'confirmed'].includes(s.status) && isAfter(parseISO(s.scheduled_at), now))
-    .sort((a, b) => parseISO(a.scheduled_at).getTime() - parseISO(b.scheduled_at).getTime());
-  const past = filtered
-    .filter((s) => !upcoming.includes(s))
-    .sort((a, b) => parseISO(b.scheduled_at).getTime() - parseISO(a.scheduled_at).getTime());
+  const { upcoming, past, sortedAll } = useMemo(() => {
+    const up = filtered
+      .filter((s) => ['requested', 'scheduled', 'confirmed'].includes(s.status) && isAfter(parseISO(s.scheduled_at), now))
+      .sort((a, b) => parseISO(a.scheduled_at).getTime() - parseISO(b.scheduled_at).getTime());
+    const p = filtered
+      .filter((s) => !up.includes(s))
+      .sort((a, b) => parseISO(b.scheduled_at).getTime() - parseISO(a.scheduled_at).getTime());
+    return { upcoming: up, past: p, sortedAll: [...up, ...p] };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered]);
+
+  const paginatedAll = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedAll.slice(start, start + pageSize);
+  }, [sortedAll, page, pageSize]);
+
+  // Split paginated results back into upcoming/past for display
+  const upcomingIds = useMemo(() => new Set(upcoming.map((s) => s.id)), [upcoming]);
+  const paginatedUpcoming = useMemo(() => paginatedAll.filter((s) => upcomingIds.has(s.id)), [paginatedAll, upcomingIds]);
+  const paginatedPast = useMemo(() => paginatedAll.filter((s) => !upcomingIds.has(s.id)), [paginatedAll, upcomingIds]);
 
   const hasFilters = statusFilter || dateFrom || dateTo;
   const clearFilters = () => { setStatusFilter(''); setDateFrom(''); setDateTo(''); };
@@ -250,13 +272,13 @@ export default function ShowingsPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          {upcoming.length > 0 && (
+          {paginatedUpcoming.length > 0 && (
             <section>
               <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
                 Upcoming ({upcoming.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {upcoming.map((s) => (
+                {paginatedUpcoming.map((s) => (
                   <ShowingCard
                     key={s.id}
                     showing={s}
@@ -268,13 +290,13 @@ export default function ShowingsPage() {
               </div>
             </section>
           )}
-          {past.length > 0 && (
+          {paginatedPast.length > 0 && (
             <section>
               <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
                 Past ({past.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {past.map((s) => (
+                {paginatedPast.map((s) => (
                   <ShowingCard
                     key={s.id}
                     showing={s}
@@ -286,6 +308,15 @@ export default function ShowingsPage() {
               </div>
             </section>
           )}
+          <div className="glass-card overflow-hidden">
+            <Pagination
+              total={filtered.length}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+            />
+          </div>
         </div>
       )}
 

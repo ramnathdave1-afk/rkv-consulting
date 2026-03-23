@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { Input, SelectField } from '@/components/ui/Input';
+import { Pagination } from '@/components/ui/Pagination';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { WorkOrderFormModal } from '@/components/work-orders/WorkOrderFormModal';
 import { Wrench, Plus, Search, Pencil, Trash2 } from 'lucide-react';
@@ -76,6 +78,8 @@ export default function WorkOrdersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingWO, setEditingWO] = useState<WorkOrderRow | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const supabase = createClient();
 
   const fetchWorkOrders = useCallback(async () => {
@@ -96,7 +100,7 @@ export default function WorkOrdersPage() {
 
   useEffect(() => { fetchWorkOrders(); }, [fetchWorkOrders]);
 
-  const filtered = workOrders.filter((wo) => {
+  const filtered = useMemo(() => workOrders.filter((wo) => {
     if (statusFilter && wo.status !== statusFilter) return false;
     if (priorityFilter && wo.priority !== priorityFilter) return false;
     if (search) {
@@ -109,7 +113,15 @@ export default function WorkOrdersPage() {
       if (!matches) return false;
     }
     return true;
-  });
+  }), [workOrders, search, statusFilter, priorityFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search, statusFilter, priorityFilter]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   async function handleDelete() {
     if (!deleteId) return;
@@ -144,8 +156,8 @@ export default function WorkOrdersPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <div className="flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+        <div className="flex-1 sm:min-w-[200px]">
           <Input
             placeholder="Search work orders..."
             value={search}
@@ -153,10 +165,10 @@ export default function WorkOrdersPage() {
             icon={<Search size={14} />}
           />
         </div>
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <SelectField options={statusOptions} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} />
         </div>
-        <div className="w-40">
+        <div className="w-full sm:w-40">
           <SelectField options={priorityFilterOptions} value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} />
         </div>
       </div>
@@ -175,21 +187,22 @@ export default function WorkOrdersPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Title</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Category</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Priority</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Vendor</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Created</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase w-20">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((wo) => (
+          <ResponsiveTable minWidth="900px">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Title</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Category</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Priority</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Vendor</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Created</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase w-20">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((wo) => (
                 <tr key={wo.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
                   <td className="px-4 py-3 font-medium text-text-primary max-w-[200px] truncate">{wo.title}</td>
                   <td className="px-4 py-3 text-text-secondary">
@@ -234,6 +247,14 @@ export default function WorkOrdersPage() {
               ))}
             </tbody>
           </table>
+          </ResponsiveTable>
+          <Pagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 

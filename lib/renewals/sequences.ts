@@ -80,7 +80,7 @@ export async function processRenewalStep(
   const leaseEnd = lease.lease_end;
   const proposedRent = seq.proposed_rent;
 
-  // Get org phone number for sending
+  // Get org phone number for SMS sending (optional — email can still go out)
   const { data: orgPhone } = await supabase
     .from('org_phone_numbers')
     .select('phone_number')
@@ -88,8 +88,6 @@ export async function processRenewalStep(
     .eq('is_active', true)
     .limit(1)
     .single();
-
-  if (!orgPhone) return;
 
   const messages: Record<string, string> = {
     '90': `Hi ${tenantName}! Your lease at ${propertyName} Unit ${unitNumber} expires on ${leaseEnd}. We'd love to have you stay! Your renewal rate would be $${proposedRent}/mo. Reply YES to renew or let us know if you have questions.`,
