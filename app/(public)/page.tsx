@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, Shield, TrendingUp, CreditCard, Home, FileText, Users, Sparkles } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
+import { LogoCarousel } from '@/components/ui/logo-carousel';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
 import CombinedFeatures from '@/components/blocks/combined-features';
@@ -28,6 +29,13 @@ const features = [
   { icon: Home, title: 'Vacancy Management', desc: 'Automated listing syndication, lead tracking, and showing scheduling. Fill units faster.' },
   { icon: Building2, title: 'Acquisitions CRM', desc: 'Deal pipeline kanban, multi-agent AI scoring (ARV + Market + Risk), MAO calculator.' },
   { icon: Shield, title: 'Fair Housing Compliance', desc: 'Every AI message passes through compliance filters before sending. Full audit log.' },
+];
+
+const pmLogos = [
+  { id: 1, name: 'AppFolio' }, { id: 2, name: 'Buildium' }, { id: 3, name: 'Yardi' },
+  { id: 4, name: 'Rent Manager' }, { id: 5, name: 'DoorLoop' }, { id: 6, name: 'RealPage' },
+  { id: 7, name: 'Entrata' }, { id: 8, name: 'QuickBooks' }, { id: 9, name: 'Twilio' },
+  { id: 10, name: 'Stripe' }, { id: 11, name: 'Supabase' }, { id: 12, name: 'Resend' },
 ];
 
 const steps = [
@@ -313,6 +321,16 @@ export default function LandingPage() {
               </button>
             </form>
           )}
+        </div>
+      </section>
+
+      {/* Logo Carousel */}
+      <section className="border-t border-white/5 py-16">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center mb-8">
+            <p className="text-xs font-medium tracking-widest text-neutral-500 uppercase">Integrates with the platforms you already use</p>
+          </div>
+          <LogoCarousel columns={5} logos={pmLogos} />
         </div>
       </section>
 
