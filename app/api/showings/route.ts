@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('showings')
-    .select('*, properties(name), units(unit_number)')
+    .select('*, properties(name, address_line1), units(unit_number)')
     .eq('org_id', profile.org_id)
     .order('scheduled_at', { ascending: true });
 
@@ -36,10 +36,25 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
+
+  // Validate required fields
+  if (!body.property_id) {
+    return NextResponse.json({ error: 'property_id is required' }, { status: 400 });
+  }
+  if (!body.scheduled_at) {
+    return NextResponse.json({ error: 'scheduled_at is required' }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from('showings')
-    .insert({ ...body, org_id: profile.org_id, created_by: user.id })
-    .select()
+    .insert({
+      ...body,
+      org_id: profile.org_id,
+      created_by: user.id,
+      follow_up_status: body.follow_up_status || 'pending',
+      reminder_sent: false,
+    })
+    .select('*, properties(name, address_line1), units(unit_number)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

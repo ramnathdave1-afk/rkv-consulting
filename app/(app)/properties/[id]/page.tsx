@@ -1,33 +1,63 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Building2, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
+import { UnitFormModal } from '@/components/units/UnitFormModal';
+import { ArrowLeft, Pencil, Trash2, Plus, Building2 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import type { Property, Unit } from '@/lib/types';
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
-  useEffect(() => {
-    async function fetch() {
-      const [propRes, unitsRes] = await Promise.all([
-        supabase.from('properties').select('*').eq('id', id).single(),
-        supabase.from('units').select('*').eq('property_id', id).order('unit_number'),
-      ]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [unitFormOpen, setUnitFormOpen] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  const [deleteUnitId, setDeleteUnitId] = useState<string | null>(null);
 
-      if (propRes.data) setProperty(propRes.data as Property);
-      setUnits((unitsRes.data as Unit[]) || []);
-      setLoading(false);
-    }
-    fetch();
+  const fetchProperty = useCallback(async () => {
+    const [propRes, unitsRes] = await Promise.all([
+      supabase.from('properties').select('*').eq('id', id).single(),
+      supabase.from('units').select('*').eq('property_id', id).order('unit_number'),
+    ]);
+
+    if (propRes.data) setProperty(propRes.data as Property);
+    setUnits((unitsRes.data as Unit[]) || []);
+    setLoading(false);
   }, [supabase, id]);
+
+  useEffect(() => {
+    fetchProperty();
+  }, [fetchProperty]);
+
+  async function handleDelete() {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/properties/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to delete');
+      toast.success('Property deleted');
+      router.push('/properties');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete property';
+      toast.error(message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -47,6 +77,18 @@ export default function PropertyDetailPage() {
     );
   }
 
+  async function handleDeleteUnit() {
+    if (!deleteUnitId) return;
+    const res = await fetch(`/api/units/${deleteUnitId}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast.success('Unit deleted');
+      fetchProperty();
+    } else {
+      toast.error('Failed to delete unit');
+    }
+    setDeleteUnitId(null);
+  }
+
   const occupied = units.filter((u) => u.status === 'occupied').length;
   const occupancy = units.length > 0 ? Math.round((occupied / units.length) * 100) : 0;
 
@@ -61,13 +103,23 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/properties" className="p-1.5 rounded-lg hover:bg-bg-elevated transition-colors">
-          <ArrowLeft size={18} className="text-text-muted" />
-        </Link>
-        <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">{property.name}</h1>
-          <p className="text-sm text-text-secondary">{property.address_line1}, {property.city}, {property.state} {property.zip}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/properties" className="p-1.5 rounded-lg hover:bg-bg-elevated transition-colors">
+            <ArrowLeft size={18} className="text-text-muted" />
+          </Link>
+          <div>
+            <h1 className="font-display text-xl font-bold text-text-primary">{property.name}</h1>
+            <p className="text-sm text-text-secondary">{property.address_line1}, {property.city}, {property.state} {property.zip}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" icon={<Pencil size={14} />} onClick={() => setEditOpen(true)}>
+            Edit
+          </Button>
+          <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={() => setDeleteOpen(true)}>
+            Delete
+          </Button>
         </div>
       </div>
 
@@ -90,9 +142,15 @@ export default function PropertyDetailPage() {
       <div className="glass-card overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-medium text-text-primary">Units ({units.length})</h3>
+          <Button size="sm" icon={<Plus size={14} />} onClick={() => { setEditingUnit(null); setUnitFormOpen(true); }}>
+            Add Unit
+          </Button>
         </div>
         {units.length === 0 ? (
-          <div className="p-8 text-center text-text-muted text-sm">No units added yet.</div>
+          <div className="p-8 text-center">
+            <Building2 size={36} className="mx-auto text-text-muted mb-3" />
+            <p className="text-sm text-text-muted">No units added yet. Add your first unit.</p>
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -102,19 +160,30 @@ export default function PropertyDetailPage() {
                 <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Bed/Bath</th>
                 <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Rent</th>
                 <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
+                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase w-20">Actions</th>
               </tr>
             </thead>
             <tbody>
               {units.map((u) => (
                 <tr key={u.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
                   <td className="px-4 py-3 font-medium text-text-primary">{u.unit_number}</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.floor_plan || '—'}</td>
+                  <td className="px-4 py-3 text-text-secondary">{u.floor_plan || '\u2014'}</td>
                   <td className="px-4 py-3 text-text-secondary">{u.bedrooms}bd / {u.bathrooms}ba</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.market_rent ? `$${Number(u.market_rent).toLocaleString()}` : '—'}</td>
+                  <td className="px-4 py-3 text-text-secondary">{u.market_rent ? `$${Number(u.market_rent).toLocaleString()}` : '\u2014'}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[u.status] || ''}`}>
                       {u.status.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => { setEditingUnit(u); setUnitFormOpen(true); }} className="p-1.5 rounded-md hover:bg-bg-elevated text-text-muted hover:text-text-primary transition-colors" title="Edit">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={() => setDeleteUnitId(u.id)} className="p-1.5 rounded-md hover:bg-danger-muted text-text-muted hover:text-danger transition-colors" title="Delete">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -122,6 +191,43 @@ export default function PropertyDetailPage() {
           </table>
         )}
       </div>
+
+      <UnitFormModal
+        open={unitFormOpen}
+        onOpenChange={setUnitFormOpen}
+        propertyId={id}
+        unit={editingUnit}
+        onSuccess={fetchProperty}
+      />
+
+      <ConfirmDialog
+        open={!!deleteUnitId}
+        onOpenChange={(open) => { if (!open) setDeleteUnitId(null); }}
+        title="Delete Unit"
+        description="This will permanently delete this unit and any associated lease data."
+        onConfirm={handleDeleteUnit}
+        confirmLabel="Delete"
+        variant="danger"
+      />
+
+      <PropertyFormModal
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        property={property}
+        onSuccess={fetchProperty}
+      />
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete Property"
+        description={`Are you sure you want to delete "${property.name}"? This action cannot be undone and will remove all associated units, leases, and work orders.`}
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDelete}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

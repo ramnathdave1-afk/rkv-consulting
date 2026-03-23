@@ -63,21 +63,21 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950">
+    <div className="min-h-screen bg-black text-white">
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200/50 dark:border-white/5 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900 dark:bg-white">
-              <span className="text-xs font-bold text-white dark:text-neutral-900">M</span>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white">
+              <span className="text-xs font-bold text-black">M</span>
             </div>
-            <span className="text-sm font-bold text-neutral-900 dark:text-white tracking-tight">MeridianNode</span>
+            <span className="text-sm font-bold text-white tracking-tight">MeridianNode</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="#features" className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors hidden sm:block">Features</Link>
-            <Link href="#gallery" className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors hidden sm:block">Portfolio</Link>
-            <Link href="/login" className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">Sign In</Link>
-            <Link href="/signup" className="rounded-full bg-neutral-900 dark:bg-white px-4 py-1.5 text-xs font-semibold text-white dark:text-neutral-900 hover:opacity-90 transition-opacity">
+            <Link href="#features" className="text-xs font-medium text-neutral-400 hover:text-white transition-colors hidden sm:block">Features</Link>
+            <Link href="#gallery" className="text-xs font-medium text-neutral-400 hover:text-white transition-colors hidden sm:block">Portfolio</Link>
+            <Link href="/login" className="text-xs font-medium text-neutral-400 hover:text-white transition-colors">Sign In</Link>
+            <Link href="/signup" className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black hover:opacity-90 transition-opacity">
               Get Started
             </Link>
           </div>
@@ -88,7 +88,7 @@ export default function LandingPage() {
       <BackgroundPaths title="MeridianNode" />
 
       {/* Stats Band */}
-      <div className="border-y border-gray-200 dark:border-white/5">
+      <div className="border-y border-white/5">
         <div className="mx-auto max-w-6xl grid grid-cols-2 md:grid-cols-4">
           {[
             { value: '2,400+', label: 'Units Managed' },
@@ -97,8 +97,8 @@ export default function LandingPage() {
             { value: '$14.2M', label: 'Rent Collected' },
           ].map((stat, i) => (
             <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              className="text-center py-10 px-4 border-r border-gray-200 dark:border-white/5 last:border-r-0">
-              <div className="text-3xl font-bold text-neutral-900 dark:text-white tracking-tight">{stat.value}</div>
+              className="text-center py-10 px-4 border-r border-white/5 last:border-r-0">
+              <div className="text-3xl font-bold text-white tracking-tight">{stat.value}</div>
               <div className="text-xs text-neutral-500 mt-1">{stat.label}</div>
             </motion.div>
           ))}
@@ -109,20 +109,20 @@ export default function LandingPage() {
       <section id="features" className="py-24">
         <div className="mx-auto max-w-5xl px-6">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-1.5 text-xs font-medium text-neutral-500 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-neutral-400 mb-6">
               <Sparkles className="w-3.5 h-3.5" /> Platform Capabilities
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight mb-4">Everything your portfolio needs</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">Everything your portfolio needs</h2>
             <p className="text-neutral-500 max-w-xl mx-auto">Eight modules powered by AI. Each one replaces hours of manual work every week.</p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
               <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                className="group p-5 rounded-xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02] hover:border-gray-300 dark:hover:border-white/10 hover:shadow-sm transition-all cursor-default">
-                <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4 group-hover:bg-neutral-900 dark:group-hover:bg-white transition-colors">
-                  <f.icon className="w-4 h-4 text-neutral-500 group-hover:text-white dark:group-hover:text-neutral-900 transition-colors" />
+                className="group p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default">
+                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center mb-4 group-hover:bg-white transition-colors">
+                  <f.icon className="w-4 h-4 text-neutral-500 group-hover:text-black transition-colors" />
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-1.5">{f.title}</h3>
+                <h3 className="text-sm font-semibold text-white mb-1.5">{f.title}</h3>
                 <p className="text-xs text-neutral-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
@@ -134,18 +134,18 @@ export default function LandingPage() {
       <Features8 />
 
       {/* How It Works */}
-      <section className="py-24 border-t border-gray-200 dark:border-white/5">
+      <section className="py-24 border-t border-white/5">
         <div className="mx-auto max-w-4xl px-6">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight mb-4">Up and running in 3 steps</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">Up and running in 3 steps</h2>
             <p className="text-neutral-500">No engineering required. Most teams go live in 48 hours.</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-6">
             {steps.map((s, i) => (
               <motion.div key={s.num} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="relative p-6 rounded-xl border border-gray-200 dark:border-white/5">
-                <span className="text-4xl font-bold text-gray-100 dark:text-white/5">{s.num}</span>
-                <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mt-2 mb-2">{s.title}</h3>
+                className="relative p-6 rounded-xl border border-white/5 bg-white/[0.02]">
+                <span className="text-4xl font-bold text-white/5">{s.num}</span>
+                <h3 className="text-sm font-semibold text-white mt-2 mb-2">{s.title}</h3>
                 <p className="text-xs text-neutral-500 leading-relaxed">{s.desc}</p>
               </motion.div>
             ))}
@@ -154,7 +154,7 @@ export default function LandingPage() {
       </section>
 
       {/* Property Gallery */}
-      <section id="gallery" className="py-16 border-t border-gray-200 dark:border-white/5">
+      <section id="gallery" className="py-16 border-t border-white/5">
         <InteractiveBentoGallery
           mediaItems={propertyImages}
           title="Properties We Manage"
@@ -163,17 +163,17 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof */}
-      <section className="py-24 border-t border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]">
+      <section className="py-24 border-t border-white/5 bg-white/[0.02]">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white tracking-tight mb-12">Trusted by serious operators</h2>
-            <blockquote className="text-xl md:text-2xl font-light text-neutral-600 dark:text-neutral-400 italic leading-relaxed mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-12">Trusted by serious operators</h2>
+            <blockquote className="text-xl md:text-2xl font-light text-neutral-400 italic leading-relaxed mb-8">
               &ldquo;We cut our response time from 12 hours to under 90 seconds. Tenants actually think they&apos;re talking to a real person. Our retention went up 18% in the first quarter.&rdquo;
             </blockquote>
             <div className="flex items-center justify-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-white/10 flex items-center justify-center text-sm font-bold text-neutral-600 dark:text-neutral-400">SR</div>
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-neutral-400">SR</div>
               <div className="text-left">
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white">Sarah Rodriguez</div>
+                <div className="text-sm font-semibold text-white">Sarah Rodriguez</div>
                 <div className="text-xs text-neutral-500">Ops Director · 200 units · Scottsdale, AZ</div>
               </div>
             </div>
@@ -182,25 +182,25 @@ export default function LandingPage() {
       </section>
 
       {/* CTA / Waitlist */}
-      <section className="py-24 border-t border-gray-200 dark:border-white/5">
+      <section className="py-24 border-t border-white/5">
         <div className="mx-auto max-w-md px-6">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white tracking-tight mb-3">Ready to scale your portfolio?</h2>
+            <h2 className="text-3xl font-bold text-white tracking-tight mb-3">Ready to scale your portfolio?</h2>
             <p className="text-neutral-500 text-sm">Join the waitlist. We&apos;ll set up a sandbox with your actual property data.</p>
           </motion.div>
           {submitted ? (
-            <div className="rounded-xl border border-gray-200 dark:border-white/5 p-6 text-center bg-white dark:bg-white/[0.02]">
-              <CheckCircle2 size={24} className="text-emerald-500 mx-auto mb-2" />
-              <div className="text-emerald-600 dark:text-emerald-400 text-lg font-semibold mb-2">You&apos;re on the list</div>
+            <div className="rounded-xl border border-white/5 p-6 text-center bg-white/[0.02]">
+              <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-2" />
+              <div className="text-emerald-400 text-lg font-semibold mb-2">You&apos;re on the list</div>
               <p className="text-sm text-neutral-500">We&apos;ll reach out when your access is ready.</p>
             </div>
           ) : (
-            <form onSubmit={handleWaitlist} className="rounded-xl border border-gray-200 dark:border-white/5 p-6 space-y-3 bg-white dark:bg-white/[0.02]">
-              {error && <div className="rounded-lg bg-red-50 dark:bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-400">{error}</div>}
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-neutral-400 dark:focus:border-white/20 focus:outline-none transition-colors" />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Work email" className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-neutral-400 dark:focus:border-white/20 focus:outline-none transition-colors" />
-              <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company (optional)" className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3 py-2.5 text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-neutral-400 dark:focus:border-white/20 focus:outline-none transition-colors" />
-              <button type="submit" disabled={loading} className="w-full rounded-full bg-neutral-900 dark:bg-white px-4 py-2.5 text-sm font-semibold text-white dark:text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-50">
+            <form onSubmit={handleWaitlist} className="rounded-xl border border-white/5 p-6 space-y-3 bg-white/[0.02]">
+              {error && <div className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</div>}
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Full name" className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-white/20 focus:outline-none transition-colors" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="Work email" className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-white/20 focus:outline-none transition-colors" />
+              <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company (optional)" className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-white/20 focus:outline-none transition-colors" />
+              <button type="submit" disabled={loading} className="w-full rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-black hover:opacity-90 transition-opacity disabled:opacity-50">
                 {loading ? 'Joining...' : 'Join Waitlist'}
               </button>
             </form>
@@ -209,43 +209,43 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-white/5 px-6 py-10">
+      <footer className="border-t border-white/5 px-6 py-10">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 mb-8">
             <div>
-              <p className="text-xs font-semibold text-neutral-900 dark:text-white mb-3">Product</p>
+              <p className="text-xs font-semibold text-white mb-3">Product</p>
               <div className="space-y-2">
-                <Link href="#features" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Features</Link>
-                <Link href="#gallery" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Portfolio</Link>
-                <Link href="/about" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">About</Link>
+                <Link href="#features" className="block text-xs text-neutral-500 hover:text-white transition-colors">Features</Link>
+                <Link href="#gallery" className="block text-xs text-neutral-500 hover:text-white transition-colors">Portfolio</Link>
+                <Link href="/about" className="block text-xs text-neutral-500 hover:text-white transition-colors">About</Link>
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-neutral-900 dark:text-white mb-3">Legal</p>
+              <p className="text-xs font-semibold text-white mb-3">Legal</p>
               <div className="space-y-2">
-                <Link href="/terms" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Terms</Link>
-                <Link href="/privacy" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Privacy</Link>
-                <Link href="/security" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Security</Link>
+                <Link href="/terms" className="block text-xs text-neutral-500 hover:text-white transition-colors">Terms</Link>
+                <Link href="/privacy" className="block text-xs text-neutral-500 hover:text-white transition-colors">Privacy</Link>
+                <Link href="/security" className="block text-xs text-neutral-500 hover:text-white transition-colors">Security</Link>
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-neutral-900 dark:text-white mb-3">Support</p>
+              <p className="text-xs font-semibold text-white mb-3">Support</p>
               <div className="space-y-2">
-                <Link href="/contact" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Contact</Link>
-                <a href="mailto:hello@meridiannode.io" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">hello@meridiannode.io</a>
+                <Link href="/contact" className="block text-xs text-neutral-500 hover:text-white transition-colors">Contact</Link>
+                <a href="mailto:hello@meridiannode.io" className="block text-xs text-neutral-500 hover:text-white transition-colors">hello@meridiannode.io</a>
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-neutral-900 dark:text-white mb-3">Account</p>
+              <p className="text-xs font-semibold text-white mb-3">Account</p>
               <div className="space-y-2">
-                <Link href="/login" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Sign In</Link>
-                <Link href="/signup" className="block text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">Create Account</Link>
+                <Link href="/login" className="block text-xs text-neutral-500 hover:text-white transition-colors">Sign In</Link>
+                <Link href="/signup" className="block text-xs text-neutral-500 hover:text-white transition-colors">Create Account</Link>
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-200 dark:border-white/5 pt-6 flex items-center justify-between">
-            <p className="text-xs text-neutral-400">&copy; {new Date().getFullYear()} MeridianNode by RKV Consulting LLC</p>
-            <p className="text-xs text-neutral-400">meridiannode.io</p>
+          <div className="border-t border-white/5 pt-6 flex items-center justify-between">
+            <p className="text-xs text-neutral-500">&copy; {new Date().getFullYear()} MeridianNode by RKV Consulting LLC</p>
+            <p className="text-xs text-neutral-500">meridiannode.io</p>
           </div>
         </div>
       </footer>

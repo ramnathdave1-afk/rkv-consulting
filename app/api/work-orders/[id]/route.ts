@@ -44,3 +44,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ work_order: data });
 }
+
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase.from('profiles').select('org_id, role').eq('user_id', user.id).single();
+  if (!profile || profile.role === 'viewer') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+
+  const { error } = await supabase
+    .from('work_orders')
+    .delete()
+    .eq('id', id)
+    .eq('org_id', profile.org_id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}

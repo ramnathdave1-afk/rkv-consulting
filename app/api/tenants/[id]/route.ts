@@ -44,3 +44,48 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ tenant: data });
 }
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase.from('profiles').select('org_id, role').eq('user_id', user.id).single();
+  if (!profile || profile.role === 'viewer') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { data, error } = await supabase
+    .from('tenants')
+    .update(body)
+    .eq('id', id)
+    .eq('org_id', profile.org_id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ tenant: data });
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase.from('profiles').select('org_id, role').eq('user_id', user.id).single();
+  if (!profile || profile.role === 'viewer') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  }
+
+  const { error } = await supabase
+    .from('tenants')
+    .delete()
+    .eq('id', id)
+    .eq('org_id', profile.org_id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}

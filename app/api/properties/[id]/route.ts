@@ -50,6 +50,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json({ property: data });
 }
 
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return PATCH(request, context);
+}
+
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();

@@ -280,15 +280,15 @@ function PasswordTab() {
 function NotificationsTab() {
   const supabase = createClient();
   const [prefs, setPrefs] = useState({
-    email_agent_alerts: true,
-    email_feasibility_complete: true,
-    email_new_sites: false,
+    email_new_work_orders: true,
+    email_lease_renewals: true,
+    email_maintenance_updates: true,
     email_weekly_digest: true,
-    inapp_alpha: true,
-    inapp_beta: true,
-    inapp_gamma: true,
-    inapp_delta: true,
-    inapp_epsilon: true,
+    inapp_ai_conversations: true,
+    inapp_work_order_status: true,
+    inapp_showing_reminders: true,
+    inapp_vacancy_alerts: true,
+    inapp_financial_alerts: true,
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -341,19 +341,19 @@ function NotificationsTab() {
         <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
           <Bell size={14} className="text-accent" /> Email Notifications
         </h2>
-        <Toggle checked={prefs.email_agent_alerts} onChange={(v) => setPrefs({ ...prefs, email_agent_alerts: v })} label="Agent activity alerts" />
-        <Toggle checked={prefs.email_feasibility_complete} onChange={(v) => setPrefs({ ...prefs, email_feasibility_complete: v })} label="Feasibility analysis complete" />
-        <Toggle checked={prefs.email_new_sites} onChange={(v) => setPrefs({ ...prefs, email_new_sites: v })} label="New sites discovered" />
-        <Toggle checked={prefs.email_weekly_digest} onChange={(v) => setPrefs({ ...prefs, email_weekly_digest: v })} label="Weekly digest summary" />
+        <Toggle checked={prefs.email_new_work_orders} onChange={(v) => setPrefs({ ...prefs, email_new_work_orders: v })} label="New work order notifications" />
+        <Toggle checked={prefs.email_lease_renewals} onChange={(v) => setPrefs({ ...prefs, email_lease_renewals: v })} label="Lease renewal reminders" />
+        <Toggle checked={prefs.email_maintenance_updates} onChange={(v) => setPrefs({ ...prefs, email_maintenance_updates: v })} label="Maintenance status updates" />
+        <Toggle checked={prefs.email_weekly_digest} onChange={(v) => setPrefs({ ...prefs, email_weekly_digest: v })} label="Weekly portfolio digest" />
       </div>
 
       <div className="glass-card p-5 space-y-3">
-        <h2 className="text-sm font-semibold text-text-primary">In-App Agent Notifications</h2>
-        <Toggle checked={prefs.inapp_alpha} onChange={(v) => setPrefs({ ...prefs, inapp_alpha: v })} label="Alpha — Infrastructure Scanner" />
-        <Toggle checked={prefs.inapp_beta} onChange={(v) => setPrefs({ ...prefs, inapp_beta: v })} label="Beta — Site Discovery" />
-        <Toggle checked={prefs.inapp_gamma} onChange={(v) => setPrefs({ ...prefs, inapp_gamma: v })} label="Gamma — Multi-Dimension Scorer" />
-        <Toggle checked={prefs.inapp_delta} onChange={(v) => setPrefs({ ...prefs, inapp_delta: v })} label="Delta — Market Intelligence" />
-        <Toggle checked={prefs.inapp_epsilon} onChange={(v) => setPrefs({ ...prefs, inapp_epsilon: v })} label="Epsilon — Feasibility Analyzer" />
+        <h2 className="text-sm font-semibold text-text-primary">In-App Notifications</h2>
+        <Toggle checked={prefs.inapp_ai_conversations} onChange={(v) => setPrefs({ ...prefs, inapp_ai_conversations: v })} label="AI conversation activity" />
+        <Toggle checked={prefs.inapp_work_order_status} onChange={(v) => setPrefs({ ...prefs, inapp_work_order_status: v })} label="Work order status changes" />
+        <Toggle checked={prefs.inapp_showing_reminders} onChange={(v) => setPrefs({ ...prefs, inapp_showing_reminders: v })} label="Upcoming showing reminders" />
+        <Toggle checked={prefs.inapp_vacancy_alerts} onChange={(v) => setPrefs({ ...prefs, inapp_vacancy_alerts: v })} label="Vacancy alerts" />
+        <Toggle checked={prefs.inapp_financial_alerts} onChange={(v) => setPrefs({ ...prefs, inapp_financial_alerts: v })} label="Financial variance alerts" />
       </div>
 
       <button
