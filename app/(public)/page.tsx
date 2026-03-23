@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, Shield, TrendingUp, CreditCard, Home, FileText, Users, Sparkles } from 'lucide-react';
-import { BackgroundPaths } from '@/components/ui/background-paths';
+import HeroAscii from '@/components/ui/hero-ascii';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
 import { Features9 } from '@/components/blocks/features-9';
@@ -85,8 +85,10 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero with Background Paths */}
-      <BackgroundPaths title="MeridianNode" />
+      {/* Hero */}
+      <HeroAscii onBookCall={() => {/* scroll to waitlist */
+        document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' });
+      }} />
 
       {/* Stats Band */}
       <div className="border-y border-white/5">
@@ -186,7 +188,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA / Waitlist */}
-      <section className="py-24 border-t border-white/5">
+      <section id="waitlist" className="py-24 border-t border-white/5">
         <div className="mx-auto max-w-md px-6">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-8">
             <h2 className="text-3xl font-bold text-white tracking-tight mb-3">Ready to scale your portfolio?</h2>
