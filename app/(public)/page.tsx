@@ -7,6 +7,7 @@ import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, 
 import { BackgroundPaths } from '@/components/ui/background-paths';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
+import { Features9 } from '@/components/blocks/features-9';
 
 const propertyImages = [
   { id: 1, type: 'image', title: 'Modern Apartment Complex', desc: 'Multi-unit residential, 48 units, Scottsdale AZ', url: '/images/property-apartments.jpg', span: 'md:col-span-2 md:row-span-3 sm:col-span-2 sm:row-span-2' },
@@ -119,7 +120,7 @@ export default function LandingPage() {
             {features.map((f, i) => (
               <motion.div key={f.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                 className="group p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default">
-                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center mb-4 group-hover:bg-white transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center mb-4 group-hover:bg-white group-hover:-translate-y-1 transition-all duration-200">
                   <f.icon className="w-4 h-4 text-neutral-500 group-hover:text-black transition-colors" />
                 </div>
                 <h3 className="text-sm font-semibold text-white mb-1.5">{f.title}</h3>
@@ -132,6 +133,9 @@ export default function LandingPage() {
 
       {/* Features Bento (Features-8 component) */}
       <Features8 />
+
+      {/* Automation Showcase — Map, Chat, Analytics */}
+      <Features9 />
 
       {/* How It Works */}
       <section className="py-24 border-t border-white/5">
