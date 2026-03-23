@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Pagination } from '@/components/ui/Pagination';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
 import { Building2, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -26,6 +28,10 @@ export default function PropertiesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchProperties = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -60,6 +66,14 @@ export default function PropertiesPage() {
         p.property_type.replace('_', ' ').toLowerCase().includes(q),
     );
   }, [properties, search]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   function openAdd() {
     setEditingProperty(null);
@@ -123,7 +137,7 @@ export default function PropertiesPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           icon={<Search size={14} />}
-          className="max-w-md"
+          className="w-full sm:max-w-md"
         />
       )}
 
@@ -144,51 +158,60 @@ export default function PropertiesPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Address</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Type</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Units</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3">
-                    <Link href={`/properties/${p.id}`} className="text-accent hover:underline font-medium">{p.name}</Link>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary">{p.address_line1}, {p.city}, {p.state} {p.zip}</td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/10 text-accent capitalize">
-                      {p.property_type.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary">{p.unit_count}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-                        title="Edit property"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => openDelete(p)}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
-                        title="Delete property"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
+          <ResponsiveTable minWidth="640px">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Address</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Type</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Units</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginated.map((p) => (
+                  <tr key={p.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link href={`/properties/${p.id}`} className="text-accent hover:underline font-medium">{p.name}</Link>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">{p.address_line1}, {p.city}, {p.state} {p.zip}</td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/10 text-accent capitalize">
+                        {p.property_type.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">{p.unit_count}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openEdit(p)}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
+                          title="Edit property"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => openDelete(p)}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
+                          title="Delete property"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ResponsiveTable>
+          <Pagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 

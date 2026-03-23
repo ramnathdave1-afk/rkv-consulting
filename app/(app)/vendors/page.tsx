@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import VendorFormModal from '@/components/vendors/VendorFormModal';
 import { HardHat, Plus, Star, Search, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,6 +25,8 @@ export default function VendorsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const supabase = createClient();
 
   const fetchVendors = useCallback(async () => {
@@ -62,6 +66,14 @@ export default function VendorsPage() {
     }
     return list;
   }, [vendors, search, specialtyFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search, specialtyFilter]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   function openAdd() {
     setEditingVendor(null);
@@ -180,7 +192,7 @@ export default function VendorsPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
+          <ResponsiveTable minWidth="800px">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
@@ -194,7 +206,7 @@ export default function VendorsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((v) => (
+                {paginated.map((v) => (
                   <tr key={v.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
                     {/* Name + Preferred badge */}
                     <td className="px-4 py-3">
@@ -261,7 +273,14 @@ export default function VendorsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ResponsiveTable>
+          <Pagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 

@@ -1,10 +1,12 @@
 /**
  * Lease Renewal Sequence Engine
- * Manages automated 90/60/30-day renewal outreach.
+ * Manages automated 90/60/30-day renewal outreach via SMS and email.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendSMS } from '@/lib/twilio/client';
+import { sendEmail } from '@/lib/email/send';
+import { leaseRenewalEmail } from '@/lib/email/templates';
 
 interface LeaseWithDetails {
   id: string;
@@ -57,7 +59,7 @@ export async function processRenewalStep(
 
   const { data: seq } = await supabase
     .from('lease_renewal_sequences')
-    .select('*, leases(monthly_rent, lease_end, units(unit_number, properties(name)), tenants(first_name, phone))')
+    .select('*, leases(monthly_rent, lease_end, units(unit_number, properties(name)), tenants(first_name, phone, email))')
     .eq('id', sequenceId)
     .single();
 
@@ -67,10 +69,10 @@ export async function processRenewalStep(
     monthly_rent: number;
     lease_end: string;
     units: { unit_number: string; properties: { name: string } | null } | null;
-    tenants: { first_name: string; phone: string | null } | null;
+    tenants: { first_name: string; phone: string | null; email: string | null } | null;
   };
 
-  if (!lease?.tenants?.phone) return;
+  if (!lease?.tenants?.phone && !lease?.tenants?.email) return;
 
   const tenantName = lease.tenants.first_name;
   const propertyName = lease.units?.properties?.name || 'your property';
@@ -96,7 +98,26 @@ export async function processRenewalStep(
   };
 
   try {
-    await sendSMS(lease.tenants.phone, orgPhone.phone_number, messages[step]);
+    const channels: string[] = [];
+
+    // Send SMS if phone available
+    if (lease.tenants.phone && orgPhone) {
+      await sendSMS(lease.tenants.phone, orgPhone.phone_number, messages[step]);
+      channels.push('sms');
+    }
+
+    // Send email if email available
+    if (lease.tenants.email) {
+      const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app';
+      const renewalUrl = `${BASE_URL}/dashboard`;
+      const emailContent = leaseRenewalEmail(tenantName, propertyName, unitNumber, leaseEnd, renewalUrl);
+      await sendEmail({
+        to: lease.tenants.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+      });
+      channels.push('email');
+    }
 
     const updateField = `step_${step}_sent_at`;
     const channelField = `step_${step}_channel`;
@@ -104,7 +125,7 @@ export async function processRenewalStep(
       .from('lease_renewal_sequences')
       .update({
         [updateField]: new Date().toISOString(),
-        [channelField]: 'sms',
+        [channelField]: channels.join('+') || 'sms',
         ...(step === '90' ? { renewal_offered_at: new Date().toISOString() } : {}),
       })
       .eq('id', sequenceId);

@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { toast } from '@/components/ui/Toast';
 import LeaseFormModal from '@/components/leases/LeaseFormModal';
 import type { LeaseFormData } from '@/components/leases/LeaseFormModal';
@@ -49,6 +51,8 @@ export default function LeasesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editLease, setEditLease] = useState<LeaseFormData | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const supabase = createClient();
 
   const fetchLeases = useCallback(async () => {
@@ -76,14 +80,22 @@ export default function LeasesPage() {
     fetchLeases();
   }, [fetchLeases]);
 
-  const filtered = leases.filter((l) => {
+  const filtered = useMemo(() => leases.filter((l) => {
     if (!search) return true;
     const q = search.toLowerCase();
     const tenantName = l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}`.toLowerCase() : '';
     const propName = (l.units?.properties?.name || '').toLowerCase();
     const unitNum = (l.units?.unit_number || '').toLowerCase();
     return tenantName.includes(q) || propName.includes(q) || unitNum.includes(q);
-  });
+  }), [leases, search]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
 
   const handleAdd = () => {
     setEditLease(null);
@@ -152,8 +164,8 @@ export default function LeasesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-end gap-4">
-        <div className="flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1 sm:max-w-sm">
           <Input
             placeholder="Search tenant, property, or unit..."
             value={search}
@@ -161,7 +173,7 @@ export default function LeasesPage() {
             icon={<Search size={14} />}
           />
         </div>
-        <div className="w-48">
+        <div className="w-full sm:w-48">
           <SelectField
             options={STATUS_FILTER_OPTIONS}
             value={statusFilter}
@@ -185,7 +197,7 @@ export default function LeasesPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
+          <ResponsiveTable minWidth="850px">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
@@ -199,7 +211,7 @@ export default function LeasesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((l) => (
+                {paginated.map((l) => (
                   <tr key={l.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
                     <td className="px-4 py-3 font-medium text-text-primary">
                       {l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}` : '--'}
@@ -242,7 +254,14 @@ export default function LeasesPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </ResponsiveTable>
+          <Pagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 

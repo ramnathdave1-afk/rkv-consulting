@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Pagination } from '@/components/ui/Pagination';
+import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { Users, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { TenantFormModal } from '@/components/tenants/TenantFormModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -46,6 +48,10 @@ export default function TenantsPage() {
   const [deletingTenant, setDeletingTenant] = useState<Tenant | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const supabase = createClient();
 
   const fetchTenants = useCallback(async () => {
@@ -87,6 +93,14 @@ export default function TenantsPage() {
 
     return result;
   }, [tenants, search, statusFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredTenants.slice(start, start + pageSize);
+  }, [filteredTenants, page, pageSize]);
 
   function handleAdd() {
     setEditingTenant(null);
@@ -154,8 +168,8 @@ export default function TenantsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-end gap-4">
-        <div className="flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1 sm:max-w-sm">
           <Input
             placeholder="Search by name, email, or phone..."
             value={search}
@@ -163,7 +177,7 @@ export default function TenantsPage() {
             icon={<Search size={14} />}
           />
         </div>
-        <div className="w-48">
+        <div className="w-full sm:w-48">
           <SelectField
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -187,51 +201,60 @@ export default function TenantsPage() {
         </div>
       ) : (
         <div className="glass-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Name</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Email</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Phone</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Source</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTenants.map((t) => (
-                <tr key={t.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-text-primary">{t.first_name} {t.last_name}</td>
-                  <td className="px-4 py-3 text-text-secondary">{t.email || '\u2014'}</td>
-                  <td className="px-4 py-3 text-text-secondary">{t.phone || '\u2014'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[t.status] || ''}`}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary capitalize">{t.source || '\u2014'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => handleEdit(t)}
-                        className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors"
-                        title="Edit tenant"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(t)}
-                        className="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
-                        title="Delete tenant"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
+          <ResponsiveTable minWidth="700px">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Name</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Email</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Phone</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Source</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginated.map((t) => (
+                  <tr key={t.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-text-primary">{t.first_name} {t.last_name}</td>
+                    <td className="px-4 py-3 text-text-secondary">{t.email || '\u2014'}</td>
+                    <td className="px-4 py-3 text-text-secondary">{t.phone || '\u2014'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[t.status] || ''}`}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary capitalize">{t.source || '\u2014'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleEdit(t)}
+                          className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                          title="Edit tenant"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(t)}
+                          className="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
+                          title="Delete tenant"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ResponsiveTable>
+          <Pagination
+            total={filteredTenants.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 
