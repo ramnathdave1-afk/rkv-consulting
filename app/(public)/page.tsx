@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageSquare, Wrench, BarChart3, ArrowRight, CheckCircle2, Building2, Shield, TrendingUp, CreditCard, Home, FileText, Users, Sparkles } from 'lucide-react';
-import HeroAscii from '@/components/ui/hero-ascii';
 import { HeroSection } from '@/components/ui/hero-section';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { Features8 } from '@/components/blocks/features-8';
@@ -89,10 +88,109 @@ export default function LandingPage() {
       {/* Animated Company Header */}
       <HeroSection />
 
-      {/* Interactive Hero */}
-      <HeroAscii onBookCall={() => {/* scroll to waitlist */
-        document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' });
-      }} />
+      {/* Live Product Demo */}
+      <section className="relative bg-black py-20 overflow-hidden">
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+            <p className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-3">Live Product Preview</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">See the platform in action</h2>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 30, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative rounded-xl border border-white/10 bg-neutral-950 overflow-hidden shadow-2xl shadow-white/[0.03]">
+            {/* Window chrome */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-neutral-900/80">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/60"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500/60"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-neutral-800 rounded-md px-4 py-1 text-[10px] text-neutral-500 font-mono">app.meridiannode.io/dashboard</div>
+              </div>
+            </div>
+            {/* Dashboard mockup */}
+            <div className="grid grid-cols-[200px_1fr] min-h-[480px]">
+              {/* Sidebar */}
+              <div className="border-r border-white/5 bg-neutral-900/50 p-4 hidden md:flex flex-col gap-1">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-6 h-6 rounded-md bg-white flex items-center justify-center"><span className="text-[8px] font-bold text-black">M</span></div>
+                  <span className="text-xs font-semibold text-white/70">MeridianNode</span>
+                </div>
+                {[
+                  { label: 'Overview', active: true },
+                  { label: 'Properties' },
+                  { label: 'Tenants' },
+                  { label: 'Financials' },
+                  { label: 'Maintenance' },
+                  { label: 'Leases' },
+                  { label: 'Vacancies' },
+                ].map((item) => (
+                  <div key={item.label} className={`text-[11px] px-3 py-2 rounded-md cursor-default ${item.active ? 'bg-white/10 text-white font-medium' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+              {/* Main content */}
+              <div className="p-6 space-y-5">
+                {/* KPI row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Total Units', value: '248', trend: '+12' },
+                    { label: 'Occupancy', value: '96.2%', trend: '+1.4%', highlight: true },
+                    { label: 'Collected', value: '$412K', trend: '+$18K' },
+                    { label: 'Open WOs', value: '7', trend: '-3' },
+                  ].map((kpi) => (
+                    <div key={kpi.label} className="bg-white/[0.03] border border-white/5 rounded-lg p-4">
+                      <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">{kpi.label}</div>
+                      <div className={`text-xl font-bold ${kpi.highlight ? 'text-emerald-400' : 'text-white'}`}>{kpi.value}</div>
+                      <div className="text-[10px] text-emerald-500 mt-1">{kpi.trend}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Chart area */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-xs text-neutral-400 font-medium">Revenue — Last 12 Months</div>
+                    <div className="flex gap-3 text-[10px] text-neutral-500">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Collected</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span>Expected</span>
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-[6px] h-32">
+                    {[38,42,45,48,52,50,55,58,62,65,70,74].map((h, i) => (
+                      <div key={i} className="flex-1 flex flex-col gap-[2px]">
+                        <div className="rounded-t bg-blue-500/20 border-t border-blue-500/40" style={{ height: `${h + 8}%` }}></div>
+                        <div className="rounded-t bg-emerald-500/40 border-t border-emerald-500/60" style={{ height: `${h}%` }}></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-2 text-[9px] text-neutral-600">
+                    {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => <span key={m}>{m}</span>)}
+                  </div>
+                </div>
+                {/* Recent activity */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-lg p-4">
+                  <div className="text-xs text-neutral-400 font-medium mb-3">Recent Activity</div>
+                  <div className="space-y-2">
+                    {[
+                      { dot: 'bg-emerald-500', text: 'Rent payment received — Unit 112 — $1,850', time: '2m ago' },
+                      { dot: 'bg-blue-500', text: 'AI responded to prospect inquiry — 43s response', time: '8m ago' },
+                      { dot: 'bg-orange-500', text: 'Maintenance dispatched — HVAC Unit 204 — P2 Urgent', time: '22m ago' },
+                      { dot: 'bg-white/40', text: 'Lease renewal sent — Unit 308 — 60-day notice', time: '1h ago' },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 text-[11px]">
+                        <div className={`w-1.5 h-1.5 rounded-full ${item.dot} shrink-0`}></div>
+                        <span className="text-neutral-400 flex-1">{item.text}</span>
+                        <span className="text-neutral-600 shrink-0">{item.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Stats Band */}
       <div className="border-y border-white/5">
