@@ -120,13 +120,74 @@ function FeatureCard({ icon, title, subtitle, description }: { icon: React.React
   )
 }
 
-// ── Map ──
+// ── Animated Map ──
 const map = new DottedMap({ height: 55, grid: 'diagonal' })
 const points = map.getPoints()
+
+// Property locations (approximate US city positions on the dotted map)
+const propertyPins = [
+  { cx: 25, cy: 28, label: 'Phoenix', units: 48 },
+  { cx: 27, cy: 25, label: 'Scottsdale', units: 64 },
+  { cx: 23, cy: 30, label: 'Tempe', units: 32 },
+  { cx: 30, cy: 32, label: 'Mesa', units: 24 },
+  { cx: 80, cy: 26, label: 'Austin', units: 36 },
+  { cx: 85, cy: 22, label: 'Dallas', units: 44 },
+]
+
+// Connection lines between nearby properties
+const connections = [
+  { x1: 25, y1: 28, x2: 27, y2: 25 },
+  { x1: 27, y1: 25, x2: 23, y2: 30 },
+  { x1: 23, y1: 30, x2: 30, y2: 32 },
+  { x1: 80, y1: 26, x2: 85, y2: 22 },
+  { x1: 30, y1: 32, x2: 80, y2: 26 },
+]
+
 const Map = () => (
-  <svg viewBox="0 0 120 60" className="w-full h-auto text-white/15">
+  <svg viewBox="0 0 120 60" className="w-full h-auto">
+    <style>{`
+      @keyframes mapDot { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.22; } }
+      @keyframes pinPulse { 0%, 100% { r: 0.6; opacity: 0.9; } 50% { r: 0.8; opacity: 1; } }
+      @keyframes pinRing { 0% { r: 0.8; opacity: 0.5; } 100% { r: 2.5; opacity: 0; } }
+      @keyframes dashFlow { 0% { stroke-dashoffset: 8; } 100% { stroke-dashoffset: 0; } }
+      @keyframes travelDot { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+    `}</style>
+    {/* Base dots with subtle animation */}
     {points.map((point, i) => (
-      <circle key={i} cx={point.x} cy={point.y} r={0.15} fill="currentColor" />
+      <circle key={i} cx={point.x} cy={point.y} r={0.15} fill="rgba(255,255,255,0.12)"
+        style={{ animation: `mapDot ${3 + (i % 5) * 0.8}s ease-in-out ${(i % 20) * 0.15}s infinite` }} />
+    ))}
+    {/* Connection lines with flowing dashes */}
+    {connections.map((c, i) => (
+      <line key={`conn-${i}`} x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2}
+        stroke="rgba(16,185,129,0.15)" strokeWidth="0.2"
+        strokeDasharray="1 1"
+        style={{ animation: `dashFlow ${2 + i * 0.5}s linear infinite` }} />
+    ))}
+    {/* Traveling dots along connections */}
+    {connections.map((c, i) => (
+      <circle key={`travel-${i}`} r="0.3" fill="#10B981"
+        style={{
+          offsetPath: `path('M${c.x1},${c.y1} L${c.x2},${c.y2}')`,
+          animation: `travelDot ${3 + i * 1.2}s ease-in-out ${i * 0.8}s infinite`,
+          filter: 'drop-shadow(0 0 1px rgba(16,185,129,0.6))',
+        }} />
+    ))}
+    {/* Property pins with pulse */}
+    {propertyPins.map((pin, i) => (
+      <g key={`pin-${i}`}>
+        {/* Expanding ring */}
+        <circle cx={pin.cx} cy={pin.cy} r="0.8" fill="none" stroke="#10B981" strokeWidth="0.15"
+          style={{ animation: `pinRing 2.5s ease-out ${i * 0.4}s infinite` }} />
+        {/* Core dot */}
+        <circle cx={pin.cx} cy={pin.cy} fill="#10B981"
+          style={{
+            animation: `pinPulse 2s ease-in-out ${i * 0.3}s infinite`,
+            filter: 'drop-shadow(0 0 1.5px rgba(16,185,129,0.8))',
+          }} r="0.6" />
+        {/* Glow */}
+        <circle cx={pin.cx} cy={pin.cy} r="1.5" fill="rgba(16,185,129,0.08)" />
+      </g>
     ))}
   </svg>
 )

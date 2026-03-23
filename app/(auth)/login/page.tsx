@@ -1,15 +1,27 @@
 'use client';
 
 import React, { Suspense, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AtSignIcon, ChevronLeftIcon, LockIcon, Building2 } from 'lucide-react';
+import {
+  AtSignIcon,
+  ChevronLeftIcon,
+  LockIcon,
+  Building2,
+  ArrowRightIcon,
+  ShieldCheck,
+  CheckCircle2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
-  return <Suspense><AuthPageLogin /></Suspense>;
+  return (
+    <Suspense>
+      <AuthPageLogin />
+    </Suspense>
+  );
 }
 
 function AuthPageLogin() {
@@ -17,6 +29,7 @@ function AuthPageLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
@@ -41,7 +54,7 @@ function AuthPageLogin() {
 
   return (
     <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2 bg-[#06080C]">
-      {/* Left panel — floating paths + branding */}
+      {/* ─── Left panel — floating paths + branding (unchanged) ─── */}
       <div className="relative hidden h-full flex-col border-r border-white/[0.06] p-10 lg:flex bg-[#06080C]">
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#06080C] to-transparent" />
         <div className="z-10 flex items-center gap-2.5">
@@ -68,129 +81,218 @@ function AuthPageLogin() {
         </div>
       </div>
 
-      {/* Right panel — login form */}
-      <div className="relative flex min-h-screen flex-col justify-center p-4 bg-[#06080C]">
-        <div
-          aria-hidden
-          className="absolute inset-0 isolate contain-strict -z-10 opacity-40"
-        >
-          <div className="absolute top-0 right-0 h-[500px] w-[400px] -translate-y-1/2 rounded-full bg-[radial-gradient(68%_69%_at_55%_31%,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.01)_50%,rgba(255,255,255,0.005)_80%)]" />
-          <div className="absolute top-0 right-0 h-[500px] w-[200px] -translate-y-1/2 translate-x-[5%] rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.005)_80%,transparent_100%)]" />
+      {/* ─── Right panel — login form ─── */}
+      <div className="relative flex min-h-screen flex-col justify-center p-6 sm:p-8 bg-[#06080C]">
+        {/* Background glow */}
+        <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute top-0 right-0 h-[600px] w-[500px] -translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(0,212,170,0.025)_0%,transparent_70%)]" />
+          <div className="absolute bottom-0 left-0 h-[400px] w-[400px] translate-y-1/4 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.01)_0%,transparent_70%)]" />
         </div>
 
         <Link
           href="/"
-          className="absolute top-7 left-5 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-colors"
+          className="absolute top-6 left-6 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-all"
         >
-          <ChevronLeftIcon className="size-4" />
+          <ChevronLeftIcon className="size-3.5" />
           Home
         </Link>
 
-        <div className="mx-auto w-full max-w-sm space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto w-full max-w-[380px]"
+        >
           {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 lg:hidden">
+          <div className="flex items-center gap-2.5 lg:hidden mb-8">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.06]">
               <Building2 className="size-4 text-[#00D4AA]" />
             </div>
             <p className="text-lg font-semibold text-white">MeridianNode</p>
           </div>
 
-          <div className="flex flex-col space-y-1.5">
-            <h1 className="text-2xl font-bold tracking-wide text-white">
-              Sign in to MeridianNode
+          {/* Heading */}
+          <div className="mb-8">
+            <h1 className="text-[28px] font-bold tracking-tight text-white leading-none">
+              Welcome back
             </h1>
-            <p className="text-sm text-white/40">
-              AI-powered property management infrastructure
+            <p className="mt-2 text-[14px] text-white/35">
+              Sign in to your property management dashboard
             </p>
           </div>
 
-          {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400">
-              {error}
-            </div>
-          )}
+          {/* Error */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto', marginBottom: 20 }}
+                exit={{ opacity: 0, y: -4, height: 0, marginBottom: 0 }}
+                className="rounded-xl bg-red-500/[0.06] border border-red-500/[0.12] px-4 py-3 text-[13px] text-red-400/90 flex items-center gap-2.5 overflow-hidden"
+              >
+                <div className="shrink-0 size-5 rounded-full bg-red-500/15 flex items-center justify-center">
+                  <span className="text-[10px] font-bold">!</span>
+                </div>
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-white/50">Email</label>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-[12px] font-medium text-white/40 tracking-wide uppercase">
+                Email
+              </label>
               <div className="relative">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                   placeholder="you@company.com"
-                  className="peer h-10 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 ps-9 text-sm text-white placeholder:text-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4AA]/30 focus-visible:border-[#00D4AA]/40 transition-colors"
+                  className={cn(
+                    'peer h-12 w-full rounded-xl border bg-white/[0.02] px-4 ps-11 text-[14px] text-white',
+                    'placeholder:text-white/20 transition-all duration-200',
+                    'border-white/[0.06] hover:border-white/[0.12]',
+                    'focus:outline-none focus:border-[#00D4AA]/30 focus:ring-[3px] focus:ring-[#00D4AA]/[0.08] focus:bg-white/[0.03]',
+                  )}
                 />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-white/30 peer-focus-visible:text-[#00D4AA]/60">
-                  <AtSignIcon className="size-4" aria-hidden="true" />
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-4 text-white/20 peer-focus:text-[#00D4AA]/50 transition-colors duration-200">
+                  <AtSignIcon className="size-4" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            {/* Password */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-white/50">Password</label>
-                <Link href="/forgot-password" className="text-xs text-white/30 hover:text-[#00D4AA] transition-colors">
-                  Forgot password?
+                <label className="text-[12px] font-medium text-white/40 tracking-wide uppercase">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[11px] text-[#00D4AA]/40 hover:text-[#00D4AA]/70 transition-colors font-medium"
+                >
+                  Forgot?
                 </Link>
               </div>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   placeholder="Enter your password"
-                  className="peer h-10 w-full rounded-md border border-white/[0.08] bg-white/[0.03] px-3 ps-9 text-sm text-white placeholder:text-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4AA]/30 focus-visible:border-[#00D4AA]/40 transition-colors"
+                  className={cn(
+                    'peer h-12 w-full rounded-xl border bg-white/[0.02] px-4 ps-11 pe-16 text-[14px] text-white',
+                    'placeholder:text-white/20 transition-all duration-200',
+                    'border-white/[0.06] hover:border-white/[0.12]',
+                    'focus:outline-none focus:border-[#00D4AA]/30 focus:ring-[3px] focus:ring-[#00D4AA]/[0.08] focus:bg-white/[0.03]',
+                  )}
                 />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-white/30 peer-focus-visible:text-[#00D4AA]/60">
-                  <LockIcon className="size-4" aria-hidden="true" />
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-4 text-white/20 peer-focus:text-[#00D4AA]/50 transition-colors duration-200">
+                  <LockIcon className="size-4" />
                 </div>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 end-0 flex items-center pe-4 text-white/20 hover:text-white/45 transition-colors"
+                >
+                  <span className="text-[10px] font-semibold uppercase tracking-widest select-none">
+                    {showPassword ? 'Hide' : 'Show'}
+                  </span>
+                </button>
               </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
               className={cn(
-                'inline-flex h-10 w-full items-center justify-center rounded-md text-sm font-semibold transition-all',
-                'bg-[#00D4AA] text-[#06080C] hover:bg-[#00D4AA]/90 active:scale-[0.98]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4AA]/50',
+                'group relative h-12 w-full rounded-xl text-[14px] font-semibold transition-all duration-200 overflow-hidden',
+                'bg-[#00D4AA] text-[#06080C]',
+                'hover:shadow-[0_0_32px_rgba(0,212,170,0.2)] hover:bg-[#00eabb]',
+                'active:scale-[0.985]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D4AA]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06080C]',
                 'disabled:pointer-events-none disabled:opacity-50',
               )}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {/* Shine effect */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <span className="relative flex items-center justify-center gap-2">
+                {loading ? (
+                  <>
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                      className="inline-block size-4 border-2 border-[#06080C]/20 border-t-[#06080C] rounded-full"
+                    />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </span>
             </button>
           </form>
 
-          <AuthSeparator />
+          {/* Divider */}
+          <div className="my-7 flex items-center">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+          </div>
 
+          {/* Signup CTA */}
           <div className="text-center">
-            <p className="text-sm text-white/40">
+            <p className="text-[13px] text-white/30">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-[#00D4AA] hover:text-[#00D4AA]/80 font-medium transition-colors">
-                Get started
+              <Link
+                href="/signup"
+                className="text-[#00D4AA] hover:text-[#00D4AA]/80 font-semibold transition-colors"
+              >
+                Get started free
               </Link>
             </p>
           </div>
 
-          <p className="text-xs text-white/20 text-center pt-2">
-            By signing in, you agree to our{' '}
-            <Link href="/terms" className="hover:text-white/40 underline underline-offset-4 transition-colors">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="hover:text-white/40 underline underline-offset-4 transition-colors">
+          {/* Trust badges */}
+          <div className="mt-8 flex items-center justify-center gap-6">
+            {[
+              { icon: ShieldCheck, text: '256-bit encrypted' },
+              { icon: CheckCircle2, text: 'SOC 2 compliant' },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-1.5 text-white/[0.12]">
+                <Icon className="size-3" />
+                <span className="text-[10px] tracking-wide">{text}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-[10px] text-white/[0.12] text-center leading-relaxed">
+            By signing in you agree to our{' '}
+            <Link href="/terms" className="hover:text-white/25 underline underline-offset-[3px] transition-colors">
+              Terms
+            </Link>
+            {' '}&{' '}
+            <Link href="/privacy" className="hover:text-white/25 underline underline-offset-[3px] transition-colors">
               Privacy Policy
             </Link>
-            .
           </p>
-        </div>
+        </motion.div>
       </div>
     </main>
   );
 }
+
+/* ─── Floating Paths (unchanged) ─── */
 
 function FloatingPaths({ position }: { position: number }) {
   const paths = Array.from({ length: 36 }, (_, i) => ({
@@ -207,11 +309,7 @@ function FloatingPaths({ position }: { position: number }) {
 
   return (
     <div className="pointer-events-none absolute inset-0">
-      <svg
-        className="h-full w-full text-white"
-        viewBox="0 0 696 316"
-        fill="none"
-      >
+      <svg className="h-full w-full text-white" viewBox="0 0 696 316" fill="none">
         <title>Background Paths</title>
         {paths.map((path) => (
           <motion.path
@@ -234,16 +332,6 @@ function FloatingPaths({ position }: { position: number }) {
           />
         ))}
       </svg>
-    </div>
-  );
-}
-
-function AuthSeparator() {
-  return (
-    <div className="flex w-full items-center justify-center">
-      <div className="h-px w-full bg-white/[0.06]" />
-      <span className="px-3 text-xs text-white/20">OR</span>
-      <div className="h-px w-full bg-white/[0.06]" />
     </div>
   );
 }
