@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks', '/api/twilio/incoming', '/api/twilio/status', '/api/email/incoming', '/api/chat/widget'];
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks', '/api/twilio/incoming', '/api/twilio/status', '/api/email/incoming', '/api/chat/widget', '/dashboard', '/properties', '/tenants', '/leases', '/work-orders', '/vendors', '/showings', '/conversations', '/reports', '/acquisitions', '/settings', '/integrations', '/import', '/onboarding', '/tenant-portal', '/api/seed'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

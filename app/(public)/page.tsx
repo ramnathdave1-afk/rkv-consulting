@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { HeroSection } from '@/components/ui/hero-section';
 import { LogoCarousel } from '@/components/ui/logo-carousel';
+import { CTA } from '@/components/ui/call-to-action';
 import InteractiveBentoGallery from '@/components/ui/interactive-bento-gallery';
 import { FeatureComparison } from '@/components/blocks/feature-comparison';
 import CombinedFeatures from '@/components/blocks/combined-features';
@@ -292,6 +293,9 @@ export default function LandingPage() {
           <LogoCarousel />
         </div>
       </section>
+
+      {/* CTA */}
+      <CTA />
 
       {/* Footer */}
       <footer className="border-t border-white/5 px-6 py-10">
