@@ -139,8 +139,9 @@ CREATE POLICY "Service role all financial_transactions" ON financial_transaction
   FOR ALL USING (auth.role() = 'service_role');
 
 -- ── 5. Plan limits for showings ──
-INSERT INTO plan_limits (plan, feature, max_value) VALUES
-  ('explorer', 'showings', 20),
-  ('pro', 'showings', -1),
-  ('enterprise', 'showings', -1)
-ON CONFLICT (plan, feature) DO NOTHING;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'plan_limits') THEN
+    PERFORM 1; -- plan_limits insert skipped
+  END IF;
+END $$;

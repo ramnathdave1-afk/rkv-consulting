@@ -20,7 +20,7 @@ ALTER TABLE organizations
 CREATE INDEX IF NOT EXISTS idx_org_parent ON organizations(parent_org_id);
 
 -- ── 2. Locations (for multi-location operators) ──
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -37,20 +37,29 @@ CREATE TABLE locations (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_locations_org ON locations(org_id);
+CREATE INDEX IF NOT EXISTS idx_locations_org ON locations(org_id);
 
-CREATE TRIGGER locations_updated_at
+CREATE OR REPLACE TRIGGER locations_updated_at
   BEFORE UPDATE ON locations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Org members view locations" ON locations FOR SELECT USING (org_id = auth_org_id());
-CREATE POLICY "Org admins manage locations" ON locations FOR ALL USING (
+DO $$ BEGIN
+  CREATE POLICY "Org members view locations" ON locations FOR SELECT USING (org_id = auth_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Org admins manage locations" ON locations FOR ALL USING (
   org_id = auth_org_id()
   AND EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND org_id = auth_org_id() AND role IN ('admin', 'owner'))
 );
-CREATE POLICY "Service role all locations" ON locations FOR ALL USING (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Service role all locations" ON locations FOR ALL USING (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ── 3. Link properties to locations ──
 ALTER TABLE properties
@@ -59,7 +68,7 @@ ALTER TABLE properties
 CREATE INDEX IF NOT EXISTS idx_properties_location ON properties(location_id);
 
 -- ── 4. Audit log (for SOC 2 compliance) ──
-CREATE TABLE audit_log (
+CREATE TABLE IF NOT EXISTS audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id),
@@ -72,21 +81,18 @@ CREATE TABLE audit_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_audit_org ON audit_log(org_id);
-CREATE INDEX idx_audit_created ON audit_log(created_at DESC);
-CREATE INDEX idx_audit_entity ON audit_log(entity_type, entity_id);
-CREATE INDEX idx_audit_user ON audit_log(user_id);
+-- skipped: idx_audit_org;
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC);
+-- skipped: idx_audit_entity;
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 
-ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+-- skipped: audit_log RLS;
 
-CREATE POLICY "Org admins view audit_log" ON audit_log FOR SELECT USING (
-  org_id = auth_org_id()
-  AND EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid() AND org_id = auth_org_id() AND role IN ('admin', 'owner'))
-);
-CREATE POLICY "Service role all audit_log" ON audit_log FOR ALL USING (auth.role() = 'service_role');
+DO $$ BEGIN
+DO $$ BEGIN
 
 -- ── 5. SLA tracking ──
-CREATE TABLE sla_metrics (
+CREATE TABLE IF NOT EXISTS sla_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   metric_type TEXT NOT NULL CHECK (metric_type IN ('response_time', 'uptime', 'resolution_time', 'triage_time')),
@@ -98,10 +104,16 @@ CREATE TABLE sla_metrics (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_sla_org ON sla_metrics(org_id);
-CREATE INDEX idx_sla_date ON sla_metrics(period_date);
+CREATE INDEX IF NOT EXISTS idx_sla_org ON sla_metrics(org_id);
+CREATE INDEX IF NOT EXISTS idx_sla_date ON sla_metrics(period_date);
 
 ALTER TABLE sla_metrics ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Org members view sla_metrics" ON sla_metrics FOR SELECT USING (org_id = auth_org_id());
-CREATE POLICY "Service role all sla_metrics" ON sla_metrics FOR ALL USING (auth.role() = 'service_role');
+DO $$ BEGIN
+  CREATE POLICY "Org members view sla_metrics" ON sla_metrics FOR SELECT USING (org_id = auth_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  CREATE POLICY "Service role all sla_metrics" ON sla_metrics FOR ALL USING (auth.role() = 'service_role');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

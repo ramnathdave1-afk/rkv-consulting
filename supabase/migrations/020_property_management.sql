@@ -468,18 +468,23 @@ CREATE POLICY "Org members view phone_numbers" ON org_phone_numbers
 CREATE POLICY "Service role all phone_numbers" ON org_phone_numbers
   FOR ALL USING (auth.role() = 'service_role');
 
--- ── 15. PM-specific plan limits ──
-INSERT INTO plan_limits (plan, feature, max_value) VALUES
-  ('explorer', 'properties', 3),
-  ('explorer', 'units', 20),
-  ('explorer', 'work_orders', -1),
-  ('explorer', 'conversations', 50),
-  ('pro', 'properties', 50),
-  ('pro', 'units', 500),
-  ('pro', 'work_orders', -1),
-  ('pro', 'conversations', -1),
-  ('enterprise', 'properties', -1),
-  ('enterprise', 'units', -1),
-  ('enterprise', 'work_orders', -1),
-  ('enterprise', 'conversations', -1)
-ON CONFLICT (plan, feature) DO NOTHING;
+-- ── 15. PM-specific plan limits (skipped if plan_limits table does not exist) ──
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'plan_limits') THEN
+    INSERT INTO plan_limits (plan, feature, max_value) VALUES
+      ('explorer', 'properties', 3),
+      ('explorer', 'units', 20),
+      ('explorer', 'work_orders', -1),
+      ('explorer', 'conversations', 50),
+      ('pro', 'properties', 50),
+      ('pro', 'units', 500),
+      ('pro', 'work_orders', -1),
+      ('pro', 'conversations', -1),
+      ('enterprise', 'properties', -1),
+      ('enterprise', 'units', -1),
+      ('enterprise', 'work_orders', -1),
+      ('enterprise', 'conversations', -1)
+    ON CONFLICT DO NOTHING;
+  END IF;
+END $$;
