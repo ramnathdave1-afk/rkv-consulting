@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring Sweethearts 2026 | Lambda</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a2e;
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .slideshow {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ===== TITLE SLIDE ===== */
+    .slide-title {
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #f48fb1 50%, #f06292 75%, #ec407a 100%);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-title::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(255,255,255,0.2) 0%, transparent 50%);
+      animation: shimmer 8s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(2%, -2%) rotate(1deg); }
+    }
+
+    .slide-title .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .slide-title .lambda-badge {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: #880e4f;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+
+    .slide-title h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 5rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 4px 20px rgba(136, 14, 79, 0.3);
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .slide-title h1 .script {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 5.5rem;
+      display: block;
+      color: #fff;
+    }
+
+    .slide-title .season {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: #880e4f;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      margin-top: 1.5rem;
+    }
+
+    .slide-title .divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #880e4f, transparent);
+      margin: 1.5rem auto;
+    }
+
+    .slide-title .year {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      color: #ad1457;
+      letter-spacing: 4px;
+    }
+
+    /* Floating flowers for title */
+    .flower {
+      position: absolute;
+      font-size: 2rem;
+      opacity: 0.4;
+      animation: floatFlower 12s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    .flower:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; font-size: 2.5rem; }
+    .flower:nth-child(2) { top: 20%; right: 8%; animation-delay: 2s; font-size: 1.8rem; }
+    .flower:nth-child(3) { bottom: 15%; left: 10%; animation-delay: 4s; font-size: 2.2rem; }
+    .flower:nth-child(4) { bottom: 25%; right: 12%; animation-delay: 1s; font-size: 1.5rem; }
+    .flower:nth-child(5) { top: 40%; left: 3%; animation-delay: 3s; font-size: 1.8rem; }
+    .flower:nth-child(6) { top: 60%; right: 5%; animation-delay: 5s; font-size: 2rem; }
+    .flower:nth-child(7) { bottom: 5%; left: 40%; animation-delay: 2.5s; font-size: 1.6rem; }
+    .flower:nth-child(8) { top: 5%; left: 50%; animation-delay: 3.5s; font-size: 1.4rem; }
+
+    @keyframes floatFlower {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-15px) rotate(5deg); }
+      50% { transform: translateY(-8px) rotate(-3deg); }
+      75% { transform: translateY(-20px) rotate(3deg); }
+    }
+
+    /* ===== CONTESTANT SLIDES ===== */
+    .slide-contestant {
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-contestant .bg-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.08;
+      background-image:
+        radial-gradient(circle at 20% 50%, currentColor 1px, transparent 1px),
+        radial-gradient(circle at 80% 50%, currentColor 1px, transparent 1px),
+        radial-gradient(circle at 50% 20%, currentColor 1px, transparent 1px),
+        radial-gradient(circle at 50% 80%, currentColor 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .slide-contestant .contestant-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .photo-frame {
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      padding: 8px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    .photo-frame .photo-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      backdrop-filter: blur(10px);
+      border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    .contestant-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.8rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 15px rgba(0,0,0,0.2);
+      letter-spacing: 2px;
+    }
+
+    .contestant-tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 1.6rem;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 3px;
+    }
+
+    .contestant-divider {
+      width: 80px;
+      height: 2px;
+      background: rgba(255,255,255,0.5);
+    }
+
+    .contestant-number {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 0.9rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* Decorative corner elements */
+    .corner-decoration {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      opacity: 0.15;
+      z-index: 1;
+    }
+
+    .corner-decoration.top-left {
+      top: 30px;
+      left: 30px;
+      border-top: 2px solid #fff;
+      border-left: 2px solid #fff;
+    }
+
+    .corner-decoration.top-right {
+      top: 30px;
+      right: 30px;
+      border-top: 2px solid #fff;
+      border-right: 2px solid #fff;
+    }
+
+    .corner-decoration.bottom-left {
+      bottom: 30px;
+      left: 30px;
+      border-bottom: 2px solid #fff;
+      border-left: 2px solid #fff;
+    }
+
+    .corner-decoration.bottom-right {
+      bottom: 30px;
+      right: 30px;
+      border-bottom: 2px solid #fff;
+      border-right: 2px solid #fff;
+    }
+
+    /* Individual contestant color themes */
+    .theme-1 { background: linear-gradient(135deg, #e91e63, #c2185b, #880e4f); }
+    .theme-2 { background: linear-gradient(135deg, #f06292, #e91e63, #c2185b); }
+    .theme-3 { background: linear-gradient(135deg, #ab47bc, #8e24aa, #6a1b9a); }
+    .theme-4 { background: linear-gradient(135deg, #ec407a, #d81b60, #ad1457); }
+    .theme-5 { background: linear-gradient(135deg, #f48fb1, #e91e63, #c2185b); }
+    .theme-6 { background: linear-gradient(135deg, #ce93d8, #ab47bc, #8e24aa); }
+    .theme-7 { background: linear-gradient(135deg, #e57373, #e53935, #c62828); }
+    .theme-8 { background: linear-gradient(135deg, #ef5350, #e91e63, #ad1457); }
+
+    /* ===== CLOSING SLIDE ===== */
+    .slide-closing {
+      background: linear-gradient(135deg, #880e4f 0%, #ad1457 30%, #c2185b 50%, #d81b60 70%, #e91e63 100%);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-closing::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+      animation: shimmer 10s ease-in-out infinite;
+    }
+
+    .slide-closing .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .slide-closing h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      color: #fff;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      margin-bottom: 1rem;
+    }
+
+    .slide-closing h2 .script {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 4rem;
+      display: block;
+    }
+
+    .slide-closing .vote-text {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 1.4rem;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 2rem;
+    }
+
+    .slide-closing .heart-row {
+      font-size: 2rem;
+      margin-top: 1.5rem;
+      letter-spacing: 8px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .slide-closing .lambda-text {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-top: 3rem;
+    }
+
+    /* ===== NAVIGATION ===== */
+    .nav-controls {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.25);
+      border-color: rgba(255,255,255,0.7);
+      transform: scale(1.1);
+    }
+
+    .slide-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .slide-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .slide-dot.active {
+      background: #fff;
+      transform: scale(1.3);
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .slide-dot:hover {
+      background: rgba(255,255,255,0.6);
+    }
+
+    /* Keyboard hint */
+    .keyboard-hint {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 100;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .slide-title h1 { font-size: 3rem; }
+      .slide-title h1 .script { font-size: 3.5rem; }
+      .slide-title .season { font-size: 1.2rem; }
+      .contestant-name { font-size: 2.5rem; }
+      .photo-frame { width: 220px; height: 220px; }
+      .slide-closing h2 { font-size: 2.5rem; }
+      .slide-closing h2 .script { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slideshow" id="slideshow">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide slide-title active" data-slide="0">
+      <span class="flower">&#127800;</span>
+      <span class="flower">&#127804;</span>
+      <span class="flower">&#127801;</span>
+      <span class="flower">&#127799;</span>
+      <span class="flower">&#127802;</span>
+      <span class="flower">&#127803;</span>
+      <span class="flower">&#127800;</span>
+      <span class="flower">&#127801;</span>
+      <div class="content">
+        <div class="lambda-badge">Lambda Presents</div>
+        <h1>
+          Spring
+          <span class="script">Sweethearts</span>
+        </h1>
+        <div class="divider"></div>
+        <div class="season">Spring 2026</div>
+        <div class="year">Meet the Contestants</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Jo -->
+    <div class="slide slide-contestant theme-1" data-slide="1">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 01</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127800;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Jo</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Drew -->
+    <div class="slide slide-contestant theme-2" data-slide="2">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 02</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127801;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Drew</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Caitlin -->
+    <div class="slide slide-contestant theme-3" data-slide="3">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 03</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127804;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Caitlin</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Britney -->
+    <div class="slide slide-contestant theme-4" data-slide="4">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 04</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127799;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Britney</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Karni -->
+    <div class="slide slide-contestant theme-5" data-slide="5">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 05</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127802;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Karni</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Carmen -->
+    <div class="slide slide-contestant theme-6" data-slide="6">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 06</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127803;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Carmen</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Kibby -->
+    <div class="slide slide-contestant theme-7" data-slide="7">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 07</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127800;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Kibby</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Neala -->
+    <div class="slide slide-contestant theme-8" data-slide="8">
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration top-right"></div>
+      <div class="corner-decoration bottom-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+      <div class="bg-pattern"></div>
+      <div class="contestant-content">
+        <div class="contestant-number">Contestant 08</div>
+        <div class="photo-frame">
+          <div class="photo-inner">&#127801;</div>
+        </div>
+        <div class="contestant-divider"></div>
+        <div class="contestant-name">Neala</div>
+        <div class="contestant-tagline">Spring Sweetheart Contestant</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Closing -->
+    <div class="slide slide-closing" data-slide="9">
+      <span class="flower">&#127800;</span>
+      <span class="flower">&#127804;</span>
+      <span class="flower">&#127801;</span>
+      <span class="flower">&#127799;</span>
+      <span class="flower">&#127802;</span>
+      <span class="flower">&#127803;</span>
+      <span class="flower">&#127800;</span>
+      <span class="flower">&#127801;</span>
+      <div class="content">
+        <h2>
+          Who Will Be Our
+          <span class="script">Spring Sweetheart?</span>
+        </h2>
+        <div class="vote-text">Cast Your Vote</div>
+        <div class="heart-row">&#10084;&#65039; &#10084;&#65039; &#10084;&#65039;</div>
+        <div class="lambda-text">Lambda &mdash; Spring 2026</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation -->
+  <div class="keyboard-hint">Use arrow keys or click to navigate</div>
+  <div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous slide">&#8592;</button>
+    <div class="slide-dots" id="slideDots"></div>
+    <button class="nav-btn" id="nextBtn" aria-label="Next slide">&#8594;</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('slideDots');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+
+    // Create dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement('div');
+      dot.classList.add('slide-dot');
+      if (i === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    function goToSlide(index) {
+      slides[currentSlide].classList.remove('active');
+      dotsContainer.children[currentSlide].classList.remove('active');
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+      dotsContainer.children[currentSlide].classList.add('active');
+    }
+
+    function nextSlide() {
+      goToSlide((currentSlide + 1) % slides.length);
+    }
+
+    function prevSlide() {
+      goToSlide((currentSlide - 1 + slides.length) % slides.length);
+    }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+    document.addEventListener('touchend', (e) => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        diff > 0 ? nextSlide() : prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
