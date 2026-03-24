@@ -106,19 +106,27 @@ export default function DemoPage() {
     { role: 'ai', text: "Welcome to the MeridianNode demo! I'm your AI assistant. Ask me about your portfolio, maintenance, or tenants." },
   ]);
 
-  const sendChat = () => {
-    if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, { role: 'user', text: chatInput }]);
-    const q = chatInput;
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const sendChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const userMsg = chatInput.trim();
+    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setChatInput('');
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { role: 'ai', text: q.toLowerCase().includes('occupancy')
-        ? "Your current occupancy is 96.2% across 248 units. Scottsdale Gardens is at 96.9% (62/64), and Mesa Terrace is at 100%. Would you like me to generate a detailed occupancy report?"
-        : q.toLowerCase().includes('maintenance')
-        ? "You have 7 open work orders. 1 P1 emergency (water leak at Unit 204 in Scottsdale), 1 P2 urgent (HVAC at Unit 112). Johnson Plumbing has been dispatched for the P1. Want me to send a status update to the tenant?"
-        : "I can help with portfolio analytics, maintenance dispatch, tenant communications, lease renewals, and owner reports. What would you like to know?"
-      }]);
-    }, 800);
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/demo/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg, history: chatMessages }),
+      });
+      const data = await res.json();
+      setChatMessages(prev => [...prev, { role: 'ai', text: data.response || "I couldn't process that. Try again." }]);
+    } catch {
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Connection issue. Try again in a moment." }]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   return (
@@ -212,6 +220,13 @@ export default function DemoPage() {
                   {m.text}
                 </div>
               ))}
+              {chatLoading && (
+                <div className="flex gap-1 p-3 self-start">
+                  <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              )}
             </div>
             <div className="p-3 border-t border-white/5 flex gap-2">
               <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()}

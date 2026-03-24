@@ -64,7 +64,19 @@ export async function configureWebhook(
   await client.incomingPhoneNumbers(phoneSid).update({
     smsUrl: `${webhookBaseUrl}/api/twilio/incoming`,
     smsMethod: 'POST',
+    voiceUrl: `${webhookBaseUrl}/api/twilio/voice/incoming`,
+    voiceMethod: 'POST',
     statusCallback: `${webhookBaseUrl}/api/twilio/status`,
     statusCallbackMethod: 'POST',
   });
+}
+
+export async function makeOutboundCall(
+  to: string,
+  from: string,
+  twiml: string
+): Promise<{ sid: string; status: string }> {
+  const client = getClient();
+  const call = await client.calls.create({ to, from, twiml });
+  return { sid: call.sid, status: call.status };
 }
