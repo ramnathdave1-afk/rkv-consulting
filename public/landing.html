@@ -281,6 +281,17 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
 .footer a{color:#555;transition:color .2s}.footer a:hover{color:#fff}
 
 /* ===== RESPONSIVE ===== */
+/* Mobile hamburger */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;z-index:101}
+.hamburger span{display:block;width:22px;height:2px;background:#fff;margin:5px 0;border-radius:2px;transition:all .3s}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:99;padding:80px 24px 24px;flex-direction:column;gap:8px}
+.mobile-overlay.open{display:flex}
+.mobile-overlay a{font-size:18px;font-weight:600;color:#ccc;padding:14px 0;border-bottom:1px solid var(--border);transition:color .2s}
+.mobile-overlay a:hover{color:#fff}
+
 @media(max-width:900px){
   .chart-grid,.feat-grid,.showcase-grid{grid-template-columns:1fr}
   .bento-grid,.tpanel.active,.split-grid,.split-grid.rev{grid-template-columns:1fr}
@@ -292,6 +303,7 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
   .steps-grid::before{display:none}
   .hero-stats{flex-wrap:wrap;gap:24px}
   nav .links{display:none}
+  .hamburger{display:block}
   .showcase-grid{grid-template-columns:1fr}
   .showcase-grid img{height:200px}
 }
@@ -302,18 +314,28 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
 <!-- NAV -->
 <nav id="navbar"><div class="inner">
   <div class="logo">RKV<em>.</em></div>
+  <button class="hamburger" id="hamburger" onclick="document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobileMenu').classList.toggle('open')"><span></span><span></span><span></span></button>
   <div class="links">
     <a href="#analytics" class="nav-link">Analytics</a>
     <a href="#agents" class="nav-link">AI Agents</a>
     <a href="#platform" class="nav-link">Platform</a>
     <a href="#proof" class="nav-link">Proof</a>
-    <a href="https://meridian-node.vercel.app" target="_blank" class="nav-link">Live Demo</a>
-    <a href="terms-of-service.html" class="nav-link">Terms</a>
-    <a href="privacy-policy.html" class="nav-link">Privacy</a>
+    <a href="/demo" class="nav-link">Live Demo</a>
+    <a href="/pricing" class="nav-link">Pricing</a>
     <a href="/login" class="nav-link" style="color:#a855f7;font-weight:600">Login</a>
     <a href="tel:+14847391152" class="btn btn-demo">Book a Demo</a>
   </div>
 </div></nav>
+<div class="mobile-overlay" id="mobileMenu">
+  <a href="#analytics" onclick="document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')">Analytics</a>
+  <a href="#agents" onclick="document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')">AI Agents</a>
+  <a href="#platform" onclick="document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')">Platform</a>
+  <a href="#proof" onclick="document.getElementById('mobileMenu').classList.remove('open');document.getElementById('hamburger').classList.remove('open')">Proof</a>
+  <a href="/demo">Live Demo</a>
+  <a href="/pricing">Pricing</a>
+  <a href="/login" style="color:var(--purple)">Log In</a>
+  <a href="tel:+14847391152" class="btn btn-purple btn-md" style="text-align:center;margin-top:12px">Book a Demo</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -323,7 +345,7 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
     <p style="animation:fadeInUp .6s ease .6s backwards">Five AI agents replace your leasing coordinator, call center, maintenance dispatcher, bookkeeper, and acquisitions analyst — so 5 people run 200+ units.</p>
     <div class="hero-btns" style="animation:fadeInUp .6s ease .8s backwards">
       <a href="tel:+14847391152" class="btn btn-white btn-lg">Book a Demo &rarr;</a>
-      <a href="https://meridian-node.vercel.app" target="_blank" class="btn btn-outline btn-lg">See the platform</a>
+      <a href="/demo" class="btn btn-outline btn-lg">See the platform</a>
     </div>
     <div class="hero-stats" style="animation:fadeInUp .6s ease 1s backwards">
       <div class="hero-stat"><div class="num" style="color:var(--green)" data-count="96">0</div><div class="label">% Occupancy</div></div>
@@ -528,7 +550,7 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
       <!-- image removed -->
     </div>
     <div class="tpanel" id="tp2">
-      <div><div class="badge green">Full Lifecycle</div><h3>Tenant request to vendor dispatch in seconds.</h3><p>AI classifies, prioritizes, matches best vendor, dispatches via SMS, updates tenant at every step. P1 emergencies get immediate dispatch with 2-hour SLA. Vendor scorecards track everything.</p><a href="https://meridian-node.vercel.app" class="btn btn-green btn-md">View workflow &rarr;</a></div>
+      <div><div class="badge green">Full Lifecycle</div><h3>Tenant request to vendor dispatch in seconds.</h3><p>AI classifies, prioritizes, matches best vendor, dispatches via SMS, updates tenant at every step. P1 emergencies get immediate dispatch with 2-hour SLA. Vendor scorecards track everything.</p><a href="/demo" class="btn btn-green btn-md">View workflow &rarr;</a></div>
       <!-- image removed -->
     </div>
   </div>
@@ -629,19 +651,19 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
     </div>
     <div class="test-grid">
       <div class="test-col">
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Cut our leasing response time from 4 hours to 90 seconds. 12 more leases last quarter."</p><div class="author"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Marcus Rivera</div><div class="role">Operations Director, 180 Units</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Maintenance dispatch used to take 45 minutes. Now the AI classifies, prioritizes, dispatches in seconds."</p><div class="author"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Emily Torres</div><div class="role">Maintenance Coordinator</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"200 units with 4 people. Before RKV, we needed 8."</p><div class="author"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Michael Brooks</div><div class="role">CEO, Brooks Property Group</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Cut our leasing response time from 4 hours to 90 seconds. 12 more leases last quarter."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--purple);flex-shrink:0">MR</div><div><div class="name">Marcus Rivera</div><div class="role">Operations Director, 180 Units</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Maintenance dispatch used to take 45 minutes. Now the AI classifies, prioritizes, dispatches in seconds."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--red);flex-shrink:0">ET</div><div><div class="name">Emily Torres</div><div class="role">Maintenance Coordinator</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"200 units with 4 people. Before RKV, we needed 8."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--green);flex-shrink:0">MB</div><div><div class="name">Michael Brooks</div><div class="role">CEO, Brooks Property Group</div></div></div></div>
       </div>
       <div class="test-col">
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Voice AI handles after-hours calls like a seasoned PM. Tenants don't realize it's AI."</p><div class="author"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Sarah Chen</div><div class="role">PM Owner, 340 Units</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Acquisitions module scored a deal at 87/100 we almost passed on. Now our top performer."</p><div class="author"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">David Park</div><div class="role">Investment Director</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Collection engine recovered $47K in 60 days."</p><div class="author"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Rachel Kim</div><div class="role">AR Manager, 150 Units</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Voice AI handles after-hours calls like a seasoned PM. Tenants don't realize it's AI."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0">SC</div><div><div class="name">Sarah Chen</div><div class="role">PM Owner, 340 Units</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Acquisitions module scored a deal at 87/100 we almost passed on. Now our top performer."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--orange);flex-shrink:0">DP</div><div><div class="name">David Park</div><div class="role">Investment Director</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Collection engine recovered $47K in 60 days."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(236,72,153,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--pink);flex-shrink:0">RK</div><div><div class="name">Rachel Kim</div><div class="role">AR Manager, 150 Units</div></div></div></div>
       </div>
       <div class="test-col">
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Eliminated 2 full days of monthly reporting. AI writes better owner reports than our team."</p><div class="author"><img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">James Okafor</div><div class="role">Finance Lead, Regional PM</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Fair housing compliance was our biggest risk. Zero violations in 6 months."</p><div class="author"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Lisa Washington</div><div class="role">Compliance Manager</div></div></div></div>
-        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Deal scoring caught 3 properties with hidden risk. Saved us from a bad acquisition."</p><div class="author"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=80&h=80&fit=crop&crop=face" alt=""><div><div class="name">Andre Williams</div><div class="role">Acquisitions Analyst</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Eliminated 2 full days of monthly reporting. AI writes better owner reports than our team."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(168,85,247,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--purple);flex-shrink:0">JO</div><div><div class="name">James Okafor</div><div class="role">Finance Lead, Regional PM</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Fair housing compliance was our biggest risk. Zero violations in 6 months."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--green);flex-shrink:0">LW</div><div><div class="name">Lisa Washington</div><div class="role">Compliance Manager</div></div></div></div>
+        <div class="tcard"><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p>"Deal scoring caught 3 properties with hidden risk. Saved us from a bad acquisition."</p><div class="author"><div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0">AW</div><div><div class="name">Andre Williams</div><div class="role">Acquisitions Analyst</div></div></div></div>
       </div>
     </div>
   </div>
@@ -659,7 +681,7 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
     <p>All 5 AI agents. No setup fees. No contracts. Call our Voice AI right now to see it in action.</p>
     <div class="cta-btns">
       <a href="tel:+14847391152" class="btn btn-white btn-lg">&#128222; Book a Demo</a>
-      <a href="https://meridian-node.vercel.app" target="_blank" class="btn btn-outline btn-lg">View platform &rarr;</a>
+      <a href="/demo" class="btn btn-outline btn-lg">View platform &rarr;</a>
     </div>
   </div>
 </section>
@@ -667,7 +689,7 @@ nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
 <div class="footer">
   &copy; 2026 RKV Consulting LLC &middot; AI infrastructure for property management.<br>
   Built by <a href="#">Dave Ramnath</a> &middot; Powered by Claude, Twilio, Supabase &amp; Vercel.<br>
-  <a href="terms-of-service.html">Terms of Service</a> &middot; <a href="privacy-policy.html">Privacy Policy</a>
+  <a href="/terms">Terms of Service</a> &middot; <a href="/privacy">Privacy Policy</a>
 </div>
 
 <script>
@@ -736,8 +758,13 @@ const countObs=new IntersectionObserver(entries=>{
       countUp(entry.target,target);
     }
   });
-},{threshold:.3});
-document.querySelectorAll('[data-count]').forEach(el=>countObs.observe(el));
+},{threshold:.1});
+document.querySelectorAll('[data-count]').forEach(el=>{countObs.observe(el);
+  const rect=el.getBoundingClientRect();
+  if(rect.top<window.innerHeight&&rect.bottom>0&&!el.dataset.counted){
+    el.dataset.counted='1';countUp(el,parseInt(el.dataset.count));
+  }
+});
 
 // ===== LIVE FEED ANIMATION =====
 const feedMessages=[

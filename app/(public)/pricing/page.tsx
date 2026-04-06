@@ -8,47 +8,47 @@ import { cn } from '@/lib/utils';
 
 const tiers = [
   {
-    id: 'explorer',
-    name: 'Explorer',
+    id: 'starter',
+    name: 'Starter',
     icon: Zap,
-    price: 0,
-    annualPrice: 0,
-    description: 'For individuals exploring the platform',
+    price: 5,
+    annualPrice: 4,
+    description: 'For small portfolios getting started with AI',
     color: '#6B7B8D',
     features: {
-      sites: '5 sites',
-      api_calls: '100 API calls/mo',
-      feasibility: '3 analyses/mo',
-      chat: '10 AI messages/day',
-      data_sources: 'Public data only',
-      team: '1 member',
-      pdf: false,
+      units: 'Up to 50 units',
+      agents: '3 AI agents',
+      voice: false,
+      acquisitions: false,
+      reports: 'Basic reporting',
+      compliance: true,
+      team: '1 team member',
       priority: false,
     },
-    cta: 'Get Started Free',
-    href: '/signup',
+    cta: 'Start Free Trial',
+    href: '/api/stripe/checkout?plan=starter',
     popular: false,
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'growth',
+    name: 'Growth',
     icon: Shield,
-    price: 199,
-    annualPrice: 159,
-    description: 'For teams and growing companies',
+    price: 5,
+    annualPrice: 4,
+    description: 'Full automation for growing portfolios',
     color: '#00D4AA',
     features: {
-      sites: '50 sites',
-      api_calls: '10,000 API calls/mo',
-      feasibility: 'Unlimited analyses',
-      chat: 'Unlimited AI chat',
-      data_sources: 'All data sources',
-      team: '5 members',
-      pdf: true,
+      units: 'Up to 500 units',
+      agents: 'All 5 AI agents',
+      voice: true,
+      acquisitions: true,
+      reports: 'AI owner reports',
+      compliance: true,
+      team: '10 team members',
       priority: false,
     },
-    cta: 'Start Pro Trial',
-    href: '/api/stripe/checkout?plan=pro',
+    cta: 'Start Free Trial',
+    href: '/api/stripe/checkout?plan=growth',
     popular: true,
   },
   {
@@ -57,51 +57,51 @@ const tiers = [
     icon: Building2,
     price: -1,
     annualPrice: -1,
-    description: 'Custom pricing for large organizations',
+    description: 'For large operators and management companies',
     color: '#8A00FF',
     features: {
-      sites: 'Unlimited sites',
-      api_calls: 'Unlimited API calls',
-      feasibility: 'Unlimited analyses',
-      chat: 'Unlimited AI chat',
-      data_sources: 'All + custom connectors',
+      units: 'Unlimited units',
+      agents: 'All 5 AI agents',
+      voice: true,
+      acquisitions: true,
+      reports: 'White-label reports',
+      compliance: true,
       team: 'Unlimited members',
-      pdf: true,
       priority: true,
     },
     cta: 'Contact Sales',
-    href: 'mailto:sales@rkvconsulting.com',
+    href: 'tel:+14847391152',
     popular: false,
   },
 ];
 
 const featureRows = [
-  { label: 'Sites', key: 'sites' },
-  { label: 'API Calls', key: 'api_calls' },
-  { label: 'Feasibility Analyses', key: 'feasibility' },
-  { label: 'AI Chat Messages', key: 'chat' },
-  { label: 'Data Sources', key: 'data_sources' },
+  { label: 'Units', key: 'units' },
+  { label: 'AI Agents', key: 'agents' },
+  { label: 'Voice AI (24/7)', key: 'voice' },
+  { label: 'Acquisitions Module', key: 'acquisitions' },
+  { label: 'Owner Reports', key: 'reports' },
+  { label: 'Fair Housing Compliance', key: 'compliance' },
   { label: 'Team Members', key: 'team' },
-  { label: 'PDF Reports', key: 'pdf' },
   { label: 'Priority Support', key: 'priority' },
 ];
 
 const faqs = [
   {
-    q: 'Can I switch plans at any time?',
-    a: 'Yes. Upgrade or downgrade instantly from your billing dashboard. Changes take effect immediately with prorated charges.',
+    q: 'What\'s included in the free trial?',
+    a: '14-day free trial with full access. No credit card required. Import your properties and see AI in action.',
   },
   {
-    q: 'What happens when I hit a usage limit?',
-    a: 'You\'ll see an upgrade prompt. Existing data is never deleted. You can upgrade to continue or wait for the next billing period.',
+    q: 'How does per-unit pricing work?',
+    a: 'You pay based on total units under management. Add or remove units anytime — billing adjusts automatically.',
   },
   {
-    q: 'Do you offer a free trial for Pro?',
-    a: 'Yes. All Pro plans include a 14-day free trial. No credit card required to start.',
+    q: 'Can I switch plans?',
+    a: 'Yes. Upgrade or downgrade anytime from your billing dashboard. Changes take effect immediately.',
   },
   {
-    q: 'What payment methods do you accept?',
-    a: 'We accept all major credit cards through Stripe. Enterprise plans can arrange invoicing.',
+    q: 'Do you integrate with my PM software?',
+    a: 'We integrate with AppFolio, Buildium, Yardi, RealPage, Entrata, and more. Or import via CSV.',
   },
 ];
 
@@ -141,10 +141,10 @@ export default function PricingPage() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="font-display text-4xl font-bold text-text-primary sm:text-5xl">
-              Simple, transparent pricing
+              Pricing that scales with your portfolio
             </h1>
             <p className="mx-auto mt-3 max-w-lg text-sm text-text-secondary">
-              Start free. Scale as your portfolio grows. Every plan includes our AI-powered intelligence engine.
+              Start with a 14-day free trial. No setup fees, no contracts. $5/unit/month — that&apos;s it.
             </p>
           </motion.div>
 
@@ -242,7 +242,7 @@ export default function PricingPage() {
                   ) : (
                     <div className="flex items-baseline gap-1">
                       <span className="font-display text-3xl font-bold text-text-primary">${price}</span>
-                      <span className="text-xs text-text-muted">/mo</span>
+                      <span className="text-xs text-text-muted">/unit/mo</span>
                       {annual && (
                         <span className="ml-2 text-xs text-text-muted line-through">${tier.price}</span>
                       )}
