@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — RKV Consulting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--fg:#f5f5f5;--card:#090909;--card-hover:#0e0e0e;
+  --muted:#0f0f0f;--muted-fg:#666;--border:#181818;--border-hover:#282828;
+  --red:#ef4444;--green:#22c55e;--purple:#a855f7;--blue:#3b82f6;
+  --orange:#f97316;--pink:#ec4899;--yellow:#eab308;--cyan:#06b6d4;
+}
+html{scroll-behavior:smooth;height:100%}
+body{background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:hidden;min-height:100%;display:flex;flex-direction:column}
+::selection{background:rgba(168,85,247,.25);color:#fff}
+a{color:inherit;text-decoration:none}
+
+/* Nav — identical to landing */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:12px 0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(0,0,0,.6);border-bottom:1px solid var(--border)}
+nav .inner{display:flex;align-items:center;justify-content:space-between;max-width:1140px;margin:0 auto;padding:0 24px}
+.logo{font-size:20px;font-weight:800;letter-spacing:-.04em}
+.logo em{font-style:normal;color:var(--purple)}
+nav .links{display:flex;gap:6px;align-items:center}
+nav .links a.nav-link{font-size:13px;font-weight:500;color:var(--muted-fg);transition:color .2s;padding:8px 14px;border-radius:8px}
+nav .links a.nav-link:hover{color:#fff;background:rgba(255,255,255,.04)}
+.btn-demo{background:var(--purple);color:#fff;padding:9px 22px;font-size:13px;border-radius:8px;font-weight:700;letter-spacing:-.01em;border:none;box-shadow:0 0 20px rgba(168,85,247,.3);display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .25s ease}
+.btn-demo:hover{filter:brightness(1.15);transform:translateY(-1px);box-shadow:0 0 30px rgba(168,85,247,.45)}
+
+/* Main container */
+.login-wrapper{flex:1;display:flex;align-items:center;justify-content:center;padding:120px 24px 60px;position:relative}
+
+/* Background effects — matching hero */
+.login-wrapper::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(168,85,247,.05) 0%,rgba(59,130,246,.03) 40%,transparent 70%);pointer-events:none;z-index:0}
+.login-wrapper::after{content:'';position:absolute;top:100px;right:10%;width:300px;height:300px;background:radial-gradient(circle,rgba(239,68,68,.03),transparent 70%);pointer-events:none;z-index:0}
+
+/* Login card */
+.login-card{position:relative;z-index:1;width:100%;max-width:420px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 36px;animation:fadeInUp .6s ease backwards}
+
+.login-card .pill{display:inline-flex;align-items:center;gap:7px;background:var(--muted);border:1px solid var(--border);padding:5px 14px;border-radius:99px;font-size:12px;font-weight:500;color:var(--muted-fg);margin-bottom:24px}
+.login-card .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+
+.login-card h1{font-size:32px;font-weight:900;letter-spacing:-.05em;line-height:1.1;margin-bottom:8px}
+.login-card h1 span{color:var(--purple)}
+.login-card .subtitle{font-size:14px;color:var(--muted-fg);line-height:1.6;margin-bottom:32px}
+
+/* Form elements */
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.form-group input{width:100%;padding:13px 16px;background:var(--muted);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:500;transition:all .25s ease;outline:none}
+.form-group input::placeholder{color:#444}
+.form-group input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(168,85,247,.1);background:#0a0a0a}
+
+.form-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.remember{display:flex;align-items:center;gap:8px;cursor:pointer}
+.remember input[type="checkbox"]{width:16px;height:16px;accent-color:var(--purple);cursor:pointer}
+.remember span{font-size:13px;color:var(--muted-fg);font-weight:500}
+.forgot{font-size:13px;color:var(--purple);font-weight:600;transition:opacity .2s}
+.forgot:hover{opacity:.8}
+
+/* Submit button — same as hero CTA */
+.btn-signin{width:100%;padding:14px 24px;background:#fff;color:#000;border:none;border-radius:10px;font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;letter-spacing:-.01em;cursor:pointer;transition:all .25s ease;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-signin:hover{background:#eee;transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,255,255,.1)}
+.btn-signin:active{transform:translateY(0)}
+
+/* Divider */
+.or-divider{display:flex;align-items:center;gap:14px;margin:24px 0}
+.or-divider .line{flex:1;height:1px;background:var(--border)}
+.or-divider span{font-size:12px;font-weight:500;color:#444;text-transform:uppercase;letter-spacing:.08em}
+
+/* SSO button */
+.btn-sso{width:100%;padding:13px 24px;background:transparent;border:1px solid var(--border-hover);color:#ccc;border-radius:10px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s ease;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-sso:hover{background:#111;border-color:#444;transform:translateY(-2px)}
+.btn-sso svg{width:18px;height:18px}
+
+/* Footer text */
+.login-footer{text-align:center;margin-top:28px;font-size:13px;color:var(--muted-fg)}
+.login-footer a{color:var(--purple);font-weight:600;transition:opacity .2s}
+.login-footer a:hover{opacity:.8}
+
+/* Error state */
+.error-msg{display:none;padding:12px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;font-size:13px;color:var(--red);font-weight:500;margin-bottom:18px;align-items:center;gap:8px}
+.error-msg.show{display:flex}
+
+/* Success state */
+.success-msg{display:none;padding:12px 16px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;font-size:13px;color:var(--green);font-weight:500;margin-bottom:18px;align-items:center;gap:8px}
+.success-msg.show{display:flex}
+
+/* Loading state */
+.btn-signin.loading{pointer-events:none;opacity:.7}
+.spinner{display:none;width:18px;height:18px;border:2px solid #333;border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
+.btn-signin.loading .spinner{display:block}
+.btn-signin.loading .btn-text{display:none}
+
+/* Bottom page footer */
+.page-footer{padding:24px;text-align:center;font-size:12px;color:#333;border-top:1px solid var(--border)}
+.page-footer a{color:var(--muted-fg);margin:0 12px;transition:color .2s}
+.page-footer a:hover{color:#fff}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:640px){
+  .login-card{padding:32px 24px}
+  .login-card h1{font-size:26px}
+  nav .links .nav-link{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV — identical to landing page -->
+<nav>
+  <div class="inner">
+    <a href="landing.html" class="logo">RKV<em>.</em></a>
+    <div class="links">
+      <a href="landing.html" class="nav-link">Home</a>
+      <a href="landing.html#analytics" class="nav-link">Analytics</a>
+      <a href="landing.html#platform" class="nav-link">Platform</a>
+      <a href="tel:+14847391152" class="btn-demo">Book a Demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- LOGIN -->
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="pill"><span class="dot"></span> Secure portal access</div>
+    <h1>Welcome back<span>.</span></h1>
+    <p class="subtitle">Sign in to your RKV Consulting dashboard to manage properties, tenants, and AI agents.</p>
+
+    <div class="error-msg" id="errorMsg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span id="errorText">Invalid email or password.</span>
+    </div>
+
+    <div class="success-msg" id="successMsg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>Authenticated — redirecting to dashboard...</span>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" id="email" placeholder="you@company.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+      </div>
+      <div class="form-row">
+        <label class="remember">
+          <input type="checkbox" checked>
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="forgot">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn-signin" id="signinBtn">
+        <span class="btn-text">Sign in &rarr;</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <div class="or-divider">
+      <div class="line"></div>
+      <span>or</span>
+      <div class="line"></div>
+    </div>
+
+    <button class="btn-sso" onclick="handleSSO()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+      Continue with SSO
+    </button>
+
+    <p class="login-footer">Don't have an account? <a href="tel:+14847391152">Contact sales</a></p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <span>&copy; 2026 RKV Consulting LLC</span>
+  <a href="terms-of-service.html">Terms</a>
+  <a href="privacy-policy.html">Privacy</a>
+</footer>
+
+<script>
+function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('signinBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  // Reset states
+  errorMsg.classList.remove('show');
+  successMsg.classList.remove('show');
+  btn.classList.add('loading');
+
+  // Simulate auth check
+  setTimeout(() => {
+    // Accept any valid-looking credentials and redirect to the main app
+    if (email && password.length >= 1) {
+      btn.classList.remove('loading');
+      successMsg.classList.add('show');
+      // Redirect to the main dashboard
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1200);
+    } else {
+      btn.classList.remove('loading');
+      errorMsg.classList.add('show');
+    }
+  }, 1500);
+}
+
+function handleSSO() {
+  // Placeholder for SSO flow
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.classList.remove('show');
+  document.getElementById('errorText').textContent = 'SSO is not configured yet. Please use email/password.';
+  errorMsg.classList.add('show');
+}
+</script>
+</body>
+</html>
