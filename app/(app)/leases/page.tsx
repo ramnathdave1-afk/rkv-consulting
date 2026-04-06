@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { toast } from '@/components/ui/Toast';
 import LeaseFormModal from '@/components/leases/LeaseFormModal';
 import type { LeaseFormData } from '@/components/leases/LeaseFormModal';
@@ -53,41 +53,32 @@ export default function LeasesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const supabase = createClient();
-
   const fetchLeases = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
-    if (!profile) return;
-
-    let query = supabase
-      .from('leases')
-      .select('id, unit_id, tenant_id, lease_start, lease_end, monthly_rent, security_deposit, status, units(unit_number, property_id, properties(name)), tenants(first_name, last_name)')
-      .eq('org_id', profile.org_id)
-      .order('lease_end', { ascending: true });
-
-    if (statusFilter) {
-      query = query.eq('status', statusFilter);
+    try {
+      const res = await fetch('/api/leases/list');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load leases');
+      setLeases((json.items as LeaseRow[]) || []);
+    } catch (err) {
+      console.error('Failed to fetch leases:', err);
+    } finally {
+      setLoading(false);
     }
-
-    const { data } = await query;
-    setLeases((data as LeaseRow[]) || []);
-    setLoading(false);
-  }, [supabase, statusFilter]);
+  }, []);
 
   useEffect(() => {
     fetchLeases();
   }, [fetchLeases]);
 
   const filtered = useMemo(() => leases.filter((l) => {
+    if (statusFilter && l.status !== statusFilter) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     const tenantName = l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}`.toLowerCase() : '';
     const propName = (l.units?.properties?.name || '').toLowerCase();
     const unitNum = (l.units?.unit_number || '').toLowerCase();
     return tenantName.includes(q) || propName.includes(q) || unitNum.includes(q);
-  }), [leases, search]);
+  }), [leases, search, statusFilter]);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [search, statusFilter]);
@@ -140,6 +131,94 @@ export default function LeasesPage() {
     if (!d) return '--';
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
+
+  const mapLeaseStatus = (status: string): RowStatus => {
+    switch (status) {
+      case 'active': case 'renewed': return 'active';
+      case 'pending': return 'warning';
+      case 'expired': return 'inactive';
+      case 'terminated': return 'critical';
+      default: return 'default';
+    }
+  };
+
+  // Row # = 1 col, remaining columns must sum to 11
+  const leaseColumns: TableColumn<LeaseRow>[] = useMemo(() => [
+    {
+      key: 'tenant',
+      label: 'Tenant',
+      span: 2,
+      render: (row) => (
+        <span className="text-[13px] font-medium text-white/90 truncate block">
+          {row.tenants ? `${row.tenants.first_name} ${row.tenants.last_name}` : '--'}
+        </span>
+      ),
+    },
+    {
+      key: 'property_unit',
+      label: 'Property / Unit',
+      span: 3,
+      render: (row) => (
+        <span className="text-[13px] text-white/50 truncate block">
+          <span className="text-white/70">{row.units?.properties?.name || '--'}</span>
+          <span className="text-white/20 mx-1">/</span>
+          <span>{row.units?.unit_number || '--'}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'rent',
+      label: 'Rent',
+      span: 2,
+      render: (row) => (
+        <span className="text-[13px] font-mono text-white/50">
+          ${Number(row.monthly_rent).toLocaleString()}<span className="text-white/25">/mo</span>
+        </span>
+      ),
+    },
+    {
+      key: 'dates',
+      label: 'Start \u2013 End',
+      span: 2,
+      render: (row) => (
+        <span className="text-[13px] text-white/40 truncate block">
+          {formatDate(row.lease_start)} \u2013 {formatDate(row.lease_end)}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      span: 1,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'actions',
+      label: '',
+      span: 1,
+      align: 'right',
+      isAction: true,
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => handleEdit(row)}
+            className="p-1.5 rounded-md text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            title="Edit lease"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => handleDelete(row.id)}
+            disabled={deletingId === row.id}
+            className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+            title="Delete lease"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], [deletingId]);
 
   if (loading) {
     return (
@@ -196,65 +275,24 @@ export default function LeasesPage() {
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <ResponsiveTable minWidth="850px">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Tenant</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Property / Unit</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Monthly Rent</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Lease Start</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Lease End</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((l) => (
-                  <tr key={l.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-text-primary">
-                      {l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}` : '--'}
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary">
-                      <span className="text-text-primary">{l.units?.properties?.name || '--'}</span>
-                      <span className="text-text-muted mx-1">/</span>
-                      <span>{l.units?.unit_number || '--'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary font-mono">
-                      ${Number(l.monthly_rent).toLocaleString()}<span className="text-text-muted">/mo</span>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary">{formatDate(l.lease_start)}</td>
-                    <td className="px-4 py-3 text-text-secondary">{formatDate(l.lease_end)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${statusColors[l.status] || ''}`}>
-                        {l.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleEdit(l)}
-                          className="p-1.5 rounded-md text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-                          title="Edit lease"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(l.id)}
-                          disabled={deletingId === l.id}
-                          className="p-1.5 rounded-md text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                          title="Delete lease"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ResponsiveTable>
+        <>
+          <AnimatedTable<LeaseRow>
+            columns={leaseColumns}
+            data={paginated}
+            getKey={(row) => row.id}
+            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
+            getRowStatus={(row) => mapLeaseStatus(row.status)}
+            title="Leases"
+            subtitle={`${filtered.length} lease${filtered.length !== 1 ? 's' : ''}`}
+            headerRight={
+              <Button icon={<Plus size={16} />} onClick={handleAdd}>
+                New Lease
+              </Button>
+            }
+            emptyState={
+              <p className="text-sm text-white/40">No leases found.</p>
+            }
+          />
           <Pagination
             total={filtered.length}
             page={page}
@@ -262,7 +300,7 @@ export default function LeasesPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </div>
+        </>
       )}
 
       {/* Modal */}

@@ -1,0 +1,12 @@
+FROM node:20-slim
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY lib/ lib/
+COPY scripts/ scripts/
+COPY tsconfig.json ./
+COPY .env.local .env.local 2>/dev/null || true
+EXPOSE 8080
+ENV PORT=8080
+ENV VOICE_AI_WS_PORT=8080
+CMD ["npx", "tsx", "scripts/voice-server.ts"]

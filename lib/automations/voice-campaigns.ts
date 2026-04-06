@@ -8,7 +8,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://meridian-node.vercel.app';
+const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
 
 export async function scheduleRentReminderCalls(orgId: string) {
   // Find tenants with active leases who are 3+ days late

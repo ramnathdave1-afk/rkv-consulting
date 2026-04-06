@@ -9,7 +9,7 @@ export async function callClaude(messages: { role: string; content: string }[], 
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
-      system: systemPrompt || 'You are MeridianNode AI — an expert property management assistant. You help PM companies manage properties, tenants, leases, work orders, vendors, and financial reporting. You can answer questions about occupancy, maintenance coordination, lease renewals, and portfolio analytics.',
+      system: systemPrompt || 'You are RKV Consulting AI — an expert property management assistant. You help PM companies manage properties, tenants, leases, work orders, vendors, and financial reporting. You can answer questions about occupancy, maintenance coordination, lease renewals, and portfolio analytics.',
       messages,
     }),
   })
@@ -33,7 +33,7 @@ export async function streamClaude(messages: { role: string; content: string }[]
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       stream: true,
-      system: systemPrompt || 'You are MeridianNode AI — an expert property management assistant. You help PM companies manage properties, tenants, leases, work orders, vendors, and financial reporting. You can answer questions about occupancy, maintenance coordination, lease renewals, and portfolio analytics.',
+      system: systemPrompt || 'You are RKV Consulting AI — an expert property management assistant. You help PM companies manage properties, tenants, leases, work orders, vendors, and financial reporting. You can answer questions about occupancy, maintenance coordination, lease renewals, and portfolio analytics.',
       messages,
     }),
   })

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Pagination } from '@/components/ui/Pagination';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
 import { Building2, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -18,8 +18,6 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const supabase = createClient();
-
   // Modal state
   const [formOpen, setFormOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -34,20 +32,17 @@ export default function PropertiesPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const fetchProperties = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
-    if (!profile) return;
-
-    const { data } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('org_id', profile.org_id)
-      .order('created_at', { ascending: false });
-
-    setProperties((data as Property[]) || []);
-    setLoading(false);
-  }, [supabase]);
+    try {
+      const res = await fetch('/api/properties/list');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load properties');
+      setProperties((json.items as Property[]) || []);
+    } catch (err) {
+      console.error('Failed to fetch properties:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchProperties();
@@ -109,6 +104,65 @@ export default function PropertiesPage() {
     }
   }
 
+  // Row # = 1 col, remaining columns must sum to 11
+  const propertyColumns: TableColumn<Property>[] = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Name',
+      span: 3,
+      render: (row) => (
+        <Link href={`/properties/${row.id}`} className="text-accent hover:underline font-medium text-[13px] truncate block">
+          {row.name}
+        </Link>
+      ),
+    },
+    {
+      key: 'address',
+      label: 'Address',
+      span: 3,
+      render: (row) => (
+        <span className="text-[13px] text-white/50 truncate block">{row.address_line1}, {row.city}, {row.state} {row.zip}</span>
+      ),
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      span: 2,
+      render: (row) => <StatusBadge status={row.property_type.replace('_', ' ')} />,
+    },
+    {
+      key: 'units',
+      label: 'Units',
+      span: 1,
+      render: (row) => <span className="text-[13px] text-white/50">{row.unit_count}</span>,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      span: 2,
+      align: 'right',
+      isAction: true,
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => openEdit(row)}
+            className="p-1.5 rounded-lg text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            title="Edit property"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => openDelete(row)}
+            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            title="Delete property"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], []);
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
@@ -157,54 +211,24 @@ export default function PropertiesPage() {
           <p className="text-sm text-text-secondary">No properties match &quot;{search}&quot;. Try a different search.</p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <ResponsiveTable minWidth="640px">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Address</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Units</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((p) => (
-                  <tr key={p.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/properties/${p.id}`} className="text-accent hover:underline font-medium">{p.name}</Link>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary">{p.address_line1}, {p.city}, {p.state} {p.zip}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-accent/10 text-accent capitalize">
-                        {p.property_type.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary">{p.unit_count}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => openEdit(p)}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-                          title="Edit property"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => openDelete(p)}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
-                          title="Delete property"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ResponsiveTable>
+        <>
+          <AnimatedTable<Property>
+            columns={propertyColumns}
+            data={paginated}
+            getKey={(row) => row.id}
+            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
+            getRowStatus={() => 'active' as RowStatus}
+            title="Properties"
+            subtitle={`${filtered.length} propert${filtered.length !== 1 ? 'ies' : 'y'}`}
+            headerRight={
+              <Button icon={<Plus size={16} />} onClick={openAdd}>
+                Add Property
+              </Button>
+            }
+            emptyState={
+              <p className="text-sm text-white/40">No properties found.</p>
+            }
+          />
           <Pagination
             total={filtered.length}
             page={page}
@@ -212,7 +236,7 @@ export default function PropertiesPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </div>
+        </>
       )}
 
       {/* Add/Edit Modal */}

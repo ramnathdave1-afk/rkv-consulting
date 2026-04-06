@@ -44,7 +44,7 @@ export async function logTrace(params: {
   end_time?: string;
   extra?: Record<string, unknown>;
 }): Promise<{ id: string }> {
-  const projectName = process.env.LANGSMITH_PROJECT || 'meridiannode-pm';
+  const projectName = process.env.LANGSMITH_PROJECT || 'rkvconsulting-pm';
 
   const response = await fetch(`${LANGSMITH_API_URL}/runs`, {
     method: 'POST',

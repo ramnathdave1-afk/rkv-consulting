@@ -45,7 +45,7 @@ export async function createLinkToken(userId: string, products: string[] = ['aut
     headers: plaidHeaders(),
     body: JSON.stringify({
       user: { client_user_id: userId },
-      client_name: 'MeridianNode',
+      client_name: 'RKV Consulting',
       products,
       country_codes: ['US'],
       language: 'en',

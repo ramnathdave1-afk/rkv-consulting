@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { callClaude } from '@/lib/ai/claude';
 
-const DEMO_SYSTEM_PROMPT = `You are MeridianNode AI — the intelligent property management assistant for a demo portfolio. You have deep expertise in residential property management.
+const DEMO_SYSTEM_PROMPT = `You are RKV Consulting AI — the intelligent property management assistant for a demo portfolio. You have deep expertise in residential property management.
 
 ## Your Portfolio (Demo Data)
 - **Total**: 248 units across 5 properties, 96.2% occupancy
@@ -35,7 +35,7 @@ const DEMO_SYSTEM_PROMPT = `You are MeridianNode AI — the intelligent property
 - Data-driven — cite specific numbers from the portfolio
 - Proactive — suggest actions the PM should take
 - Keep responses concise (2-4 sentences unless asked for detail)
-- If asked about features, explain how MeridianNode automates that specific PM workflow`;
+- If asked about features, explain how RKV Consulting automates that specific PM workflow`;
 
 const MAX_MESSAGES = 20;
 

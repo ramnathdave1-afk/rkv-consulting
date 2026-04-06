@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   }
 
   await sendEmail({
-    to: 'hello@meridiannode.io',
+    to: 'hello@rkvconsulting.com',
     subject: `[Contact] ${name} — ${email}`,
     html: `
       <div style="font-family: Inter, sans-serif; max-width: 500px; margin: 0 auto; background: #06080C; color: #F0F2F5; padding: 32px; border-radius: 12px;">

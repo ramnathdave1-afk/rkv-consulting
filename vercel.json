@@ -15,6 +15,14 @@
     {
       "path": "/api/cron/variance-alerts",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/move-ins",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/voice-campaigns",
+      "schedule": "0 9 * * *"
     }
   ]
 }

@@ -209,7 +209,7 @@ function SignupForm() {
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
             <h1 className="font-display text-3xl font-bold text-text-primary">
-              Meridian Node
+              RKV Consulting
             </h1>
             <p className="mt-2 text-sm text-text-secondary">
               Create your free account
@@ -300,7 +300,7 @@ function SignupForm() {
           </p>
 
           <p className="mt-4 text-center text-xs text-text-muted">
-            Meridian Node by RKV Consulting LLC
+            RKV Consulting by RKV Consulting LLC
           </p>
         </div>
       </div>
@@ -313,7 +313,7 @@ function SignupForm() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="font-display text-3xl font-bold text-text-primary">
-            Meridian Node
+            RKV Consulting
           </h1>
           <p className="mt-2 text-sm text-text-secondary">
             Create your account
@@ -378,7 +378,7 @@ function SignupForm() {
         </form>
 
         <p className="mt-6 text-center text-xs text-text-muted">
-          Meridian Node by RKV Consulting LLC
+          RKV Consulting by RKV Consulting LLC
         </p>
       </div>
     </div>

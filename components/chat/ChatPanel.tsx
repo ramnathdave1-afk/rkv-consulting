@@ -2,15 +2,67 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Bot, User, Sparkles, Trash2 } from 'lucide-react';
+import {
+  X,
+  Send,
+  Bot,
+  User,
+  Sparkles,
+  Trash2,
+  ChevronDown,
+  Paperclip,
+  Command,
+  LoaderIcon,
+  Building2,
+  Wrench,
+  DollarSign,
+  FileText,
+  CalendarDays,
+} from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
 import { useChatStore } from '@/store/chat-store';
 import { cn } from '@/lib/utils';
 
+const QUICK_QUESTIONS = [
+  { icon: <Building2 className="w-3.5 h-3.5" />, label: 'Occupancy Rate', text: "What's my occupancy rate?" },
+  { icon: <Wrench className="w-3.5 h-3.5" />, label: 'Open Work Orders', text: 'How many open work orders do I have?' },
+  { icon: <DollarSign className="w-3.5 h-3.5" />, label: 'Monthly Revenue', text: "What's my total monthly revenue?" },
+  { icon: <FileText className="w-3.5 h-3.5" />, label: 'Expiring Leases', text: 'Show me leases expiring soon' },
+  { icon: <CalendarDays className="w-3.5 h-3.5" />, label: 'Showings', text: 'Any upcoming showings?' },
+];
+
+function formatTime(date: Date) {
+  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function TypingDots() {
+  return (
+    <div className="flex items-center ml-1">
+      {[1, 2, 3].map((dot) => (
+        <motion.div
+          key={dot}
+          className="w-1.5 h-1.5 bg-white/90 rounded-full mx-0.5"
+          initial={{ opacity: 0.3 }}
+          animate={{
+            opacity: [0.3, 0.9, 0.3],
+            scale: [0.85, 1.1, 0.85],
+          }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            delay: dot * 0.15,
+            ease: 'easeInOut',
+          }}
+          style={{ boxShadow: '0 0 4px rgba(0, 212, 170, 0.3)' }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function ChatPanel() {
   const chatOpen = useAppStore((s) => s.chatOpen);
   const setChatOpen = useAppStore((s) => s.setChatOpen);
-  const selectedPropertyId = useAppStore((s) => s.selectedPropertyId);
 
   const messages = useChatStore((s) => s.messages);
   const isStreaming = useChatStore((s) => s.isStreaming);
@@ -20,89 +72,106 @@ export function ChatPanel() {
   const setStreamingText = useChatStore((s) => s.setStreamingText);
   const finalizeStreaming = useChatStore((s) => s.finalizeStreaming);
   const clearHistory = useChatStore((s) => s.clearHistory);
-  const context = useChatStore((s) => s.context);
 
   const [input, setInput] = useState('');
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingText]);
+  }, []);
 
   useEffect(() => {
-    if (chatOpen) inputRef.current?.focus();
+    scrollToBottom();
+  }, [messages, streamingText, scrollToBottom]);
+
+  useEffect(() => {
+    if (chatOpen) setTimeout(() => textareaRef.current?.focus(), 100);
   }, [chatOpen]);
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isStreaming) return;
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 80);
+  }, []);
 
-    const userContent = input.trim();
-    addMessage('user', userContent);
-    setInput('');
-    setStreaming(true);
-    setStreamingText('');
+  const adjustHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = '44px';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }, []);
 
-    const allMessages = [
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-      { role: 'user' as const, content: userContent },
-    ];
+  const sendMessage = useCallback(
+    async (overrideText?: string) => {
+      const text = overrideText || input.trim();
+      if (!text || isStreaming) return;
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: allMessages,
-          context: { ...context, propertyId: selectedPropertyId },
-        }),
-      });
+      addMessage('user', text);
+      if (!overrideText) setInput('');
+      if (textareaRef.current) textareaRef.current.style.height = '44px';
+      setStreaming(true);
+      setStreamingText('');
 
-      if (!response.ok || !response.body) {
-        throw new Error(`Chat error: ${response.status}`);
-      }
+      const allMessages = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: 'user' as const, content: text },
+      ];
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let buffer = '';
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: allMessages }),
+        });
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        if (!response.ok || !response.body) throw new Error('Chat error');
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-                fullText += parsed.delta.text;
-                setStreamingText(fullText);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                  fullText += parsed.delta.text;
+                  setStreamingText(fullText);
+                }
+              } catch {
+                // skip
               }
-            } catch {
-              // skip malformed SSE lines
             }
           }
         }
-      }
 
-      finalizeStreaming();
-      if (!fullText) {
-        addMessage('assistant', 'No response received.');
+        finalizeStreaming();
+        if (!fullText) {
+          addMessage('assistant', 'No response received. Please try again.');
+          setStreaming(false);
+        }
+      } catch {
+        addMessage('assistant', 'Unable to connect. Please try again.');
         setStreaming(false);
+        setStreamingText('');
       }
-    } catch {
-      addMessage('assistant', 'Error: Unable to connect to AI. Please try again.');
-      setStreaming(false);
-      setStreamingText('');
-    }
-  }, [input, isStreaming, messages, context, selectedPropertyId, addMessage, setStreaming, setStreamingText, finalizeStreaming]);
+    },
+    [input, isStreaming, messages, addMessage, setStreaming, setStreamingText, finalizeStreaming],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,36 +184,43 @@ export function ChatPanel() {
     <AnimatePresence>
       {chatOpen && (
         <motion.div
-          initial={{ x: '100%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '100%', opacity: 0 }}
-          transition={{ type: 'tween', duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed right-0 top-0 z-50 flex h-screen w-[420px] flex-col border-l border-border bg-bg-primary/95 backdrop-blur-xl shadow-2xl"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          className="fixed bottom-6 right-6 z-50 flex w-[400px] flex-col overflow-hidden rounded-2xl border border-white/[0.05] shadow-2xl shadow-black/40"
+          style={{ height: '540px' }}
         >
+          {/* Glassmorphism background */}
+          <div className="absolute inset-0 bg-[#0A0A0B]/95 backdrop-blur-2xl" />
+          {/* Subtle glow */}
+          <div className="absolute top-0 left-1/4 w-48 h-48 bg-[#00D4AA]/5 rounded-full filter blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-indigo-500/5 rounded-full filter blur-[80px] pointer-events-none" />
+
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-                <Sparkles size={16} className="text-accent" />
+          <div className="relative flex items-center justify-between border-b border-white/[0.05] px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.05]">
+                <Sparkles size={15} className="text-[#00D4AA]" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#0A0A0B]" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-text-primary">MeridianNode AI</h3>
-                <p className="text-[10px] text-text-muted">
-                  Property management assistant
-                </p>
+                <h3 className="text-sm font-semibold text-white/90">RKV Consulting AI</h3>
+                <p className="text-[10px] text-white/30">Property management assistant</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={clearHistory}
-                className="rounded-lg p-1.5 text-text-muted hover:bg-bg-elevated hover:text-text-primary transition-colors"
+                className="rounded-lg p-1.5 text-white/30 hover:bg-white/[0.05] hover:text-white/70 transition-colors"
                 title="Clear chat"
               >
                 <Trash2 size={14} />
               </button>
               <button
                 onClick={() => setChatOpen(false)}
-                className="rounded-lg p-1.5 text-text-muted hover:bg-bg-elevated hover:text-text-primary transition-colors"
+                className="rounded-lg p-1.5 text-white/30 hover:bg-white/[0.05] hover:text-white/70 transition-colors"
+                title="Close"
               >
                 <X size={16} />
               </button>
@@ -152,63 +228,87 @@ export function ChatPanel() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="relative flex-1 overflow-y-auto px-4 py-4 space-y-3"
+          >
+            {/* Empty state */}
             {messages.length === 0 && !isStreaming && (
-              <div className="flex flex-col items-center justify-center h-full text-center px-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 mb-4">
-                  <Bot size={24} className="text-accent" />
-                </div>
-                <p className="text-sm font-medium text-text-primary mb-1">Ask Meridian AI</p>
-                <p className="text-xs text-text-muted mb-6">
-                  Get insights on sites, parcels, zoning, grid capacity, and feasibility analysis.
-                </p>
-                <div className="space-y-2 w-full">
-                  {[
-                    'Find solar sites near Phoenix with 50+ acres',
-                    'What zoning is compatible with data centers?',
-                    'Analyze grid capacity in Maricopa County',
-                  ].map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
-                      className="w-full rounded-lg border border-border bg-bg-secondary/40 px-3 py-2 text-left text-xs text-text-muted hover:border-accent/30 hover:text-text-primary transition-colors"
+              <div className="flex flex-col items-center justify-center h-full text-center px-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <h2 className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-white/90 to-white/40 mb-1">
+                    How can I help?
+                  </h2>
+                  <motion.div
+                    className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-auto mb-2"
+                    initial={{ width: 0 }}
+                    animate={{ width: '80%' }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                  />
+                  <p className="text-[11px] text-white/30 mb-5">
+                    Ask about your portfolio or get PM advice
+                  </p>
+                </motion.div>
+                <div className="flex flex-wrap items-center justify-center gap-1.5 w-full">
+                  {QUICK_QUESTIONS.map((q, i) => (
+                    <motion.button
+                      key={q.text}
+                      onClick={() => sendMessage(q.text)}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/[0.02] hover:bg-white/[0.06] rounded-lg text-[11px] text-white/50 hover:text-white/80 transition-all border border-white/[0.04] hover:border-white/[0.08]"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + i * 0.06 }}
                     >
-                      {suggestion}
-                    </button>
+                      {q.icon}
+                      <span>{q.label}</span>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Messages */}
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className={cn(
-                  'flex gap-2',
-                  msg.role === 'user' ? 'justify-end' : 'justify-start',
-                )}
+                transition={{ duration: 0.15 }}
+                className={cn('flex gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}
               >
                 {msg.role === 'assistant' && (
-                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent/10">
-                    <Bot size={12} className="text-accent" />
+                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.05]">
+                    <Bot size={12} className="text-[#00D4AA]" />
                   </div>
                 )}
-                <div
-                  className={cn(
-                    'max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed',
-                    msg.role === 'user'
-                      ? 'bg-accent text-white'
-                      : 'bg-bg-secondary/60 border border-border text-text-primary',
-                  )}
-                >
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                <div className="flex flex-col gap-0.5 max-w-[82%]">
+                  <div
+                    className={cn(
+                      'rounded-xl px-3 py-2 text-xs leading-relaxed',
+                      msg.role === 'user'
+                        ? 'bg-white text-[#0A0A0B] rounded-br-sm shadow-lg shadow-white/5'
+                        : 'bg-white/[0.03] border border-white/[0.06] text-white/85 rounded-bl-sm',
+                    )}
+                  >
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[9px] text-white/20 px-1',
+                      msg.role === 'user' ? 'text-right' : 'text-left',
+                    )}
+                  >
+                    {formatTime(msg.timestamp)}
+                  </span>
                 </div>
                 {msg.role === 'user' && (
-                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent/20">
-                    <User size={12} className="text-accent" />
+                  <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10">
+                    <User size={12} className="text-white/70" />
                   </div>
                 )}
               </motion.div>
@@ -216,24 +316,16 @@ export function ChatPanel() {
 
             {/* Streaming */}
             {isStreaming && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-2"
-              >
-                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent/10">
-                  <Bot size={12} className="text-accent animate-pulse" />
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2">
+                <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.05]">
+                  <Bot size={12} className="text-[#00D4AA]" />
                 </div>
-                <div className="max-w-[85%] rounded-xl bg-bg-secondary/60 border border-border px-3 py-2 text-xs leading-relaxed text-text-primary">
+                <div className="max-w-[82%] rounded-xl rounded-bl-sm bg-white/[0.03] border border-white/[0.06] px-3 py-2 text-xs leading-relaxed text-white/85">
                   <div className="whitespace-pre-wrap">
                     {streamingText || (
-                      <span className="flex items-center gap-1 text-text-muted">
-                        <span className="animate-pulse">Thinking</span>
-                        <span className="inline-flex gap-0.5">
-                          <span className="h-1 w-1 rounded-full bg-accent animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="h-1 w-1 rounded-full bg-accent animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="h-1 w-1 rounded-full bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </span>
+                      <span className="flex items-center gap-1.5 text-white/40">
+                        <span>Thinking</span>
+                        <TypingDots />
                       </span>
                     )}
                   </div>
@@ -244,28 +336,83 @@ export function ChatPanel() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="border-t border-border px-4 py-3">
-            <div className="flex items-end gap-2 rounded-xl border border-border bg-bg-secondary/40 px-3 py-2 focus-within:border-accent/50 transition-colors">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about sites, zoning, grid capacity..."
-                rows={1}
-                className="flex-1 resize-none bg-transparent text-xs text-text-primary placeholder:text-text-muted outline-none max-h-24"
-                disabled={isStreaming}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim() || isStreaming}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-white disabled:opacity-30 hover:bg-accent/80 transition-colors"
+          {/* Scroll to bottom */}
+          <AnimatePresence>
+            {showScrollBtn && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={scrollToBottom}
+                className="absolute bottom-[76px] left-1/2 -translate-x-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.05] border border-white/[0.08] shadow-lg hover:bg-white/[0.1] transition-colors"
               >
-                <Send size={12} />
-              </button>
+                <ChevronDown size={14} className="text-white/50" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Input */}
+          <div className="relative border-t border-white/[0.05] p-3">
+            <div className="backdrop-blur-xl bg-white/[0.02] rounded-xl border border-white/[0.05]">
+              <div className="px-3 py-2">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    adjustHeight();
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
+                  placeholder="Ask about your properties..."
+                  rows={1}
+                  className="w-full resize-none bg-transparent text-xs text-white/90 placeholder:text-white/20 outline-none leading-relaxed"
+                  style={{ height: '44px', maxHeight: '120px', overflow: 'hidden' }}
+                  disabled={isStreaming}
+                />
+              </div>
+              <div className="px-3 pb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <button className="p-1.5 text-white/25 hover:text-white/60 rounded-lg transition-colors">
+                    <Paperclip className="w-3.5 h-3.5" />
+                  </button>
+                  <button className="p-1.5 text-white/25 hover:text-white/60 rounded-lg transition-colors">
+                    <Command className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <motion.button
+                  onClick={() => sendMessage()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={!input.trim() || isStreaming}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1.5',
+                    input.trim()
+                      ? 'bg-white text-[#0A0A0B] shadow-lg shadow-white/10'
+                      : 'bg-white/[0.05] text-white/30',
+                  )}
+                >
+                  {isStreaming ? (
+                    <LoaderIcon className="w-3.5 h-3.5 animate-[spin_2s_linear_infinite]" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  <span>Send</span>
+                </motion.button>
+              </div>
             </div>
           </div>
+
+          {/* Focus glow effect */}
+          {inputFocused && (
+            <motion.div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-[#00D4AA]/5 rounded-full filter blur-[60px] pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>

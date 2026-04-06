@@ -23,7 +23,7 @@ export default function SecurityPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
           </Link>
           <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
         </div>
@@ -36,7 +36,7 @@ export default function SecurityPage() {
           </div>
           <h1 className="font-display text-3xl font-bold text-text-primary mb-2">Security</h1>
           <p className="text-sm text-text-secondary max-w-lg mx-auto">
-            Security is foundational to Meridian Node. Here&apos;s how we protect your data and infrastructure intelligence.
+            Security is foundational to RKV Consulting. Here&apos;s how we protect your data and infrastructure intelligence.
           </p>
         </motion.div>
 
@@ -68,21 +68,21 @@ export default function SecurityPage() {
         >
           <h3 className="font-display text-sm font-bold text-text-primary mb-2">Report a Vulnerability</h3>
           <p className="text-xs text-text-secondary mb-3">
-            If you discover a security vulnerability, please report it responsibly to security@meridiannode.io
+            If you discover a security vulnerability, please report it responsibly to security@rkvconsulting.com
           </p>
           <a
-            href="mailto:security@meridiannode.io"
+            href="mailto:security@rkvconsulting.com"
             className="inline-flex items-center gap-2 rounded-lg border border-accent/30 px-4 py-2 text-xs font-semibold text-accent hover:bg-accent/5 transition-colors"
           >
             <Lock size={12} />
-            security@meridiannode.io
+            security@rkvconsulting.com
           </a>
         </motion.div>
       </div>
 
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV</p>
+          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex gap-4">
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>

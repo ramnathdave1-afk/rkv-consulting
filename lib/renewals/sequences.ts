@@ -106,7 +106,7 @@ export async function processRenewalStep(
 
     // Send email if email available
     if (lease.tenants.email) {
-      const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app';
+      const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
       const renewalUrl = `${BASE_URL}/dashboard`;
       const emailContent = leaseRenewalEmail(tenantName, propertyName, unitNumber, leaseEnd, renewalUrl);
       await sendEmail({

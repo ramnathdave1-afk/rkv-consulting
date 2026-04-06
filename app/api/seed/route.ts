@@ -440,8 +440,8 @@ export async function POST(request: NextRequest) {
       const { data: newOrg, error: orgErr } = await supabase
         .from('organizations')
         .insert({
-          name: 'MeridianNode Demo',
-          slug: 'meridiannode-demo',
+          name: 'RKV Consulting Demo',
+          slug: 'rkvconsulting-demo',
           enabled_verticals: ['residential', 'mixed_use'],
           default_vertical: 'residential',
         })

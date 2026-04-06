@@ -1,27 +1,27 @@
 /**
  * Email Templates — HTML templates for transactional emails.
- * PM-specific templates for MeridianNode property management platform.
+ * PM-specific templates for RKV Consulting property management platform.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
 
-function layout(content: string) {
+export function layout(content: string) {
   return `
     <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 520px; margin: 0 auto; background: #06080C; color: #F0F2F5; padding: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
       <div style="text-align: center; margin-bottom: 24px;">
         <span style="display: inline-block; background: rgba(0,212,170,0.1); padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; color: #00D4AA;">M</span>
-        <span style="margin-left: 8px; font-size: 14px; font-weight: 700; color: #F0F2F5;">Meridian Node</span>
+        <span style="margin-left: 8px; font-size: 14px; font-weight: 700; color: #F0F2F5;">RKV Consulting</span>
       </div>
       ${content}
       <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 28px 0 16px;" />
       <p style="margin: 0; font-size: 11px; color: #4A5568; text-align: center;">
-        Meridian Node by RKV Consulting LLC · <a href="${BASE_URL}" style="color: #00D4AA; text-decoration: none;">meridiannode.io</a>
+        RKV Consulting by RKV Consulting LLC · <a href="${BASE_URL}" style="color: #00D4AA; text-decoration: none;">rkvconsulting.com</a>
       </p>
     </div>
   `;
 }
 
-function button(text: string, url: string) {
+export function button(text: string, url: string) {
   return `
     <div style="text-align: center; margin: 24px 0;">
       <a href="${url}" style="display: inline-block; background: #00D4AA; color: #06080C; font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 8px; text-decoration: none;">
@@ -57,11 +57,11 @@ function infoRow(label: string, value: string) {
 
 export function welcomeEmail(name: string) {
   return {
-    subject: 'Welcome to Meridian Node',
+    subject: 'Welcome to RKV Consulting',
     html: layout(`
       <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Welcome, ${name}!</h2>
       <p style="margin: 0 0 12px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
-        Your Meridian Node account is ready. Let's get your property management powered by AI.
+        Your RKV Consulting account is ready. Let's get your property management powered by AI.
       </p>
       <p style="margin: 0 0 8px; font-size: 13px; color: #8B95A5;">Here's how to get started:</p>
       <ul style="margin: 0 0 16px; padding-left: 20px; font-size: 13px; color: #8B95A5; line-height: 1.8;">
@@ -77,11 +77,11 @@ export function welcomeEmail(name: string) {
 
 export function invitationEmail(inviterName: string, orgName: string, inviteUrl: string) {
   return {
-    subject: `${inviterName} invited you to ${orgName} on Meridian Node`,
+    subject: `${inviterName} invited you to ${orgName} on RKV Consulting`,
     html: layout(`
       <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">You've been invited</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
-        <strong style="color: #F0F2F5;">${inviterName}</strong> has invited you to join <strong style="color: #F0F2F5;">${orgName}</strong> on Meridian Node — an AI-powered property management platform.
+        <strong style="color: #F0F2F5;">${inviterName}</strong> has invited you to join <strong style="color: #F0F2F5;">${orgName}</strong> on RKV Consulting — an AI-powered property management platform.
       </p>
       ${button('Accept Invitation', inviteUrl)}
       <p style="margin: 0; font-size: 11px; color: #4A5568;">This invitation expires in 7 days.</p>
@@ -91,7 +91,7 @@ export function invitationEmail(inviterName: string, orgName: string, inviteUrl:
 
 export function passwordResetEmail(resetUrl: string) {
   return {
-    subject: 'Reset your Meridian Node password',
+    subject: 'Reset your RKV Consulting password',
     html: layout(`
       <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Password Reset</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
@@ -115,7 +115,7 @@ export function weeklyDigestEmail(stats: {
 }) {
   const fmtRevenue = stats.revenue.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
   return {
-    subject: 'Your Weekly Meridian Node Digest',
+    subject: 'Your Weekly RKV Consulting Digest',
     html: layout(`
       <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Weekly Digest</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5;">Here's your portfolio snapshot for the week:</p>

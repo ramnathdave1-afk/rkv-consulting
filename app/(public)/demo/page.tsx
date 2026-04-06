@@ -103,7 +103,7 @@ export default function DemoPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([
-    { role: 'ai', text: "Welcome to the MeridianNode demo! I'm your AI assistant. Ask me about your portfolio, maintenance, or tenants." },
+    { role: 'ai', text: "Welcome to the RKV Consulting demo! I'm your AI assistant. Ask me about your portfolio, maintenance, or tenants." },
   ]);
 
   const [chatLoading, setChatLoading] = useState(false);
@@ -141,7 +141,7 @@ export default function DemoPage() {
           <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
             <span className="text-[9px] font-bold text-black">M</span>
           </div>
-          {!collapsed && <span className="text-sm font-semibold tracking-tight truncate">MeridianNode</span>}
+          {!collapsed && <span className="text-sm font-semibold tracking-tight truncate">RKV Consulting</span>}
         </div>
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => (
@@ -210,7 +210,7 @@ export default function DemoPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center"><Sparkles className="w-3.5 h-3.5 text-emerald-400" /></div>
-                <div><div className="text-xs font-semibold">MeridianNode AI</div><div className="text-[10px] text-emerald-400">Online</div></div>
+                <div><div className="text-xs font-semibold">RKV Consulting AI</div><div className="text-[10px] text-emerald-400">Online</div></div>
               </div>
               <button onClick={() => setChatOpen(false)} className="text-neutral-500 hover:text-white"><XCircle className="w-4 h-4" /></button>
             </div>

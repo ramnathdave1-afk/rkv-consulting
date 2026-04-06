@@ -13,57 +13,108 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   color?: string;
 }
 
-const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-bg-elevated text-text-secondary border-border',
-  success: 'bg-success-muted text-success border-[rgba(34,197,94,0.25)]',
-  danger: 'bg-danger-muted text-danger border-[rgba(239,68,68,0.25)]',
-  warning: 'bg-warning-muted text-warning border-[rgba(245,158,11,0.25)]',
-  info: 'bg-blue-muted text-blue border-[rgba(59,130,246,0.25)]',
-  violet: 'bg-violet-muted text-violet border-[rgba(138,0,255,0.25)]',
-  muted: 'bg-bg-elevated text-text-muted border-border',
-  accent: 'bg-accent-muted text-accent border-border-accent',
+/* ── Opaque fills for light mode ── */
+const variantFills: Record<BadgeVariant, { bg: string; text: string }> = {
+  default: { bg: 'var(--bg-hover)', text: 'var(--text-secondary)' },
+  success: { bg: '#E6F7EF', text: '#0D6B3A' },
+  danger:  { bg: '#FDE8E8', text: '#B91C1C' },
+  warning: { bg: '#FFF3D6', text: '#92610A' },
+  info:    { bg: '#E8F0FE', text: '#1D4ED8' },
+  violet:  { bg: '#F3E8FF', text: '#7C3AED' },
+  muted:   { bg: 'var(--bg-hover)', text: 'var(--text-tertiary)' },
+  accent:  { bg: '#E6F7F1', text: '#0D7353' },
+};
+
+/* ── Opaque fills for dark mode ── */
+const variantFillsDark: Record<BadgeVariant, { bg: string; text: string }> = {
+  default: { bg: 'var(--bg-hover)', text: 'var(--text-secondary)' },
+  success: { bg: '#0D3D2E', text: '#34D399' },
+  danger:  { bg: '#3D1515', text: '#F87171' },
+  warning: { bg: '#3D2E0A', text: '#FBBF24' },
+  info:    { bg: '#1A2744', text: '#60A5FA' },
+  violet:  { bg: '#2D1A4E', text: '#A855F7' },
+  muted:   { bg: 'var(--bg-hover)', text: 'var(--text-tertiary)' },
+  accent:  { bg: '#0D3D2E', text: '#34D399' },
 };
 
 const dotColors: Record<BadgeVariant, string> = {
-  default: '#8B95A5',
-  success: '#22C55E',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  info: '#3B82F6',
-  violet: '#8A00FF',
-  muted: '#4A5568',
-  accent: '#00D4AA',
+  default: 'var(--text-tertiary)',
+  success: 'var(--success)',
+  danger: 'var(--danger)',
+  warning: 'var(--warning)',
+  info: 'var(--info)',
+  violet: 'var(--violet)',
+  muted: 'var(--text-tertiary)',
+  accent: 'var(--accent)',
 };
 
-const sizeStyles: Record<BadgeSize, string> = {
-  sm: 'px-2 py-0.5 text-[10px]',
-  md: 'px-2.5 py-1 text-[11px]',
+const sizeStyles: Record<BadgeSize, { height: string; padding: string; fontSize: string }> = {
+  sm: { height: '18px', padding: '0 6px', fontSize: '10px' },
+  md: { height: '20px', padding: '0 8px', fontSize: '11px' },
 };
 
-function Badge({ variant = 'default', size = 'md', dot = false, color, className, children, style, ...props }: BadgeProps) {
-  const customStyle = color
-    ? { backgroundColor: `${color}20`, color, borderColor: `${color}40`, ...style }
-    : style;
+function Badge({ variant = 'default', size = 'md', dot = false, color, className, children, style: styleProp, ...props }: BadgeProps) {
+  const fills = variantFills[variant];
+  const darkFills = variantFillsDark[variant];
+  const dims = sizeStyles[size];
+
+  const customStyle: React.CSSProperties = color
+    ? {
+        backgroundColor: `${color}20`,
+        color,
+        height: dims.height,
+        padding: dims.padding,
+        fontSize: dims.fontSize,
+        ...styleProp,
+      }
+    : {
+        backgroundColor: fills.bg,
+        color: fills.text,
+        height: dims.height,
+        padding: dims.padding,
+        fontSize: dims.fontSize,
+        ...styleProp,
+      };
+
+  /* Generate a stable class name for dark mode */
+  const darkClass = `badge-${variant}`;
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 font-semibold rounded-full border whitespace-nowrap select-none',
-        !color && variantStyles[variant],
-        sizeStyles[size],
-        className,
+    <>
+      {!color && (
+        <style>{`
+          [data-theme="dark"] .${darkClass},
+          .dark .${darkClass} {
+            background-color: ${darkFills.bg} !important;
+            color: ${darkFills.text} !important;
+          }
+        `}</style>
       )}
-      style={customStyle}
-      {...props}
-    >
-      {dot && (
-        <span
-          className="h-1.5 w-1.5 rounded-full"
-          style={{ background: color || dotColors[variant] }}
-        />
-      )}
-      {children}
-    </span>
+      <span
+        className={cn(
+          'inline-flex items-center gap-1.5 font-medium rounded-full whitespace-nowrap select-none',
+          !color && darkClass,
+          className,
+        )}
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontWeight: 500,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          lineHeight: dims.height,
+          ...customStyle,
+        }}
+        {...props}
+      >
+        {dot && (
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: color || dotColors[variant] }}
+          />
+        )}
+        {children}
+      </span>
+    </>
   );
 }
 

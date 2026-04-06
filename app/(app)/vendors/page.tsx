@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { AnimatedTable, StatusBadge, type TableColumn } from '@/components/ui/AnimatedTable';
 import VendorFormModal from '@/components/vendors/VendorFormModal';
 import { HardHat, Plus, Star, Search, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,6 +15,19 @@ const SPECIALTY_OPTIONS = [
   'plumbing', 'electrical', 'hvac', 'appliance', 'pest',
   'structural', 'cosmetic', 'safety', 'general', 'turnover',
 ];
+
+const specialtyColors: Record<string, string> = {
+  plumbing: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+  electrical: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
+  hvac: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+  appliance: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+  pest: 'bg-red-500/10 border-red-500/20 text-red-400',
+  structural: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
+  cosmetic: 'bg-pink-500/10 border-pink-500/20 text-pink-400',
+  safety: 'bg-red-500/10 border-red-500/20 text-red-400',
+  general: 'bg-gray-500/10 border-gray-500/20 text-gray-400',
+  turnover: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+};
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -27,23 +39,18 @@ export default function VendorsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const supabase = createClient();
-
   const fetchVendors = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
-    if (!profile) return;
-
-    const { data } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('org_id', profile.org_id)
-      .order('name', { ascending: true });
-
-    setVendors((data as Vendor[]) || []);
-    setLoading(false);
-  }, [supabase]);
+    try {
+      const res = await fetch('/api/vendors/list');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load vendors');
+      setVendors((json.items as Vendor[]) || []);
+    } catch (err) {
+      console.error('Failed to fetch vendors:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchVendors();
@@ -105,7 +112,7 @@ export default function VendorsPage() {
   }
 
   function renderStars(rating: number | null) {
-    if (rating == null) return <span className="text-text-muted">--</span>;
+    if (rating == null) return <span className="text-white/20">--</span>;
     const full = Math.floor(rating);
     const half = rating - full >= 0.5;
     return (
@@ -113,20 +120,121 @@ export default function VendorsPage() {
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            size={12}
+            size={11}
             className={
               i < full
                 ? 'text-yellow-500 fill-yellow-500'
                 : i === full && half
                   ? 'text-yellow-500 fill-yellow-500/50'
-                  : 'text-text-muted'
+                  : 'text-white/15'
             }
           />
         ))}
-        <span className="ml-1 text-xs text-text-secondary">{rating}</span>
+        <span className="ml-1 text-[11px] text-white/40">{rating}</span>
       </span>
     );
   }
+
+  // Row # = 1 col, remaining columns must sum to 11
+  const columns: TableColumn<Vendor>[] = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Name / Company',
+      span: 2,
+      render: (v) => (
+        <div className="min-w-0">
+          <span className="font-medium text-white/90 text-[13px] truncate block">{v.name}</span>
+          {v.company && <span className="text-white/35 text-[11px] truncate block">{v.company}</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'specialties',
+      label: 'Specialties',
+      span: 3,
+      render: (v) => (
+        <div className="flex gap-1 flex-wrap overflow-hidden max-h-[36px]">
+          {(v.specialty || []).map((s) => (
+            <span
+              key={s}
+              className={`inline-flex px-2 py-0.5 rounded-md border text-[10px] font-medium capitalize ${specialtyColors[s] || 'bg-white/5 border-white/10 text-white/40'}`}
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: 'contact',
+      label: 'Contact',
+      span: 2,
+      render: (v) => (
+        <div className="space-y-0.5 min-w-0">
+          {v.email && <div className="text-white/40 text-[13px] truncate">{v.email}</div>}
+          {v.phone && <div className="text-white/40 text-[13px]">{v.phone}</div>}
+          {!v.email && !v.phone && <span className="text-white/20">--</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'rate',
+      label: 'Rate',
+      span: 1,
+      render: (v) => (
+        <span className="text-white/50 text-[13px] font-mono">
+          {v.hourly_rate != null ? `$${v.hourly_rate}/hr` : '--'}
+        </span>
+      ),
+    },
+    {
+      key: 'rating',
+      label: 'Rating',
+      span: 1,
+      render: (v) => renderStars(v.rating),
+    },
+    {
+      key: 'preferred',
+      label: 'Pref',
+      span: 1,
+      align: 'center',
+      render: (v) =>
+        v.is_preferred ? (
+          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg border text-[10px] font-semibold bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
+            <Star size={9} className="fill-yellow-400" />
+            Pref
+          </span>
+        ) : (
+          <span className="text-white/15 text-xs">--</span>
+        ),
+    },
+    {
+      key: 'actions',
+      label: '',
+      span: 1,
+      align: 'right',
+      isAction: true,
+      render: (v) => (
+        <div className="flex items-center justify-end gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); openEdit(v); }}
+            className="p-1.5 rounded-md hover:bg-white/[0.06] text-white/30 hover:text-white/70 transition-colors"
+            title="Edit vendor"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDelete(v); }}
+            disabled={deletingId === v.id}
+            className="p-1.5 rounded-md hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-colors disabled:opacity-50"
+            title="Delete vendor"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], [deletingId]);
 
   if (loading) {
     return (
@@ -191,89 +299,21 @@ export default function VendorsPage() {
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <ResponsiveTable minWidth="800px">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Company</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Contact</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Specialties</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Rate</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Rating</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((v) => (
-                  <tr key={v.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                    {/* Name + Preferred badge */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-text-primary">{v.name}</span>
-                        {v.is_preferred && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/15 text-yellow-500 border border-yellow-500/20">
-                            <Star size={9} className="fill-yellow-500" />
-                            Preferred
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    {/* Company */}
-                    <td className="px-4 py-3 text-text-secondary">{v.company || '--'}</td>
-                    {/* Contact */}
-                    <td className="px-4 py-3">
-                      <div className="space-y-0.5">
-                        {v.email && <div className="text-text-secondary text-xs">{v.email}</div>}
-                        {v.phone && <div className="text-text-secondary text-xs">{v.phone}</div>}
-                        {!v.email && !v.phone && <span className="text-text-muted">--</span>}
-                      </div>
-                    </td>
-                    {/* Specialties as tags */}
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1 flex-wrap">
-                        {(v.specialty || []).map((s) => (
-                          <span
-                            key={s}
-                            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent capitalize"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    {/* Rate */}
-                    <td className="px-4 py-3 text-text-secondary">
-                      {v.hourly_rate != null ? `$${v.hourly_rate}/hr` : '--'}
-                    </td>
-                    {/* Rating */}
-                    <td className="px-4 py-3">{renderStars(v.rating)}</td>
-                    {/* Actions */}
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => openEdit(v)}
-                          className="p-1.5 rounded-md text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-                          title="Edit vendor"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(v)}
-                          disabled={deletingId === v.id}
-                          className="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
-                          title="Delete vendor"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ResponsiveTable>
+        <div>
+          <AnimatedTable<Vendor>
+            columns={columns}
+            data={paginated}
+            getKey={(row) => row.id}
+            getRowNumber={(row, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
+            getRowStatus={(row) =>
+              row.is_preferred ? 'active'
+                : row.rating != null && row.rating >= 4 ? 'info'
+                : 'default'
+            }
+            emptyState={
+              <p className="text-white/30 text-sm">No vendors found.</p>
+            }
+          />
           <Pagination
             total={filtered.length}
             page={page}

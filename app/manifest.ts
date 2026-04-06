@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Meridian Node',
-    short_name: 'MeridianNode',
+    name: 'RKV Consulting',
+    short_name: 'RKV Consulting',
     description: 'AI-Powered Land Infrastructure Intelligence',
     start_url: '/dashboard',
     display: 'standalone',

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Pagination } from '@/components/ui/Pagination';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { Users, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { TenantFormModal } from '@/components/tenants/TenantFormModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -52,23 +52,18 @@ export default function TenantsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const supabase = createClient();
-
   const fetchTenants = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
-    if (!profile) return;
-
-    const { data } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('org_id', profile.org_id)
-      .order('created_at', { ascending: false });
-
-    setTenants((data as Tenant[]) || []);
-    setLoading(false);
-  }, [supabase]);
+    try {
+      const res = await fetch('/api/tenants/list');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load tenants');
+      setTenants((json.items as Tenant[]) || []);
+    } catch (err) {
+      console.error('Failed to fetch tenants:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchTenants();
@@ -141,6 +136,76 @@ export default function TenantsPage() {
     fetchTenants();
   }
 
+  const mapTenantStatus = (status: string): RowStatus => {
+    switch (status) {
+      case 'active': case 'approved': return 'active';
+      case 'prospect': case 'applicant': return 'info';
+      case 'notice': return 'warning';
+      case 'past': return 'inactive';
+      case 'denied': return 'critical';
+      default: return 'default';
+    }
+  };
+
+  // Row # = 1 col, remaining columns must sum to 11
+  const tenantColumns: TableColumn<Tenant>[] = useMemo(() => [
+    {
+      key: 'name',
+      label: 'Name',
+      span: 3,
+      render: (row) => (
+        <span className="text-[13px] font-medium text-white/90 truncate block">{row.first_name} {row.last_name}</span>
+      ),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      span: 3,
+      render: (row) => (
+        <span className="text-[13px] text-white/50 truncate block">{row.email || '\u2014'}</span>
+      ),
+    },
+    {
+      key: 'phone',
+      label: 'Phone',
+      span: 2,
+      render: (row) => (
+        <span className="text-[13px] text-white/50 truncate block">{row.phone || '\u2014'}</span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      span: 1,
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      span: 2,
+      align: 'right',
+      isAction: true,
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => handleEdit(row)}
+            className="p-1.5 rounded-md text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            title="Edit tenant"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            title="Delete tenant"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], []);
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
@@ -200,54 +265,28 @@ export default function TenantsPage() {
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <ResponsiveTable minWidth="700px">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Email</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Phone</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Source</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((t) => (
-                  <tr key={t.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-text-primary">{t.first_name} {t.last_name}</td>
-                    <td className="px-4 py-3 text-text-secondary">{t.email || '\u2014'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{t.phone || '\u2014'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[t.status] || ''}`}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-text-secondary capitalize">{t.source || '\u2014'}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleEdit(t)}
-                          className="p-1.5 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors"
-                          title="Edit tenant"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(t)}
-                          className="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger-muted transition-colors"
-                          title="Delete tenant"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ResponsiveTable>
+        <>
+          <AnimatedTable<Tenant>
+            columns={tenantColumns}
+            data={paginated}
+            getKey={(row) => row.id}
+            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
+            getRowStatus={(row) => mapTenantStatus(row.status)}
+            title="Tenants"
+            subtitle={`${filteredTenants.length} tenant${filteredTenants.length !== 1 ? 's' : ''}`}
+            headerRight={
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+              >
+                <Plus size={16} />
+                Add Tenant
+              </button>
+            }
+            emptyState={
+              <p className="text-sm text-white/40">No tenants found.</p>
+            }
+          />
           <Pagination
             total={filteredTenants.length}
             page={page}
@@ -255,7 +294,7 @@ export default function TenantsPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </div>
+        </>
       )}
 
       {/* Add/Edit Modal */}

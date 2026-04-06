@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/dashboard', '/map', '/agents', '/sites', '/pipeline', '/settings', '/market', '/data-sources', '/feasibility', '/api-keys'],
       },
     ],
-    sitemap: 'https://meridiannode.io/sitemap.xml',
+    sitemap: 'https://rkvconsulting.com/sitemap.xml',
   };
 }

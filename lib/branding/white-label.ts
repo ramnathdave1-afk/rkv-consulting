@@ -15,11 +15,11 @@ export interface OrgBranding {
 }
 
 const DEFAULT_BRANDING: OrgBranding = {
-  brand_name: 'MeridianNode',
+  brand_name: 'RKV Consulting',
   brand_color: '#00D4AA',
   logo_url: null,
-  email_from_name: 'MeridianNode',
-  email_from_address: 'noreply@meridiannode.io',
+  email_from_name: 'RKV Consulting',
+  email_from_address: 'noreply@rkvconsulting.com',
   white_label_enabled: false,
 };
 

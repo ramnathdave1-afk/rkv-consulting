@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { Topbar } from '@/components/navigation/Topbar';
 import { CommandBar } from '@/components/command-bar/CommandBar';
@@ -17,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const commandBarOpen = useAppStore((s) => s.commandBarOpen);
   const setCommandBarOpen = useAppStore((s) => s.setCommandBarOpen);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useNotificationSubscription();
 
@@ -35,12 +38,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
       <main
         className={cn(
-          'min-h-screen pt-14 transition-all duration-200',
+          'min-h-screen pt-16 transition-all duration-300',
           'max-lg:pl-0',
-          sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-56',
+          sidebarCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[264px]',
         )}
       >
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
       <CommandBar open={commandBarOpen} onOpenChange={setCommandBarOpen} />
       <ChatPanel />

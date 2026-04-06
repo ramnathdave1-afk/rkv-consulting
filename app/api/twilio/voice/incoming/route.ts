@@ -1,52 +1,52 @@
 import { NextResponse } from 'next/server';
-import { generateVoiceGreeting } from '@/lib/twilio/voice';
-import { createClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const to = formData.get('To') as string;
   const from = formData.get('From') as string;
   const callSid = formData.get('CallSid') as string;
 
-  // Look up org by phone number
-  const { data: orgPhone } = await supabase
-    .from('org_phone_numbers')
-    .select('org_id, organizations(name)')
-    .eq('phone_number', to)
-    .single();
+  const supabase = createAdminClient();
+  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
 
-  const orgName = (orgPhone?.organizations as any)?.name || 'MeridianNode';
-  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://meridian-node.vercel.app';
-
-  // Create conversation record for this call
+  // Create conversation for this call
   const { data: conversation } = await supabase.from('conversations').insert({
-    org_id: orgPhone?.org_id,
+    org_id: ORG_ID,
     channel: 'voice',
     participant_phone: from,
     status: 'ai_handling',
-    metadata: { call_sid: callSid, direction: 'inbound' },
+    ai_context: { call_sid: callSid, direction: 'inbound', history: [] },
   }).select('id').single();
 
-  // Log inbound call
-  if (conversation) {
-    await supabase.from('messages').insert({
-      conversation_id: conversation.id,
-      org_id: orgPhone?.org_id,
-      sender_type: 'system',
-      content: `Inbound voice call from ${from}`,
-      channel: 'voice',
-      metadata: { call_sid: callSid },
-    });
+  const convoId = conversation?.id || '';
+
+  // Greeting + first <Gather> to listen for caller speech
+  const greeting = "Hi, thank you for calling RKV Consulting. I'm your AI property management assistant. How can I help you today?";
+  const noInput = "I didn't catch that. Please call back anytime. Goodbye.";
+  const useElevenLabs = !!process.env.ELEVENLABS_API_KEY;
+
+  let twiml: string;
+  if (useElevenLabs) {
+    const greetUrl = `${webhookBase}/api/voice/tts?text=${encodeURIComponent(greeting)}`;
+    const noInputUrl = `${webhookBase}/api/voice/tts?text=${encodeURIComponent(noInput)}`;
+    twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="${webhookBase}/api/twilio/voice/respond?convo=${convoId}" method="POST" speechTimeout="2" language="en-US">
+    <Play>${greetUrl}</Play>
+  </Gather>
+  <Play>${noInputUrl}</Play>
+</Response>`;
+  } else {
+    twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Gather input="speech" action="${webhookBase}/api/twilio/voice/respond?convo=${convoId}" method="POST" speechTimeout="2" language="en-US">
+    <Say voice="Polly.Joanna">${greeting}</Say>
+  </Gather>
+  <Say voice="Polly.Joanna">${noInput}</Say>
+</Response>`;
   }
 
-  const twiml = generateVoiceGreeting(orgName, webhookBase);
-
-  return new NextResponse(twiml, {
-    headers: { 'Content-Type': 'text/xml' },
-  });
+  return new NextResponse(twiml, { headers: { 'Content-Type': 'text/xml' } });
 }

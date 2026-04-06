@@ -29,7 +29,7 @@ export async function POST() {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: sub.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app'}/settings/billing`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app'}/settings/billing`,
   });
 
   return NextResponse.json({ url: session.url });

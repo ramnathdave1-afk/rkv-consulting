@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const callSid = formData.get('CallSid') as string;
   const conversationId = new URL(request.url).searchParams.get('conversation_id');
 
-  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://meridian-node.vercel.app';
+  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
 
   if (!speechResult) {
     const twiml = generateVoiceResponse(

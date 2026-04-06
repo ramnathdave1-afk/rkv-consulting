@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No outbound phone number configured' }, { status: 400 });
     }
 
-    const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://meridian-node.vercel.app';
+    const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
     const twiml = generateOutboundScript(purpose, tenant.name, details || '', webhookBase);
 
     // Create conversation record

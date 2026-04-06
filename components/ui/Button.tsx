@@ -1,9 +1,9 @@
 'use client';
 
-import React, { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import React, { forwardRef, useState, useEffect, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export type ButtonVariant = 'primary' | 'solid' | 'ghost' | 'outline' | 'danger';
+export type ButtonVariant = 'primary' | 'solid' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'icon';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,51 +12,162 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   fullWidth?: boolean;
   icon?: ReactNode;
+  /** For danger variant: delays enabling the button by 1.5s (use in destructive modals) */
+  delayEnable?: boolean;
 }
 
-const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-bg-primary hover:bg-accent-hover active:scale-[0.97]',
-  solid: 'bg-accent text-bg-primary hover:bg-accent-hover active:scale-[0.97]',
-  outline: 'bg-transparent border border-accent text-accent hover:bg-accent-muted active:scale-[0.97]',
-  ghost: 'bg-transparent border border-border text-text-secondary hover:border-border-hover hover:text-text-primary active:scale-[0.97]',
-  danger: 'bg-danger-muted border border-[rgba(239,68,68,0.25)] text-danger hover:bg-[rgba(239,68,68,0.15)] active:scale-[0.97]',
-};
-
-const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5 rounded-md',
-  md: 'h-9 px-4 text-sm gap-2 rounded-lg',
-  lg: 'h-10 px-5 text-sm gap-2 rounded-lg',
-};
-
-function Spinner({ className }: { className?: string }) {
+function Spinner() {
   return (
-    <svg className={cn('animate-spin', className)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="1em" height="1em">
+    <svg
+      className="animate-spin w-4 h-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+    >
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   );
 }
 
+const variantStyles: Record<ButtonVariant, string> = {
+  primary: [
+    'text-white',
+    'hover:scale-[1.01]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  // Keep 'solid' as alias for primary (backward compat)
+  solid: [
+    'text-white',
+    'hover:scale-[1.01]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  secondary: [
+    'border border-[var(--border)] bg-transparent text-[var(--text-primary)]',
+    'hover:bg-[var(--bg-surface)] hover:border-[var(--border-hover)]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  // Keep 'outline' as alias for secondary (backward compat)
+  outline: [
+    'border border-[var(--border)] bg-transparent text-[var(--text-primary)]',
+    'hover:bg-[var(--bg-surface)] hover:border-[var(--border-hover)]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  ghost: [
+    'bg-transparent text-[var(--accent)] ghost-underline',
+    'hover:bg-[var(--accent-muted)]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  danger: [
+    'bg-[var(--danger,#ef4444)] text-white',
+    'hover:bg-[color-mix(in_srgb,var(--danger,#ef4444)_92%,black)]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  icon: [
+    'bg-transparent text-[var(--text-secondary)]',
+    'hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]',
+    'active:scale-[0.95]',
+  ].join(' '),
+};
+
+const sizeStyles: Record<ButtonSize, string> = {
+  sm: 'h-7 px-3 text-[12px] gap-1.5 rounded-[var(--radius-sm,6px)] font-[var(--font-body)]',
+  md: 'h-9 px-4 text-[14px] gap-2 rounded-[var(--radius-md,10px)] font-[var(--font-body)]',
+  lg: 'h-11 px-5 text-[15px] gap-2 rounded-[var(--radius-md,10px)] font-[var(--font-body)]',
+};
+
+const iconSizeStyles: Record<ButtonSize, string> = {
+  sm: 'h-8 w-8 rounded-[var(--radius-sm,6px)]',
+  md: 'h-9 w-9 rounded-[var(--radius-md,10px)]',
+  lg: 'h-11 w-11 rounded-[var(--radius-md,10px)]',
+};
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', loading = false, fullWidth = false, icon, disabled, className, children, ...props }, ref) => {
-    const isDisabled = disabled || loading;
+  (
+    {
+      variant = 'primary',
+      size = 'md',
+      loading = false,
+      fullWidth = false,
+      icon,
+      disabled,
+      delayEnable = false,
+      className,
+      children,
+      title,
+      style,
+      ...props
+    },
+    ref,
+  ) => {
+    const [delayDisabled, setDelayDisabled] = useState(delayEnable);
+
+    useEffect(() => {
+      if (!delayEnable) {
+        setDelayDisabled(false);
+        return;
+      }
+      setDelayDisabled(true);
+      const timer = setTimeout(() => setDelayDisabled(false), 1500);
+      return () => clearTimeout(timer);
+    }, [delayEnable]);
+
+    const isIcon = variant === 'icon';
+    const isDisabled = disabled || loading || delayDisabled;
+    const isPrimary = variant === 'primary' || variant === 'solid';
+
     return (
       <button
         ref={ref}
         disabled={isDisabled}
+        title={title}
         className={cn(
-          'inline-flex items-center justify-center font-semibold transition-all duration-150 ease-out select-none whitespace-nowrap',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-muted',
+          'inline-flex items-center justify-center font-semibold select-none whitespace-nowrap',
+          'transition-all duration-[150ms] ease-out',
+          'focus-visible:outline-none',
           variantStyles[variant],
-          sizeStyles[size],
+          isIcon ? iconSizeStyles[size] : sizeStyles[size],
           fullWidth && 'w-full',
           isDisabled && 'opacity-50 pointer-events-none cursor-not-allowed',
           className,
         )}
+        style={{
+          willChange: 'transform',
+          /* Primary/solid: subtle gradient from accent to slightly darker */
+          ...(isPrimary
+            ? {
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
+              }
+            : {}),
+          /* Focus ring via box-shadow for smoother appearance */
+          ...style,
+        }}
+        onFocus={(e) => {
+          if (!isDisabled) {
+            (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent)';
+          }
+          props.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          (e.currentTarget as HTMLElement).style.boxShadow = '';
+          props.onBlur?.(e);
+        }}
         {...props}
       >
-        {loading ? <Spinner className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} /> : icon ? <span className="shrink-0 flex items-center">{icon}</span> : null}
-        {children}
+        {loading ? (
+          <Spinner />
+        ) : icon ? (
+          <span className="shrink-0 flex items-center">{icon}</span>
+        ) : null}
+        {!loading && !isIcon && children}
       </button>
     );
   },

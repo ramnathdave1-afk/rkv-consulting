@@ -34,7 +34,7 @@ export default function ContactPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
           </Link>
           <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
         </div>
@@ -43,7 +43,7 @@ export default function ContactPage() {
       <div className="mx-auto max-w-2xl px-6 py-20">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <h1 className="font-display text-3xl font-bold text-text-primary mb-2">Get in Touch</h1>
-          <p className="text-sm text-text-secondary">Questions about Meridian Node? Enterprise pricing? We&apos;d love to hear from you.</p>
+          <p className="text-sm text-text-secondary">Questions about RKV Consulting? Enterprise pricing? We&apos;d love to hear from you.</p>
         </motion.div>
 
         {sent ? (
@@ -119,7 +119,7 @@ export default function ContactPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-text-primary">Email Us</p>
-              <p className="text-xs text-text-muted">hello@meridiannode.io</p>
+              <p className="text-xs text-text-muted">hello@rkvconsulting.com</p>
             </div>
           </div>
           <div className="glass-card p-4 flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function ContactPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-text-primary">Enterprise Sales</p>
-              <p className="text-xs text-text-muted">sales@meridiannode.io</p>
+              <p className="text-xs text-text-muted">sales@rkvconsulting.com</p>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function ContactPage() {
 
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-4xl flex items-center justify-between">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV</p>
+          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex gap-4">
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>

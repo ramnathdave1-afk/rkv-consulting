@@ -34,24 +34,59 @@ function ModalContent({ children, className, maxWidth = 'md', showClose = true }
     <Dialog.Portal>
       <AnimatePresence>
         <Dialog.Overlay asChild>
-          <motion.div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+          <motion.div
+            className="fixed inset-0 z-50"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
         </Dialog.Overlay>
         <Dialog.Content asChild>
           <motion.div
             className={cn(
               'fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2',
-              'bg-bg-secondary border border-border rounded-xl backdrop-blur-xl focus:outline-none',
+              'bg-bg-secondary border border-border focus:outline-none',
               maxWidthMap[maxWidth],
               className,
             )}
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0, transition: { type: 'spring', damping: 25, stiffness: 350 } }}
-            exit={{ opacity: 0, scale: 0.97, y: 5, transition: { duration: 0.15 } }}
+            style={{
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-lg)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+            }}
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              transition: {
+                type: 'spring',
+                damping: 28,
+                stiffness: 380,
+                mass: 0.8,
+              },
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.96,
+              y: 8,
+              transition: { duration: 0.15, ease: 'easeIn' },
+            }}
           >
             {children}
             {showClose && (
               <Dialog.Close asChild>
-                <button className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors" aria-label="Close">
+                <button
+                  className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-all duration-150"
+                  aria-label="Close"
+                >
                   <X size={16} />
                 </button>
               </Dialog.Close>

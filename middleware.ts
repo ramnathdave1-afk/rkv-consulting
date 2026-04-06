@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/demo', '/api/demo', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks', '/api/twilio/incoming', '/api/twilio/status', '/api/email/incoming', '/api/chat/widget', '/dashboard', '/properties', '/tenants', '/leases', '/work-orders', '/vendors', '/showings', '/conversations', '/reports', '/acquisitions', '/settings', '/integrations', '/import', '/onboarding', '/tenant-portal', '/api/seed'];
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/demo', '/api/demo', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks', '/api/twilio', '/api/email/incoming', '/api/chat/widget', '/dashboard', '/properties', '/tenants', '/leases', '/work-orders', '/vendors', '/showings', '/conversations', '/reports', '/acquisitions', '/settings', '/integrations', '/import', '/onboarding', '/tenant-portal', '/api/seed', '/api/dashboard', '/api/market', '/voice', '/campaigns', '/lease-audits', '/move-ins', '/delinquency', '/field-ops', '/api/voice', '/api/campaigns', '/api/lease-audits', '/api/move-ins', '/api/delinquency', '/api/field-ops', '/api/activity', '/api/chat', '/api/properties/list', '/api/tenants/list', '/api/leases/list', '/api/work-orders/list', '/api/vendors/list', '/calendar', '/api/calendar', '/quizlet'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

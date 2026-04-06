@@ -8,10 +8,30 @@ import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
 import { UnitFormModal } from '@/components/units/UnitFormModal';
-import { ArrowLeft, Pencil, Trash2, Plus, Building2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Plus, Building2, TrendingUp, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Property, Unit } from '@/lib/types';
+
+// ── Rental data types for Market Rent Comps ──
+interface RentalComp {
+  address: string;
+  rent: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sqft: number | null;
+  source: string;
+  link: string;
+}
+
+interface RentalData {
+  rentals: RentalComp[];
+  medianRent: number | null;
+  avgRent: number | null;
+  lowRent: number | null;
+  highRent: number | null;
+}
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +47,9 @@ export default function PropertyDetailPage() {
   const [unitFormOpen, setUnitFormOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [deleteUnitId, setDeleteUnitId] = useState<string | null>(null);
+  const [rentalData, setRentalData] = useState<RentalData | null>(null);
+  const [rentalLoading, setRentalLoading] = useState(false);
+  const [rentalError, setRentalError] = useState<string | null>(null);
 
   const fetchProperty = useCallback(async () => {
     const [propRes, unitsRes] = await Promise.all([
@@ -42,6 +65,18 @@ export default function PropertyDetailPage() {
   useEffect(() => {
     fetchProperty();
   }, [fetchProperty]);
+
+  // Fetch rental comps when property loads
+  useEffect(() => {
+    if (!property?.city || !property?.state || !property?.zip) return;
+    setRentalLoading(true);
+    setRentalError(null);
+    fetch(`/api/market/rentals?city=${encodeURIComponent(property.city)}&state=${encodeURIComponent(property.state)}&zip=${encodeURIComponent(property.zip)}`)
+      .then((r) => { if (!r.ok) throw new Error('Failed to fetch rental data'); return r.json(); })
+      .then((d) => setRentalData(d))
+      .catch((e) => setRentalError(e.message))
+      .finally(() => setRentalLoading(false));
+  }, [property?.city, property?.state, property?.zip]);
 
   async function handleDelete() {
     setDeleteLoading(true);
@@ -191,6 +226,101 @@ export default function PropertyDetailPage() {
           </table>
         )}
       </div>
+
+      {/* Market Rent Comps */}
+      {property.city && property.state && property.zip && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="glass-card p-4"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={14} className="text-[#00D4AA]" />
+            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">Market Rent Comps</h3>
+            <span className="ml-auto text-[10px] text-text-muted">
+              {property.city}, {property.state} {property.zip}
+            </span>
+          </div>
+
+          {rentalLoading ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-20" />
+                ))}
+              </div>
+              <Skeleton className="h-40" />
+            </div>
+          ) : rentalError ? (
+            <div className="text-center py-6">
+              <p className="text-xs text-red-400">{rentalError}</p>
+            </div>
+          ) : rentalData ? (
+            <div className="space-y-4">
+              {/* Rent summary cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Median Rent', value: rentalData.medianRent, color: '#00D4AA' },
+                  { label: 'Avg Rent', value: rentalData.avgRent, color: '#3B82F6' },
+                  { label: 'Low', value: rentalData.lowRent, color: '#F59E0B' },
+                  { label: 'High', value: rentalData.highRent, color: '#8B5CF6' },
+                ].map((item) => (
+                  <div key={item.label} className="p-3 rounded-lg bg-bg-primary border border-border">
+                    <p className="text-[10px] uppercase tracking-wider text-text-muted">{item.label}</p>
+                    <p className="text-lg font-bold text-text-primary">
+                      {item.value !== null ? `$${item.value.toLocaleString()}` : '--'}
+                    </p>
+                    <p className="text-[10px] text-text-muted">/month</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rental comps list */}
+              {rentalData.rentals.length > 0 && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-border bg-bg-primary">
+                    <h4 className="text-xs font-medium text-text-primary">Comparable Rentals ({rentalData.rentals.length})</h4>
+                  </div>
+                  <div className="divide-y divide-border/50 max-h-72 overflow-y-auto">
+                    {rentalData.rentals.map((rental, i) => (
+                      <div key={i} className="px-4 py-2.5 hover:bg-bg-elevated/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-text-primary truncate">{rental.address}</p>
+                            <div className="flex items-center gap-3 mt-0.5">
+                              {rental.bedrooms !== null && (
+                                <span className="text-[10px] text-text-muted">{rental.bedrooms} bd</span>
+                              )}
+                              {rental.bathrooms !== null && (
+                                <span className="text-[10px] text-text-muted">{rental.bathrooms} ba</span>
+                              )}
+                              {rental.sqft !== null && (
+                                <span className="text-[10px] text-text-muted">{rental.sqft.toLocaleString()} sqft</span>
+                              )}
+                              <span className="text-[10px] text-text-muted">{rental.source}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-3">
+                            <span className="text-sm font-bold text-[#00D4AA]">
+                              {rental.rent !== null ? `$${rental.rent.toLocaleString()}` : '--'}
+                            </span>
+                            {rental.link && (
+                              <a href={rental.link} target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-text-primary transition-colors">
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </motion.div>
+      )}
 
       <UnitFormModal
         open={unitFormOpen}

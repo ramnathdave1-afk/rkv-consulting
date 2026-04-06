@@ -25,8 +25,8 @@ export default function LoginPage() {
 }
 
 function AuthPageLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('kdramnat@asu.edu');
+  const [password, setPassword] = useState('Kishan14!');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -61,12 +61,12 @@ function AuthPageLogin() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.06]">
             <Building2 className="size-4 text-[#00D4AA]" />
           </div>
-          <p className="text-lg font-semibold text-white">MeridianNode</p>
+          <p className="text-lg font-semibold text-white">RKV Consulting</p>
         </div>
         <div className="z-10 mt-auto">
           <blockquote className="space-y-3">
             <p className="text-xl text-white/90 leading-relaxed">
-              &ldquo;MeridianNode cut our tenant communication time by 70%.
+              &ldquo;RKV Consulting cut our tenant communication time by 70%.
               The AI handles leasing inquiries and maintenance requests
               so my team can focus on what matters.&rdquo;
             </p>
@@ -108,7 +108,7 @@ function AuthPageLogin() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.06]">
               <Building2 className="size-4 text-[#00D4AA]" />
             </div>
-            <p className="text-lg font-semibold text-white">MeridianNode</p>
+            <p className="text-lg font-semibold text-white">RKV Consulting</p>
           </div>
 
           {/* Heading */}

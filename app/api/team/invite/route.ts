@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
 import { invitationEmail } from '@/lib/email/templates';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://meridian-node.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();

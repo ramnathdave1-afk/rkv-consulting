@@ -83,7 +83,7 @@ export function HeroSection() {
           <h2 className="text-xs md:text-sm font-mono font-light uppercase tracking-[0.2em] opacity-80" style={{ color: colors[200] }}>
             <span className="word" data-delay="0">Welcome</span>{" "}
             <span className="word" data-delay="200">to</span>{" "}
-            <span className="word" data-delay="400"><b>MeridianNode</b></span>{" "}
+            <span className="word" data-delay="400"><b>RKV Consulting</b></span>{" "}
             <span className="word" data-delay="600">—</span>{" "}
             <span className="word" data-delay="800">The</span>{" "}
             <span className="word" data-delay="1000">smartest</span>{" "}

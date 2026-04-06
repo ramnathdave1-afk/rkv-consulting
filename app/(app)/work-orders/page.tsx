@@ -1,17 +1,15 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Pagination } from '@/components/ui/Pagination';
-import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
+import { AnimatedTable, StatusBadge, type TableColumn } from '@/components/ui/AnimatedTable';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { WorkOrderFormModal } from '@/components/work-orders/WorkOrderFormModal';
 import { Wrench, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { formatDistanceToNow } from 'date-fns';
 
 interface WorkOrderRow {
   id: string;
@@ -33,23 +31,6 @@ interface WorkOrderRow {
   tenants: { first_name: string; last_name: string } | null;
   vendors: { name: string; company: string | null } | null;
 }
-
-const priorityColors: Record<string, string> = {
-  emergency: 'bg-red-500/10 text-red-500',
-  high: 'bg-orange-500/10 text-orange-500',
-  medium: 'bg-yellow-500/10 text-yellow-500',
-  low: 'bg-green-500/10 text-green-500',
-};
-
-const statusColors: Record<string, string> = {
-  open: 'bg-red-500/10 text-red-500',
-  assigned: 'bg-yellow-500/10 text-yellow-500',
-  in_progress: 'bg-blue-500/10 text-blue-500',
-  parts_needed: 'bg-purple-500/10 text-purple-500',
-  completed: 'bg-green-500/10 text-green-500',
-  closed: 'bg-gray-500/10 text-gray-500',
-  cancelled: 'bg-gray-400/10 text-gray-400',
-};
 
 const statusOptions = [
   { value: '', label: 'All Statuses' },
@@ -80,23 +61,18 @@ export default function WorkOrdersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const supabase = createClient();
-
   const fetchWorkOrders = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
-    if (!profile) return;
-
-    const { data } = await supabase
-      .from('work_orders')
-      .select('*, properties(name), units(unit_number), tenants(first_name, last_name), vendors(name, company)')
-      .eq('org_id', profile.org_id)
-      .order('created_at', { ascending: false });
-
-    setWorkOrders((data as WorkOrderRow[]) || []);
-    setLoading(false);
-  }, [supabase]);
+    try {
+      const res = await fetch('/api/work-orders/list');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to load work orders');
+      setWorkOrders((json.items as WorkOrderRow[]) || []);
+    } catch (err) {
+      console.error('Failed to fetch work orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => { fetchWorkOrders(); }, [fetchWorkOrders]);
 
@@ -134,6 +110,73 @@ export default function WorkOrdersPage() {
     }
     setDeleteId(null);
   }
+
+  // Row # = 1 col, remaining columns must sum to 11
+  const columns: TableColumn<WorkOrderRow>[] = useMemo(() => [
+    {
+      key: 'title',
+      label: 'Title',
+      span: 3,
+      render: (wo) => (
+        <span className="font-medium text-white/90 text-[13px] truncate block">{wo.title}</span>
+      ),
+    },
+    {
+      key: 'property',
+      label: 'Property / Unit',
+      span: 2,
+      render: (wo) => (
+        <span className="text-white/50 text-[13px] truncate block">
+          {wo.properties?.name || '\u2014'}{wo.units ? ` / ${wo.units.unit_number}` : ''}
+        </span>
+      ),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      span: 1,
+      render: (wo) => (
+        <span className="text-white/40 text-[13px] capitalize truncate block">{wo.category.replace('_', ' ')}</span>
+      ),
+    },
+    {
+      key: 'priority',
+      label: 'Priority',
+      span: 1,
+      render: (wo) => <StatusBadge status={wo.priority} />,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      span: 2,
+      render: (wo) => <StatusBadge status={wo.status} />,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      span: 2,
+      align: 'right',
+      isAction: true,
+      render: (wo) => (
+        <div className="flex items-center justify-end gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditingWO(wo); setFormOpen(true); }}
+            className="p-1.5 rounded-md hover:bg-white/[0.06] text-white/30 hover:text-white/70 transition-colors"
+            title="Edit"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setDeleteId(wo.id); }}
+            className="p-1.5 rounded-md hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], []);
 
   if (loading) {
     return (
@@ -186,68 +229,22 @@ export default function WorkOrdersPage() {
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <ResponsiveTable minWidth="900px">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Title</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Category</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Priority</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Vendor</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Created</th>
-                  <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase w-20">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((wo) => (
-                <tr key={wo.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-text-primary max-w-[200px] truncate">{wo.title}</td>
-                  <td className="px-4 py-3 text-text-secondary">
-                    {wo.properties?.name || '—'}{wo.units ? ` / ${wo.units.unit_number}` : ''}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary capitalize">{wo.category.replace('_', ' ')}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${priorityColors[wo.priority] || ''}`}>
-                      {wo.priority}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[wo.status] || ''}`}>
-                      {wo.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary">
-                    {wo.vendors?.name || <span className="text-text-muted">Unassigned</span>}
-                  </td>
-                  <td className="px-4 py-3 text-text-muted text-xs">
-                    {formatDistanceToNow(new Date(wo.created_at), { addSuffix: true })}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => { setEditingWO(wo); setFormOpen(true); }}
-                        className="p-1.5 rounded-md hover:bg-bg-elevated text-text-muted hover:text-text-primary transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(wo.id)}
-                        className="p-1.5 rounded-md hover:bg-danger-muted text-text-muted hover:text-danger transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </ResponsiveTable>
+        <div>
+          <AnimatedTable<WorkOrderRow>
+            columns={columns}
+            data={paginated}
+            getKey={(row) => row.id}
+            getRowNumber={(row, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
+            getRowStatus={(row) =>
+              row.priority === 'emergency' ? 'critical'
+                : row.status === 'open' ? 'warning'
+                : row.status === 'completed' || row.status === 'closed' ? 'success'
+                : 'default'
+            }
+            emptyState={
+              <p className="text-white/30 text-sm">No work orders found.</p>
+            }
+          />
           <Pagination
             total={filtered.length}
             page={page}

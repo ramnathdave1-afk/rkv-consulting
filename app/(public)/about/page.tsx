@@ -23,7 +23,7 @@ export default function AboutPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/pricing" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Pricing</Link>
@@ -41,7 +41,7 @@ export default function AboutPage() {
               The Intelligence Layer for<br />Infrastructure Development
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm text-text-secondary leading-relaxed">
-              Meridian Node replaces months of manual site research with AI-powered intelligence. Our autonomous agents continuously scan infrastructure, score sites, and surface opportunities — so developers can move faster with better data.
+              RKV Consulting replaces months of manual site research with AI-powered intelligence. Our autonomous agents continuously scan infrastructure, score sites, and surface opportunities — so developers can move faster with better data.
             </p>
           </motion.div>
         </div>
@@ -88,13 +88,13 @@ export default function AboutPage() {
       <div className="mx-auto max-w-4xl px-6 pb-24 text-center">
         <h2 className="font-display text-2xl font-bold text-text-primary mb-3">Built by RKV Consulting</h2>
         <p className="text-sm text-text-secondary max-w-xl mx-auto">
-          RKV Consulting is an AI agency building intelligent tools for the infrastructure and energy sectors. Meridian Node is our flagship platform, combining deep domain expertise with cutting-edge AI.
+          RKV Consulting is an AI agency building intelligent tools for the infrastructure and energy sectors. RKV Consulting is our flagship platform, combining deep domain expertise with cutting-edge AI.
         </p>
       </div>
 
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV</p>
+          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex gap-4">
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>

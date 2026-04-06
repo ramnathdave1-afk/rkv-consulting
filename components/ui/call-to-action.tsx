@@ -14,7 +14,7 @@ function CTA() {
               Ready to automate your portfolio?
             </h3>
             <p className="text-base leading-relaxed tracking-tight text-neutral-400 max-w-xl">
-              Stop drowning in manual processes. MeridianNode gives your 5-person team the power of 20 — with AI that handles tenant communication, maintenance dispatch, and owner reporting automatically.
+              Stop drowning in manual processes. RKV Consulting gives your 5-person team the power of 20 — with AI that handles tenant communication, maintenance dispatch, and owner reporting automatically.
             </p>
           </div>
           <div className="flex flex-row gap-4">

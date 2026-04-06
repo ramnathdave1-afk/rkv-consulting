@@ -68,7 +68,7 @@ export function ownerReportHTML(data: OwnerReportData): string {
       <div>${data.reportType.charAt(0).toUpperCase() + data.reportType.slice(1)} Report</div>
       <div>${data.periodStart} — ${data.periodEnd}</div>
       <div>Generated: ${data.generatedDate}</div>
-      <div style="margin-top:8px;color:#00D4AA;font-weight:600;">MeridianNode</div>
+      <div style="margin-top:8px;color:#00D4AA;font-weight:600;">RKV Consulting</div>
     </div>
   </div>
 
@@ -128,7 +128,7 @@ export function ownerReportHTML(data: OwnerReportData): string {
   </div>
 
   <div class="footer">
-    <p>${data.orgName} &middot; Powered by MeridianNode &middot; Generated ${data.generatedDate}</p>
+    <p>${data.orgName} &middot; Powered by RKV Consulting &middot; Generated ${data.generatedDate}</p>
   </div>
 </body>
 </html>`;

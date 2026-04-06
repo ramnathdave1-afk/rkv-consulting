@@ -70,7 +70,7 @@ const tiers = [
       priority: true,
     },
     cta: 'Contact Sales',
-    href: 'mailto:sales@meridiannode.io',
+    href: 'mailto:sales@rkvconsulting.com',
     popular: false,
   },
 ];
@@ -118,7 +118,7 @@ export default function PricingPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">
@@ -387,7 +387,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV. All rights reserved.</p>
+          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>

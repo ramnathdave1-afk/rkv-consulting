@@ -1,45 +1,33 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Sora, DM_Sans, JetBrains_Mono } from "next/font/google";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
+const sora = Sora({
   variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Meridian Node | AI-Powered Land Infrastructure Intelligence",
-  description:
-    "AI-powered land infrastructure intelligence platform for site selection across data centers, solar, wind, EV charging, and land development. Autonomous agents score, analyze, and discover sites.",
+  title: "RKV Consulting | AI-Powered Property Management",
+  description: "AI-powered property management platform by RKV Consulting. Automate leasing, maintenance, financial reporting, and acquisitions.",
   icons: { icon: "/favicon.ico" },
-  metadataBase: new URL("https://meridiannode.io"),
-  openGraph: {
-    title: "Meridian Node — AI Land Intelligence",
-    description: "Autonomous AI agents for infrastructure site discovery, scoring, and feasibility analysis.",
-    url: "https://meridiannode.io",
-    siteName: "Meridian Node",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Meridian Node — AI Land Intelligence",
-    description: "Autonomous AI agents for infrastructure site discovery, scoring, and feasibility analysis.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  metadataBase: new URL("https://rkvconsulting.com"),
 };
 
 export default function RootLayout({
@@ -48,9 +36,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased bg-bg-primary text-text-primary`}
+        className={`${sora.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
+        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
       >
         <Providers>{children}</Providers>
       </body>

@@ -7,11 +7,11 @@ import { motion } from 'framer-motion';
 const sections = [
   {
     title: '1. Acceptance of Terms',
-    content: 'By accessing or using Meridian Node ("Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. We reserve the right to update these terms at any time with notice provided through the platform.',
+    content: 'By accessing or using RKV Consulting ("Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. We reserve the right to update these terms at any time with notice provided through the platform.',
   },
   {
     title: '2. Description of Service',
-    content: 'Meridian Node is an AI-powered land infrastructure intelligence platform that provides site discovery, feasibility analysis, scoring, market intelligence, and reporting tools. The Service includes web-based dashboards, APIs, AI-assisted analysis, and data aggregation from public and licensed sources.',
+    content: 'RKV Consulting is an AI-powered land infrastructure intelligence platform that provides site discovery, feasibility analysis, scoring, market intelligence, and reporting tools. The Service includes web-based dashboards, APIs, AI-assisted analysis, and data aggregation from public and licensed sources.',
   },
   {
     title: '3. User Accounts',
@@ -47,7 +47,7 @@ const sections = [
   },
   {
     title: '11. Contact',
-    content: 'For questions about these terms, contact us at legal@meridiannode.io or through the Contact page.',
+    content: 'For questions about these terms, contact us at legal@rkvconsulting.com or through the Contact page.',
   },
 ];
 
@@ -60,7 +60,7 @@ export default function TermsPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
               <span className="text-xs font-bold text-accent">M</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">Meridian Node</span>
+            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
           </Link>
           <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
         </div>
@@ -89,7 +89,7 @@ export default function TermsPage() {
 
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-4xl flex items-center justify-between">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} MeridianNode by RKV</p>
+          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex gap-4">
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
             <Link href="/pricing" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Pricing</Link>

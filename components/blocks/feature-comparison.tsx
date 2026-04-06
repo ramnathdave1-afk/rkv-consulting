@@ -36,7 +36,7 @@ export function FeatureComparison() {
             Platform
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-4">
-            Before &amp; After MeridianNode
+            Before &amp; After RKV Consulting
           </h2>
           <p className="text-neutral-500 max-w-xl mx-auto text-lg">
             Drag the slider to see the difference. Manual chaos on the left, AI-powered clarity on the right.
@@ -52,9 +52,9 @@ export function FeatureComparison() {
           onTouchMove={onMove}
           onTouchEnd={() => setDragging(false)}
         >
-          {/* AFTER (MeridianNode dashboard) — sits behind */}
+          {/* AFTER (RKV Consulting dashboard) — sits behind */}
           <div className="absolute inset-0 bg-neutral-950 p-4 md:p-8">
-            <div className="text-[10px] font-mono text-emerald-500 mb-3 uppercase tracking-widest">With MeridianNode</div>
+            <div className="text-[10px] font-mono text-emerald-500 mb-3 uppercase tracking-widest">With RKV Consulting</div>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[{ l: 'Units', v: '248', c: 'text-white' }, { l: 'Occupancy', v: '96.2%', c: 'text-emerald-400' }, { l: 'Collected', v: '$412K', c: 'text-white' }, { l: 'Response', v: '<90s', c: 'text-emerald-400' }].map(k => (
                 <div key={k.l} className="bg-white/[0.03] border border-white/5 rounded-lg p-3">
@@ -90,7 +90,7 @@ export function FeatureComparison() {
             className="absolute inset-0 bg-neutral-900 p-4 md:p-8 z-10"
             style={{ clipPath: `inset(0 ${100 - inset}% 0 0)` }}
           >
-            <div className="text-[10px] font-mono text-red-400 mb-3 uppercase tracking-widest">Without MeridianNode</div>
+            <div className="text-[10px] font-mono text-red-400 mb-3 uppercase tracking-widest">Without RKV Consulting</div>
             <div className="space-y-2">
               <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
                 <div className="text-[9px] text-red-400 font-medium mb-1">12+ hrs/week chasing rent</div>
