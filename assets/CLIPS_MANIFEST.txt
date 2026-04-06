@@ -1,0 +1,78 @@
+RKV CONSULTING - SOFTWARE CLIPS & ASSETS MANIFEST
+=================================================
+
+LOCATION: /data/.openclaw/media/
+
+FILES AVAILABLE:
+================
+
+1. RKV_CONSULTING_CLIPS_ACCESS.md
+   - Complete guide to all clips and how to access them
+   - Includes platform stats, features, pricing
+   - Direct file paths for all assets
+
+2. f855c06c-9623-4a04-94b0-6bd5101721af.pdf
+   - Full landing page (25+ sections)
+   - Hero, integrations, performance data, AI agents, testimonials, CTA
+   - Ready for printing or digital sharing
+
+3. Dashboard Screenshots (captured via browser)
+   - Dashboard Overview (KPIs, revenue, occupancy)
+   - Financials Tab (ROI, delinquency, lease expirations)
+   - Operations Tab (occupancy trends, work orders)
+   - Market Intelligence (home prices, rent, vacancy)
+   - Properties Page (5 multi-family properties)
+   - Work Orders (28 maintenance requests)
+   - Tenants (94 prospect/tenant database)
+   - Conversations (AI leasing agent SMS/chat)
+   - Acquisitions (multi-agent deal scoring)
+   - Leases (renewal automation, 86 active)
+
+DIRECT ACCESS LINKS:
+====================
+
+Landing Page PDF:
+file:///data/.openclaw/media/f855c06c-9623-4a04-94b0-6bd5101721af.pdf
+
+Complete Guide:
+file:///data/.openclaw/media/RKV_CONSULTING_CLIPS_ACCESS.md
+
+All Dashboard Clips:
+file:///data/.openclaw/media/
+
+PLATFORM DETAILS:
+=================
+
+Product: RKV Consulting (AI-Powered Property Management)
+Tagline: A 25-person team in one click
+Target: Property management companies (50-500 units)
+Pricing: $5/unit/month
+
+Key Features:
+- 5 AI Agents (Leasing, Voice, Maintenance, Finance, Acquisitions)
+- Multi-agent deal scoring (COMPETITIVE ADVANTAGE)
+- Fair Housing compliance
+- White-label branding
+- 90-second response time to leads
+- Integration with AppFolio, Buildium, Yardi, RealPage, etc.
+
+Performance Results:
+- 96% occupancy (up from 81%)
+- $67K monthly revenue (+59%)
+- 1.5 min response time (vs 4 hours before)
+- 97.1% AI resolution rate
+- 200+ units managed with 5 people
+
+Founder: Dave Ramnath
+Contact: (484) 432-2066 | kishanramnath@rkv-consulting.com
+
+USAGE:
+======
+
+For Sales Deck: Use the landing page PDF + dashboard screenshots
+For Demo: Use the live app at https://meridian-node.vercel.app/dashboard
+For Pitch: Reference the performance metrics in RKV_CONSULTING_CLIPS_ACCESS.md
+
+All assets are capture-ready for presentations, cold outreach, and investor materials.
+
+Last Updated: April 6, 2026
