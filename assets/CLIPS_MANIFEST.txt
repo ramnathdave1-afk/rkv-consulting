@@ -70,7 +70,7 @@ USAGE:
 ======
 
 For Sales Deck: Use the landing page PDF + dashboard screenshots
-For Demo: Use the live app at https://meridian-node.vercel.app/dashboard
+For Demo: Use the live app at https://rkv-consulting.vercel.app/demo
 For Pitch: Reference the performance metrics in RKV_CONSULTING_CLIPS_ACCESS.md
 
 All assets are capture-ready for presentations, cold outreach, and investor materials.

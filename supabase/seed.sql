@@ -1,10 +1,10 @@
 -- ============================================================
--- Meridian Node Seed Data — PJM Interconnection Territory
+-- RKV Consulting Seed Data
 -- ============================================================
 
 -- Create a demo organization
 INSERT INTO organizations (id, name, slug) VALUES
-  ('a0000000-0000-0000-0000-000000000001', 'Meridian Demo', 'meridian-demo');
+  ('a0000000-0000-0000-0000-000000000001', 'RKV Consulting Demo', 'rkv-demo');
 
 -- ============================================================
 -- PJM Substations (real locations, synthetic capacity data)
