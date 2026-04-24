@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://rkvconsulting.com';
+  const base = 'https://rkv-consulting.com';
 
   return [
     { url: base, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },

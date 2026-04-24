@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   title: "RKV Consulting | AI-Powered Property Management",
   description: "AI-powered property management platform by RKV Consulting. Automate leasing, maintenance, financial reporting, and acquisitions.",
   icons: { icon: "/favicon.ico" },
-  metadataBase: new URL("https://rkvconsulting.com"),
+  metadataBase: new URL("https://rkv-consulting.com"),
 };
 
 export default function RootLayout({

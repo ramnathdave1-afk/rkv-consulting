@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.supabase.co" },
     ],
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/", destination: "/landing.html" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
 };
 
 export default nextConfig;
