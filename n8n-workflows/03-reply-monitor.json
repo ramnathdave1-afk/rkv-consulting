@@ -1,0 +1,34 @@
+{
+  "name": "03 - Reply Monitor",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] } },
+      "name": "Every 5 Minutes", "type": "n8n-nodes-base.scheduleTrigger", "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/reply_classifier",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true, "bodyParameters": { "parameters": [] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Reply Classifier", "type": "n8n-nodes-base.httpRequest", "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/lead_responder",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true, "bodyParameters": { "parameters": [] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Lead Responder", "type": "n8n-nodes-base.httpRequest", "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": { "main": [[{ "node": "Reply Classifier" }]] },
+    "Reply Classifier": { "main": [[{ "node": "Lead Responder" }]] }
+  },
+  "settings": { "timezone": "America/New_York" }
+}

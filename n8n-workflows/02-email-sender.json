@@ -1,0 +1,22 @@
+{
+  "name": "02 - Email Sender",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] } },
+      "name": "Every 15 Minutes", "type": "n8n-nodes-base.scheduleTrigger", "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/email_blaster",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "batch_size", "value": "50" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Email Blaster", "type": "n8n-nodes-base.httpRequest", "position": [400, 300]
+    }
+  ],
+  "connections": { "Every 15 Minutes": { "main": [[{ "node": "Email Blaster" }]] } },
+  "settings": { "timezone": "America/New_York" }
+}

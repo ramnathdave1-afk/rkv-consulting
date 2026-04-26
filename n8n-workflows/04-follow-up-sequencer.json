@@ -1,0 +1,21 @@
+{
+  "name": "04 - Follow-Up Sequencer",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 9 * * 1-5" }] } },
+      "name": "9am Mon-Fri", "type": "n8n-nodes-base.scheduleTrigger", "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/follow_up_sequencer",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true, "bodyParameters": { "parameters": [] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Follow-Up Sequencer", "type": "n8n-nodes-base.httpRequest", "position": [400, 300]
+    }
+  ],
+  "connections": { "9am Mon-Fri": { "main": [[{ "node": "Follow-Up Sequencer" }]] } },
+  "settings": { "timezone": "America/New_York" }
+}

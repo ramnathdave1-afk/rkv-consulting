@@ -1,0 +1,131 @@
+{
+  "name": "01 - Campaign Launch",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "campaign-launch", "responseMode": "responseNode" },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/lead_scraper",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [
+          { "name": "geo", "value": "={{$json.geo}}" },
+          { "name": "count", "value": "={{$json.count || 5000}}" },
+          { "name": "campaign_id", "value": "={{$json.campaign_id}}" }
+        ]},
+        "options": { "timeout": 600000 }
+      },
+      "name": "Lead Scraper", "type": "n8n-nodes-base.httpRequest", "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/company_enricher",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 600000 }
+      },
+      "name": "Company Enricher", "type": "n8n-nodes-base.httpRequest", "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/contact_finder",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 600000 }
+      },
+      "name": "Contact Finder", "type": "n8n-nodes-base.httpRequest", "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/email_finder",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Email Finder", "type": "n8n-nodes-base.httpRequest", "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/email_verifier",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Email Verifier", "type": "n8n-nodes-base.httpRequest", "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/icp_scorer",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "ICP Scorer", "type": "n8n-nodes-base.httpRequest", "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/research_report_generator",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 600000 }
+      },
+      "name": "Research Reports", "type": "n8n-nodes-base.httpRequest", "position": [1600, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/email_copywriter",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 600000 }
+      },
+      "name": "Email Copywriter", "type": "n8n-nodes-base.httpRequest", "position": [1800, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/subject_line_optimizer",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "campaign_id", "value": "={{$node['Webhook'].json.campaign_id}}" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Subject Lines", "type": "n8n-nodes-base.httpRequest", "position": [2000, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ success: true, message: 'Campaign launch complete' }) }}" },
+      "name": "Response", "type": "n8n-nodes-base.respondToWebhook", "position": [2200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Lead Scraper" }]] },
+    "Lead Scraper": { "main": [[{ "node": "Company Enricher" }]] },
+    "Company Enricher": { "main": [[{ "node": "Contact Finder" }]] },
+    "Contact Finder": { "main": [[{ "node": "Email Finder" }]] },
+    "Email Finder": { "main": [[{ "node": "Email Verifier" }]] },
+    "Email Verifier": { "main": [[{ "node": "ICP Scorer" }]] },
+    "ICP Scorer": { "main": [[{ "node": "Research Reports" }]] },
+    "Research Reports": { "main": [[{ "node": "Email Copywriter" }]] },
+    "Email Copywriter": { "main": [[{ "node": "Subject Lines" }]] },
+    "Subject Lines": { "main": [[{ "node": "Response" }]] }
+  },
+  "settings": { "timezone": "America/New_York" }
+}

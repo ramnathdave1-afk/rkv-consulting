@@ -1,0 +1,28 @@
+{
+  "name": "07 - System Health Monitor",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "minutes", "minutesInterval": 10 }] } },
+      "name": "Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/campaign_orchestrator",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "action", "value": "health_check" }] },
+        "options": { "timeout": 30000 }
+      },
+      "name": "Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 300]
+    }
+  ],
+  "connections": {
+    "Every 10 Minutes": { "main": [[{ "node": "Health Check" }]] }
+  },
+  "settings": { "timezone": "America/New_York" }
+}

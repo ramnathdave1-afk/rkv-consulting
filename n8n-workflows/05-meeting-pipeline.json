@@ -1,0 +1,43 @@
+{
+  "name": "05 - Meeting Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meeting-book",
+        "responseMode": "responseNode"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/meeting_booker",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [
+          { "name": "contact_id", "value": "={{$json.contact_id}}" },
+          { "name": "scheduled_at", "value": "={{$json.scheduled_at}}" },
+          { "name": "duration", "value": "={{$json.duration || 30}}" }
+        ]},
+        "options": { "timeout": 60000 }
+      },
+      "name": "Meeting Booker",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Meeting Booker" }]] },
+    "Meeting Booker": { "main": [[{ "node": "Response" }]] }
+  },
+  "settings": { "timezone": "America/New_York" }
+}

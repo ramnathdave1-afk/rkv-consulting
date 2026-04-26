@@ -1,0 +1,28 @@
+{
+  "name": "06 - Weekly Reporting",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 18 * * 5" }] } },
+      "name": "Friday 6pm",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.NEXT_PUBLIC_URL}}/api/outreach/agents/campaign_orchestrator",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.OUTREACH_API_SECRET}}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "action", "value": "weekly_report" }] },
+        "options": { "timeout": 300000 }
+      },
+      "name": "Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 300]
+    }
+  ],
+  "connections": {
+    "Friday 6pm": { "main": [[{ "node": "Weekly Report" }]] }
+  },
+  "settings": { "timezone": "America/New_York" }
+}
