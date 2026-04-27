@@ -3,12 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { sendSMS } from '@/lib/twilio/client';
 import { sendEmail } from '@/lib/email/send';
 import { showingReminderEmail } from '@/lib/email/templates';
+import { verifyCronAuth } from '@/lib/auth/cron';
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = verifyCronAuth(request);
+  if (unauthorized) return unauthorized;
 
   const supabase = createAdminClient();
   const now = new Date();

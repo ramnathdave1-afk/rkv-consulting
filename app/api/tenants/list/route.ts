@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .single();
+  if (!profile) return NextResponse.json({ error: 'No profile' }, { status: 403 });
+
   const { data, error } = await supabase
     .from('tenants')
     .select('*')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', profile.org_id)
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

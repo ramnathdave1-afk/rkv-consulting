@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { initRenewalSequence, processRenewalStep } from '@/lib/renewals/sequences';
+import { verifyCronAuth } from '@/lib/auth/cron';
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = verifyCronAuth(request);
+  if (unauthorized) return unauthorized;
 
   const supabase = createAdminClient();
   const now = new Date();

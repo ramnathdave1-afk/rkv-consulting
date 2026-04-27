@@ -1,6 +1,7 @@
 import { query, ORG_ID } from './db';
 import { refreshGmailToken, sendEmail as gmailSend, type GmailCredentials } from '../integrations/gmail';
 import { injectTrackingPixel, rewriteLinks } from './tracking';
+import { withRetry } from './retry';
 import type { OutreachDomain } from './types';
 
 const WARMUP_LIMITS: Record<string, number> = {
@@ -72,17 +73,38 @@ export async function sendTrackedEmail(
   const creds = await getCredentials(domain);
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
 
+  // CAN-SPAM: bail if recipient has unsubscribed.
+  const suppressed = await query<{ id: string }>(
+    `SELECT id FROM outreach_unsubscribes WHERE org_id = $1 AND lower(email) = lower($2) LIMIT 1`,
+    [ORG_ID, to]
+  );
+  if (suppressed.rows.length > 0) {
+    throw new Error(`Recipient ${to} has unsubscribed`);
+  }
+
+  const unsubscribeUrl = `${baseUrl}/api/outreach/unsubscribe?email=${encodeURIComponent(to)}&token=${encodeURIComponent(sendId)}`;
+  const physicalAddress =
+    process.env.OUTREACH_PHYSICAL_ADDRESS ||
+    'RKV Consulting, 123 Main St, Phoenix, AZ 85001';
+  const unsubscribeMailto =
+    process.env.OUTREACH_UNSUBSCRIBE_MAILTO ||
+    `unsubscribe@${domain.email_address.split('@')[1] || 'rkv-consulting.com'}`;
+
   // Inject tracking
   let trackedHtml = injectTrackingPixel(htmlBody, sendId, baseUrl);
   trackedHtml = rewriteLinks(trackedHtml, sendId, baseUrl);
 
-  // Add signature
+  // CAN-SPAM-compliant footer: company name, physical address, unsubscribe link.
   trackedHtml += `
     <br><br>
     <div style="font-size:13px;color:#666;border-top:1px solid #eee;padding-top:12px;margin-top:12px;">
       <strong>${domain.display_name || 'Dave Ramnath'}</strong><br>
       RKV Consulting<br>
       <a href="https://rkv-consulting.com" style="color:#2563eb;">rkv-consulting.com</a>
+    </div>
+    <div style="font-size:11px;color:#999;margin-top:16px;">
+      ${physicalAddress}<br>
+      Don't want these emails? <a href="${unsubscribeUrl}" style="color:#999;">Unsubscribe</a>.
     </div>
   `;
 
@@ -93,6 +115,8 @@ export async function sendTrackedEmail(
     `Subject: ${subject}`,
     'Content-Type: text/html; charset=utf-8',
     'MIME-Version: 1.0',
+    `List-Unsubscribe: <${unsubscribeUrl}>, <mailto:${unsubscribeMailto}?subject=unsubscribe>`,
+    'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
   ];
 
   if (opts?.replyToMessageId) {
@@ -107,24 +131,26 @@ export async function sendTrackedEmail(
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 
-  const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${creds.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      raw: encoded,
-      threadId: opts?.threadId || undefined,
-    }),
+  const data = await withRetry(async () => {
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${creds.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        raw: encoded,
+        threadId: opts?.threadId || undefined,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Gmail send error (${response.status}): ${err}`);
+    }
+
+    return response.json();
   });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Gmail send error (${response.status}): ${err}`);
-  }
-
-  const data = await response.json();
 
   // Increment daily count
   await query(

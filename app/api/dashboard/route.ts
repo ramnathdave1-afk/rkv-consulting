@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
-  // Use the first org (demo)
-  const { data: org } = await supabase.from('organizations').select('id').limit(1).single();
-  if (!org) return NextResponse.json({ error: 'No org found' }, { status: 404 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const orgId = org.id;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('org_id')
+    .eq('user_id', user.id)
+    .single();
+  if (!profile) return NextResponse.json({ error: 'No profile' }, { status: 403 });
+
+  const orgId = profile.org_id;
   const now = new Date();
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 

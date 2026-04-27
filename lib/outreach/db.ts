@@ -57,5 +57,13 @@ export async function transaction<T>(
   }
 }
 
-// Default org ID for RKV Consulting
-export const ORG_ID = '00000000-0000-0000-0000-000000000001';
+// Org context for the outreach worker. In multi-tenant operation each call
+// path should pass an orgId explicitly (derived from auth/session or a
+// Twilio phone-number lookup). Until every caller is refactored, this is
+// configured via env so no UUID is hardcoded in source.
+export function getOutreachOrgId(): string {
+  return process.env.OUTREACH_ORG_ID ?? '';
+}
+
+// Backwards-compat re-export. Prefer getOutreachOrgId() at new call sites.
+export const ORG_ID: string = getOutreachOrgId();

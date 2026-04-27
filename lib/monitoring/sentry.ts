@@ -1,8 +1,8 @@
 /**
- * Sentry Error Tracking Setup
- * Captures errors in both frontend and API routes.
- * Configure NEXT_PUBLIC_SENTRY_DSN and SENTRY_DSN env vars.
+ * Sentry Error Tracking Wrapper.
+ * Uses @sentry/nextjs when SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN is set.
  */
+import * as Sentry from '@sentry/nextjs';
 
 interface SentryEvent {
   message: string;
@@ -12,92 +12,39 @@ interface SentryEvent {
   user?: { id: string; email?: string; org_id?: string };
 }
 
-const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+const DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 export function captureException(error: Error, context?: Partial<SentryEvent>): void {
-  if (!SENTRY_DSN) {
+  if (!DSN) {
     console.error('[Sentry stub]', error.message, context);
     return;
   }
-
-  // In production, this would use @sentry/nextjs SDK
-  // For now, log to console and send to Sentry ingest API
-  const event = {
-    exception: {
-      values: [{
-        type: error.name,
-        value: error.message,
-        stacktrace: { frames: parseStack(error.stack) },
-      }],
-    },
-    level: context?.level || 'error',
-    tags: context?.tags || {},
-    extra: context?.extra || {},
+  Sentry.captureException(error, {
+    level: context?.level,
+    tags: context?.tags,
+    extra: context?.extra,
     user: context?.user,
-    environment: process.env.NODE_ENV || 'development',
-    platform: 'node',
-  };
-
-  sendToSentry(event).catch(console.error);
-}
-
-export function captureMessage(message: string, level: SentryEvent['level'] = 'info', context?: Partial<SentryEvent>): void {
-  if (!SENTRY_DSN) {
-    console.log(`[Sentry stub] [${level}]`, message);
-    return;
-  }
-
-  const event = {
-    message: { formatted: message },
-    level,
-    tags: context?.tags || {},
-    extra: context?.extra || {},
-    user: context?.user,
-    environment: process.env.NODE_ENV || 'development',
-    platform: 'node',
-  };
-
-  sendToSentry(event).catch(console.error);
-}
-
-export function setUser(user: { id: string; email?: string; org_id?: string }): void {
-  // In production with @sentry/nextjs, this would call Sentry.setUser()
-  if (!SENTRY_DSN) return;
-  globalThis.__sentryUser = user;
-}
-
-async function sendToSentry(event: Record<string, unknown>): Promise<void> {
-  if (!SENTRY_DSN) return;
-
-  try {
-    const url = new URL(SENTRY_DSN);
-    const projectId = url.pathname.replace('/', '');
-    const publicKey = url.username;
-    const ingestUrl = `https://${url.host}/api/${projectId}/store/?sentry_key=${publicKey}&sentry_version=7`;
-
-    await fetch(ingestUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(event),
-    });
-  } catch {
-    // Sentry reporting should never crash the app
-  }
-}
-
-function parseStack(stack?: string): { filename: string; function: string; lineno: number }[] {
-  if (!stack) return [];
-  return stack.split('\n').slice(1, 10).map((line) => {
-    const match = line.match(/at\s+(.+?)\s+\((.+?):(\d+)/);
-    return {
-      filename: match?.[2] || 'unknown',
-      function: match?.[1] || 'anonymous',
-      lineno: Number(match?.[3]) || 0,
-    };
   });
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __sentryUser: { id: string; email?: string; org_id?: string } | undefined;
+export function captureMessage(
+  message: string,
+  level: SentryEvent['level'] = 'info',
+  context?: Partial<SentryEvent>,
+): void {
+  if (!DSN) {
+    console.log(`[Sentry stub] [${level}]`, message);
+    return;
+  }
+  Sentry.captureMessage(message, {
+    level,
+    tags: context?.tags,
+    extra: context?.extra,
+    user: context?.user,
+  });
+}
+
+export function setUser(user: { id: string; email?: string; org_id?: string }): void {
+  if (!DSN) return;
+  Sentry.setUser({ id: user.id, email: user.email, org_id: user.org_id });
 }

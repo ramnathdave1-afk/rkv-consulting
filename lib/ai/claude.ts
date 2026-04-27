@@ -1,4 +1,6 @@
-export async function callClaude(messages: { role: string; content: string }[], systemPrompt?: string) {
+type SystemPrompt = string | Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }>;
+
+export async function callClaude(messages: { role: string; content: string }[], systemPrompt?: SystemPrompt) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {

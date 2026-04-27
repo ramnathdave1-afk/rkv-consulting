@@ -2,7 +2,36 @@ import "@/lib/config";
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/terms', '/privacy', '/about', '/contact', '/security', '/demo', '/api/demo', '/api/waitlist', '/api/webhooks', '/api/stripe/webhooks', '/api/twilio', '/api/email/incoming', '/api/chat/widget', '/dashboard', '/properties', '/tenants', '/leases', '/work-orders', '/vendors', '/showings', '/conversations', '/reports', '/acquisitions', '/settings', '/integrations', '/import', '/onboarding', '/tenant-portal', '/api/dashboard', '/api/market', '/voice', '/campaigns', '/lease-audits', '/move-ins', '/delinquency', '/field-ops', '/api/voice', '/api/campaigns', '/api/lease-audits', '/api/move-ins', '/api/delinquency', '/api/field-ops', '/api/activity', '/api/chat', '/api/properties/list', '/api/tenants/list', '/api/leases/list', '/api/work-orders/list', '/api/vendors/list', '/calendar', '/api/calendar', '/quizlet', '/status', '/changelog', '/docs', '/api/outreach/track', '/api/outreach/webhooks', '/api/outreach/agents'];
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/pricing',
+  '/terms',
+  '/privacy',
+  '/about',
+  '/contact',
+  '/security',
+  '/demo',
+  '/status',
+  '/changelog',
+  '/docs',
+  '/api/auth',
+  '/api/demo',
+  '/api/waitlist',
+  '/api/twilio',
+  '/api/stripe/webhooks',
+  '/api/webhooks',
+  '/api/email/incoming',
+  '/api/chat/widget',
+  '/api/outreach/track',
+  '/api/outreach/webhooks',
+  '/api/outreach/unsubscribe',
+  '/_next',
+  '/favicon.ico',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

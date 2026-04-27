@@ -1,4 +1,5 @@
 import { query, ORG_ID } from './db';
+import { withRetry } from './retry';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -39,28 +40,30 @@ async function callModel(
     ? `${systemPrompt}\n\nIMPORTANT: Respond with valid JSON only. No markdown, no explanation, just JSON.`
     : systemPrompt;
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY!,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: MODELS[model],
-      max_tokens: maxTokens,
-      temperature,
-      system,
-      messages,
-    }),
+  const data = await withRetry(async () => {
+    const response = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: MODELS[model],
+        max_tokens: maxTokens,
+        temperature,
+        system,
+        messages,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Claude ${model} API error ${response.status}: ${errorBody}`);
+    }
+
+    return response.json();
   });
-
-  if (!response.ok) {
-    const errorBody = await response.text().catch(() => 'Unknown error');
-    throw new Error(`Claude ${model} API error ${response.status}: ${errorBody}`);
-  }
-
-  const data = await response.json();
   const inputTokens = data.usage?.input_tokens ?? 0;
   const outputTokens = data.usage?.output_tokens ?? 0;
   const pricing = PRICING[model];

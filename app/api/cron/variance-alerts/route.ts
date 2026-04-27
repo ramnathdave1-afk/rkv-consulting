@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { checkVarianceAlerts } from '@/lib/analytics/variance-alerts';
 import { upsertDeferredMaintenance } from '@/lib/maintenance/deferred-tracker';
+import { verifyCronAuth } from '@/lib/auth/cron';
 
 // Runs daily to check all orgs for variance alerts and deferred maintenance
-export async function GET() {
-  const authHeader = process.env.CRON_SECRET;
-  // In production, validate the cron secret
+export async function GET(request: NextRequest) {
+  const unauthorized = verifyCronAuth(request);
+  if (unauthorized) return unauthorized;
 
   const supabase = createAdminClient();
   const { data: orgs } = await supabase.from('organizations').select('id');

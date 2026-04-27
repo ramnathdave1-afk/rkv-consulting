@@ -46,6 +46,12 @@ export async function sendCampaign(campaignId: string): Promise<{
     throw new Error(`Campaign not found: ${campaignId}`);
   }
 
+  // Bail early if the campaign isn't in a sendable state. Status is checked
+  // once here rather than re-queried per recipient (was an N+1).
+  if (campaign.status === 'paused' || campaign.status === 'cancelled') {
+    return { sent: 0, delivered: 0, failed: 0 };
+  }
+
   // Load recipients with tenant + lease + unit + property info
   const { data: recipients, error: rErr } = await supabase
     .from('campaign_recipients')
@@ -86,17 +92,6 @@ export async function sendCampaign(campaignId: string): Promise<{
   let failed = 0;
 
   for (const recipient of recipients || []) {
-    // Check if campaign was paused/cancelled
-    const { data: latest } = await supabase
-      .from('campaigns')
-      .select('status')
-      .eq('id', campaignId)
-      .single();
-
-    if (latest?.status === 'paused' || latest?.status === 'cancelled') {
-      break;
-    }
-
     const tenant = recipient.tenants as any;
     const tenantName = tenant
       ? `${tenant.first_name} ${tenant.last_name}`.trim()

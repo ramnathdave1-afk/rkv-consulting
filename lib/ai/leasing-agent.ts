@@ -155,8 +155,10 @@ export async function generateLeasingResponse(
     { role: 'user', content: inboundMessage },
   ];
 
-  // Call Claude
-  const result = await callClaude(messages, systemPrompt);
+  // Call Claude with prompt caching on the long system prompt
+  const result = await callClaude(messages, [
+    { type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } },
+  ]);
 
   if (result.error || !result.content) {
     return {

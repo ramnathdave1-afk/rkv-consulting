@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { callClaude } from '@/lib/ai/claude';
 
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
-
 const SYSTEM_PROMPT = `You are the AI phone assistant for RKV Consulting, a property management company. You handle all inbound calls professionally and conversationally.
 
 You can help with ANY property management request including:
@@ -75,10 +73,38 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const speechResult = formData.get('SpeechResult') as string;
   const callerPhone = formData.get('From') as string || '';
+  const calledNumber = formData.get('To') as string || '';
   const convoId = request.nextUrl.searchParams.get('convo') || '';
   const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
 
   const supabase = createAdminClient();
+
+  // Resolve org_id: prefer the conversation's org, fall back to the Twilio
+  // number that was dialed.
+  let orgId: string | null = null;
+  if (convoId) {
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('org_id')
+      .eq('id', convoId)
+      .single();
+    orgId = conv?.org_id ?? null;
+  }
+  if (!orgId && calledNumber) {
+    const { data: phoneRecord } = await supabase
+      .from('org_phone_numbers')
+      .select('org_id')
+      .eq('phone_number', calledNumber)
+      .eq('is_active', true)
+      .maybeSingle();
+    orgId = phoneRecord?.org_id ?? null;
+  }
+  if (!orgId) {
+    return new NextResponse(
+      `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Joanna">We're unable to take this call right now. Please try again later.</Say></Response>`,
+      { headers: { 'Content-Type': 'text/xml' } }
+    );
+  }
 
   // If no speech detected, ask again
   if (!speechResult) {
@@ -96,7 +122,7 @@ export async function POST(request: NextRequest) {
   if (convoId) {
     await supabase.from('messages').insert({
       conversation_id: convoId,
-      org_id: ORG_ID,
+      org_id: orgId,
       direction: 'inbound',
       sender_type: 'tenant',
       content: speechResult,
@@ -119,12 +145,12 @@ export async function POST(request: NextRequest) {
   const { data: properties } = await supabase
     .from('properties')
     .select('name, address_line1, city, state, zip, property_type, unit_count')
-    .eq('org_id', ORG_ID);
+    .eq('org_id', orgId);
 
   const { data: vacantUnits } = await supabase
     .from('units')
     .select('unit_number, bedrooms, bathrooms, market_rent, square_footage, properties(name)')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .eq('status', 'vacant')
     .limit(15);
 
@@ -140,7 +166,7 @@ export async function POST(request: NextRequest) {
   const { data: knowledge } = await supabase
     .from('property_knowledge')
     .select('question, answer, category')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .order('category');
 
   const knowledgeContext = knowledge?.length
@@ -155,10 +181,12 @@ export async function POST(request: NextRequest) {
     { role: 'user', content: speechResult },
   ];
 
-  // Call Claude
+  // Call Claude with prompt caching on the long static system prompt
   let aiResponse = '';
   try {
-    const result = await callClaude(messages, fullSystemPrompt);
+    const result = await callClaude(messages, [
+      { type: 'text', text: fullSystemPrompt, cache_control: { type: 'ephemeral' } },
+    ]);
     if (result.content && Array.isArray(result.content)) {
       aiResponse = result.content.map((block: { text?: string }) => block.text || '').join('');
     } else if (typeof result.content === 'string') {
@@ -191,7 +219,7 @@ export async function POST(request: NextRequest) {
   if (convoId) {
     await supabase.from('messages').insert({
       conversation_id: convoId,
-      org_id: ORG_ID,
+      org_id: orgId,
       direction: 'outbound',
       sender_type: 'ai',
       content: aiResponse,
