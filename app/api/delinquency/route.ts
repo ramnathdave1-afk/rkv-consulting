@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   // Fetch delinquent rent payments with tenant/property/unit joins
@@ -20,7 +24,7 @@ export async function GET() {
         )
       )
     `)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .in('status', ['late', 'delinquent', 'partial'])
     .order('days_late', { ascending: false });
 

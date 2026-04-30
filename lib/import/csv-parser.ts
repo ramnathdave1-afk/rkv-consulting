@@ -1,7 +1,7 @@
 /**
  * CSV Import Parser
  * Parses CSV files for bulk import of properties, units, tenants, leases.
- * Handles common column name variations from AppFolio, Buildium, and manual exports.
+ * Handles common column name variations from PM platform exports and manual spreadsheets.
  */
 
 export interface CSVParseResult<T> {

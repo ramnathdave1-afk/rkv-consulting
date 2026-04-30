@@ -1,199 +1,829 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Upload,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type Entity = 'properties' | 'units' | 'tenants' | 'leases';
 
-interface ImportResult {
-  entity: string;
-  total_rows: number;
-  created: number;
-  skipped: number;
-  errors: { row: number; messages: string[] }[];
+interface SchemaField {
+  name: string;
+  label: string;
+  required?: boolean;
+  hint?: string;
 }
 
-const entities: { value: Entity; label: string; description: string; order: number }[] = [
-  { value: 'properties', label: 'Properties', description: 'Import buildings and complexes', order: 1 },
-  { value: 'units', label: 'Units', description: 'Import individual units (requires properties first)', order: 2 },
-  { value: 'tenants', label: 'Tenants', description: 'Import residents and prospects', order: 3 },
-  { value: 'leases', label: 'Leases', description: 'Import lease agreements (requires units + tenants first)', order: 4 },
-];
-
-const sampleHeaders: Record<Entity, string> = {
-  properties: 'name,address,city,state,zip,type,units,year_built',
-  units: 'property_name,unit_number,bedrooms,bathrooms,sqft,rent,status',
-  tenants: 'first_name,last_name,email,phone,status,move_in_date',
-  leases: 'tenant_name,unit_number,property_name,lease_start,lease_end,monthly_rent,status',
+const ENTITY_LABELS: Record<Entity, string> = {
+  properties: 'Properties',
+  units: 'Units',
+  tenants: 'Tenants',
+  leases: 'Leases',
 };
 
+const ENTITY_ORDER: { value: Entity; label: string; description: string; order: number }[] = [
+  { value: 'properties', label: 'Properties', description: 'Buildings & complexes', order: 1 },
+  { value: 'units', label: 'Units', description: 'Requires properties first', order: 2 },
+  { value: 'tenants', label: 'Tenants', description: 'Residents & prospects', order: 3 },
+  { value: 'leases', label: 'Leases', description: 'Requires units + tenants', order: 4 },
+];
+
+const SCHEMAS: Record<Entity, SchemaField[]> = {
+  properties: [
+    { name: 'name', label: 'Property Name', required: true },
+    { name: 'address_line1', label: 'Address', required: true },
+    { name: 'address_line2', label: 'Address 2 (Apt/Suite)' },
+    { name: 'city', label: 'City', required: true },
+    { name: 'state', label: 'State', required: true },
+    { name: 'zip', label: 'ZIP', required: true },
+    { name: 'property_type', label: 'Property Type', hint: 'multifamily, single_family, commercial, mixed_use, hoa' },
+    { name: 'unit_count', label: 'Unit Count' },
+    { name: 'year_built', label: 'Year Built' },
+  ],
+  units: [
+    { name: 'property_name', label: 'Property Name', required: true, hint: 'Must match an existing property' },
+    { name: 'unit_number', label: 'Unit Number', required: true },
+    { name: 'bedrooms', label: 'Bedrooms' },
+    { name: 'bathrooms', label: 'Bathrooms' },
+    { name: 'square_footage', label: 'Square Footage' },
+    { name: 'market_rent', label: 'Market Rent' },
+    { name: 'status', label: 'Status', hint: 'occupied, vacant, notice, make_ready, down, model' },
+    { name: 'floor_plan', label: 'Floor Plan' },
+  ],
+  tenants: [
+    { name: 'first_name', label: 'First Name', required: true, hint: 'Required unless full_name is provided' },
+    { name: 'last_name', label: 'Last Name' },
+    { name: 'full_name', label: 'Full Name', hint: 'Use instead of first/last' },
+    { name: 'email', label: 'Email' },
+    { name: 'phone', label: 'Phone' },
+    { name: 'status', label: 'Status', hint: 'prospect, applicant, approved, active, notice, past, denied' },
+    { name: 'move_in_date', label: 'Move-in Date' },
+    { name: 'move_out_date', label: 'Move-out Date' },
+  ],
+  leases: [
+    { name: 'tenant_name', label: 'Tenant Name', required: true, hint: '"First Last" — must match existing tenant' },
+    { name: 'unit_number', label: 'Unit Number', required: true },
+    { name: 'property_name', label: 'Property Name' },
+    { name: 'lease_start', label: 'Lease Start', required: true, hint: 'YYYY-MM-DD' },
+    { name: 'lease_end', label: 'Lease End', required: true, hint: 'YYYY-MM-DD' },
+    { name: 'monthly_rent', label: 'Monthly Rent', required: true },
+    { name: 'security_deposit', label: 'Security Deposit' },
+    { name: 'status', label: 'Status', hint: 'pending, active, expired, terminated, renewed' },
+  ],
+};
+
+const STEP_LABELS = ['Choose', 'Upload', 'Map', 'Validate', 'Import'];
+
 export default function ImportPage() {
-  const [selectedEntity, setSelectedEntity] = useState<Entity>('properties');
+  const [step, setStep] = useState(1);
+  const [entity, setEntity] = useState<Entity>('properties');
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvRows, setCsvRows] = useState<Record<string, string>[]>([]);
+  const [mapping, setMapping] = useState<Record<string, string>>({});
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<{
+    valid_count: number;
+    invalid_count: number;
+    total: number;
+    errors: { row: number; field: string; message: string }[];
+  } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    imported: number;
+    skipped: number;
+    total: number;
+    errors: { row: number; messages: string[] }[];
+  } | null>(null);
+  const [skipInvalid, setSkipInvalid] = useState(true);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  async function handleUpload() {
-    if (!file) return;
-    setUploading(true);
-    setResult(null);
+  const schema = SCHEMAS[entity];
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('entity', selectedEntity);
-
-    try {
-      const res = await fetch('/api/import', { method: 'POST', body: formData });
-      const data = await res.json();
-      setResult(data);
-    } catch {
-      setResult({ entity: selectedEntity, total_rows: 0, created: 0, skipped: 0, errors: [{ row: 0, messages: ['Upload failed'] }] });
+  const parseFile = useCallback(async (f: File) => {
+    const text = await f.text();
+    const { headers, rows } = parseCSV(text);
+    setCsvHeaders(headers);
+    setCsvRows(rows);
+    const auto: Record<string, string> = {};
+    for (const h of headers) {
+      const target = autoDetect(h, schema);
+      if (target) auto[h] = target;
     }
-    setUploading(false);
+    setMapping(auto);
+    setPreviewResult(null);
+    setImportResult(null);
+  }, [schema]);
+
+  function handleFile(f: File | null) {
+    if (!f) return;
+    setFile(f);
+    parseFile(f);
+  }
+
+  const canAdvance = useMemo(() => {
+    if (step === 1) return true;
+    if (step === 2) return file !== null && csvRows.length > 0;
+    if (step === 3) {
+      const mappedTargets = new Set(Object.values(mapping).filter(Boolean));
+      return schema.filter((f) => f.required).every((f) => mappedTargets.has(f.name));
+    }
+    if (step === 4) return previewResult !== null;
+    return false;
+  }, [step, file, csvRows.length, mapping, schema, previewResult]);
+
+  async function runPreview() {
+    setPreviewing(true);
+    setPreviewResult(null);
+    try {
+      const res = await fetch('/api/import/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: entity, rows: csvRows, mapping }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPreviewResult({
+          valid_count: 0,
+          invalid_count: csvRows.length,
+          total: csvRows.length,
+          errors: [{ row: 0, field: '', message: data.error || 'Preview failed' }],
+        });
+      } else {
+        setPreviewResult(data);
+      }
+    } catch (e) {
+      setPreviewResult({
+        valid_count: 0,
+        invalid_count: csvRows.length,
+        total: csvRows.length,
+        errors: [{ row: 0, field: '', message: String(e) }],
+      });
+    }
+    setPreviewing(false);
+  }
+
+  async function runImport() {
+    setImporting(true);
+    setImportResult(null);
+    try {
+      let rowsToSend = csvRows;
+      if (skipInvalid && previewResult) {
+        const badRows = new Set(previewResult.errors.map((e) => e.row));
+        rowsToSend = csvRows.filter((_, idx) => !badRows.has(idx + 2));
+      }
+      const res = await fetch('/api/import/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: entity, rows: rowsToSend, mapping, confirm: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportResult({
+          imported: 0,
+          skipped: rowsToSend.length,
+          total: rowsToSend.length,
+          errors: [{ row: 0, messages: [data.error || 'Import failed'] }],
+        });
+      } else {
+        setImportResult(data);
+      }
+    } catch (e) {
+      setImportResult({
+        imported: 0,
+        skipped: csvRows.length,
+        total: csvRows.length,
+        errors: [{ row: 0, messages: [String(e)] }],
+      });
+    }
+    setImporting(false);
+  }
+
+  function reset() {
+    setStep(1);
+    setFile(null);
+    setCsvHeaders([]);
+    setCsvRows([]);
+    setMapping({});
+    setPreviewResult(null);
+    setImportResult(null);
   }
 
   function downloadTemplate() {
-    const csv = sampleHeaders[selectedEntity] + '\n';
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedEntity}_template.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    window.open(`/api/import/templates/${entity}`, '_blank');
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto">
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div>
         <h1 className="font-display text-xl font-bold text-text-primary">Import Data</h1>
-        <p className="text-sm text-text-secondary">Bulk import from CSV files exported from your PM platform.</p>
+        <p className="text-sm text-text-secondary">
+          Bulk-load properties, units, tenants, and leases from any CSV.
+        </p>
       </div>
 
-      {/* Import order guide */}
-      <div className="glass-card p-4">
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Import Order</h3>
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          {entities.map((e, i) => (
-            <React.Fragment key={e.value}>
-              <span className={`px-2 py-1 rounded-lg ${selectedEntity === e.value ? 'bg-accent/10 text-accent font-medium' : ''}`}>
-                {e.order}. {e.label}
-              </span>
-              {i < entities.length - 1 && <ArrowRight size={12} className="text-text-muted" />}
-            </React.Fragment>
-          ))}
+      <div className="glass-card p-3">
+        <div className="flex items-center gap-1 sm:gap-2 text-xs">
+          {STEP_LABELS.map((label, i) => {
+            const n = i + 1;
+            const active = step === n;
+            const done = step > n;
+            return (
+              <React.Fragment key={label}>
+                <div
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors ${
+                    active
+                      ? 'bg-accent/10 text-accent font-medium'
+                      : done
+                      ? 'text-text-primary'
+                      : 'text-text-muted'
+                  }`}
+                >
+                  <span
+                    className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] ${
+                      done
+                        ? 'bg-green-500 text-white'
+                        : active
+                        ? 'bg-accent text-white'
+                        : 'bg-bg-elevated text-text-muted border border-border'
+                    }`}
+                  >
+                    {done ? <Check size={10} /> : n}
+                  </span>
+                  <span>{label}</span>
+                </div>
+                {i < STEP_LABELS.length - 1 && (
+                  <ArrowRight size={12} className="text-text-muted" />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
 
-      {/* Entity selector */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {entities.map((e) => (
-          <button
-            key={e.value}
-            onClick={() => { setSelectedEntity(e.value); setFile(null); setResult(null); }}
-            className={`p-3 rounded-lg border text-left transition-colors ${
-              selectedEntity === e.value ? 'border-accent bg-accent/5' : 'border-border hover:border-border-hover'
-            }`}
-          >
-            <p className="text-sm font-medium text-text-primary">{e.label}</p>
-            <p className="text-[10px] text-text-muted mt-0.5">{e.description}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* File upload */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className="glass-card p-8 border-2 border-dashed border-border hover:border-accent/50 cursor-pointer transition-colors text-center"
-      >
-        <Upload size={32} className="mx-auto text-text-muted mb-3" />
-        {file ? (
-          <div>
-            <p className="text-sm font-medium text-text-primary">{file.name}</p>
-            <p className="text-xs text-text-muted mt-1">{(file.size / 1024).toFixed(1)} KB</p>
-          </div>
-        ) : (
-          <div>
-            <p className="text-sm text-text-secondary">Click to upload a CSV file</p>
-            <p className="text-xs text-text-muted mt-1">or drag and drop</p>
-          </div>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={(e) => { setFile(e.target.files?.[0] || null); setResult(null); }}
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleUpload}
-          disabled={!file || uploading}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 transition-colors"
-        >
-          {uploading ? 'Importing...' : `Import ${selectedEntity}`}
-        </button>
-        <button onClick={downloadTemplate} className="px-4 py-2.5 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors">
-          <FileText size={14} className="inline mr-1.5" />
-          Download Template
-        </button>
-      </div>
-
-      {/* Results */}
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            {result.created > 0 ? (
-              <CheckCircle2 size={18} className="text-green-500" />
-            ) : (
-              <AlertTriangle size={18} className="text-yellow-500" />
-            )}
-            <h3 className="text-sm font-semibold text-text-primary">Import Results</h3>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-500">{result.created}</p>
-              <p className="text-[10px] text-text-muted uppercase">Created</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-500">{result.skipped}</p>
-              <p className="text-[10px] text-text-muted uppercase">Skipped</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-text-secondary">{result.total_rows}</p>
-              <p className="text-[10px] text-text-muted uppercase">Total Rows</p>
+      {step === 1 && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div className="glass-card p-4">
+            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+              Recommended Import Order
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-text-secondary flex-wrap">
+              {ENTITY_ORDER.map((e, i) => (
+                <React.Fragment key={e.value}>
+                  <span
+                    className={`px-2 py-1 rounded-lg ${
+                      entity === e.value ? 'bg-accent/10 text-accent font-medium' : ''
+                    }`}
+                  >
+                    {e.order}. {e.label}
+                  </span>
+                  {i < ENTITY_ORDER.length - 1 && <ArrowRight size={12} className="text-text-muted" />}
+                </React.Fragment>
+              ))}
             </div>
           </div>
 
-          {result.errors.length > 0 && (
-            <div className="mt-3 space-y-1">
-              <p className="text-xs font-medium text-text-muted">Errors:</p>
-              {result.errors.map((err, i) => (
-                <div key={i} className="text-xs text-red-400 bg-red-500/5 rounded px-2 py-1">
-                  Row {err.row}: {err.messages.join(', ')}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {ENTITY_ORDER.map((e) => (
+              <button
+                key={e.value}
+                onClick={() => setEntity(e.value)}
+                className={`p-3 rounded-lg border text-left transition-colors ${
+                  entity === e.value
+                    ? 'border-accent bg-accent/5'
+                    : 'border-border hover:border-border-hover'
+                }`}
+              >
+                <p className="text-sm font-medium text-text-primary">{e.label}</p>
+                <p className="text-[10px] text-text-muted mt-0.5">{e.description}</p>
+              </button>
+            ))}
+          </div>
+
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
+                Schema for {ENTITY_LABELS[entity]}
+              </h3>
+              <button
+                onClick={downloadTemplate}
+                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
+              >
+                <FileText size={12} /> Download template CSV
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+              {schema.map((f) => (
+                <div key={f.name} className="text-xs flex items-start gap-2">
+                  <code className="text-accent bg-accent/5 rounded px-1.5 py-0.5 shrink-0">
+                    {f.name}
+                  </code>
+                  <span className="text-text-secondary">
+                    {f.label}
+                    {f.required && <span className="text-red-400 ml-1">*</span>}
+                    {f.hint && <span className="text-text-muted block text-[10px]">{f.hint}</span>}
+                  </span>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+
+          <NavButtons
+            onNext={() => setStep(2)}
+            canAdvance
+            nextLabel="Choose CSV"
+          />
         </motion.div>
       )}
 
-      {/* Column reference */}
-      <div className="glass-card p-4">
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Expected Columns for {selectedEntity}</h3>
-        <code className="text-xs text-accent bg-accent/5 rounded px-2 py-1 block">
-          {sampleHeaders[selectedEntity]}
-        </code>
-        <p className="text-[10px] text-text-muted mt-2">
-          Column names are flexible — we recognize common variations from AppFolio, Buildium, and other platforms.
-        </p>
+      {step === 2 && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFile(f);
+            }}
+            className={`glass-card p-8 border-2 border-dashed cursor-pointer transition-colors text-center ${
+              dragOver ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
+            }`}
+          >
+            <Upload size={32} className="mx-auto text-text-muted mb-3" />
+            {file ? (
+              <div>
+                <p className="text-sm font-medium text-text-primary">{file.name}</p>
+                <p className="text-xs text-text-muted mt-1">
+                  {(file.size / 1024).toFixed(1)} KB · {csvRows.length} rows · {csvHeaders.length} columns
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm text-text-secondary">Click to upload a CSV file</p>
+                <p className="text-xs text-text-muted mt-1">or drag and drop</p>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0] || null)}
+            />
+          </div>
+
+          {csvRows.length > 0 && (
+            <div className="glass-card p-4">
+              <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+                Preview (first 10 rows)
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="text-xs w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      {csvHeaders.map((h) => (
+                        <th key={h} className="text-left px-2 py-1.5 font-medium text-text-primary whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {csvRows.slice(0, 10).map((r, i) => (
+                      <tr key={i} className="border-b border-border/40">
+                        {csvHeaders.map((h) => (
+                          <td key={h} className="px-2 py-1 text-text-secondary whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis">
+                            {r[h]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <NavButtons
+            onBack={() => setStep(1)}
+            onNext={() => setStep(3)}
+            canAdvance={canAdvance}
+            nextLabel="Map columns"
+          />
+        </motion.div>
+      )}
+
+      {step === 3 && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div className="glass-card p-4">
+            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+              Match CSV columns → {ENTITY_LABELS[entity]} fields
+            </h3>
+            <div className="space-y-2">
+              {csvHeaders.map((h) => (
+                <div key={h} className="flex items-center gap-3 text-sm">
+                  <code className="flex-1 bg-bg-elevated rounded px-2 py-1.5 text-text-primary text-xs">
+                    {h}
+                  </code>
+                  <ArrowRight size={14} className="text-text-muted" />
+                  <select
+                    value={mapping[h] || ''}
+                    onChange={(e) => setMapping((m) => ({ ...m, [h]: e.target.value }))}
+                    className="flex-1 bg-bg-elevated border border-border rounded px-2 py-1.5 text-xs text-text-primary"
+                  >
+                    <option value="">— ignore —</option>
+                    {schema.map((f) => (
+                      <option key={f.name} value={f.name}>
+                        {f.label}
+                        {f.required ? ' *' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <RequiredFieldStatus schema={schema} mapping={mapping} />
+          </div>
+
+          <NavButtons
+            onBack={() => setStep(2)}
+            onNext={async () => {
+              setStep(4);
+              await runPreview();
+            }}
+            canAdvance={canAdvance}
+            nextLabel="Validate"
+          />
+        </motion.div>
+      )}
+
+      {step === 4 && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          {previewing && (
+            <div className="glass-card p-6 text-center text-sm text-text-secondary">
+              Validating rows...
+            </div>
+          )}
+
+          {previewResult && (
+            <>
+              <div className="glass-card p-5">
+                <div className="grid grid-cols-3 gap-4">
+                  <Stat label="Valid" value={previewResult.valid_count} color="green" />
+                  <Stat label="Invalid" value={previewResult.invalid_count} color="yellow" />
+                  <Stat label="Total" value={previewResult.total} color="muted" />
+                </div>
+              </div>
+
+              {previewResult.errors.length > 0 && (
+                <div className="glass-card p-4">
+                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                    Validation Errors ({previewResult.errors.length})
+                  </h3>
+                  <div className="max-h-72 overflow-y-auto space-y-1">
+                    {previewResult.errors.map((err, i) => (
+                      <div key={i} className="text-xs text-red-400 bg-red-500/5 rounded px-2 py-1">
+                        Row {err.row}
+                        {err.field ? ` · ${err.field}` : ''}: {err.message}
+                      </div>
+                    ))}
+                  </div>
+                  <label className="flex items-center gap-2 mt-3 text-xs text-text-secondary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={skipInvalid}
+                      onChange={(e) => setSkipInvalid(e.target.checked)}
+                      className="rounded"
+                    />
+                    Skip invalid rows on import
+                  </label>
+                </div>
+              )}
+            </>
+          )}
+
+          <NavButtons
+            onBack={() => setStep(3)}
+            onNext={async () => {
+              setStep(5);
+              await runImport();
+            }}
+            canAdvance={canAdvance && (previewResult?.valid_count ?? 0) > 0}
+            nextLabel={`Import ${previewResult?.valid_count ?? 0} rows`}
+          />
+        </motion.div>
+      )}
+
+      {step === 5 && (
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          {importing && (
+            <div className="glass-card p-6 text-center">
+              <div className="mb-3 text-sm text-text-secondary">Importing rows...</div>
+              <div className="h-1.5 bg-bg-elevated rounded overflow-hidden">
+                <motion.div
+                  className="h-full bg-accent"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '90%' }}
+                  transition={{ duration: 2, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {importResult && (
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-5 space-y-4"
+              >
+                <div className="flex items-center gap-2">
+                  {importResult.imported > 0 ? (
+                    <CheckCircle2 size={20} className="text-green-500" />
+                  ) : (
+                    <AlertTriangle size={20} className="text-yellow-500" />
+                  )}
+                  <h3 className="text-sm font-semibold text-text-primary">
+                    {importResult.imported > 0 && importResult.skipped === 0
+                      ? 'Import complete'
+                      : importResult.imported > 0
+                      ? 'Import complete with skipped rows'
+                      : 'Nothing imported'}
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <Stat label="Imported" value={importResult.imported} color="green" />
+                  <Stat label="Skipped" value={importResult.skipped} color="yellow" />
+                  <Stat label="Total" value={importResult.total} color="muted" />
+                </div>
+
+                {importResult.imported > 0 && (
+                  <a
+                    href={`/${entity}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
+                  >
+                    View imported {ENTITY_LABELS[entity].toLowerCase()} <ArrowRight size={12} />
+                  </a>
+                )}
+              </motion.div>
+
+              {importResult.errors.length > 0 && (
+                <div className="glass-card p-4">
+                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                    Errors ({importResult.errors.length})
+                  </h3>
+                  <div className="max-h-60 overflow-y-auto space-y-1">
+                    {importResult.errors.map((err, i) => (
+                      <div key={i} className="text-xs text-red-400 bg-red-500/5 rounded px-2 py-1">
+                        Row {err.row}: {err.messages.join(', ')}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={reset}
+                  className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors"
+                >
+                  Import another file
+                </button>
+              </div>
+            </>
+          )}
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function NavButtons({
+  onBack,
+  onNext,
+  canAdvance,
+  nextLabel,
+}: {
+  onBack?: () => void;
+  onNext?: () => void;
+  canAdvance: boolean;
+  nextLabel: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors"
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+      )}
+      {onNext && (
+        <button
+          onClick={onNext}
+          disabled={!canAdvance}
+          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {nextLabel} <ArrowRight size={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, color }: { label: string; value: number; color: 'green' | 'yellow' | 'muted' }) {
+  const colorClass =
+    color === 'green' ? 'text-green-500' : color === 'yellow' ? 'text-yellow-500' : 'text-text-secondary';
+  return (
+    <div className="text-center">
+      <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
+      <p className="text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+function RequiredFieldStatus({
+  schema,
+  mapping,
+}: {
+  schema: SchemaField[];
+  mapping: Record<string, string>;
+}) {
+  const mapped = new Set(Object.values(mapping).filter(Boolean));
+  const required = schema.filter((f) => f.required);
+  const missing = required.filter((f) => !mapped.has(f.name));
+
+  if (missing.length === 0) {
+    return (
+      <div className="mt-4 flex items-center gap-2 text-xs text-green-500">
+        <Check size={14} /> All required fields are mapped
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex items-start gap-2 text-xs text-yellow-500">
+      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+      <div>
+        Missing required fields:{' '}
+        <span className="font-medium">{missing.map((f) => f.label).join(', ')}</span>
       </div>
     </div>
   );
+}
+
+function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const out: string[][] = [];
+  let cur = '';
+  let row: string[] = [];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"' && text[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (c === '"') {
+        inQuotes = false;
+      } else {
+        cur += c;
+      }
+    } else {
+      if (c === '"') {
+        inQuotes = true;
+      } else if (c === ',') {
+        row.push(cur);
+        cur = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(cur);
+        out.push(row);
+        row = [];
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+  }
+  if (cur !== '' || row.length > 0) {
+    row.push(cur);
+    out.push(row);
+  }
+  const filtered = out.filter((r) => r.some((v) => v.trim() !== ''));
+  if (filtered.length === 0) return { headers: [], rows: [] };
+
+  const headers = filtered[0].map((h) => h.trim());
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < filtered.length; i++) {
+    const r: Record<string, string> = {};
+    headers.forEach((h, j) => {
+      r[h] = (filtered[i][j] ?? '').trim();
+    });
+    rows.push(r);
+  }
+  return { headers, rows };
+}
+
+function autoDetect(csvHeader: string, schema: SchemaField[]): string | null {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const h = norm(csvHeader);
+
+  const aliases: Record<string, string> = {
+    propertyname: 'name',
+    buildingname: 'name',
+    property: 'name',
+    name: 'name',
+    address: 'address_line1',
+    addressline1: 'address_line1',
+    streetaddress: 'address_line1',
+    street: 'address_line1',
+    address2: 'address_line2',
+    addressline2: 'address_line2',
+    apt: 'address_line2',
+    suite: 'address_line2',
+    city: 'city',
+    state: 'state',
+    st: 'state',
+    zip: 'zip',
+    zipcode: 'zip',
+    postalcode: 'zip',
+    type: 'property_type',
+    propertytype: 'property_type',
+    units: 'unit_count',
+    unitcount: 'unit_count',
+    totalunits: 'unit_count',
+    yearbuilt: 'year_built',
+    built: 'year_built',
+    unit: 'unit_number',
+    unitnumber: 'unit_number',
+    unitnum: 'unit_number',
+    bedrooms: 'bedrooms',
+    beds: 'bedrooms',
+    br: 'bedrooms',
+    bathrooms: 'bathrooms',
+    baths: 'bathrooms',
+    ba: 'bathrooms',
+    sqft: 'square_footage',
+    squarefootage: 'square_footage',
+    sqfeet: 'square_footage',
+    rent: 'market_rent',
+    marketrent: 'market_rent',
+    monthlyrent: 'market_rent',
+    askingrent: 'market_rent',
+    status: 'status',
+    floorplan: 'floor_plan',
+    plan: 'floor_plan',
+    layout: 'floor_plan',
+    firstname: 'first_name',
+    first: 'first_name',
+    lastname: 'last_name',
+    last: 'last_name',
+    fullname: 'full_name',
+    tenantname: 'tenant_name',
+    residentname: 'tenant_name',
+    email: 'email',
+    emailaddress: 'email',
+    phone: 'phone',
+    phonenumber: 'phone',
+    cell: 'phone',
+    mobile: 'phone',
+    movein: 'move_in_date',
+    moveindate: 'move_in_date',
+    moveout: 'move_out_date',
+    moveoutdate: 'move_out_date',
+    leasestart: 'lease_start',
+    startdate: 'lease_start',
+    start: 'lease_start',
+    leaseend: 'lease_end',
+    enddate: 'lease_end',
+    end: 'lease_end',
+    expiration: 'lease_end',
+    deposit: 'security_deposit',
+    securitydeposit: 'security_deposit',
+  };
+
+  const target = aliases[h];
+  if (target && schema.some((f) => f.name === target)) return target;
+
+  for (const f of schema) {
+    if (norm(f.name) === h) return f.name;
+  }
+  return null;
 }

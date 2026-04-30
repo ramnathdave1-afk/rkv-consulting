@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> },
 ) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id, itemId } = await params;
   const supabase = createAdminClient();
   const body = await request.json();
@@ -21,7 +25,7 @@ export async function PATCH(
       completed_by: body.completed_by || null,
     })
     .eq('id', itemId)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .select()
     .single();
 
@@ -32,7 +36,7 @@ export async function PATCH(
     .from('move_in_checklist_items')
     .select('completed')
     .eq('checklist_id', id)
-    .eq('org_id', ORG_ID);
+    .eq('org_id', orgId);
 
   if (allItems) {
     const total = allItems.length;
@@ -55,7 +59,7 @@ export async function PATCH(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('org_id', ORG_ID);
+      .eq('org_id', orgId);
   }
 
   return NextResponse.json({ item: data });

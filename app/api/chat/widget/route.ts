@@ -7,8 +7,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateLeasingResponse, classifyIntent } from '@/lib/ai/leasing-agent';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const { allowed, resetAt } = checkRateLimit(`chat-widget:${ip}`, 30, 60_000); // 30 req/min/IP
+
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Try again later.' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(Math.ceil((resetAt - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
+
   const { org_id, session_id, message, visitor_name, visitor_email, visitor_phone } = await request.json();
 
   if (!org_id || !message) {

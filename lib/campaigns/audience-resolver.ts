@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { captureException } from '@/lib/monitoring/sentry';
 
 export interface AudienceFilter {
   property_id?: string;
@@ -62,7 +63,7 @@ export async function resolveAudience(
   const { data: tenants, error } = await query;
 
   if (error) {
-    console.error('[Audience] Error resolving audience:', error);
+    captureException(error, { module: 'audience-resolver' });
     return [];
   }
 

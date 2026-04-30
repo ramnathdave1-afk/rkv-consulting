@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 function hoursAgo(h: number): string {
   return new Date(Date.now() - h * 3600000).toISOString();
@@ -119,7 +118,7 @@ const SEED_ENTRIES = [
   {
     event_type: 'property_added',
     title: 'New property added',
-    description: 'Mesa View Townhomes — 12 units, 85201. Import from AppFolio complete.',
+    description: 'Mesa View Townhomes — 12 units, 85201. CSV import complete.',
     severity: 'success',
     entity_type: 'property',
     created_at: hoursAgo(22),
@@ -191,14 +190,19 @@ const SEED_ENTRIES = [
 ];
 
 export async function POST() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   // Clear existing seed data
-  await supabase.from('activity_feed').delete().eq('org_id', ORG_ID);
+  await supabase.from('activity_feed').delete().eq('org_id', orgId);
 
   const rows = SEED_ENTRIES.map((entry) => ({
     ...entry,
-    org_id: ORG_ID,
+    org_id: orgId,
     metadata: {},
   }));
 

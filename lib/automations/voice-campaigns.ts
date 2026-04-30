@@ -2,13 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { makeOutboundCall } from '@/lib/twilio/client';
 import { generateOutboundScript } from '@/lib/twilio/voice';
 import { getRentCollectionTier } from '@/lib/ai/prompts/rent-collection';
+import { captureException } from '@/lib/monitoring/sentry';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
+const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.com';
 
 export async function scheduleRentReminderCalls(orgId: string) {
   // Find tenants with active leases who are 3+ days late
@@ -63,7 +64,7 @@ export async function scheduleRentReminderCalls(orgId: string) {
       const call = await makeOutboundCall(tenant.phone, fromNumber, twiml);
       calls.push({ tenant: tenant.name, callSid: call.sid, tier });
     } catch (err) {
-      console.error(`Failed to call ${tenant.name}:`, err);
+      captureException(err, { module: 'voice-campaigns', stage: 'rent_reminder', tenant: tenant.name });
     }
   }
 
@@ -103,7 +104,7 @@ export async function scheduleMaintenanceUpdateCalls(orgId: string) {
       const call = await makeOutboundCall(tenant.phone, fromNumber, twiml);
       calls.push({ tenant: tenant.name, workOrder: wo.id, callSid: call.sid });
     } catch (err) {
-      console.error(`Failed maintenance follow-up call for ${tenant.name}:`, err);
+      captureException(err, { module: 'voice-campaigns', stage: 'maintenance_followup', tenant: tenant.name });
     }
   }
 

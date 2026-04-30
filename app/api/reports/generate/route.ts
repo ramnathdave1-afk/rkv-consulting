@@ -5,6 +5,11 @@ import { generatePDF } from '@/lib/pdf/generate';
 import { ownerReportHTML } from '@/lib/pdf/templates/owner-report';
 import { callClaude } from '@/lib/ai/claude';
 
+// Vercel serverless: PDF generation w/ headless Chromium needs more than the
+// default 10s timeout. 60s is the max on Pro plan.
+export const maxDuration = 60;
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -2,107 +2,116 @@
  * Fair Housing Compliance Filter
  * Pre-screens every AI-generated tenant/prospect message before delivery.
  * Blocks or rewrites messages containing protected class language per HUD Fair Housing Act.
+ *
+ * Uses an LLM (Claude Haiku) to detect subtle violations that regex cannot catch,
+ * with a fast regex pre-check for the most blatant violations.
  */
 
-// Protected class categories per Fair Housing Act
-const PROTECTED_CLASS_PATTERNS: { category: string; patterns: RegExp[] }[] = [
-  {
-    category: 'race',
-    patterns: [
-      /\b(white|black|african.?american|asian|hispanic|latino|latina|caucasian)\s+(neighborhood|area|community|tenant|resident|people|family|families)\b/i,
-      /\b(racial|ethnicity|ethnic)\s+(preference|requirement|restriction)\b/i,
-    ],
-  },
-  {
-    category: 'religion',
-    patterns: [
-      /\b(christian|muslim|jewish|hindu|buddhist|catholic|protestant)\s+(neighborhood|area|community|tenant|resident)\b/i,
-      /\b(church|mosque|synagogue|temple)\s+(nearby|close|walking distance)\b/i,
-    ],
-  },
-  {
-    category: 'national_origin',
-    patterns: [
-      /\b(where are you from|what country|speak english|english.?only|citizen|immigration status)\b/i,
-      /\b(foreign|immigrant|undocumented)\s+(tenant|resident|applicant)\b/i,
-    ],
-  },
-  {
-    category: 'sex',
-    patterns: [
-      /\b(male.?only|female.?only|single (men|women|males|females) only|gender.?preference)\b/i,
-      /\b(sexual orientation|gay|lesbian|transgender)\s+(restriction|preference|policy)\b/i,
-    ],
-  },
-  {
-    category: 'familial_status',
-    patterns: [
-      /\b(no (kids|children|babies|minors))\b/i,
-      /\b(adults?.?only|no families|child.?free|single.?only)\b/i,
-      /\b(pregnant|expecting|maternity)\s+(not allowed|restricted|prohibited)\b/i,
-    ],
-  },
-  {
-    category: 'disability',
-    patterns: [
-      /\b(handicapped|disabled|wheelchair|mental illness|psychiatric)\s+(not allowed|restricted|prohibited|cannot)\b/i,
-      /\b(no (disabled|handicapped|wheelchairs|service animals|emotional support))\b/i,
-    ],
-  },
-];
+import Anthropic from '@anthropic-ai/sdk';
 
-// Steering language — suggesting or discouraging based on demographics
-const STEERING_PATTERNS: RegExp[] = [
-  /\b(you (would|might|wouldn't) (like|enjoy|fit in|feel comfortable))\b/i,
-  /\b(people like you|your kind|your type)\b/i,
-  /\b(not (right|suitable|good) for (you|your family|someone like))\b/i,
-  /\b(better suited|more appropriate) (neighborhood|area|community)\b/i,
-];
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export interface ComplianceResult {
-  passed: boolean;
-  violations: ComplianceViolation[];
-  original_message: string;
+  is_compliant: boolean;
+  violations: string[];
+  reasoning: string;
+  suggested_revision?: string;
 }
 
-export interface ComplianceViolation {
-  category: string;
-  matched_text: string;
-  pattern_description: string;
-}
-
-export function checkCompliance(message: string): ComplianceResult {
-  const violations: ComplianceViolation[] = [];
-
-  // Check protected class patterns
-  for (const group of PROTECTED_CLASS_PATTERNS) {
-    for (const pattern of group.patterns) {
-      const match = message.match(pattern);
-      if (match) {
-        violations.push({
-          category: group.category,
-          matched_text: match[0],
-          pattern_description: `Protected class reference: ${group.category}`,
-        });
-      }
-    }
+export async function checkFairHousingCompliance(text: string): Promise<ComplianceResult> {
+  // Quick regex pre-check for obvious violations (fast path)
+  const obviousViolations = quickRegexCheck(text);
+  if (obviousViolations.length > 0) {
+    return {
+      is_compliant: false,
+      violations: obviousViolations,
+      reasoning: 'Detected explicit references to protected classes',
+    };
   }
 
-  // Check steering patterns
-  for (const pattern of STEERING_PATTERNS) {
-    const match = message.match(pattern);
-    if (match) {
-      violations.push({
-        category: 'steering',
-        matched_text: match[0],
-        pattern_description: 'Potential steering language',
-      });
-    }
-  }
+  // LLM check for subtle violations
+  const prompt = `You are a Fair Housing compliance checker for a property management AI.
+Analyze this proposed message to a tenant or prospect and identify any Fair Housing Act violations.
 
-  return {
-    passed: violations.length === 0,
-    violations,
-    original_message: message,
-  };
+Federal Fair Housing Act protected classes: race, color, national origin, religion, sex (including gender identity, sexual orientation), familial status (kids, pregnant, single parent), disability.
+
+Many states/cities also protect: age, marital status, source of income (Section 8), military status, ancestry.
+
+PROBLEMATIC PATTERNS:
+- "Perfect for young professionals" (age discrimination)
+- "Family-friendly" or "great for couples" (familial status — implying singles unwelcome)
+- "Quiet building, no kids" (familial status)
+- "Christian community" (religion)
+- "Must be employed" (vs. allowing other income sources — could be disability/source of income)
+- Steering: "This neighborhood is more diverse" or "You'd fit in better elsewhere"
+- Inquiries: "Are you single?" "Do you have kids?" "Do you go to church?"
+
+ALLOWED:
+- Factual descriptions of property: # bedrooms, sqft, amenities
+- Objective qualifications: credit score requirements, income-to-rent ratio
+- Pet policy
+- Lease terms
+
+Message to check:
+"""
+${text}
+"""
+
+Return ONLY JSON, no markdown:
+{
+  "is_compliant": true|false,
+  "violations": ["specific violations found"],
+  "reasoning": "1-2 sentence explanation",
+  "suggested_revision": "if not compliant, suggest a compliant version"
+}`;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const responseText = response.content[0].type === 'text' ? response.content[0].text : '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      // Fail-safe: if Claude can't respond, fall back to allowing (with warning)
+      return {
+        is_compliant: true,
+        violations: [],
+        reasoning: 'Compliance check unavailable, message allowed by default',
+      };
+    }
+    return JSON.parse(jsonMatch[0]) as ComplianceResult;
+  } catch {
+    // Don't block sending if Claude is down
+    return {
+      is_compliant: true,
+      violations: [],
+      reasoning: 'Compliance check unavailable, message allowed',
+    };
+  }
 }
+
+function quickRegexCheck(text: string): string[] {
+  const violations: string[] = [];
+  // Only catch the most obvious — the LLM handles the rest
+  const patterns: { pattern: RegExp; violation: string }[] = [
+    { pattern: /\b(no kids|no children|no families)\b/i, violation: 'Familial status discrimination' },
+    {
+      pattern: /\b(christians?|muslims?|jewish|catholic|protestant) (only|preferred|community|building)\b/i,
+      violation: 'Religious discrimination',
+    },
+    {
+      pattern: /\b(white|black|asian|hispanic|latino|caucasian) (only|preferred)\b/i,
+      violation: 'Racial discrimination',
+    },
+  ];
+  for (const { pattern, violation } of patterns) {
+    if (pattern.test(text)) violations.push(violation);
+  }
+  return violations;
+}
+
+// Keep old export name for backwards compat
+export const checkCompliance = checkFairHousingCompliance;

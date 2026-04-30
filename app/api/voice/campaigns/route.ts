@@ -1,20 +1,25 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { captureException } from '@/lib/monitoring/sentry';
 import {
   scheduleRentReminderCalls,
   scheduleMaintenanceUpdateCalls,
 } from '@/lib/automations/voice-campaigns';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   try {
     const { data: campaigns, error } = await supabase
       .from('voice_campaigns')
       .select('*')
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -22,7 +27,7 @@ export async function GET() {
 
     return NextResponse.json({ campaigns: campaigns || [] });
   } catch (err) {
-    console.error('Voice campaigns GET error:', err);
+    captureException(err, { route: 'voice/campaigns', method: 'GET' });
     return NextResponse.json(
       { error: 'Failed to fetch campaigns' },
       { status: 500 },
@@ -31,6 +36,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   try {
@@ -52,7 +62,7 @@ export async function POST(request: Request) {
     const { data: campaign, error: insertError } = await supabase
       .from('voice_campaigns')
       .insert({
-        org_id: ORG_ID,
+        org_id: orgId,
         name: campaignName,
         type,
         status: 'running',
@@ -70,9 +80,9 @@ export async function POST(request: Request) {
     let results: any[] = [];
     try {
       if (type === 'rent_reminder') {
-        results = await scheduleRentReminderCalls(ORG_ID);
+        results = await scheduleRentReminderCalls(orgId);
       } else if (type === 'maintenance_update') {
-        results = await scheduleMaintenanceUpdateCalls(ORG_ID);
+        results = await scheduleMaintenanceUpdateCalls(orgId);
       }
       // lease_renewal and showing_confirmation don't have dedicated schedulers yet;
       // the campaign record is created but calls would be triggered by the cron job.
@@ -87,7 +97,7 @@ export async function POST(request: Request) {
         })
         .eq('id', campaign.id);
     } catch (callErr) {
-      console.error('Campaign call execution error:', callErr);
+      captureException(callErr, { route: 'voice/campaigns', stage: 'call_execution' });
       await supabase
         .from('voice_campaigns')
         .update({ status: 'failed' })
@@ -96,7 +106,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ campaign, callResults: results }, { status: 201 });
   } catch (err) {
-    console.error('Voice campaigns POST error:', err);
+    captureException(err, { route: 'voice/campaigns', method: 'POST' });
     return NextResponse.json(
       { error: 'Failed to create campaign' },
       { status: 500 },

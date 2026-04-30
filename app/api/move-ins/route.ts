@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DEFAULT_CHECKLIST_ITEMS } from '@/lib/move-ins/default-checklist';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -16,7 +20,7 @@ export async function GET() {
       units ( id, unit_number ),
       move_in_checklist_items ( id, completed )
     `)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .order('move_in_date', { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,6 +38,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
   const body = await request.json();
 
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
   const { data: checklist, error: cErr } = await supabase
     .from('move_in_checklists')
     .insert({
-      org_id: ORG_ID,
+      org_id: orgId,
       tenant_id,
       property_id,
       unit_id: unit_id || null,
@@ -66,7 +75,7 @@ export async function POST(request: NextRequest) {
   // Auto-generate default checklist items
   const items = DEFAULT_CHECKLIST_ITEMS.map((item) => ({
     checklist_id: checklist.id,
-    org_id: ORG_ID,
+    org_id: orgId,
     item_type: item.type,
     label: item.label,
     sort_order: item.sort,

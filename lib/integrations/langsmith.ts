@@ -2,6 +2,7 @@
  * LangSmith Prompt Management Stub
  * Prompt versioning, A/B testing, and evaluation traces.
  */
+import { captureMessage } from '@/lib/monitoring/sentry';
 
 const LANGSMITH_API_URL = 'https://api.smith.langchain.com/api/v1';
 
@@ -64,7 +65,7 @@ export async function logTrace(params: {
 
   if (!response.ok) {
     // LangSmith logging is non-critical — don't throw
-    console.error(`LangSmith trace error: ${response.status}`);
+    captureMessage('LangSmith trace error', 'error', { status: response.status });
     return { id: '' };
   }
 

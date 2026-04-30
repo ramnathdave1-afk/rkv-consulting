@@ -67,7 +67,7 @@ const navSections = [
     label: 'Settings',
     items: [
       { label: 'Vendors', href: '/vendors', icon: HardHat, keywords: ['contractors'] },
-      { label: 'Integrations', href: '/integrations', icon: Link2, keywords: ['appfolio', 'buildium', 'connect'] },
+      { label: 'Integrations', href: '/integrations', icon: Link2, keywords: ['twilio', 'stripe', 'resend', 'connect'] },
       { label: 'Import Data', href: '/import', icon: Upload, keywords: ['csv', 'upload'] },
       { label: 'Billing', href: '/settings/billing', icon: CreditCard, keywords: ['plan', 'subscription'] },
       { label: 'Settings', href: '/settings', icon: Settings, keywords: ['preferences', 'config'] },

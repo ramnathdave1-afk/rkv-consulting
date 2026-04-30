@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { orgId } = await getUserOrg();
+    if (!orgId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const supabase = createAdminClient();
 
@@ -16,7 +20,7 @@ export async function GET(
       .from('lease_audits')
       .select('*')
       .eq('id', id)
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .single();
 
     if (auditErr || !audit) {

@@ -1,21 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Building2, Home, Landmark, KeyRound, DoorOpen, LayoutGrid, Phone, CreditCard, Mail, Calendar, Calculator, Send } from "lucide-react";
+import { Phone, CreditCard, Mail, Calendar, Calculator, Send, Sparkles, FileSpreadsheet } from "lucide-react";
 
 const integrations = [
-  { name: 'AppFolio', icon: Building2 },
-  { name: 'Buildium', icon: Home },
-  { name: 'Yardi', icon: Landmark },
-  { name: 'Rent Manager', icon: KeyRound },
-  { name: 'DoorLoop', icon: DoorOpen },
-  { name: 'RealPage', icon: LayoutGrid },
   { name: 'Twilio', icon: Phone },
   { name: 'Stripe', icon: CreditCard },
+  { name: 'Resend', icon: Send },
+  { name: 'Claude AI', icon: Sparkles },
   { name: 'Gmail', icon: Mail },
   { name: 'Google Cal', icon: Calendar },
   { name: 'QuickBooks', icon: Calculator },
-  { name: 'Resend', icon: Send },
+  { name: 'CSV Import', icon: FileSpreadsheet },
 ];
 
 export function LogoCarousel() {

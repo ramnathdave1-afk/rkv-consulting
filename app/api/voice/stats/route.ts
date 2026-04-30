@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { captureException } from '@/lib/monitoring/sentry';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   try {
@@ -11,7 +16,7 @@ export async function GET() {
     const { count: totalCalls } = await supabase
       .from('conversations')
       .select('*', { count: 'exact', head: true })
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .eq('channel', 'voice');
 
     // Calls today
@@ -20,7 +25,7 @@ export async function GET() {
     const { count: callsToday } = await supabase
       .from('conversations')
       .select('*', { count: 'exact', head: true })
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .eq('channel', 'voice')
       .gte('created_at', todayStart.toISOString());
 
@@ -28,7 +33,7 @@ export async function GET() {
     const { count: aiHandled } = await supabase
       .from('conversations')
       .select('*', { count: 'exact', head: true })
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .eq('channel', 'voice')
       .in('status', ['ai_handling', 'closed', 'active']);
 
@@ -40,7 +45,7 @@ export async function GET() {
     const { count: activeCampaigns } = await supabase
       .from('voice_campaigns')
       .select('*', { count: 'exact', head: true })
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .in('status', ['running', 'scheduled']);
 
     return NextResponse.json({
@@ -50,7 +55,7 @@ export async function GET() {
       activeCampaigns: activeCampaigns || 0,
     });
   } catch (err) {
-    console.error('Voice stats error:', err);
+    captureException(err, { route: 'voice/stats' });
     return NextResponse.json(
       { error: 'Failed to fetch voice stats' },
       { status: 500 },

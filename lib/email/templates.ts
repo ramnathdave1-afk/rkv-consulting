@@ -3,7 +3,7 @@
  * PM-specific templates for RKV Consulting property management platform.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.com';
 
 export function layout(content: string) {
   return `

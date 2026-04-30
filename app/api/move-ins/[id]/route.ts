@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
   const supabase = createAdminClient();
 
@@ -20,7 +24,7 @@ export async function GET(
       move_in_checklist_items ( id, item_type, label, completed, completed_at, completed_by, notes, sort_order )
     `)
     .eq('id', id)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
@@ -39,6 +43,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { id } = await params;
   const supabase = createAdminClient();
   const body = await request.json();
@@ -58,7 +67,7 @@ export async function PATCH(
     .from('move_in_checklists')
     .update(allowedFields)
     .eq('id', id)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .select()
     .single();
 

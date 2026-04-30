@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { callClaude } from '@/lib/ai/claude';
+import { captureException } from '@/lib/monitoring/sentry';
 
 const SYSTEM_PROMPT = `You are the AI phone assistant for RKV Consulting, a property management company. You handle all inbound calls professionally and conversationally.
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
   const callerPhone = formData.get('From') as string || '';
   const calledNumber = formData.get('To') as string || '';
   const convoId = request.nextUrl.searchParams.get('convo') || '';
-  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
+  const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.com';
 
   const supabase = createAdminClient();
 
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest) {
       aiResponse = "I'd be happy to help with that. Let me have a team member call you back with the details.";
     }
   } catch (err) {
-    console.error('[VoiceAI] Claude error:', err);
+    captureException(err, { route: 'twilio/voice/respond', stage: 'claude' });
     aiResponse = "I apologize, I'm having a bit of trouble right now. Let me have a team member call you back shortly.";
   }
 

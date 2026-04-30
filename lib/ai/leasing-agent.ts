@@ -174,10 +174,10 @@ export async function generateLeasingResponse(
       ? result.content
       : '';
 
-  // Run compliance filter
-  const compliance = checkCompliance(aiText);
+  // Run compliance filter (LLM-based, async)
+  const compliance = await checkCompliance(aiText);
 
-  if (!compliance.passed) {
+  if (!compliance.is_compliant) {
     // Log the violation
     const supabase = createAdminClient();
     await supabase.from('messages').insert({
@@ -185,16 +185,20 @@ export async function generateLeasingResponse(
       org_id: context.orgId,
       direction: 'outbound',
       sender_type: 'system',
-      content: `[COMPLIANCE BLOCKED] Original AI response violated fair housing rules: ${compliance.violations.map((v) => v.category).join(', ')}`,
+      content: `[COMPLIANCE BLOCKED] Original AI response violated fair housing rules: ${compliance.violations.join(', ')}`,
       channel: 'sms',
       status: 'failed',
-      metadata: { compliance_violations: compliance.violations },
+      metadata: {
+        compliance_violations: compliance.violations,
+        compliance_reasoning: compliance.reasoning,
+        suggested_revision: compliance.suggested_revision,
+      },
     });
 
     return {
       response: "Thanks for your message! A team member will follow up with you shortly.",
       blocked: true,
-      violations: compliance.violations.map((v) => `${v.category}: ${v.matched_text}`),
+      violations: compliance.violations,
     };
   }
 

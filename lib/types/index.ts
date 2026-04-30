@@ -375,7 +375,9 @@ export type ConversationChannel = 'sms' | 'email' | 'web_chat' | 'voice';
 export type ConversationStatus = 'active' | 'closed' | 'escalated' | 'ai_handling' | 'human_handling';
 export type MessageDirection = 'inbound' | 'outbound';
 export type MessageSenderType = 'tenant' | 'staff' | 'ai' | 'system';
-export type IntegrationPlatform = 'appfolio' | 'buildium' | 'rent_manager' | 'yardi' | 'doorloop' | 'realpage' | 'entrata' | 'propertyware' | 'resman';
+// Free-form: any platform identifier we may have synced from in the past, plus
+// 'csv' for manual imports. PM-software-specific connectors were removed.
+export type IntegrationPlatform = string;
 export type IntegrationStatus = 'connected' | 'disconnected' | 'error' | 'syncing';
 export type SyncJobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type SyncEntityType = 'properties' | 'units' | 'tenants' | 'leases' | 'work_orders' | 'vendors' | 'full';

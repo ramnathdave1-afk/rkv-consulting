@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function POST() {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   const { error } = await supabase
     .from('activity_feed')
     .update({ read: true })
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .eq('read', false);
 
   if (error) {

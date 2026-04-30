@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { sendSMS } from '@/lib/twilio/client';
 import { sendEmail } from '@/lib/email/send';
 import { layout } from '@/lib/email/templates';
+import { captureException } from '@/lib/monitoring/sentry';
 
 const TWILIO_FROM = process.env.TWILIO_PHONE_NUMBER || '+10000000000';
 
@@ -167,7 +168,7 @@ export async function sendCampaign(campaignId: string): Promise<{
         delivered++;
       }
     } catch (err) {
-      console.error(`[Campaign] Failed to send to recipient ${recipient.id}:`, err);
+      captureException(err, { module: 'campaign-sender', recipientId: recipient.id });
       recipientStatus = 'failed';
       failed++;
     }

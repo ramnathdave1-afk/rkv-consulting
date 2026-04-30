@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { format } from 'date-fns';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
+import { captureException } from '@/lib/monitoring/sentry';
 
 interface RawEvent {
   id: string;
@@ -15,6 +15,11 @@ interface RawEvent {
 
 export async function GET() {
   try {
+    const { orgId } = await getUserOrg();
+    if (!orgId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
 
     // Fetch data from multiple tables in parallel
@@ -24,7 +29,7 @@ export async function GET() {
         supabase
           .from('showings')
           .select('id, prospect_name, scheduled_at, status, properties(name), units(unit_number)')
-          .eq('org_id', ORG_ID)
+          .eq('org_id', orgId)
           .neq('status', 'cancelled')
           .order('scheduled_at', { ascending: true }),
 
@@ -32,7 +37,7 @@ export async function GET() {
         supabase
           .from('work_orders')
           .select('id, title, scheduled_date, priority, status, properties(name), units(unit_number)')
-          .eq('org_id', ORG_ID)
+          .eq('org_id', orgId)
           .not('scheduled_date', 'is', null)
           .order('scheduled_date', { ascending: true }),
 
@@ -40,7 +45,7 @@ export async function GET() {
         supabase
           .from('conversations')
           .select('id, lead_name, created_at, channel')
-          .eq('org_id', ORG_ID)
+          .eq('org_id', orgId)
           .eq('channel', 'voice')
           .order('created_at', { ascending: false })
           .limit(200),
@@ -49,7 +54,7 @@ export async function GET() {
         supabase
           .from('leases')
           .select('id, lease_end, monthly_rent, status, tenants(first_name, last_name), units(unit_number, properties(name))')
-          .eq('org_id', ORG_ID)
+          .eq('org_id', orgId)
           .eq('status', 'active')
           .gte('lease_end', format(new Date(), 'yyyy-MM-dd'))
           .lte(
@@ -64,7 +69,7 @@ export async function GET() {
         supabase
           .from('campaigns')
           .select('id, name, scheduled_at, status, channel')
-          .eq('org_id', ORG_ID)
+          .eq('org_id', orgId)
           .not('scheduled_at', 'is', null)
           .order('scheduled_at', { ascending: true }),
       ]);
@@ -176,7 +181,7 @@ export async function GET() {
 
     return NextResponse.json({ events });
   } catch (err: any) {
-    console.error('[Calendar API Error]', err);
+    captureException(err, { route: 'calendar' });
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
   }
 }

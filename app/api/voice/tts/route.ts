@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
@@ -29,7 +30,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!res.ok) {
-      console.error('[TTS] ElevenLabs error:', res.status, await res.text());
+      const errorText = await res.text();
+      captureMessage('TTS ElevenLabs error', 'error', { status: res.status, errorText });
       return new NextResponse('TTS failed', { status: 500 });
     }
 
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('[TTS] Error:', err);
+    captureException(err, { route: 'voice/tts' });
     return new NextResponse('TTS error', { status: 500 });
   }
 }

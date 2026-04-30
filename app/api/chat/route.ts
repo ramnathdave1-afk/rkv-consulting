@@ -1,9 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { streamClaude } from '@/lib/ai/claude';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
-
-async function loadOrgContext() {
+async function loadOrgContext(orgId: string) {
   const supabase = createAdminClient();
 
   const [
@@ -15,13 +15,13 @@ async function loadOrgContext() {
     { data: financials },
     { data: showings },
   ] = await Promise.all([
-    supabase.from('properties').select('id, name, address_line1, city, state, unit_count, property_type').eq('org_id', ORG_ID),
-    supabase.from('units').select('id, unit_number, property_id, status, market_rent, bedrooms, bathrooms').eq('org_id', ORG_ID),
-    supabase.from('leases').select('id, unit_id, tenant_id, lease_start, lease_end, monthly_rent, status').eq('org_id', ORG_ID),
-    supabase.from('tenants').select('id, first_name, last_name, email, phone, status, move_in_date').eq('org_id', ORG_ID),
-    supabase.from('work_orders').select('id, title, description, category, priority, status, property_id, unit_id, tenant_id, created_at').eq('org_id', ORG_ID),
-    supabase.from('financial_transactions').select('id, type, category, amount, description, transaction_date, property_id').eq('org_id', ORG_ID).order('transaction_date', { ascending: false }).limit(100),
-    supabase.from('showings').select('id, prospect_name, status, scheduled_at, property_id, unit_id').eq('org_id', ORG_ID).order('scheduled_at', { ascending: false }).limit(20),
+    supabase.from('properties').select('id, name, address_line1, city, state, unit_count, property_type').eq('org_id', orgId),
+    supabase.from('units').select('id, unit_number, property_id, status, market_rent, bedrooms, bathrooms').eq('org_id', orgId),
+    supabase.from('leases').select('id, unit_id, tenant_id, lease_start, lease_end, monthly_rent, status').eq('org_id', orgId),
+    supabase.from('tenants').select('id, first_name, last_name, email, phone, status, move_in_date').eq('org_id', orgId),
+    supabase.from('work_orders').select('id, title, description, category, priority, status, property_id, unit_id, tenant_id, created_at').eq('org_id', orgId),
+    supabase.from('financial_transactions').select('id, type, category, amount, description, transaction_date, property_id').eq('org_id', orgId).order('transaction_date', { ascending: false }).limit(100),
+    supabase.from('showings').select('id, prospect_name, status, scheduled_at, property_id, unit_id').eq('org_id', orgId).order('scheduled_at', { ascending: false }).limit(20),
   ]);
 
   // Compute metrics
@@ -143,6 +143,14 @@ Respond helpfully and professionally. You are their trusted PM assistant.`;
 
 export async function POST(req: Request) {
   try {
+    const { orgId } = await getUserOrg();
+    if (!orgId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -155,9 +163,9 @@ export async function POST(req: Request) {
     // Load live org data for context
     let orgContext: string;
     try {
-      orgContext = await loadOrgContext();
+      orgContext = await loadOrgContext(orgId);
     } catch (err) {
-      console.error('[Chat API] Failed to load org context:', err);
+      captureException(err, { route: 'chat', stage: 'load_org_context' });
       orgContext = 'Portfolio data temporarily unavailable. Answer general PM questions to the best of your ability.';
     }
 
@@ -173,7 +181,7 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
-      console.error('[Chat API] Claude stream error:', response.status, errorText);
+      captureMessage('Chat API Claude stream error', 'error', { route: 'chat', status: response.status, errorText });
       return new Response(JSON.stringify({ error: 'AI service error' }), {
         status: 502,
         headers: { 'Content-Type': 'application/json' },
@@ -188,7 +196,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (err) {
-    console.error('[Chat API] Unexpected error:', err);
+    captureException(err, { route: 'chat' });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

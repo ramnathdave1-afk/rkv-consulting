@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
+import { captureException } from '@/lib/monitoring/sentry';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ paymentId: string }> }
 ) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { paymentId } = await params;
   const supabase = createAdminClient();
 
@@ -23,7 +28,7 @@ export async function PATCH(
       .from('rent_payments')
       .select('id, amount_due, amount_paid')
       .eq('id', paymentId)
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .single();
 
     if (fetchErr || !current) {
@@ -53,7 +58,7 @@ export async function PATCH(
       .from('rent_payments')
       .update(updateData)
       .eq('id', paymentId)
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .select()
       .single();
 
@@ -63,7 +68,7 @@ export async function PATCH(
 
     return NextResponse.json({ payment: updated });
   } catch (err: any) {
-    console.error('Record payment error:', err);
+    captureException(err, { route: 'delinquency/[paymentId]', op: 'record_payment' });
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
   }
 }

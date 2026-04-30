@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveAudience } from '@/lib/campaigns/audience-resolver';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 /**
  * GET /api/campaigns — List all campaigns with aggregated stats.
  */
 export async function GET(request: NextRequest) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
@@ -19,7 +23,7 @@ export async function GET(request: NextRequest) {
       *,
       campaign_recipients ( id, status )
     `)
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .order('created_at', { ascending: false });
 
   if (status && status !== 'all') {
@@ -91,6 +95,11 @@ export async function GET(request: NextRequest) {
  * POST /api/campaigns — Create a new campaign, resolve audience, insert recipients.
  */
 export async function POST(request: NextRequest) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
 
   const body = await request.json();
@@ -111,7 +120,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Resolve audience
-  const audience = await resolveAudience(ORG_ID, audience_filter || {});
+  const audience = await resolveAudience(orgId, audience_filter || {});
 
   if (audience.length === 0) {
     return NextResponse.json(
@@ -127,7 +136,7 @@ export async function POST(request: NextRequest) {
   const { data: campaign, error: cErr } = await supabase
     .from('campaigns')
     .insert({
-      org_id: ORG_ID,
+      org_id: orgId,
       name,
       channel,
       subject: subject || null,

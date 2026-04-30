@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { captureMessage } from '@/lib/monitoring/sentry';
 
 export interface AuditFinding {
   lease_audit_id: string;
@@ -21,7 +20,7 @@ function severityFromGapPercent(gapPercent: number): 'critical' | 'high' | 'medi
   return 'low';
 }
 
-export async function runLeaseAudit(orgId: string = ORG_ID) {
+export async function runLeaseAudit(orgId: string) {
   const supabase = createAdminClient();
 
   // Create audit row
@@ -153,7 +152,7 @@ export async function runLeaseAudit(orgId: string = ORG_ID) {
         .insert(findings);
 
       if (findingsErr) {
-        console.error('Failed to insert findings:', findingsErr.message);
+        captureMessage('lease-audits: failed to insert findings', 'error', { error: findingsErr.message });
       }
     }
 
@@ -175,7 +174,7 @@ export async function runLeaseAudit(orgId: string = ORG_ID) {
       .single();
 
     if (updateErr) {
-      console.error('Failed to update audit:', updateErr.message);
+      captureMessage('lease-audits: failed to update audit', 'error', { error: updateErr.message });
     }
 
     return { audit: completedAudit || audit, findings };

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { validateRequest, sendSMS } from '@/lib/twilio/client';
 import { generateLeasingResponse, classifyIntent } from '@/lib/ai/leasing-agent';
 import { createWorkOrderFromMessage } from '@/lib/ai/maintenance-triage';
+import { captureException } from '@/lib/monitoring/sentry';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
       ai_classified_intent: intent,
     });
   } catch (err) {
-    console.error('[Twilio SMS] Failed to send:', err);
+    captureException(err, { route: 'twilio/incoming', stage: 'sms_send' });
     // Store failed message
     await supabase.from('messages').insert({
       conversation_id: conversation.id,

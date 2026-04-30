@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { sendSMS } from '@/lib/twilio/client';
 import { sendEmail } from '@/lib/email/send';
 import { leaseRenewalEmail } from '@/lib/email/templates';
+import { captureException } from '@/lib/monitoring/sentry';
 
 interface LeaseWithDetails {
   id: string;
@@ -106,7 +107,7 @@ export async function processRenewalStep(
 
     // Send email if email available
     if (lease.tenants.email) {
-      const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
+      const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.com';
       const renewalUrl = `${BASE_URL}/dashboard`;
       const emailContent = leaseRenewalEmail(tenantName, propertyName, unitNumber, leaseEnd, renewalUrl);
       await sendEmail({
@@ -128,7 +129,7 @@ export async function processRenewalStep(
       })
       .eq('id', sequenceId);
   } catch (err) {
-    console.error(`[Renewal] Failed to send ${step}-day notice for sequence ${sequenceId}:`, err);
+    captureException(err, { module: 'renewals', step, sequenceId });
   }
 }
 

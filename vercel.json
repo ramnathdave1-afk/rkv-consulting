@@ -2,27 +2,29 @@
   "crons": [
     {
       "path": "/api/cron/lease-renewals",
-      "schedule": "0 9 * * *"
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron/showing-reminders",
-      "schedule": "0 8 * * *"
+      "schedule": "0 14 * * *"
     },
     {
       "path": "/api/cron/showing-followups",
-      "schedule": "0 10 * * *"
+      "schedule": "0 18 * * *"
     },
     {
       "path": "/api/cron/variance-alerts",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/move-ins",
-      "schedule": "0 8 * * *"
+      "schedule": "0 16 * * *"
     },
     {
       "path": "/api/cron/voice-campaigns",
-      "schedule": "0 9 * * *"
+      "schedule": "0 15 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/cron/**/route.ts": { "maxDuration": 300 },
+    "app/api/reports/generate/route.ts": { "maxDuration": 60 },
+    "app/api/import/execute/route.ts": { "maxDuration": 60 },
+    "app/api/chat/route.ts": { "maxDuration": 60 }
+  }
 }

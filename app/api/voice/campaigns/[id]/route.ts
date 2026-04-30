@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { captureException } from '@/lib/monitoring/sentry';
 
 export async function PATCH(
   request: Request,
@@ -32,7 +33,7 @@ export async function PATCH(
 
     return NextResponse.json({ campaign });
   } catch (err) {
-    console.error('Voice campaign PATCH error:', err);
+    captureException(err, { route: 'voice/campaigns/[id]', method: 'PATCH' });
     return NextResponse.json(
       { error: 'Failed to update campaign' },
       { status: 500 },

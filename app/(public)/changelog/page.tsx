@@ -87,7 +87,7 @@ const releases: Release[] = [
     category: 'Improvement',
     title: 'CSV Import v2',
     description:
-      'Flexible column mapping that recognizes variations from AppFolio, Buildium, Yardi, and other PM platforms.',
+      'Flexible column mapping that recognizes the export formats from most major PM platforms.',
   },
   {
     version: 'v1.2.0',

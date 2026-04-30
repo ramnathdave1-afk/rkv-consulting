@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@rkvconsulting.com';
@@ -23,13 +24,13 @@ export async function sendEmail({
     });
 
     if (error) {
-      console.error('[Email] Failed to send:', error);
+      captureMessage('Email send failed', 'error', { error: String(error), to });
       return { success: false, error };
     }
 
     return { success: true, id: data?.id };
   } catch (err) {
-    console.error('[Email] Exception:', err);
+    captureException(err, { module: 'email', to });
     return { success: false, error: err };
   }
 }

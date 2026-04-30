@@ -4,72 +4,107 @@ import { sendSMS } from '@/lib/twilio/client';
 import { sendEmail } from '@/lib/email/send';
 import { showingFollowUpEmail } from '@/lib/email/templates';
 import { verifyCronAuth } from '@/lib/auth/cron';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.vercel.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.com';
 
 export async function GET(request: NextRequest) {
   const unauthorized = verifyCronAuth(request);
   if (unauthorized) return unauthorized;
 
-  const supabase = createAdminClient();
-  const now = new Date();
-  const ago24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const ago48h = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
-  let smsSent = 0;
-  let emailsSent = 0;
+  const startedAt = Date.now();
+  captureMessage('cron:showing-followups:start', 'info');
 
-  // Find completed showings from 24-48h ago with no follow-up
-  const { data: showings } = await supabase
-    .from('showings')
-    .select('id, org_id, prospect_name, prospect_phone, prospect_email, properties(name), units(unit_number)')
-    .eq('status', 'completed')
-    .eq('follow_up_status', 'pending')
-    .gte('scheduled_at', ago48h)
-    .lte('scheduled_at', ago24h);
+  try {
+    const supabase = createAdminClient();
+    const now = new Date();
+    const ago24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const ago48h = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+    const followupCutoff = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString();
+    let smsSent = 0;
+    let emailsSent = 0;
+    let skipped = 0;
 
-  for (const showing of (showings || [])) {
-    if (!showing.prospect_phone && !showing.prospect_email) continue;
+    // Find completed showings from 24-48h ago with no follow-up
+    const { data: showings } = await supabase
+      .from('showings')
+      .select('id, org_id, prospect_name, prospect_phone, prospect_email, follow_up_sent_at, properties(name), units(unit_number)')
+      .eq('status', 'completed')
+      .eq('follow_up_status', 'pending')
+      .gte('scheduled_at', ago48h)
+      .lte('scheduled_at', ago24h);
 
-    const name = showing.prospect_name || 'there';
-    const property = (showing.properties as unknown as { name: string } | null)?.name || 'the property';
-    const unit = (showing.units as unknown as { unit_number: string } | null)?.unit_number || '';
-    const unitText = unit ? ` Unit ${unit}` : '';
-    const applicationUrl = `${BASE_URL}/apply`;
+    // Chunk by org
+    const byOrg = new Map<string, typeof showings>();
+    for (const s of showings || []) {
+      const list = byOrg.get(s.org_id) || [];
+      list.push(s);
+      byOrg.set(s.org_id, list);
+    }
 
-    try {
-      // Send SMS if phone available
-      if (showing.prospect_phone) {
-        const { data: orgPhone } = await supabase
-          .from('org_phone_numbers')
-          .select('phone_number')
-          .eq('org_id', showing.org_id)
-          .eq('is_active', true)
-          .limit(1)
-          .single();
+    for (const [orgId, orgShowings] of byOrg.entries()) {
+      for (const showing of orgShowings || []) {
+        // Idempotency: skip if a follow-up was sent in the last 12h
+        if (showing.follow_up_sent_at && showing.follow_up_sent_at > followupCutoff) {
+          skipped++;
+          continue;
+        }
 
-        if (orgPhone) {
-          const message = `Hi ${name}! Thanks for visiting ${property}${unitText}. We'd love to hear your thoughts! Are you interested in moving forward with an application? Reply YES or let us know if you have any questions.`;
-          await sendSMS(showing.prospect_phone, orgPhone.phone_number, message);
-          smsSent++;
+        if (!showing.prospect_phone && !showing.prospect_email) continue;
+
+        const name = showing.prospect_name || 'there';
+        const property = (showing.properties as unknown as { name: string } | null)?.name || 'the property';
+        const unit = (showing.units as unknown as { unit_number: string } | null)?.unit_number || '';
+        const unitText = unit ? ` Unit ${unit}` : '';
+        const applicationUrl = `${BASE_URL}/apply`;
+
+        try {
+          // Send SMS if phone available
+          if (showing.prospect_phone) {
+            const { data: orgPhone } = await supabase
+              .from('org_phone_numbers')
+              .select('phone_number')
+              .eq('org_id', showing.org_id)
+              .eq('is_active', true)
+              .limit(1)
+              .single();
+
+            if (orgPhone) {
+              const message = `Hi ${name}! Thanks for visiting ${property}${unitText}. We'd love to hear your thoughts! Are you interested in moving forward with an application? Reply YES or let us know if you have any questions.`;
+              await sendSMS(showing.prospect_phone, orgPhone.phone_number, message);
+              smsSent++;
+            }
+          }
+
+          // Send follow-up email if email available
+          if (showing.prospect_email) {
+            const emailContent = showingFollowUpEmail(name, property, unit, applicationUrl);
+            await sendEmail({
+              to: showing.prospect_email,
+              subject: emailContent.subject,
+              html: emailContent.html,
+            });
+            emailsSent++;
+          }
+
+          await supabase.from('showings').update({ follow_up_status: 'sent', follow_up_sent_at: now.toISOString() }).eq('id', showing.id);
+        } catch (err) {
+          captureException(err, { cron: 'showing-followups', showing_id: showing.id, org_id: orgId });
         }
       }
-
-      // Send follow-up email if email available
-      if (showing.prospect_email) {
-        const emailContent = showingFollowUpEmail(name, property, unit, applicationUrl);
-        await sendEmail({
-          to: showing.prospect_email,
-          subject: emailContent.subject,
-          html: emailContent.html,
-        });
-        emailsSent++;
-      }
-
-      await supabase.from('showings').update({ follow_up_status: 'sent', follow_up_sent_at: now.toISOString() }).eq('id', showing.id);
-    } catch (err) {
-      console.error(`[Cron] Showing follow-up failed for ${showing.id}:`, err);
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
-  }
 
-  return NextResponse.json({ success: true, sms_sent: smsSent, emails_sent: emailsSent });
+    captureMessage('cron:showing-followups:end', 'info', {
+      duration_ms: Date.now() - startedAt,
+      sms_sent: smsSent,
+      emails_sent: emailsSent,
+      skipped,
+    });
+
+    return NextResponse.json({ success: true, sms_sent: smsSent, emails_sent: emailsSent, skipped });
+  } catch (err) {
+    captureException(err, { cron: 'showing-followups' });
+    return NextResponse.json({ error: 'Cron failed' }, { status: 500 });
+  }
 }

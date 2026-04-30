@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendSMS } from '@/lib/twilio/client';
+import { captureException } from '@/lib/monitoring/sentry';
 import {
   getRentCollectionTier,
   RENT_REMINDER_FRIENDLY,
@@ -86,7 +87,7 @@ export async function triggerCollection(
       await sendSMS(tenant.phone, fromNumber, message);
       completedChannels.push('sms');
     } catch (err) {
-      console.error('SMS send error:', err);
+      captureException(err, { module: 'collection-engine', channel: 'sms' });
     }
   }
 
@@ -104,13 +105,13 @@ export async function triggerCollection(
         .single();
 
       const fromNumber = orgPhone?.phone_number || process.env.TWILIO_PHONE_NUMBER!;
-      const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
+      const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.com';
       const details = `Your rent of ${amountStr} for Unit ${unit.unit_number} is ${daysLate} days past due.`;
       const twiml = generateOutboundScript('rent_reminder', tenant.name, details, webhookBase);
       await makeOutboundCall(tenant.phone, fromNumber, twiml);
       completedChannels.push('voice');
     } catch (err) {
-      console.error('Voice call error:', err);
+      captureException(err, { module: 'collection-engine', channel: 'voice' });
     }
   }
 

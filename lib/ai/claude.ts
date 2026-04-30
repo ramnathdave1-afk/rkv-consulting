@@ -1,3 +1,5 @@
+import { captureMessage } from '@/lib/monitoring/sentry';
+
 type SystemPrompt = string | Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }>;
 
 export async function callClaude(messages: { role: string; content: string }[], systemPrompt?: SystemPrompt) {
@@ -17,7 +19,7 @@ export async function callClaude(messages: { role: string; content: string }[], 
   })
   if (!response.ok) {
     const errorBody = await response.text().catch(() => 'Unknown error')
-    console.error(`[Claude API] ${response.status}: ${errorBody}`)
+    captureMessage('Claude API error', 'error', { status: response.status, errorBody })
     return { error: `Claude API error: ${response.status}`, content: null }
   }
   return response.json()

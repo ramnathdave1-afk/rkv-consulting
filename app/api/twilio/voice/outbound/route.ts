@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
 import { generateOutboundScript } from '@/lib/twilio/voice';
+import { captureException } from '@/lib/monitoring/sentry';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No outbound phone number configured' }, { status: 400 });
     }
 
-    const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.vercel.app';
+    const webhookBase = process.env.TWILIO_WEBHOOK_BASE_URL || 'https://rkv-consulting.com';
     const twiml = generateOutboundScript(purpose, tenant.name, details || '', webhookBase);
 
     // Create conversation record
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
       conversation_id: conversation?.id,
     });
   } catch (error: any) {
-    console.error('Outbound call error:', error);
+    captureException(error, { route: 'twilio/voice/outbound' });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

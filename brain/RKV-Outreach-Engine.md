@@ -1,0 +1,1 @@
+- **2026-04-28 11:00** — `reply-rate-alarm`: BREACH 0.43% (was 1.0%). Investigation queued.

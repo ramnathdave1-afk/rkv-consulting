@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET(request: Request) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
   const { searchParams } = new URL(request.url);
   const vendorId = searchParams.get('vendor_id');
@@ -14,7 +18,7 @@ export async function GET(request: Request) {
     .select(
       '*, properties(id, name, address_line1, city, state, zip), units(id, unit_number), tenants(id, first_name, last_name, phone, email), vendors(id, name, company, phone)'
     )
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .in('status', ['assigned', 'in_progress', 'parts_needed'])
     .order('priority', { ascending: true })
     .order('created_at', { ascending: false });
@@ -30,7 +34,7 @@ export async function GET(request: Request) {
       .select(
         '*, properties(id, name, address_line1, city, state, zip), units(id, unit_number), tenants(id, first_name, last_name, phone, email), vendors(id, name, company, phone)'
       )
-      .eq('org_id', ORG_ID)
+      .eq('org_id', orgId)
       .eq('status', status)
       .order('priority', { ascending: true })
       .order('created_at', { ascending: false });
@@ -50,14 +54,14 @@ export async function GET(request: Request) {
   const { data: vendors } = await supabase
     .from('vendors')
     .select('id, name, company, phone')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .order('name');
 
   // Compute KPI counts
   const { data: allWOs } = await supabase
     .from('work_orders')
     .select('status, completed_date')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .in('status', ['assigned', 'in_progress', 'parts_needed', 'completed']);
 
   const today = new Date().toISOString().split('T')[0];

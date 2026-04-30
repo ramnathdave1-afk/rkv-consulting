@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const ORG_ID = 'a0000000-0000-0000-0000-000000000001';
+import { getUserOrg } from '@/lib/auth/get-user-org';
 
 export async function GET(request: NextRequest) {
+  const { orgId } = await getUserOrg();
+  if (!orgId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = createAdminClient();
   const { searchParams } = new URL(request.url);
 
@@ -14,7 +18,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('activity_feed')
     .select('*')
-    .eq('org_id', ORG_ID)
+    .eq('org_id', orgId)
     .order('created_at', { ascending: false })
     .limit(limit);
 

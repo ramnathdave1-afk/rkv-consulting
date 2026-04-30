@@ -1,4 +1,5 @@
 import { Pool, QueryResult, PoolClient } from 'pg';
+import { captureException, captureMessage } from '@/lib/monitoring/sentry';
 
 let pool: Pool | null = null;
 
@@ -17,7 +18,7 @@ function getPool(): Pool {
     });
 
     pool.on('error', (err) => {
-      console.error('[Outreach DB] Unexpected pool error:', err.message);
+      captureException(err, { module: 'outreach-db', stage: 'pool_error' });
     });
   }
   return pool;
@@ -31,7 +32,7 @@ export async function query<T extends Record<string, unknown> = Record<string, u
   const result = await getPool().query<T>(text, params);
   const duration = Date.now() - start;
   if (duration > 2000) {
-    console.warn(`[Outreach DB] Slow query (${duration}ms):`, text.slice(0, 100));
+    captureMessage('Outreach DB slow query', 'warning', { duration_ms: duration, query_preview: text.slice(0, 100) });
   }
   return result;
 }

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { captureMessage } from '@/lib/monitoring/sentry';
 
 export type ActivityEventType =
   | 'call_inbound' | 'call_outbound'
@@ -49,6 +50,6 @@ export function logActivity(params: LogActivityParams): void {
       read: false,
     })
     .then(({ error }) => {
-      if (error) console.error('[activity-log] Insert failed:', error.message);
+      if (error) captureMessage('activity-log: insert failed', 'error', { error: error.message });
     });
 }

@@ -101,7 +101,7 @@ const faqs = [
   },
   {
     q: 'Do you integrate with my PM software?',
-    a: 'We integrate with AppFolio, Buildium, Yardi, RealPage, Entrata, and more. Or import via CSV.',
+    a: 'Today, you bring your data via CSV import — we recognize column variations from most major PM platforms. Custom integrations for AppFolio, Buildium, Yardi, and others are available on request — contact sales.',
   },
 ];
 
