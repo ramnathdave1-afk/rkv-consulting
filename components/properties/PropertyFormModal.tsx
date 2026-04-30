@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { useLocations } from '@/lib/hooks/useLocations';
 import toast from 'react-hot-toast';
 import type { Property, PropertyType } from '@/lib/types';
 
@@ -39,6 +40,7 @@ interface FormData {
   unit_count: string;
   year_built: string;
   square_footage: string;
+  location_id: string;
 }
 
 const emptyForm: FormData = {
@@ -52,16 +54,19 @@ const emptyForm: FormData = {
   unit_count: '',
   year_built: '',
   square_footage: '',
+  location_id: '',
 };
 
 export function PropertyFormModal({ open, onOpenChange, property, onSuccess }: PropertyFormModalProps) {
   const isEdit = !!property;
+  const { locations, activeLocationId } = useLocations();
   const [form, setForm] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (property) {
+      const p = property as Property & { location_id?: string | null };
       setForm({
         name: property.name || '',
         address_line1: property.address_line1 || '',
@@ -73,12 +78,18 @@ export function PropertyFormModal({ open, onOpenChange, property, onSuccess }: P
         unit_count: property.unit_count?.toString() || '',
         year_built: property.year_built?.toString() || '',
         square_footage: property.square_footage?.toString() || '',
+        location_id: p.location_id || '',
       });
     } else {
-      setForm(emptyForm);
+      // Default new property to active location, falling back to org default
+      const defaultLoc = locations.find((l) => l.is_default);
+      setForm({
+        ...emptyForm,
+        location_id: activeLocationId || defaultLoc?.id || (locations[0]?.id ?? ''),
+      });
     }
     setErrors({});
-  }, [property, open]);
+  }, [property, open, locations, activeLocationId]);
 
   function onChange(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -92,6 +103,7 @@ export function PropertyFormModal({ open, onOpenChange, property, onSuccess }: P
     if (!form.city.trim()) newErrors.city = 'City is required';
     if (!form.state) newErrors.state = 'State is required';
     if (!form.zip.trim()) newErrors.zip = 'ZIP code is required';
+    if (!form.location_id) newErrors.location_id = 'Location is required';
     if (!form.unit_count || Number(form.unit_count) < 1) newErrors.unit_count = 'At least 1 unit required';
     if (form.year_built && (Number(form.year_built) < 1800 || Number(form.year_built) > new Date().getFullYear() + 5)) {
       newErrors.year_built = 'Enter a valid year';
@@ -117,6 +129,7 @@ export function PropertyFormModal({ open, onOpenChange, property, onSuccess }: P
         unit_count: Number(form.unit_count),
         year_built: form.year_built ? Number(form.year_built) : null,
         square_footage: form.square_footage ? Number(form.square_footage) : null,
+        location_id: form.location_id || null,
       };
 
       const url = isEdit ? `/api/properties/${property!.id}` : '/api/properties';
@@ -160,6 +173,17 @@ export function PropertyFormModal({ open, onOpenChange, property, onSuccess }: P
               value={form.name}
               onChange={(e) => onChange('name', e.target.value)}
               error={errors.name}
+            />
+
+            <SelectField
+              label="Location"
+              options={[
+                { value: '', label: 'Select a location...' },
+                ...locations.map((l) => ({ value: l.id, label: l.name })),
+              ]}
+              value={form.location_id}
+              onChange={(e) => onChange('location_id', e.target.value)}
+              error={errors.location_id}
             />
 
             <Input

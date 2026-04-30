@@ -114,6 +114,7 @@ export async function processRenewalStep(
         to: lease.tenants.email,
         subject: emailContent.subject,
         html: emailContent.html,
+        orgId: seq.org_id,
       });
       channels.push('email');
     }

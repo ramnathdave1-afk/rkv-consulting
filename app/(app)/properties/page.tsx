@@ -9,6 +9,8 @@ import { Pagination } from '@/components/ui/Pagination';
 import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
 import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
+import { LocationFilter } from '@/components/settings/LocationFilter';
+import { useLocations } from '@/lib/hooks/useLocations';
 import { Building2, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -48,10 +50,16 @@ export default function PropertiesPage() {
     fetchProperties();
   }, [fetchProperties]);
 
+  const { activeLocationId } = useLocations();
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return properties;
+    let list = properties;
+    if (activeLocationId) {
+      list = list.filter((p) => (p as Property & { location_id?: string | null }).location_id === activeLocationId);
+    }
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return properties.filter(
+    return list.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.address_line1.toLowerCase().includes(q) ||
@@ -60,10 +68,10 @@ export default function PropertiesPage() {
         p.zip.includes(q) ||
         p.property_type.replace('_', ' ').toLowerCase().includes(q),
     );
-  }, [properties, search]);
+  }, [properties, search, activeLocationId]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, activeLocationId]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -186,13 +194,16 @@ export default function PropertiesPage() {
 
       {/* Search / Filter */}
       {properties.length > 0 && (
-        <Input
-          placeholder="Search by name, address, city, state, ZIP, or type..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          icon={<Search size={14} />}
-          className="w-full sm:max-w-md"
-        />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Input
+            placeholder="Search by name, address, city, state, ZIP, or type..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            icon={<Search size={14} />}
+            className="w-full sm:max-w-md"
+          />
+          <LocationFilter />
+        </div>
       )}
 
       {properties.length === 0 ? (

@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('leases')
-    .select('id, unit_id, tenant_id, lease_start, lease_end, monthly_rent, security_deposit, status, units(unit_number, property_id, properties(name)), tenants(first_name, last_name)')
+    .select('id, unit_id, tenant_id, lease_start, lease_end, monthly_rent, security_deposit, status, location_id, units(unit_number, property_id, properties(name, location_id)), tenants(first_name, last_name)')
     .eq('org_id', profile.org_id)
     .order('lease_end', { ascending: true });
 

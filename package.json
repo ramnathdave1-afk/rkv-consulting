@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "load-test": "npx --yes tsx@4 scripts/load-test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",

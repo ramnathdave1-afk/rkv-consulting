@@ -29,8 +29,18 @@ const PLAN_PRICES: Record<string, { monthly: string; annual: string }> = {
     annual: process.env.STRIPE_PRO_ANNUAL_PRICE_ID || '',
   },
   enterprise: {
-    monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || '',
+    monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || process.env.STRIPE_PRICE_ENTERPRISE || '',
     annual: process.env.STRIPE_ENTERPRISE_ANNUAL_PRICE_ID || '',
+  },
+  // New four-tier system. Annual env vars are optional; fall back to monthly so
+  // checkout still works when only one cadence has been configured in Stripe.
+  starter: {
+    monthly: process.env.STRIPE_PRICE_STARTER || '',
+    annual: process.env.STRIPE_PRICE_STARTER_ANNUAL || process.env.STRIPE_PRICE_STARTER || '',
+  },
+  growth: {
+    monthly: process.env.STRIPE_PRICE_GROWTH || process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '',
+    annual: process.env.STRIPE_PRICE_GROWTH_ANNUAL || process.env.STRIPE_PRO_ANNUAL_PRICE_ID || '',
   },
 };
 

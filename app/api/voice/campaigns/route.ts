@@ -6,6 +6,7 @@ import {
   scheduleMaintenanceUpdateCalls,
 } from '@/lib/automations/voice-campaigns';
 import { getUserOrg } from '@/lib/auth/get-user-org';
+import { requireFeature } from '@/lib/billing/gate';
 
 export async function GET() {
   const { orgId } = await getUserOrg();
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
   if (!orgId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const gate = await requireFeature(orgId, 'voice_ai');
+  if (!gate.allowed) return gate.response;
 
   const supabase = createAdminClient();
 

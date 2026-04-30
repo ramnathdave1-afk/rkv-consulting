@@ -8,6 +8,8 @@ import { RevenueChart } from '@/components/reports/RevenueChart';
 import { ExpenseBreakdown } from '@/components/reports/ExpenseBreakdown';
 import { PropertyRevenue } from '@/components/reports/PropertyRevenue';
 import { GenerateReportModal } from '@/components/reports/GenerateReportModal';
+import { LocationFilter } from '@/components/settings/LocationFilter';
+import { useLocations } from '@/lib/hooks/useLocations';
 import {
   DollarSign,
   TrendingDown,
@@ -27,7 +29,19 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import type { FinancialKPIs } from '@/lib/types';
 
-type Tab = 'overview' | 'rent_roll' | 'property_table' | 'expirations' | 'reports';
+type Tab = 'overview' | 'rent_roll' | 'property_table' | 'per_location' | 'expirations' | 'reports';
+
+interface PerLocationRow {
+  location_id: string | null;
+  location_name: string;
+  property_count: number;
+  unit_count: number;
+  occupied_units: number;
+  occupancy_rate: number;
+  active_leases: number;
+  monthly_rent: number;
+  open_work_orders: number;
+}
 type Period = 'current_month' | 'last_month' | 'quarter' | 'year';
 
 interface PropertyTableRow {
@@ -108,8 +122,10 @@ export default function ReportsPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [rentRollSearch, setRentRollSearch] = useState('');
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
+  const [perLocation, setPerLocation] = useState<PerLocationRow[]>([]);
 
   const supabase = createClient();
+  const { activeLocationId } = useLocations();
 
   const fetchData = useCallback(async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setRefreshing(true);
@@ -122,8 +138,9 @@ export default function ReportsPage() {
 
       const params = new URLSearchParams({ period });
       if (propertyFilter) params.set('property_id', propertyFilter);
+      if (activeLocationId) params.set('location_id', activeLocationId);
 
-      const [financialsRes, reportsRes] = await Promise.all([
+      const [financialsRes, reportsRes, perLocRes] = await Promise.all([
         fetch(`/api/reports/financials?${params}`).then((r) => r.json()),
         supabase
           .from('owner_reports')
@@ -131,10 +148,12 @@ export default function ReportsPage() {
           .eq('org_id', profile.org_id)
           .order('created_at', { ascending: false })
           .limit(20),
+        fetch('/api/reports/per-location').then((r) => r.json()).catch(() => ({ items: [] })),
       ]);
 
       setData(financialsRes);
       setReports((reportsRes.data || []) as OwnerReportRow[]);
+      setPerLocation((perLocRes?.items as PerLocationRow[]) || []);
     } catch (err) {
       console.error('Failed to fetch financial data:', err);
       toast.error('Failed to load financial data');
@@ -142,7 +161,7 @@ export default function ReportsPage() {
 
     setLoading(false);
     setRefreshing(false);
-  }, [supabase, period, propertyFilter]);
+  }, [supabase, period, propertyFilter, activeLocationId]);
 
   useEffect(() => {
     setLoading(true);
@@ -191,6 +210,7 @@ export default function ReportsPage() {
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'property_table', label: 'Per-Property', count: data.property_table.length },
+    { key: 'per_location', label: 'Per-Location', count: perLocation.length },
     { key: 'rent_roll', label: 'Rent Roll', count: data.rent_roll.length },
     { key: 'expirations', label: 'Expirations', count: data.expiring_leases.length },
     { key: 'reports', label: 'Generated Reports', count: reports.length },
@@ -233,6 +253,9 @@ export default function ReportsPage() {
               ))}
             </select>
           </div>
+
+          {/* Location Filter */}
+          <LocationFilter />
 
           {/* Property Filter */}
           <div className="relative">
@@ -378,6 +401,60 @@ export default function ReportsPage() {
                   </tfoot>
                 </table>
               </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {tab === 'per_location' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+          <div className="glass-card overflow-x-auto">
+            {perLocation.length === 0 ? (
+              <div className="p-8 text-center text-text-secondary">
+                <Building2 size={36} className="mx-auto mb-3 text-text-muted" />
+                No locations to compare yet. Add a location in <a href="/settings/locations" className="text-accent hover:underline">Settings → Locations</a>.
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-xs uppercase tracking-wide text-text-tertiary">
+                    <th className="text-left p-3">Location</th>
+                    <th className="text-right p-3">Properties</th>
+                    <th className="text-right p-3">Units</th>
+                    <th className="text-right p-3">Occupied</th>
+                    <th className="text-right p-3">Occupancy</th>
+                    <th className="text-right p-3">Active Leases</th>
+                    <th className="text-right p-3">Monthly Rent</th>
+                    <th className="text-right p-3">Open WOs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {perLocation.map((row) => (
+                    <tr key={row.location_id || 'unassigned'} className="border-b border-border last:border-0">
+                      <td className="p-3 font-medium text-text-primary">{row.location_name}</td>
+                      <td className="p-3 text-right text-text-secondary">{row.property_count}</td>
+                      <td className="p-3 text-right text-text-secondary">{row.unit_count}</td>
+                      <td className="p-3 text-right text-text-secondary">{row.occupied_units}</td>
+                      <td className="p-3 text-right text-text-secondary">{row.occupancy_rate}%</td>
+                      <td className="p-3 text-right text-text-secondary">{row.active_leases}</td>
+                      <td className="p-3 text-right text-accent font-semibold">${row.monthly_rent.toLocaleString()}</td>
+                      <td className="p-3 text-right text-text-secondary">{row.open_work_orders}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-border bg-bg-elevated/50 font-semibold">
+                    <td className="p-3 text-text-primary">Total</td>
+                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.property_count, 0)}</td>
+                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.unit_count, 0)}</td>
+                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.occupied_units, 0)}</td>
+                    <td className="p-3 text-right">—</td>
+                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.active_leases, 0)}</td>
+                    <td className="p-3 text-right text-accent">${perLocation.reduce((s, r) => s + r.monthly_rent, 0).toLocaleString()}</td>
+                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.open_work_orders, 0)}</td>
+                  </tr>
+                </tfoot>
+              </table>
             )}
           </div>
         </motion.div>

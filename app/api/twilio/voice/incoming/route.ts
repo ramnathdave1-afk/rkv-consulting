@@ -68,8 +68,8 @@ export async function POST(request: Request) {
   }
   const convoId = conversation.id;
 
-  const greeting = `Hi, thank you for calling ${orgName}. I'm your AI assistant. How can I help you today?`;
-  const noInput = "I didn't catch that. Please call back anytime. Goodbye.";
+  const greeting = `Hey, this is the ${orgName} AI agent. Dave's the founder — he probably emailed you. I'm what handles the late-night tenant and guest calls for property managers who use us. What do you want to see?`;
+  const noInput = "I didn't catch that. Call back anytime to see how it works. Bye.";
   const useElevenLabs = !!process.env.ELEVENLABS_API_KEY;
   const action = `${webhookBase}/api/twilio/voice/respond?convo=${convoId}`;
 

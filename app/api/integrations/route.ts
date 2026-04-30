@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { encryptCredentials } from '@/lib/integrations/credentials';
+import { logAuditEvent, requestContext } from '@/lib/audit/log-action';
 
 export async function GET() {
   const supabase = await createClient();
@@ -61,5 +62,16 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAuditEvent({
+    orgId: profile.org_id,
+    userId: user.id,
+    action: 'integration_connect',
+    resource_type: 'integration',
+    resource_id: data.id,
+    metadata: { platform: data.platform, auth_type: data.auth_type },
+    ...requestContext(request),
+  });
+
   return NextResponse.json({ integration: data }, { status: 201 });
 }

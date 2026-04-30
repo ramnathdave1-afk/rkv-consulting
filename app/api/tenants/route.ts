@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { logAuditEvent, requestContext } from '@/lib/audit/log-action';
 
 export async function GET() {
   const supabase = await createClient();
@@ -47,5 +48,16 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAuditEvent({
+    orgId: profile.org_id,
+    userId: user.id,
+    action: 'create',
+    resource_type: 'tenant',
+    resource_id: data.id,
+    metadata: { first_name: data.first_name, last_name: data.last_name, email: data.email },
+    ...requestContext(request),
+  });
+
   return NextResponse.json({ tenant: data }, { status: 201 });
 }

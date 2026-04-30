@@ -41,6 +41,12 @@ export const INTEGRATION_REGISTRY: IntegrationInfo[] = [
     status: 'available',
   },
   {
+    id: 'appfolio',
+    label: 'AppFolio',
+    description: 'CSV / SFTP / webhook sync of properties, units, tenants, leases, work orders',
+    status: 'available',
+  },
+  {
     id: 'quickbooks',
     label: 'QuickBooks',
     description: 'Accounting sync (OAuth scaffolded)',

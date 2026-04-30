@@ -12,7 +12,20 @@ export async function GET(request: NextRequest) {
   const orgId = profile.org_id;
   const url = new URL(request.url);
   const propertyId = url.searchParams.get('property_id');
+  const locationId = url.searchParams.get('location_id');
   const period = url.searchParams.get('period') || 'current_month'; // current_month | last_month | quarter | year
+
+  // If a location is specified, resolve the set of property IDs in that
+  // location once and apply the constraint to every helper query below.
+  let locationPropertyIds: string[] | null = null;
+  if (locationId) {
+    const { data: locProps } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('org_id', orgId)
+      .eq('location_id', locationId);
+    locationPropertyIds = (locProps || []).map((p: { id: string }) => p.id);
+  }
 
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
@@ -54,6 +67,7 @@ export async function GET(request: NextRequest) {
   function txQuery(selectFields: string) {
     let q = supabase.from('financial_transactions').select(selectFields).eq('org_id', orgId);
     if (propertyId) q = q.eq('property_id', propertyId);
+    else if (locationPropertyIds) q = q.in('property_id', locationPropertyIds.length ? locationPropertyIds : ['__none__']);
     return q;
   }
 
@@ -61,6 +75,7 @@ export async function GET(request: NextRequest) {
   function leaseQuery(selectFields: string) {
     let q = supabase.from('leases').select(selectFields).eq('org_id', orgId);
     if (propertyId) q = q.eq('property_id', propertyId);
+    else if (locationPropertyIds) q = q.in('property_id', locationPropertyIds.length ? locationPropertyIds : ['__none__']);
     return q;
   }
 
@@ -68,6 +83,7 @@ export async function GET(request: NextRequest) {
   function unitQuery(selectFields: string) {
     let q = supabase.from('units').select(selectFields).eq('org_id', orgId);
     if (propertyId) q = q.eq('property_id', propertyId);
+    else if (locationPropertyIds) q = q.in('property_id', locationPropertyIds.length ? locationPropertyIds : ['__none__']);
     return q;
   }
 

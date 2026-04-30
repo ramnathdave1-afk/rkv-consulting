@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/send';
 import { invitationEmail } from '@/lib/email/templates';
+import { logAuditEvent, requestContext } from '@/lib/audit/log-action';
+import { requireUserLimit } from '@/lib/billing/gate';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rkv-consulting.com';
 
@@ -19,6 +21,10 @@ export async function POST(request: NextRequest) {
   if (!profile || profile.role !== 'admin') {
     return NextResponse.json({ error: 'Only admins can invite' }, { status: 403 });
   }
+
+  // Block invites once the org hits the user cap on its plan.
+  const limitGate = await requireUserLimit(profile.org_id);
+  if (!limitGate.allowed) return limitGate.response;
 
   const body = await request.json();
   const { email, role } = body;
@@ -56,7 +62,17 @@ export async function POST(request: NextRequest) {
     inviteUrl,
   );
 
-  await sendEmail({ to: email, subject, html });
+  await sendEmail({ to: email, subject, html, orgId: profile.org_id });
+
+  await logAuditEvent({
+    orgId: profile.org_id,
+    userId: user.id,
+    action: 'invite_user',
+    resource_type: 'user',
+    resource_id: invitation.id,
+    metadata: { email, role },
+    ...requestContext(request),
+  });
 
   return NextResponse.json({ invitation }, { status: 201 });
 }

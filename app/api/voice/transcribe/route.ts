@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { transcribeAudio } from '@/lib/ai/whisper';
 import { triageMaintenanceRequest, matchVendor } from '@/lib/ai/maintenance-triage';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireFeature } from '@/lib/billing/gate';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -11,6 +12,9 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
   if (!profile) return NextResponse.json({ error: 'No profile' }, { status: 403 });
+
+  const gate = await requireFeature(profile.org_id, 'voice_ai');
+  if (!gate.allowed) return gate.response;
 
   const formData = await request.formData();
   const audioFile = formData.get('audio') as File | null;

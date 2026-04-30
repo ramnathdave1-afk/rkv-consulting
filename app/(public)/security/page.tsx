@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Shield, Lock, Server, Eye, Key, Globe } from 'lucide-react';
+import { StatusBadge } from '@/components/landing/StatusBadge';
 
 const practices = [
   { icon: Lock, title: 'Encryption', description: 'All data encrypted in transit (TLS 1.3) and at rest (AES-256). Database connections use SSL. API keys are hashed with SHA-256 before storage.' },
@@ -81,9 +82,10 @@ export default function SecurityPage() {
       </div>
 
       <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-5xl flex items-center justify-between">
+        <div className="mx-auto max-w-5xl flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <StatusBadge />
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
           </div>

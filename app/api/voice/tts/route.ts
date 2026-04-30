@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { captureException, captureMessage } from '@/lib/monitoring/sentry';
+import { getUserOrg } from '@/lib/auth/get-user-org';
+import { requireFeature } from '@/lib/billing/gate';
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 
 export async function GET(request: NextRequest) {
+  const { user, orgId } = await getUserOrg();
+  if (!user || !orgId) return new NextResponse('Unauthorized', { status: 401 });
+
+  const gate = await requireFeature(orgId, 'voice_ai');
+  if (!gate.allowed) return gate.response;
+
   const text = request.nextUrl.searchParams.get('text');
   if (!text) return new NextResponse('Missing text param', { status: 400 });
   if (!ELEVENLABS_API_KEY) return new NextResponse('ElevenLabs not configured', { status: 500 });

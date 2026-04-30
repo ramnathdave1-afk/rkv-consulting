@@ -48,13 +48,34 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected routes — require auth
-  const { user, supabaseResponse } = await updateSession(request);
+  const { user, supabaseResponse, supabase } = await updateSession(request);
 
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Force unfinished onboarding into the wizard.
+  // Skip the check for the wizard itself, API routes, and Next internals.
+  if (
+    supabase &&
+    pathname !== '/onboarding' &&
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/_next/')
+  ) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profile && !profile.onboarding_completed) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

@@ -7,6 +7,9 @@ import { ChartTooltip } from '@/components/dashboard/ChartTooltip';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { MarketIntelligencePanel } from '@/components/market/MarketIntelligencePanel';
 import { ActivityFeed } from '@/components/activity/ActivityFeed';
+import { GettingStartedChecklist } from '@/components/dashboard/GettingStartedChecklist';
+import { LocationFilter } from '@/components/settings/LocationFilter';
+import { useLocations } from '@/lib/hooks/useLocations';
 import {
   Building2,
   DoorOpen,
@@ -145,9 +148,14 @@ export default function DashboardPage() {
   const [marketDropdownOpen, setMarketDropdownOpen] = useState(false);
   const supabase = createClient();
 
+  const { activeLocationId, activeLocation } = useLocations();
+
   const fetchDashboard = useCallback(async () => {
     try {
-      const res = await fetch('/api/dashboard');
+      const url = activeLocationId
+        ? `/api/dashboard?location_id=${encodeURIComponent(activeLocationId)}`
+        : '/api/dashboard';
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch dashboard');
       const json = await res.json();
       setData(json);
@@ -156,7 +164,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeLocationId]);
 
   useEffect(() => {
     fetchDashboard();
@@ -207,6 +215,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 lg:p-8 space-y-7">
+      <GettingStartedChecklist />
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
@@ -235,10 +244,13 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Real-time overview across your portfolio
+            {activeLocationId
+              ? `Live data for ${activeLocation?.name || 'this location'}`
+              : 'Real-time overview across your portfolio'}
           </p>
         </div>
-        <div className="hidden sm:flex gap-2">
+        <div className="hidden sm:flex gap-2 items-center">
+          <LocationFilter />
           <button className="flex items-center gap-2 px-3 py-2 rounded-xl border text-[13px] font-semibold transition-all hover:-translate-y-px"
             style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'transparent' }}>
             <Filter size={14} /> Filter

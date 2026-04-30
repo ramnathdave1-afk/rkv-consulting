@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
               to: showing.prospect_email,
               subject: emailContent.subject,
               html: emailContent.html,
+              orgId: showing.org_id,
             });
             emailsSent++;
           }

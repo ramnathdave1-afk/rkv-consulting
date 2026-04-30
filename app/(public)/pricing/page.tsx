@@ -5,25 +5,30 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Check, X, Sparkles, ArrowRight, Zap, Shield, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/landing/StatusBadge';
+import { PLANS } from '@/lib/billing/plans';
 
+// Public-facing tier list is derived from PLANS so prices, unit caps, and
+// feature flags can never drift from the server-side gate logic. Visual
+// fields (icon, color, copy, popular) are local; numbers come from PLANS.
 const tiers = [
   {
     id: 'starter',
-    name: 'Starter',
+    name: PLANS.starter.name,
     icon: Zap,
-    price: 5,
-    annualPrice: 4,
+    price: PLANS.starter.price_monthly,
+    annualPrice: Math.round(PLANS.starter.price_monthly * 0.8),
     description: 'For small portfolios getting started with AI',
     color: '#6B7B8D',
     features: {
-      units: 'Up to 50 units',
+      units: `Up to ${PLANS.starter.max_units} units`,
       agents: '3 AI agents',
-      voice: false,
-      acquisitions: false,
+      voice: PLANS.starter.features.voice_ai,
+      acquisitions: PLANS.starter.features.acquisitions_module,
       reports: 'Basic reporting',
-      compliance: true,
-      team: '1 team member',
-      priority: false,
+      compliance: PLANS.starter.features.fair_housing_filter,
+      team: `${PLANS.starter.max_users} team members`,
+      priority: PLANS.starter.features.priority_support,
     },
     cta: 'Start Free Trial',
     href: '/api/stripe/checkout?plan=starter',
@@ -31,21 +36,21 @@ const tiers = [
   },
   {
     id: 'growth',
-    name: 'Growth',
+    name: PLANS.growth.name,
     icon: Shield,
-    price: 5,
-    annualPrice: 4,
+    price: PLANS.growth.price_monthly,
+    annualPrice: Math.round(PLANS.growth.price_monthly * 0.8),
     description: 'Full automation for growing portfolios',
     color: '#00D4AA',
     features: {
-      units: 'Up to 500 units',
+      units: `Up to ${PLANS.growth.max_units} units`,
       agents: 'All 5 AI agents',
-      voice: true,
-      acquisitions: true,
+      voice: PLANS.growth.features.voice_ai,
+      acquisitions: PLANS.growth.features.acquisitions_module,
       reports: 'AI owner reports',
-      compliance: true,
-      team: '10 team members',
-      priority: false,
+      compliance: PLANS.growth.features.fair_housing_filter,
+      team: `${PLANS.growth.max_users} team members`,
+      priority: PLANS.growth.features.priority_support,
     },
     cta: 'Start Free Trial',
     href: '/api/stripe/checkout?plan=growth',
@@ -53,21 +58,21 @@ const tiers = [
   },
   {
     id: 'enterprise',
-    name: 'Enterprise',
+    name: PLANS.enterprise.name,
     icon: Building2,
-    price: -1,
-    annualPrice: -1,
+    price: PLANS.enterprise.price_monthly,
+    annualPrice: Math.round(PLANS.enterprise.price_monthly * 0.8),
     description: 'For large operators and management companies',
     color: '#8A00FF',
     features: {
       units: 'Unlimited units',
       agents: 'All 5 AI agents',
-      voice: true,
-      acquisitions: true,
+      voice: PLANS.enterprise.features.voice_ai,
+      acquisitions: PLANS.enterprise.features.acquisitions_module,
       reports: 'White-label reports',
-      compliance: true,
+      compliance: PLANS.enterprise.features.fair_housing_filter,
       team: 'Unlimited members',
-      priority: true,
+      priority: PLANS.enterprise.features.priority_support,
     },
     cta: 'Contact Sales',
     href: 'tel:+14847391152',
@@ -386,9 +391,10 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
+        <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.</p>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <StatusBadge />
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
           </div>

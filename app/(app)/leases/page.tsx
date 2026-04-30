@@ -10,6 +10,8 @@ import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { toast } from '@/components/ui/Toast';
 import LeaseFormModal from '@/components/leases/LeaseFormModal';
 import type { LeaseFormData } from '@/components/leases/LeaseFormModal';
+import { LocationFilter } from '@/components/settings/LocationFilter';
+import { useLocations } from '@/lib/hooks/useLocations';
 import type { LeaseStatus } from '@/lib/types';
 import { FileText, Plus, Pencil, Trash2, Search } from 'lucide-react';
 
@@ -22,7 +24,8 @@ interface LeaseRow {
   monthly_rent: number;
   security_deposit: number | null;
   status: LeaseStatus;
-  units: { unit_number: string; property_id: string; properties: { name: string } | null } | null;
+  location_id: string | null;
+  units: { unit_number: string; property_id: string; properties: { name: string; location_id?: string | null } | null } | null;
   tenants: { first_name: string; last_name: string } | null;
 }
 
@@ -70,18 +73,24 @@ export default function LeasesPage() {
     fetchLeases();
   }, [fetchLeases]);
 
+  const { activeLocationId } = useLocations();
+
   const filtered = useMemo(() => leases.filter((l) => {
     if (statusFilter && l.status !== statusFilter) return false;
+    if (activeLocationId) {
+      const lLoc = l.location_id || l.units?.properties?.location_id || null;
+      if (lLoc !== activeLocationId) return false;
+    }
     if (!search) return true;
     const q = search.toLowerCase();
     const tenantName = l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}`.toLowerCase() : '';
     const propName = (l.units?.properties?.name || '').toLowerCase();
     const unitNum = (l.units?.unit_number || '').toLowerCase();
     return tenantName.includes(q) || propName.includes(q) || unitNum.includes(q);
-  }), [leases, search, statusFilter]);
+  }), [leases, search, statusFilter, activeLocationId]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, activeLocationId]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -258,6 +267,9 @@ export default function LeasesPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           />
+        </div>
+        <div className="w-full sm:w-auto">
+          <LocationFilter />
         </div>
       </div>
 

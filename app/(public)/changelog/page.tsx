@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, Wrench, Bug, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/landing/StatusBadge';
 
 type Category = 'Feature' | 'Improvement' | 'Fix';
 
@@ -206,9 +207,10 @@ export default function ChangelogPage() {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-5xl flex items-center justify-between">
+        <div className="mx-auto max-w-5xl flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <StatusBadge />
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
           </div>

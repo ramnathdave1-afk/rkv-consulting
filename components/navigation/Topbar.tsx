@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Menu, Bell, Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { LocationSwitcher } from '@/components/navigation/LocationSwitcher';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
@@ -102,6 +103,8 @@ export function Topbar({ sidebarCollapsed, onOpenCommandBar, onMobileMenuToggle 
 
       {/* Right side */}
       <div className="flex items-center gap-2">
+        <LocationSwitcher />
+
         {/* Bell with premium red dot + glow */}
         <button
           className="relative flex items-center justify-center h-[38px] w-[38px] rounded-xl transition-all hover:-translate-y-px"

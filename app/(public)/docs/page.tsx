@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/components/landing/StatusBadge';
 import {
   Book,
   Building2,
@@ -417,9 +418,10 @@ export default function DocsPage() {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
+        <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.</p>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <StatusBadge />
             <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
           </div>

@@ -11,7 +11,7 @@ export async function GET() {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('work_orders')
-    .select('*, properties(name), units(unit_number), tenants(first_name, last_name), vendors(name, company)')
+    .select('*, properties(name, location_id), units(unit_number), tenants(first_name, last_name), vendors(name, company)')
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
 

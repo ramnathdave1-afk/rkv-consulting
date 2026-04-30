@@ -7,6 +7,7 @@ import {
   validateLeaseRow,
   type ImportEntity,
 } from '@/lib/import/csv-parser';
+import { requireFeature } from '@/lib/billing/gate';
 
 const VALID_ENTITIES: ImportEntity[] = ['properties', 'units', 'tenants', 'leases'];
 
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
   if (role === 'viewer') {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
+
+  const gate = await requireFeature(orgId, 'csv_import');
+  if (!gate.allowed) return gate.response;
 
   let body: {
     type?: ImportEntity;

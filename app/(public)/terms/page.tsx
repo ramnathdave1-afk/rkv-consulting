@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { StatusBadge } from '@/components/landing/StatusBadge';
 
 const sections = [
   {
@@ -88,9 +89,10 @@ export default function TermsPage() {
       </div>
 
       <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-4xl flex items-center justify-between">
+        <div className="mx-auto max-w-4xl flex items-center justify-between flex-wrap gap-3">
           <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <StatusBadge />
             <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
             <Link href="/pricing" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Pricing</Link>
           </div>

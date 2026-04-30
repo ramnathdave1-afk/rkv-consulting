@@ -35,28 +35,28 @@ export async function handleStageTransition(
     case 'due_diligence':
       // Notify team
       for (const member of analysts) {
-        await sendEmail({ to: member.email, ...emailContent });
+        await sendEmail({ to: member.email, ...emailContent, orgId });
       }
       break;
 
     case 'loi':
       // Generate preliminary report + notify analysts
       for (const member of analysts) {
-        await sendEmail({ to: member.email, ...emailContent });
+        await sendEmail({ to: member.email, ...emailContent, orgId });
       }
       break;
 
     case 'under_contract':
       // Generate full report + notify all admins
       for (const admin of admins) {
-        await sendEmail({ to: admin.email, ...emailContent });
+        await sendEmail({ to: admin.email, ...emailContent, orgId });
       }
       break;
 
     case 'closed':
       // Final report + summary email to all admins
       for (const admin of admins) {
-        await sendEmail({ to: admin.email, ...emailContent });
+        await sendEmail({ to: admin.email, ...emailContent, orgId });
       }
       break;
   }

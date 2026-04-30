@@ -8,6 +8,8 @@ import { Pagination } from '@/components/ui/Pagination';
 import { AnimatedTable, StatusBadge, type TableColumn } from '@/components/ui/AnimatedTable';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { WorkOrderFormModal } from '@/components/work-orders/WorkOrderFormModal';
+import { LocationFilter } from '@/components/settings/LocationFilter';
+import { useLocations } from '@/lib/hooks/useLocations';
 import { Wrench, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,7 +28,8 @@ interface WorkOrderRow {
   tenant_id: string | null;
   vendor_id: string | null;
   created_at: string;
-  properties: { name: string } | null;
+  location_id: string | null;
+  properties: { name: string; location_id?: string | null } | null;
   units: { unit_number: string } | null;
   tenants: { first_name: string; last_name: string } | null;
   vendors: { name: string; company: string | null } | null;
@@ -76,9 +79,15 @@ export default function WorkOrdersPage() {
 
   useEffect(() => { fetchWorkOrders(); }, [fetchWorkOrders]);
 
+  const { activeLocationId } = useLocations();
+
   const filtered = useMemo(() => workOrders.filter((wo) => {
     if (statusFilter && wo.status !== statusFilter) return false;
     if (priorityFilter && wo.priority !== priorityFilter) return false;
+    if (activeLocationId) {
+      const woLoc = wo.location_id || wo.properties?.location_id || null;
+      if (woLoc !== activeLocationId) return false;
+    }
     if (search) {
       const q = search.toLowerCase();
       const matches = wo.title.toLowerCase().includes(q) ||
@@ -89,10 +98,10 @@ export default function WorkOrdersPage() {
       if (!matches) return false;
     }
     return true;
-  }), [workOrders, search, statusFilter, priorityFilter]);
+  }), [workOrders, search, statusFilter, priorityFilter, activeLocationId]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [search, statusFilter, priorityFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, priorityFilter, activeLocationId]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -213,6 +222,9 @@ export default function WorkOrdersPage() {
         </div>
         <div className="w-full sm:w-40">
           <SelectField options={priorityFilterOptions} value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} />
+        </div>
+        <div className="w-full sm:w-auto">
+          <LocationFilter />
         </div>
       </div>
 

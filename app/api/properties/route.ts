@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkLimit, incrementUsage } from '@/lib/billing/usage';
+import { logAuditEvent, requestContext } from '@/lib/audit/log-action';
 
 export async function GET() {
   const supabase = await createClient();
@@ -59,5 +60,17 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await incrementUsage(profile.org_id, 'properties');
+
+  const ctx = requestContext(request);
+  await logAuditEvent({
+    orgId: profile.org_id,
+    userId: user.id,
+    action: 'create',
+    resource_type: 'property',
+    resource_id: data.id,
+    metadata: { name: data.name, address_line1: data.address_line1 },
+    ...ctx,
+  });
+
   return NextResponse.json({ property: data }, { status: 201 });
 }

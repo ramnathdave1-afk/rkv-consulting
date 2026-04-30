@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireFeature } from '@/lib/billing/gate';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -8,6 +9,9 @@ export async function GET(request: NextRequest) {
 
   const { data: profile } = await supabase.from('profiles').select('org_id').eq('user_id', user.id).single();
   if (!profile) return NextResponse.json({ error: 'No profile' }, { status: 403 });
+
+  const gate = await requireFeature(profile.org_id, 'acquisitions_module');
+  if (!gate.allowed) return gate.response;
 
   const url = new URL(request.url);
   const stage = url.searchParams.get('stage');
@@ -29,6 +33,9 @@ export async function POST(request: NextRequest) {
   if (!profile || profile.role === 'viewer') {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   }
+
+  const gate = await requireFeature(profile.org_id, 'acquisitions_module');
+  if (!gate.allowed) return gate.response;
 
   const body = await request.json();
   const { data, error } = await supabase

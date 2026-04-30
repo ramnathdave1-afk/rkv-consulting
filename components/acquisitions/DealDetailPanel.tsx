@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Brain, Trash2, Edit3, MapPin, User, Phone, Mail, Clock, ArrowRight, DollarSign, Activity } from 'lucide-react';
+import { X, Brain, Trash2, Edit3, MapPin, User, Phone, Mail, Clock, ArrowRight, DollarSign, Activity, AlertTriangle, Database } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -225,6 +225,7 @@ export function DealDetailPanel({ deal, onClose, onEdit, onDeleted, onUpdated }:
             </div>
             {deal.deal_score !== null ? (
               <div className="space-y-3">
+                <DataQualityBanner deal={deal} />
                 <div className="flex items-center gap-2">
                   <div className={`text-3xl font-bold ${scoreColor(deal.deal_score)}`}>{deal.deal_score}</div>
                   <span className="text-xs text-text-muted">/100</span>
@@ -425,5 +426,68 @@ export function DealDetailPanel({ deal, onClose, onEdit, onDeleted, onUpdated }:
         loading={deleting}
       />
     </>
+  );
+}
+
+/* ─── Data Quality Banner ─── */
+/**
+ * Shows whether the deal score was computed from real RentCast comps
+ * or fell back to Claude-only "simulated" mode (no API key, or address
+ * not found). Reads `metadata.data_quality` and `metadata.data_sources`,
+ * which are set by /api/deals/[id]/score.
+ */
+function DataQualityBanner({ deal }: { deal: Deal }) {
+  const meta = (deal.metadata && typeof deal.metadata === 'object') ? (deal.metadata as Record<string, unknown>) : {};
+  const quality = meta.data_quality as 'real' | 'partial' | 'simulated' | undefined;
+  const sources = (meta.data_sources && typeof meta.data_sources === 'object')
+    ? (meta.data_sources as {
+        rentcast_value?: boolean;
+        rentcast_rent?: boolean;
+        rentcast_market?: boolean;
+        sale_comp_count?: number;
+        rent_comp_count?: number;
+        avg_comp_distance_miles?: number | null;
+      })
+    : null;
+
+  // No metadata yet (e.g. legacy deals scored before this feature) — render nothing.
+  if (!quality) return null;
+
+  if (quality === 'simulated') {
+    return (
+      <div className="flex items-start gap-2 p-3 rounded-lg border border-yellow-500/30 bg-yellow-500/5">
+        <AlertTriangle size={14} className="text-yellow-400 shrink-0 mt-0.5" />
+        <div className="text-[11px] leading-relaxed">
+          <p className="text-yellow-400 font-medium">AI-only estimate</p>
+          <p className="text-text-secondary">
+            No real comps were used. Connect a RentCast API key in Settings to anchor scoring to real sale & rent comparables.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const saleCount = sources?.sale_comp_count ?? 0;
+  const rentCount = sources?.rent_comp_count ?? 0;
+  const dist = sources?.avg_comp_distance_miles;
+  const parts: string[] = [];
+  if (sources?.rentcast_value) parts.push(`${saleCount} sale comp${saleCount === 1 ? '' : 's'}`);
+  if (sources?.rentcast_rent) parts.push(`${rentCount} rent comp${rentCount === 1 ? '' : 's'}`);
+  if (sources?.rentcast_market) parts.push('ZIP market data');
+  const summary = parts.join(' · ') || 'real comps';
+
+  return (
+    <div className="flex items-start gap-2 p-3 rounded-lg border border-green-500/25 bg-green-500/5">
+      <Database size={14} className="text-green-400 shrink-0 mt-0.5" />
+      <div className="text-[11px] leading-relaxed">
+        <p className="text-green-400 font-medium">
+          {quality === 'real' ? 'Anchored to RentCast' : 'Partially anchored to RentCast'}
+        </p>
+        <p className="text-text-secondary">
+          {summary}
+          {dist !== null && dist !== undefined ? ` · ${dist} mi avg distance` : ''}
+        </p>
+      </div>
+    </div>
   );
 }

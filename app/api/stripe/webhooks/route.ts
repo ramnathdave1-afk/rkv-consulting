@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { captureException } from '@/lib/monitoring/sentry';
+import { mapStripeProductToTier, type PlanTier } from '@/lib/billing/plans';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-02-25.clover' });
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       if (orgId && subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const plan = determinePlan(subscription);
+        const tier = determineTier(subscription);
         const period = extractPeriod(subscription);
 
         await supabase
@@ -63,18 +65,54 @@ export async function POST(request: NextRequest) {
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: subscriptionId,
             plan,
+            tier,
             status: subscription.status === 'trialing' ? 'trialing' : 'active',
             ...period,
             cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'org_id' });
 
+        // Mirror the active tier and customer id onto the organization so
+        // server-side gate helpers can read it without joining subscriptions.
+        await supabase
+          .from('organizations')
+          .update({
+            plan_tier: tier,
+            stripe_customer_id: session.customer as string,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orgId);
+
         await supabase.from('agent_activity_log').insert({
           agent_name: 'system',
-          action: `Subscription activated: ${plan} plan`,
-          details: { org_id: orgId, plan, subscription_id: subscriptionId },
+          action: `Subscription activated: ${tier} plan`,
+          details: { org_id: orgId, plan, tier, subscription_id: subscriptionId },
         });
       }
+      break;
+    }
+
+    case 'customer.subscription.created': {
+      const subscription = event.data.object as Stripe.Subscription;
+      const tier = determineTier(subscription);
+      const period = extractPeriod(subscription);
+
+      await supabase
+        .from('subscriptions')
+        .update({
+          plan: determinePlan(subscription),
+          tier,
+          status: subscription.status === 'trialing' ? 'trialing' : 'active',
+          ...period,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
+      await supabase
+        .from('organizations')
+        .update({ plan_tier: tier, updated_at: new Date().toISOString() })
+        .eq('stripe_customer_id', subscription.customer as string);
       break;
     }
 
@@ -117,26 +155,44 @@ export async function POST(request: NextRequest) {
       const subscription = event.data.object as Stripe.Subscription;
       await supabase
         .from('subscriptions')
-        .update({ status: 'canceled', plan: 'explorer', updated_at: new Date().toISOString() })
+        .update({
+          status: 'canceled',
+          plan: 'explorer',
+          tier: 'trial',
+          updated_at: new Date().toISOString(),
+        })
         .eq('stripe_subscription_id', subscription.id);
+
+      // Drop the org back to trial when subscription is canceled.
+      await supabase
+        .from('organizations')
+        .update({ plan_tier: 'trial', updated_at: new Date().toISOString() })
+        .eq('stripe_customer_id', subscription.customer as string);
       break;
     }
 
     case 'customer.subscription.updated': {
       const subscription = event.data.object as Stripe.Subscription;
       const plan = determinePlan(subscription);
+      const tier = determineTier(subscription);
       const period = extractPeriod(subscription);
 
       await supabase
         .from('subscriptions')
         .update({
           plan,
+          tier,
           status: subscription.status === 'trialing' ? 'trialing' : subscription.cancel_at_period_end ? 'active' : subscription.status,
           current_period_end: period.current_period_end,
           cancel_at_period_end: subscription.cancel_at_period_end,
           updated_at: new Date().toISOString(),
         })
         .eq('stripe_subscription_id', subscription.id);
+
+      await supabase
+        .from('organizations')
+        .update({ plan_tier: tier, updated_at: new Date().toISOString() })
+        .eq('stripe_customer_id', subscription.customer as string);
       break;
     }
   }
@@ -154,4 +210,10 @@ function determinePlan(subscription: Stripe.Subscription): string {
   if (priceId === proMonthly || priceId === proAnnual) return 'pro';
   if (priceId === entMonthly || priceId === entAnnual) return 'enterprise';
   return 'pro';
+}
+
+/** Map a Stripe subscription's first price item to the new four-tier system. */
+function determineTier(subscription: Stripe.Subscription): PlanTier {
+  const priceId = subscription.items.data[0]?.price.id ?? null;
+  return mapStripeProductToTier(priceId);
 }

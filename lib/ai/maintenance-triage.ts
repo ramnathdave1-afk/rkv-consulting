@@ -5,6 +5,7 @@
 
 import { callClaude } from './claude';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { startSlaTracking, type SlaPriority } from '@/lib/sla/track';
 import type { WorkOrderCategory, WorkOrderPriority } from '@/lib/types';
 
 export interface TriageResult {
@@ -157,6 +158,19 @@ export async function createWorkOrderFromMessage(params: {
     })
     .select('id')
     .single();
+
+  if (workOrder?.id) {
+    const slaPriority: SlaPriority | undefined =
+      triage.priority === 'emergency' || triage.priority === 'high' || triage.priority === 'low'
+        ? triage.priority
+        : 'standard';
+    await startSlaTracking({
+      orgId: params.orgId,
+      resourceType: 'work_order',
+      resourceId: workOrder.id,
+      priority: slaPriority,
+    });
+  }
 
   return {
     workOrderId: workOrder?.id || '',

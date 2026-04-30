@@ -57,22 +57,34 @@ function infoRow(label: string, value: string) {
 
 export function welcomeEmail(name: string) {
   return {
-    subject: 'Welcome to RKV Consulting',
-    html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Welcome, ${name}!</h2>
-      <p style="margin: 0 0 12px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
-        Your RKV Consulting account is ready. Let's get your property management powered by AI.
-      </p>
-      <p style="margin: 0 0 8px; font-size: 13px; color: #8B95A5;">Here's how to get started:</p>
-      <ul style="margin: 0 0 16px; padding-left: 20px; font-size: 13px; color: #8B95A5; line-height: 1.8;">
-        <li>Add your properties and units</li>
-        <li>Set up your AI leasing agent</li>
-        <li>Connect your PM platform</li>
-        <li>Import tenants and leases</li>
-      </ul>
-      ${button('Open Dashboard', `${BASE_URL}/dashboard`)}
-    `),
+    subject: 'Welcome to RKV Consulting — your 14-day trial starts now',
+    html: welcomeEmailTemplate(name, `${BASE_URL}/dashboard`),
   };
+}
+
+/**
+ * Trial-focused welcome email used by the signup flow. Highlights the
+ * 14-day trial and the 3-day check-in commitment.
+ */
+export function welcomeEmailTemplate(name: string, dashboardUrl: string) {
+  return layout(`
+    <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Welcome to RKV Consulting, ${name}!</h2>
+    <p style="margin: 0 0 12px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
+      Your <strong style="color: #F0F2F5;">14-day trial</strong> is active — full access, no credit card required.
+      We'll be in touch in 3 days to make sure you're set up.
+    </p>
+    <p style="margin: 0 0 8px; font-size: 13px; color: #8B95A5;">Here's how to get started:</p>
+    <ul style="margin: 0 0 16px; padding-left: 20px; font-size: 13px; color: #8B95A5; line-height: 1.8;">
+      <li>Add your first property — or load demo data to explore</li>
+      <li>Customize branding (logo + primary color)</li>
+      <li>Invite your team</li>
+      <li>Connect AppFolio / Buildium / Yardi for auto-import</li>
+    </ul>
+    ${button('Open Dashboard', dashboardUrl)}
+    <p style="margin: 8px 0 0; font-size: 11px; color: #4A5568;">
+      Need help? Just reply to this email — a real human will respond.
+    </p>
+  `);
 }
 
 export function invitationEmail(inviterName: string, orgName: string, inviteUrl: string) {

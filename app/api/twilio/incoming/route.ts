@@ -4,6 +4,7 @@ import { validateRequest, sendSMS } from '@/lib/twilio/client';
 import { generateLeasingResponse, classifyIntent } from '@/lib/ai/leasing-agent';
 import { createWorkOrderFromMessage } from '@/lib/ai/maintenance-triage';
 import { captureException } from '@/lib/monitoring/sentry';
+import { startSlaTracking, recordFirstResponse } from '@/lib/sla/track';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -91,6 +92,13 @@ export async function POST(request: NextRequest) {
     channel: 'sms',
     twilio_sid: messageSid,
     status: 'received',
+  });
+
+  // Start SLA tracking on the conversation (idempotent — only first inbound creates it)
+  await startSlaTracking({
+    orgId,
+    resourceType: 'tenant_message',
+    resourceId: conversation.id,
   });
 
   // Update conversation timestamp
@@ -191,6 +199,9 @@ export async function POST(request: NextRequest) {
       status: smsResult.status,
       ai_classified_intent: intent,
     });
+
+    // SLA: AI just responded — record first response
+    await recordFirstResponse('tenant_message', conversation.id);
   } catch (err) {
     captureException(err, { route: 'twilio/incoming', stage: 'sms_send' });
     // Store failed message

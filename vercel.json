@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/voice-campaigns",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/status-check",
+      "schedule": "* * * * *"
     }
   ],
   "functions": {

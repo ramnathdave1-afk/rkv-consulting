@@ -78,6 +78,10 @@ function SignupForm() {
         full_name: fullName,
         email,
         role: invitation.role,
+        // Invitees join an existing org that may already be set up, but we
+        // still walk them through a quick personal-onboarding pass.
+        onboarding_completed: false,
+        onboarding_step: 'org_setup',
       });
 
       if (profileError) {
@@ -143,6 +147,8 @@ function SignupForm() {
         email,
         role: 'admin',
         company: companyName || null,
+        onboarding_completed: false,
+        onboarding_step: 'org_setup',
       });
 
       if (profileError) {

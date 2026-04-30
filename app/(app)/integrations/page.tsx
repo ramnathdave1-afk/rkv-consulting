@@ -2,7 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Clock, Mail, MessageSquare, CreditCard, Sparkles, Calculator } from 'lucide-react';
+import {
+  CheckCircle2,
+  Clock,
+  Mail,
+  MessageSquare,
+  CreditCard,
+  Sparkles,
+  Calculator,
+  Building2,
+} from 'lucide-react';
 
 interface IntegrationRow {
   id: string;
@@ -10,6 +19,7 @@ interface IntegrationRow {
   description: string;
   status: 'working' | 'coming_soon';
   icon: React.ElementType;
+  href?: string;
 }
 
 const integrations: IntegrationRow[] = [
@@ -42,6 +52,22 @@ const integrations: IntegrationRow[] = [
     icon: Sparkles,
   },
   {
+    id: 'buildium',
+    label: 'Buildium',
+    description: 'Two-way sync of properties, units, tenants, leases, and work orders via the Buildium REST API.',
+    status: 'working',
+    icon: Building2,
+    href: '/integrations/buildium',
+  },
+  {
+    id: 'appfolio',
+    label: 'AppFolio',
+    description: 'Sync properties, units, tenants, leases, and work orders via CSV upload, scheduled SFTP, or webhooks.',
+    status: 'working',
+    icon: Building2,
+    href: '/integrations/appfolio',
+  },
+  {
     id: 'quickbooks',
     label: 'QuickBooks',
     description: 'Accounting sync — OAuth scaffolded, full sync coming soon.',
@@ -64,8 +90,8 @@ export default function IntegrationsPage() {
         {integrations.map((item) => {
           const Icon = item.icon;
           const working = item.status === 'working';
-          return (
-            <div key={item.id} className="glass-card p-5">
+          const card = (
+            <div className="glass-card p-5 h-full">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 shrink-0">
@@ -87,10 +113,20 @@ export default function IntegrationsPage() {
                       )}
                     </div>
                     <p className="text-xs text-text-secondary mt-0.5">{item.description}</p>
+                    {item.href && (
+                      <p className="text-[11px] text-accent mt-2">Configure &rarr;</p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
+          );
+          return item.href ? (
+            <Link key={item.id} href={item.href} className="block">
+              {card}
+            </Link>
+          ) : (
+            <div key={item.id}>{card}</div>
           );
         })}
       </div>
@@ -98,9 +134,10 @@ export default function IntegrationsPage() {
       <div className="glass-card p-5">
         <h2 className="text-sm font-semibold text-text-primary mb-1">Need a custom integration?</h2>
         <p className="text-xs text-text-secondary mb-3">
-          We don&apos;t ship pre-built connectors for AppFolio, Buildium, Yardi, RealPage, Entrata, DoorLoop,
-          Rent Manager, Propertyware, or ResMan today. We can build a custom data pipeline for your portfolio
-          on request, or you can import via CSV right now.
+          Buildium and AppFolio are live today (Buildium via the official REST API; AppFolio via CSV
+          upload, scheduled SFTP, and webhooks). Other PMS platforms (Yardi, RealPage, Entrata, DoorLoop,
+          Rent Manager, Propertyware, ResMan) are on the roadmap. We can build a custom data pipeline for
+          your portfolio on request, or you can import via CSV right now.
         </p>
         <div className="flex items-center gap-3">
           <Link

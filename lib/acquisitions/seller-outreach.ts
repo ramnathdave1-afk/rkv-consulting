@@ -82,12 +82,12 @@ export async function processSellerStep(sequenceId: string, step: number): Promi
       channel = 'sms';
     } catch {
       if (deal.seller_email) {
-        await sendEmail({ to: deal.seller_email, subject: `Regarding your property at ${address}`, html: `<p>${message}</p>` });
+        await sendEmail({ to: deal.seller_email, subject: `Regarding your property at ${address}`, html: `<p>${message}</p>`, orgId: deal.org_id });
         channel = 'email';
       }
     }
   } else if (deal.seller_email) {
-    await sendEmail({ to: deal.seller_email, subject: `Regarding your property at ${address}`, html: `<p>${message}</p>` });
+    await sendEmail({ to: deal.seller_email, subject: `Regarding your property at ${address}`, html: `<p>${message}</p>`, orgId: deal.org_id });
     channel = 'email';
   }
 

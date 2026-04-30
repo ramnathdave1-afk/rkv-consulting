@@ -310,3 +310,28 @@ button { transition: all 150ms ease; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ─── White-label brand scope ──────────────────────────────────────────
+ * The tenant portal layout sets --brand-primary / --brand-secondary on its
+ * root, then everything inside .tenant-portal can opt into those vars.
+ * Buttons inside the portal that use .btn-brand pick up the brand color
+ * automatically; otherwise children stay on the platform theme.
+ */
+.tenant-portal {
+  --primary: var(--brand-primary, #00bfa6);
+  --secondary: var(--brand-secondary, #1a1a2e);
+}
+.tenant-portal .btn-brand,
+.tenant-portal .btn-primary {
+  background: var(--brand-primary, #00bfa6);
+  color: #ffffff;
+}
+.tenant-portal .text-brand {
+  color: var(--brand-primary, #00bfa6);
+}
+.tenant-portal .border-brand {
+  border-color: var(--brand-primary, #00bfa6);
+}
+.tenant-portal .bg-brand {
+  background: var(--brand-primary, #00bfa6);
+}
