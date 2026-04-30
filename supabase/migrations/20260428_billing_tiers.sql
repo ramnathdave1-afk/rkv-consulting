@@ -29,8 +29,16 @@ ALTER TABLE organizations
   CHECK (plan_tier IN ('trial', 'starter', 'growth', 'enterprise'));
 
 -- subscriptions table: ensure tier column matches the org plan_tier shape.
-ALTER TABLE subscriptions
-  ADD COLUMN IF NOT EXISTS tier text;
+-- Skip if subscriptions table doesn't exist (Stripe billing not yet enabled).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_name = 'subscriptions'
+  ) THEN
+    EXECUTE 'ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS tier text';
+  END IF;
+END $$;
 
 -- Backfill from existing 'plan' column if present, mapping legacy tiers.
 DO $$
