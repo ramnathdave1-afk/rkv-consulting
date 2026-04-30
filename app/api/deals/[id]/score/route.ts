@@ -54,6 +54,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   const mergedMetadata = {
     ...existingMetadata,
     data_quality: result.data_quality,
+    data_source: result.data_source,
     data_sources: result.data_sources,
     last_scored_at: new Date().toISOString(),
   };

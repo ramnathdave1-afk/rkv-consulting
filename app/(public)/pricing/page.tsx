@@ -3,116 +3,103 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Check, X, Sparkles, ArrowRight, Zap, Shield, Building2 } from 'lucide-react';
+import { Check, X, ArrowRight, Calendar, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/landing/StatusBadge';
-import { PLANS } from '@/lib/billing/plans';
+import { PLANS, PLAN_TIER_ORDER, FEATURE_LABELS, type FeatureKey } from '@/lib/billing/plans';
 
-// Public-facing tier list is derived from PLANS so prices, unit caps, and
-// feature flags can never drift from the server-side gate logic. Visual
-// fields (icon, color, copy, popular) are local; numbers come from PLANS.
-const tiers = [
-  {
-    id: 'starter',
-    name: PLANS.starter.name,
-    icon: Zap,
-    price: PLANS.starter.price_monthly,
-    annualPrice: Math.round(PLANS.starter.price_monthly * 0.8),
-    description: 'For small portfolios getting started with AI',
-    color: '#6B7B8D',
-    features: {
-      units: `Up to ${PLANS.starter.max_units} units`,
-      agents: '3 AI agents',
-      voice: PLANS.starter.features.voice_ai,
-      acquisitions: PLANS.starter.features.acquisitions_module,
-      reports: 'Basic reporting',
-      compliance: PLANS.starter.features.fair_housing_filter,
-      team: `${PLANS.starter.max_users} team members`,
-      priority: PLANS.starter.features.priority_support,
-    },
-    cta: 'Start Free Trial',
-    href: '/api/stripe/checkout?plan=starter',
-    popular: false,
-  },
-  {
-    id: 'growth',
-    name: PLANS.growth.name,
-    icon: Shield,
-    price: PLANS.growth.price_monthly,
-    annualPrice: Math.round(PLANS.growth.price_monthly * 0.8),
-    description: 'Full automation for growing portfolios',
-    color: '#00D4AA',
-    features: {
-      units: `Up to ${PLANS.growth.max_units} units`,
-      agents: 'All 5 AI agents',
-      voice: PLANS.growth.features.voice_ai,
-      acquisitions: PLANS.growth.features.acquisitions_module,
-      reports: 'AI owner reports',
-      compliance: PLANS.growth.features.fair_housing_filter,
-      team: `${PLANS.growth.max_users} team members`,
-      priority: PLANS.growth.features.priority_support,
-    },
-    cta: 'Start Free Trial',
-    href: '/api/stripe/checkout?plan=growth',
-    popular: true,
-  },
-  {
-    id: 'enterprise',
-    name: PLANS.enterprise.name,
-    icon: Building2,
-    price: PLANS.enterprise.price_monthly,
-    annualPrice: Math.round(PLANS.enterprise.price_monthly * 0.8),
-    description: 'For large operators and management companies',
-    color: '#8A00FF',
-    features: {
-      units: 'Unlimited units',
-      agents: 'All 5 AI agents',
-      voice: PLANS.enterprise.features.voice_ai,
-      acquisitions: PLANS.enterprise.features.acquisitions_module,
-      reports: 'White-label reports',
-      compliance: PLANS.enterprise.features.fair_housing_filter,
-      team: 'Unlimited members',
-      priority: PLANS.enterprise.features.priority_support,
-    },
-    cta: 'Contact Sales',
-    href: 'tel:+14847391152',
-    popular: false,
-  },
+// Public-facing tiers are now informational only — they describe what's
+// included at each tier, but pricing is negotiated 1:1 with sales. Keep
+// this in sync with PLANS so the feature columns can't drift.
+const PUBLIC_TIERS = (['starter', 'growth', 'enterprise'] as const).map((t) => ({
+  id: t,
+  name: PLANS[t].name,
+  blurb:
+    t === 'starter'
+      ? 'For small portfolios getting started with AI'
+      : t === 'growth'
+        ? 'Full automation for growing portfolios'
+        : 'For large operators and management companies',
+  unitsLabel:
+    PLANS[t].max_units === 0
+      ? 'Unlimited units'
+      : `Up to ${PLANS[t].max_units.toLocaleString()} units`,
+  usersLabel:
+    PLANS[t].max_users === 0
+      ? 'Unlimited team members'
+      : `${PLANS[t].max_users} team members`,
+}));
+
+// Feature rows shown in the comparison table — purely informational.
+const COMPARISON_FEATURES: FeatureKey[] = [
+  'ai_leasing_agent',
+  'ai_maintenance_triage',
+  'voice_ai',
+  'fair_housing_filter',
+  'csv_import',
+  'pm_integrations',
+  'multi_location',
+  'white_label',
+  'custom_domain',
+  'sso_saml',
+  'audit_log',
+  'sla_tracking',
+  'acquisitions_module',
+  'deal_scoring_ai',
+  'api_access',
+  'webhooks',
+  'priority_support',
+  'dedicated_csm',
 ];
 
-const featureRows = [
-  { label: 'Units', key: 'units' },
-  { label: 'AI Agents', key: 'agents' },
-  { label: 'Voice AI (24/7)', key: 'voice' },
-  { label: 'Acquisitions Module', key: 'acquisitions' },
-  { label: 'Owner Reports', key: 'reports' },
-  { label: 'Fair Housing Compliance', key: 'compliance' },
-  { label: 'Team Members', key: 'team' },
-  { label: 'Priority Support', key: 'priority' },
-];
+const PORTFOLIO_SIZES = ['50-100', '100-500', '500-2000', '2000+'] as const;
 
-const faqs = [
-  {
-    q: 'What\'s included in the free trial?',
-    a: '14-day free trial with full access. No credit card required. Import your properties and see AI in action.',
-  },
-  {
-    q: 'How does per-unit pricing work?',
-    a: 'You pay based on total units under management. Add or remove units anytime — billing adjusts automatically.',
-  },
-  {
-    q: 'Can I switch plans?',
-    a: 'Yes. Upgrade or downgrade anytime from your billing dashboard. Changes take effect immediately.',
-  },
-  {
-    q: 'Do you integrate with my PM software?',
-    a: 'Today, you bring your data via CSV import — we recognize column variations from most major PM platforms. Custom integrations for AppFolio, Buildium, Yardi, and others are available on request — contact sales.',
-  },
-];
+const CAL_LINK = process.env.NEXT_PUBLIC_CAL_LINK || 'https://cal.com/rkv-consulting/demo';
 
 export default function PricingPage() {
-  const [annual, setAnnual] = useState(false);
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      name: String(fd.get('name') ?? '').trim(),
+      email: String(fd.get('email') ?? '').trim(),
+      company: String(fd.get('company') ?? '').trim(),
+      portfolio_size: String(fd.get('portfolio_size') ?? '').trim(),
+      current_software: String(fd.get('current_software') ?? '').trim(),
+      message: String(fd.get('message') ?? '').trim(),
+    };
+
+    if (!payload.name || !payload.email || !payload.message) {
+      setError('Name, email, and message are required.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/contact/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error || 'Something went wrong. Please try again.');
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-bg-primary">
@@ -129,9 +116,14 @@ export default function PricingPage() {
             <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">
               Sign In
             </Link>
-            <Link href="/signup" className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-bg-primary hover:bg-accent-hover transition-colors">
-              Get Started
-            </Link>
+            <a
+              href={CAL_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-bg-primary hover:bg-accent-hover transition-colors"
+            >
+              Book a Demo
+            </a>
           </div>
         </div>
       </nav>
@@ -139,170 +131,82 @@ export default function PricingPage() {
       {/* Hero */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,212,170,0.06)_0%,_transparent_50%)]" />
-        <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-8 text-center">
+        <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <h1 className="font-display text-4xl font-bold text-text-primary sm:text-5xl">
-              Pricing that scales with your portfolio
+              Custom Pricing for Property Management Teams
             </h1>
-            <p className="mx-auto mt-3 max-w-lg text-sm text-text-secondary">
-              Start with a 14-day free trial. No setup fees, no contracts. $5/unit/month — that&apos;s it.
+            <p className="mx-auto mt-5 max-w-2xl text-base text-text-secondary leading-relaxed">
+              Every PM company is different. Tell us about your portfolio and we&rsquo;ll build a
+              plan that fits &mdash; pricing typically scales with units managed.
             </p>
           </motion.div>
 
-          {/* Annual toggle */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-bg-secondary/60 backdrop-blur-sm px-4 py-2"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
-            <span className={cn('text-xs font-medium transition-colors', !annual ? 'text-text-primary' : 'text-text-muted')}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setAnnual(!annual)}
-              className="relative h-5 w-10 rounded-full bg-bg-elevated transition-colors"
-              style={annual ? { backgroundColor: 'rgba(0,212,170,0.3)' } : {}}
+            <a
+              href={CAL_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-bg-primary hover:bg-accent-hover shadow-[0_0_20px_rgba(0,212,170,0.18)] transition-all"
             >
-              <motion.div
-                className="absolute top-0.5 h-4 w-4 rounded-full bg-accent"
-                animate={{ left: annual ? 22 : 2 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
-            </button>
-            <span className={cn('text-xs font-medium transition-colors', annual ? 'text-text-primary' : 'text-text-muted')}>
-              Annual
-            </span>
-            {annual && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent"
-              >
-                Save 20%
-              </motion.span>
-            )}
+              <Calendar size={16} />
+              Book a Demo
+              <ArrowRight size={14} />
+            </a>
+            <a
+              href="#talk-to-sales"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-elevated px-5 py-3 text-sm font-semibold text-text-primary hover:bg-bg-tertiary hover:border-border-hover transition-all"
+            >
+              <MessageSquare size={16} />
+              Talk to Sales
+            </a>
           </motion.div>
         </div>
       </div>
 
-      {/* Pricing Cards */}
-      <div className="mx-auto max-w-6xl px-6 pb-16">
+      {/* Tier overview cards (informational, no prices) */}
+      <div className="mx-auto max-w-6xl px-6 pb-12">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {tiers.map((tier, i) => {
-            const price = annual ? tier.annualPrice : tier.price;
-            const isPopular = tier.popular;
-
-            return (
-              <motion.div
-                key={tier.id}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 + i * 0.1 }}
-                className={cn(
-                  'relative rounded-2xl border p-6 transition-all',
-                  isPopular
-                    ? 'border-accent/40 bg-bg-secondary/80 backdrop-blur-lg shadow-[0_0_40px_rgba(0,212,170,0.08)]'
-                    : 'border-border bg-bg-secondary/40 backdrop-blur-sm hover:border-border-hover',
-                )}
-              >
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <div className="flex items-center gap-1 rounded-full bg-accent px-3 py-0.5 text-[10px] font-bold text-bg-primary uppercase tracking-wider">
-                      <Sparkles size={10} />
-                      Most Popular
-                    </div>
-                  </div>
-                )}
-
-                {/* Header */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="flex h-8 w-8 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${tier.color}15` }}
-                    >
-                      <tier.icon size={16} style={{ color: tier.color }} />
-                    </div>
-                    <h3 className="font-display text-lg font-bold text-text-primary">{tier.name}</h3>
-                  </div>
-                  <p className="text-xs text-text-muted">{tier.description}</p>
-                </div>
-
-                {/* Price */}
-                <div className="mb-6">
-                  {price === -1 ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-display text-3xl font-bold text-text-primary">Custom</span>
-                    </div>
-                  ) : price === 0 ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-display text-3xl font-bold text-text-primary">$0</span>
-                      <span className="text-xs text-text-muted">/forever</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-display text-3xl font-bold text-text-primary">${price}</span>
-                      <span className="text-xs text-text-muted">/unit/mo</span>
-                      {annual && (
-                        <span className="ml-2 text-xs text-text-muted line-through">${tier.price}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* CTA */}
-                <Link
-                  href={tier.href}
-                  className={cn(
-                    'flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all w-full mb-6',
-                    isPopular
-                      ? 'bg-accent text-bg-primary hover:bg-accent-hover shadow-[0_0_20px_rgba(0,212,170,0.2)]'
-                      : 'border border-border bg-bg-elevated text-text-primary hover:bg-bg-tertiary hover:border-border-hover',
-                  )}
-                >
-                  {tier.cta}
-                  <ArrowRight size={14} />
-                </Link>
-
-                {/* Features */}
-                <div className="space-y-2.5">
-                  {Object.entries(tier.features).map(([key, value]) => {
-                    const row = featureRows.find((r) => r.key === key);
-                    if (!row) return null;
-                    const isBoolean = typeof value === 'boolean';
-                    return (
-                      <div key={key} className="flex items-center gap-2">
-                        {isBoolean ? (
-                          value ? (
-                            <Check size={13} className="text-accent shrink-0" />
-                          ) : (
-                            <X size={13} className="text-text-muted/40 shrink-0" />
-                          )
-                        ) : (
-                          <Check size={13} className="text-accent shrink-0" />
-                        )}
-                        <span className={cn(
-                          'text-xs',
-                          isBoolean && !value ? 'text-text-muted/40' : 'text-text-secondary',
-                        )}>
-                          {isBoolean ? row.label : value}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            );
-          })}
+          {PUBLIC_TIERS.map((tier, i) => (
+            <motion.div
+              key={tier.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.05 * i }}
+              className="rounded-2xl border border-border bg-bg-secondary/40 backdrop-blur-sm p-6"
+            >
+              <h3 className="font-display text-lg font-bold text-text-primary">{tier.name}</h3>
+              <p className="mt-1 text-xs text-text-muted">{tier.blurb}</p>
+              <ul className="mt-4 space-y-2 text-sm text-text-secondary">
+                <li className="flex items-center gap-2">
+                  <Check size={13} className="text-accent shrink-0" />
+                  <span>{tier.unitsLabel}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check size={13} className="text-accent shrink-0" />
+                  <span>{tier.usersLabel}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check size={13} className="text-accent shrink-0" />
+                  <span>See full feature list below</span>
+                </li>
+              </ul>
+            </motion.div>
+          ))}
         </div>
       </div>
 
-      {/* Comparison Table */}
+      {/* Comparison Table — what's included at each tier */}
       <div className="mx-auto max-w-6xl px-6 pb-16">
         <motion.div
           initial={{ opacity: 0 }}
@@ -311,36 +215,39 @@ export default function PricingPage() {
           className="glass-card overflow-hidden"
         >
           <div className="p-5 border-b border-border">
-            <h2 className="font-display text-lg font-bold text-text-primary">Full Feature Comparison</h2>
+            <h2 className="font-display text-lg font-bold text-text-primary">What&rsquo;s Included</h2>
+            <p className="mt-1 text-xs text-text-muted">
+              Capabilities by tier. Final pricing is set during your discovery call.
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left px-5 py-3 text-text-muted font-medium uppercase tracking-wider">Feature</th>
-                  {tiers.map((t) => (
-                    <th key={t.id} className="px-5 py-3 text-center font-semibold" style={{ color: t.color }}>
-                      {t.name}
+                  {PLAN_TIER_ORDER.filter((t) => t !== 'trial').map((t) => (
+                    <th key={t} className="px-5 py-3 text-center font-semibold text-text-primary">
+                      {PLANS[t].name}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {featureRows.map((row, i) => (
-                  <tr key={row.key} className={cn('border-b border-border/50', i % 2 === 0 && 'bg-bg-elevated/20')}>
-                    <td className="px-5 py-2.5 text-text-secondary">{row.label}</td>
-                    {tiers.map((t) => {
-                      const v = t.features[row.key as keyof typeof t.features];
-                      return (
-                        <td key={t.id} className="px-5 py-2.5 text-center">
-                          {typeof v === 'boolean' ? (
-                            v ? <Check size={14} className="mx-auto text-accent" /> : <X size={14} className="mx-auto text-text-muted/30" />
-                          ) : (
-                            <span className="text-text-primary font-mono">{v}</span>
-                          )}
-                        </td>
-                      );
-                    })}
+                {COMPARISON_FEATURES.map((f, i) => (
+                  <tr
+                    key={f}
+                    className={cn('border-b border-border/50', i % 2 === 0 && 'bg-bg-elevated/20')}
+                  >
+                    <td className="px-5 py-2.5 text-text-secondary">{FEATURE_LABELS[f]}</td>
+                    {PLAN_TIER_ORDER.filter((t) => t !== 'trial').map((t) => (
+                      <td key={t} className="px-5 py-2.5 text-center">
+                        {PLANS[t].features[f] ? (
+                          <Check size={14} className="mx-auto text-accent" />
+                        ) : (
+                          <X size={14} className="mx-auto text-text-muted/30" />
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -349,57 +256,157 @@ export default function PricingPage() {
         </motion.div>
       </div>
 
-      {/* FAQ */}
-      <div className="mx-auto max-w-3xl px-6 pb-24">
-        <h2 className="font-display text-2xl font-bold text-text-primary text-center mb-8">Frequently Asked Questions</h2>
-        <div className="space-y-2">
-          {faqs.map((faq, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <button
-                onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
-                className="w-full glass-card p-4 text-left hover:border-border-hover transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-text-primary">{faq.q}</h3>
-                  <motion.span
-                    animate={{ rotate: expandedFaq === i ? 45 : 0 }}
-                    className="text-text-muted text-lg shrink-0 ml-3"
-                  >
-                    +
-                  </motion.span>
+      {/* Talk to Sales form */}
+      <div id="talk-to-sales" className="mx-auto max-w-2xl px-6 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="text-center mb-8">
+            <h2 className="font-display text-2xl font-bold text-text-primary">Talk to Sales</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              Tell us about your portfolio. We&rsquo;ll come back with a custom proposal within
+              one business day.
+            </p>
+          </div>
+
+          {submitted ? (
+            <div className="glass-card p-8 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/15">
+                <Check className="text-accent" size={20} />
+              </div>
+              <h3 className="font-display text-lg font-bold text-text-primary">Thanks &mdash; we&rsquo;ll be in touch</h3>
+              <p className="mt-2 text-sm text-text-secondary">
+                A team member will reach out within one business day. In the meantime, you can{' '}
+                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                  grab time on the calendar
+                </a>{' '}
+                directly.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field name="name" label="Name" required />
+                <Field name="email" label="Email" type="email" required />
+              </div>
+              <Field name="company" label="Company" />
+
+              <div>
+                <label htmlFor="portfolio_size" className="block text-xs font-medium text-text-secondary mb-1.5">
+                  Portfolio size
+                </label>
+                <select
+                  id="portfolio_size"
+                  name="portfolio_size"
+                  className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select a range
+                  </option>
+                  {PORTFOLIO_SIZES.map((s) => (
+                    <option key={s} value={s}>
+                      {s} units
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Field
+                name="current_software"
+                label="Current PM software"
+                placeholder="AppFolio, Buildium, Yardi, etc."
+              />
+
+              <div>
+                <label htmlFor="message" className="block text-xs font-medium text-text-secondary mb-1.5">
+                  What problem are you trying to solve? <span className="text-accent">*</span>
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  required
+                  rows={4}
+                  className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent resize-none"
+                  placeholder="Leasing response time, maintenance dispatch, owner reporting, etc."
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                  {error}
                 </div>
-                {expandedFaq === i && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-2 text-xs text-text-secondary leading-relaxed"
-                  >
-                    {faq.a}
-                  </motion.p>
-                )}
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-bg-primary hover:bg-accent-hover disabled:opacity-60 transition-all"
+              >
+                {submitting ? 'Sending…' : 'Talk to Sales'}
+                {!submitting && <ArrowRight size={14} />}
               </button>
-            </motion.div>
-          ))}
-        </div>
+              <p className="text-[11px] text-text-muted text-center">
+                Or{' '}
+                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                  book a demo directly
+                </a>{' '}
+                if you&rsquo;d rather skip the form.
+              </p>
+            </form>
+          )}
+        </motion.div>
       </div>
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.</p>
+          <p className="text-xs text-text-muted">
+            &copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.
+          </p>
           <div className="flex items-center gap-4">
             <StatusBadge />
-            <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
-            <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">
+              Terms
+            </Link>
+            <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">
+              Privacy
+            </Link>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function Field({
+  name,
+  label,
+  type = 'text',
+  required = false,
+  placeholder,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label htmlFor={name} className="block text-xs font-medium text-text-secondary mb-1.5">
+        {label} {required && <span className="text-accent">*</span>}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder-text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+      />
     </div>
   );
 }

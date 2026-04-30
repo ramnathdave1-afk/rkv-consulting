@@ -3,12 +3,15 @@
  * Based on debate-and-consensus architecture from the PRD.
  * Three specialized Claude agents evaluate independently, then a chief agent synthesizes.
  *
- * When a RentCast API key is configured, the ARV and Market agents are seeded
- * with REAL comparable sales, rent estimates, and market statistics. Claude
- * then validates / synthesizes against those data points instead of fabricating
- * numbers from training data. When RentCast is unavailable (no key, address
- * not found, network error), the engine falls back to Claude-only mode and
- * tags the result with `data_quality: 'simulated'` so the UI can warn the user.
+ * Comp data source preference (cheapest first):
+ *   1. Apify-scraped Zillow comps (free with our existing Apify subscription)
+ *   2. RentCast AVM API (paid $49/mo, optional fallback)
+ *   3. Claude-only "simulated" mode (no real data)
+ *
+ * The ARV and Market agents are seeded with whichever real data is available
+ * so Claude validates against ground truth instead of fabricating numbers.
+ * The result is tagged with `data_quality` and `data_source` so the UI can
+ * tell the user where the comps came from.
  */
 
 import { callClaude } from '@/lib/ai/claude';
@@ -22,8 +25,18 @@ import {
   type ValueEstimate,
   type MarketData,
 } from './rentcast';
+import {
+  getValueEstimateViaApify,
+  getRentEstimateViaApify,
+  getMarketDataViaApify,
+  isApifyConfigured,
+  type ApifyValueEstimate,
+  type ApifyRentEstimate,
+  type ApifyMarketData,
+} from './apify-comps';
 
 export type DealDataQuality = 'real' | 'partial' | 'simulated';
+export type DealDataSource = 'apify' | 'rentcast' | null;
 
 export interface DealEvaluation {
   composite_score: number;
@@ -43,11 +56,18 @@ export interface DealEvaluation {
   };
   /** Whether the underlying numbers came from real comps or were fabricated by Claude. */
   data_quality: DealDataQuality;
+  /** Which provider supplied the comps ('apify' | 'rentcast' | null). */
+  data_source: DealDataSource;
   /** Summary of the data sources actually used (for UI display). */
   data_sources: {
+    /** True if any sale comps were sourced (apify or rentcast). */
     rentcast_value: boolean;
     rentcast_rent: boolean;
     rentcast_market: boolean;
+    /** Granular per-provider flags. */
+    apify_value: boolean;
+    apify_rent: boolean;
+    apify_market: boolean;
     sale_comp_count: number;
     rent_comp_count: number;
     avg_comp_distance_miles: number | null;
@@ -58,6 +78,52 @@ interface RealCompContext {
   value: ValueEstimate | null;
   rent: RentalEstimate | null;
   market: MarketData | null;
+  source: DealDataSource;
+}
+
+/**
+ * Normalize an Apify value estimate to the RentCast ValueEstimate shape so the
+ * existing prompt formatters work unchanged.
+ */
+function apifyValueToRentCast(v: ApifyValueEstimate): ValueEstimate {
+  return {
+    value: v.value,
+    value_high: v.value_high,
+    value_low: v.value_low,
+    comparables: v.comparables.map((c) => ({
+      address: c.address,
+      sale_price: c.price,
+      sale_date: c.sale_date ?? '',
+      bedrooms: c.bedrooms,
+      bathrooms: c.bathrooms,
+      square_feet: c.square_feet,
+      distance_miles: c.distance_miles ?? 0,
+    })),
+  };
+}
+
+function apifyRentToRentCast(r: ApifyRentEstimate): RentalEstimate {
+  return {
+    rent: r.rent,
+    rent_high: r.rent_high,
+    rent_low: r.rent_low,
+    comparables: r.comparables.map((c) => ({
+      address: c.address,
+      rent: c.rent_estimate ?? c.price,
+      bedrooms: c.bedrooms,
+      bathrooms: c.bathrooms,
+      square_feet: c.square_feet,
+      distance_miles: c.distance_miles ?? 0,
+    })),
+  };
+}
+
+function apifyMarketToRentCast(m: ApifyMarketData): MarketData {
+  return {
+    median_rent: m.median_rent,
+    median_value: m.median_value,
+    cap_rate: m.cap_rate,
+  };
 }
 
 function dealContext(deal: Deal): string {
@@ -72,7 +138,13 @@ Source: ${deal.source}
 Notes: ${deal.notes || 'none'}`;
 }
 
-function formatValueContext(value: ValueEstimate): string {
+function sourceLabel(source: DealDataSource): string {
+  if (source === 'apify') return 'Apify/Zillow comps';
+  if (source === 'rentcast') return 'RentCast';
+  return 'real comps';
+}
+
+function formatValueContext(value: ValueEstimate, source: DealDataSource): string {
   const top = value.comparables.slice(0, 6);
   const compsLine = top
     .map(
@@ -80,12 +152,12 @@ function formatValueContext(value: ValueEstimate): string {
         `  - ${c.address} | $${c.sale_price.toLocaleString()} | ${c.bedrooms}br/${c.bathrooms}ba | ${c.square_feet} sqft | ${c.distance_miles.toFixed(2)} mi | sold ${c.sale_date || 'n/a'}`,
     )
     .join('\n');
-  return `Real AVM (RentCast): $${value.value.toLocaleString()} (range $${value.value_low.toLocaleString()} - $${value.value_high.toLocaleString()})
+  return `Real AVM (${sourceLabel(source)}): $${value.value.toLocaleString()} (range $${value.value_low.toLocaleString()} - $${value.value_high.toLocaleString()})
 Real sale comparables (${value.comparables.length} total, top ${top.length}):
 ${compsLine || '  (none returned)'}`;
 }
 
-function formatRentContext(rent: RentalEstimate): string {
+function formatRentContext(rent: RentalEstimate, source: DealDataSource): string {
   const top = rent.comparables.slice(0, 6);
   const compsLine = top
     .map(
@@ -93,18 +165,18 @@ function formatRentContext(rent: RentalEstimate): string {
         `  - ${c.address} | $${c.rent.toLocaleString()}/mo | ${c.bedrooms}br/${c.bathrooms}ba | ${c.square_feet} sqft | ${c.distance_miles.toFixed(2)} mi`,
     )
     .join('\n');
-  return `Real rent AVM (RentCast): $${rent.rent.toLocaleString()}/mo (range $${rent.rent_low.toLocaleString()} - $${rent.rent_high.toLocaleString()})
+  return `Real rent AVM (${sourceLabel(source)}): $${rent.rent.toLocaleString()}/mo (range $${rent.rent_low.toLocaleString()} - $${rent.rent_high.toLocaleString()})
 Real rental comparables (${rent.comparables.length} total, top ${top.length}):
 ${compsLine || '  (none returned)'}`;
 }
 
-function formatMarketContext(market: MarketData, zip: string): string {
-  return `Real ZIP-level market (RentCast, ${zip}): median value $${market.median_value.toLocaleString()}, median rent $${market.median_rent.toLocaleString()}/mo, gross cap rate ${market.cap_rate.toFixed(2)}%`;
+function formatMarketContext(market: MarketData, zip: string, source: DealDataSource): string {
+  return `Real ZIP-level market (${sourceLabel(source)}, ${zip}): median value $${market.median_value.toLocaleString()}, median rent $${market.median_rent.toLocaleString()}/mo, gross cap rate ${market.cap_rate.toFixed(2)}%`;
 }
 
 async function runARVAgent(deal: Deal, ctx: RealCompContext): Promise<string> {
   const realBlock = ctx.value
-    ? `\n\nREAL DATA (use these as the ground truth — do not fabricate):\n${formatValueContext(ctx.value)}`
+    ? `\n\nREAL DATA (use these as the ground truth — do not fabricate):\n${formatValueContext(ctx.value, ctx.source)}`
     : '\n\nNote: No real AVM/comps available for this address. Estimate from training data and FLAG your confidence as low.';
 
   const result = await callClaude(
@@ -139,10 +211,10 @@ Respond in JSON format:
 
 async function runMarketAgent(deal: Deal, ctx: RealCompContext): Promise<string> {
   const rentBlock = ctx.rent
-    ? `\n\n${formatRentContext(ctx.rent)}`
+    ? `\n\n${formatRentContext(ctx.rent, ctx.source)}`
     : '\n\nNote: No real rent comps available for this address. Estimate from training data.';
   const marketBlock = ctx.market
-    ? `\n${formatMarketContext(ctx.market, deal.zip)}`
+    ? `\n${formatMarketContext(ctx.market, deal.zip, ctx.source)}`
     : '';
 
   const result = await callClaude(
@@ -215,7 +287,7 @@ async function runChiefAgent(
   ctx: RealCompContext,
 ): Promise<string> {
   const realDataNote = ctx.value || ctx.rent || ctx.market
-    ? `\n\nNOTE: This evaluation has access to REAL RentCast data — prefer numbers anchored to those comps when resolving disagreements between agents.`
+    ? `\n\nNOTE: This evaluation has access to REAL ${sourceLabel(ctx.source)} data — prefer numbers anchored to those comps when resolving disagreements between agents.`
     : `\n\nNOTE: No real comps were available — treat all numbers as estimates and lean toward "low" arv_confidence.`;
 
   const result = await callClaude(
@@ -284,28 +356,51 @@ async function fetchRealCompContext(
   deal: Deal,
   explicitKey?: string,
 ): Promise<RealCompContext> {
-  if (!isRentCastConfigured(explicitKey)) {
-    return { value: null, rent: null, market: null };
-  }
-
   const addr = {
     address: deal.address,
     city: deal.city,
     state: deal.state,
     zip: deal.zip,
   };
-  const beds = deal.bedrooms ?? undefined;
-  const baths = deal.bathrooms ?? undefined;
-  const sqft = deal.square_footage ?? undefined;
 
-  // Run all three RentCast lookups in parallel — they're independent.
-  const [value, rent, market] = await Promise.all([
-    getValueEstimate(addr, beds, baths, sqft, explicitKey),
-    getRentEstimate(addr, beds, baths, sqft, explicitKey),
-    deal.zip ? getMarketData(deal.zip, explicitKey) : Promise.resolve(null),
-  ]);
+  // 1. Prefer Apify (free with our existing subscription).
+  if (isApifyConfigured()) {
+    const [apifyValue, apifyRent, apifyMarket] = await Promise.all([
+      getValueEstimateViaApify(addr),
+      getRentEstimateViaApify(addr),
+      getMarketDataViaApify(addr),
+    ]);
 
-  return { value, rent, market };
+    if (apifyValue || apifyRent || apifyMarket) {
+      return {
+        value: apifyValue ? apifyValueToRentCast(apifyValue) : null,
+        rent: apifyRent ? apifyRentToRentCast(apifyRent) : null,
+        market: apifyMarket ? apifyMarketToRentCast(apifyMarket) : null,
+        source: 'apify',
+      };
+    }
+    // Apify configured but returned nothing — fall through to RentCast if available.
+  }
+
+  // 2. Fall back to RentCast (paid AVM, only if user has a key configured).
+  if (isRentCastConfigured(explicitKey)) {
+    const beds = deal.bedrooms ?? undefined;
+    const baths = deal.bathrooms ?? undefined;
+    const sqft = deal.square_footage ?? undefined;
+
+    const [value, rent, market] = await Promise.all([
+      getValueEstimate(addr, beds, baths, sqft, explicitKey),
+      getRentEstimate(addr, beds, baths, sqft, explicitKey),
+      deal.zip ? getMarketData(deal.zip, explicitKey) : Promise.resolve(null),
+    ]);
+
+    if (value || rent || market) {
+      return { value, rent, market, source: 'rentcast' };
+    }
+  }
+
+  // 3. No real data available — Claude-only "simulated" mode.
+  return { value: null, rent: null, market: null, source: null };
 }
 
 function classifyDataQuality(ctx: RealCompContext): DealDataQuality {
@@ -362,10 +457,15 @@ export async function evaluateDeal(
       risk_agent: riskReport,
     },
     data_quality,
+    data_source: ctx.source,
     data_sources: {
-      rentcast_value: !!ctx.value,
-      rentcast_rent: !!ctx.rent,
-      rentcast_market: !!ctx.market,
+      // Generic "any-provider" flags (back-compat with existing UI usage).
+      rentcast_value: ctx.source === 'rentcast' && !!ctx.value,
+      rentcast_rent: ctx.source === 'rentcast' && !!ctx.rent,
+      rentcast_market: ctx.source === 'rentcast' && !!ctx.market,
+      apify_value: ctx.source === 'apify' && !!ctx.value,
+      apify_rent: ctx.source === 'apify' && !!ctx.rent,
+      apify_market: ctx.source === 'apify' && !!ctx.market,
       sale_comp_count: ctx.value?.comparables.length ?? 0,
       rent_comp_count: ctx.rent?.comparables.length ?? 0,
       avg_comp_distance_miles: avgCompDistance(ctx),

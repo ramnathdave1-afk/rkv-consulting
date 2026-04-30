@@ -431,19 +431,22 @@ export function DealDetailPanel({ deal, onClose, onEdit, onDeleted, onUpdated }:
 
 /* ─── Data Quality Banner ─── */
 /**
- * Shows whether the deal score was computed from real RentCast comps
- * or fell back to Claude-only "simulated" mode (no API key, or address
- * not found). Reads `metadata.data_quality` and `metadata.data_sources`,
- * which are set by /api/deals/[id]/score.
+ * Shows whether the deal score was computed from real comps (Apify or RentCast)
+ * or fell back to Claude-only "simulated" mode. Reads `metadata.data_quality`,
+ * `metadata.data_source`, and `metadata.data_sources` from /api/deals/[id]/score.
  */
 function DataQualityBanner({ deal }: { deal: Deal }) {
   const meta = (deal.metadata && typeof deal.metadata === 'object') ? (deal.metadata as Record<string, unknown>) : {};
   const quality = meta.data_quality as 'real' | 'partial' | 'simulated' | undefined;
+  const source = meta.data_source as 'apify' | 'rentcast' | null | undefined;
   const sources = (meta.data_sources && typeof meta.data_sources === 'object')
     ? (meta.data_sources as {
         rentcast_value?: boolean;
         rentcast_rent?: boolean;
         rentcast_market?: boolean;
+        apify_value?: boolean;
+        apify_rent?: boolean;
+        apify_market?: boolean;
         sale_comp_count?: number;
         rent_comp_count?: number;
         avg_comp_distance_miles?: number | null;
@@ -460,7 +463,7 @@ function DataQualityBanner({ deal }: { deal: Deal }) {
         <div className="text-[11px] leading-relaxed">
           <p className="text-yellow-400 font-medium">AI-only estimate</p>
           <p className="text-text-secondary">
-            No real comps were used. Connect a RentCast API key in Settings to anchor scoring to real sale & rent comparables.
+            No real comps were used. Connect Apify or RentCast in Settings for real data.
           </p>
         </div>
       </div>
@@ -470,19 +473,33 @@ function DataQualityBanner({ deal }: { deal: Deal }) {
   const saleCount = sources?.sale_comp_count ?? 0;
   const rentCount = sources?.rent_comp_count ?? 0;
   const dist = sources?.avg_comp_distance_miles;
+  const hasValue = sources?.apify_value || sources?.rentcast_value;
+  const hasRent = sources?.apify_rent || sources?.rentcast_rent;
+  const hasMarket = sources?.apify_market || sources?.rentcast_market;
   const parts: string[] = [];
-  if (sources?.rentcast_value) parts.push(`${saleCount} sale comp${saleCount === 1 ? '' : 's'}`);
-  if (sources?.rentcast_rent) parts.push(`${rentCount} rent comp${rentCount === 1 ? '' : 's'}`);
-  if (sources?.rentcast_market) parts.push('ZIP market data');
+  if (hasValue) parts.push(`${saleCount} sale comp${saleCount === 1 ? '' : 's'}`);
+  if (hasRent) parts.push(`${rentCount} rent comp${rentCount === 1 ? '' : 's'}`);
+  if (hasMarket) parts.push('ZIP market data');
   const summary = parts.join(' · ') || 'real comps';
+
+  const headline =
+    source === 'apify'
+      ? quality === 'real'
+        ? 'Anchored to Zillow comps via Apify'
+        : 'Partially anchored to Zillow comps via Apify'
+      : source === 'rentcast'
+        ? quality === 'real'
+          ? 'Anchored to RentCast comps'
+          : 'Partially anchored to RentCast comps'
+        : quality === 'real'
+          ? 'Anchored to real comps'
+          : 'Partially anchored to real comps';
 
   return (
     <div className="flex items-start gap-2 p-3 rounded-lg border border-green-500/25 bg-green-500/5">
       <Database size={14} className="text-green-400 shrink-0 mt-0.5" />
       <div className="text-[11px] leading-relaxed">
-        <p className="text-green-400 font-medium">
-          {quality === 'real' ? 'Anchored to RentCast' : 'Partially anchored to RentCast'}
-        </p>
+        <p className="text-green-400 font-medium">{headline}</p>
         <p className="text-text-secondary">
           {summary}
           {dist !== null && dist !== undefined ? ` · ${dist} mi avg distance` : ''}
