@@ -33,10 +33,10 @@ export default function CalendarPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-[16px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <p className="font-display text-base font-semibold text-[#020617]">
             Failed to load calendar
           </p>
-          <p className="mt-1 text-[14px]" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="mt-1 text-sm text-slate-500">
             {error}
           </p>
         </div>

@@ -1,22 +1,16 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Send,
   Pause,
   Play,
   Ban,
-  CheckCircle2,
-  XCircle,
-  Clock,
   Mail,
   MessageSquare,
-  Eye,
+  Loader2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import toast from 'react-hot-toast';
 
@@ -56,23 +50,23 @@ interface Stats {
   failed: number;
 }
 
-const statusBadge: Record<string, { variant: any; label: string }> = {
-  draft: { variant: 'muted', label: 'Draft' },
-  scheduled: { variant: 'info', label: 'Scheduled' },
-  active: { variant: 'accent', label: 'Active' },
-  sending: { variant: 'warning', label: 'Sending' },
-  paused: { variant: 'warning', label: 'Paused' },
-  completed: { variant: 'success', label: 'Completed' },
-  cancelled: { variant: 'danger', label: 'Cancelled' },
-  failed: { variant: 'danger', label: 'Failed' },
+const statusPill: Record<string, { label: string; classes: string }> = {
+  draft: { label: 'Draft', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
+  scheduled: { label: 'Scheduled', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  sending: { label: 'Sending', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  paused: { label: 'Paused', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  completed: { label: 'Sent', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  cancelled: { label: 'Cancelled', classes: 'bg-red-50 text-red-700 border-red-200' },
+  failed: { label: 'Failed', classes: 'bg-red-50 text-red-700 border-red-200' },
 };
 
-const recipientStatusBadge: Record<string, { variant: any; label: string }> = {
-  pending: { variant: 'muted', label: 'Pending' },
-  sent: { variant: 'info', label: 'Sent' },
-  delivered: { variant: 'success', label: 'Delivered' },
-  opened: { variant: 'accent', label: 'Opened' },
-  failed: { variant: 'danger', label: 'Failed' },
+const recipientStatusPill: Record<string, { label: string; classes: string }> = {
+  pending: { label: 'Pending', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
+  sent: { label: 'Sent', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  delivered: { label: 'Delivered', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  opened: { label: 'Opened', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  failed: { label: 'Failed', classes: 'bg-red-50 text-red-700 border-red-200' },
 };
 
 const channelIcon: Record<string, React.ReactNode> = {
@@ -181,256 +175,215 @@ export function CampaignDetailPanel({
     return (
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-text-secondary">{label}</span>
-          <span className="text-text-primary font-semibold">
+          <span className="text-slate-600">{label}</span>
+          <span className="text-[#020617] font-semibold tabular-nums">
             {value} ({pct}%)
           </span>
         </div>
-        <div className="h-2 rounded-full bg-bg-elevated overflow-hidden">
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: color }}
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width] duration-500"
+            style={{ background: color, width: `${pct}%` }}
           />
         </div>
       </div>
     );
   }
 
-  return (
-    <AnimatePresence>
-      {campaignId && (
-        <motion.div
-          className="fixed inset-0 z-50 flex justify-end"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+  if (!campaignId) return null;
 
-          {/* Panel */}
-          <motion.div
-            className="relative w-full max-w-2xl h-full bg-bg-secondary border-l border-border overflow-y-auto"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-bg-secondary/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between">
-              <div className="min-w-0">
-                {loading ? (
-                  <Skeleton className="h-6 w-48" />
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-display font-bold text-text-primary truncate">
-                      {campaign?.name}
-                    </h2>
-                    {campaign && (
-                      <Badge
-                        variant={statusBadge[campaign.status]?.variant || 'muted'}
-                        dot
-                        size="sm"
-                      >
-                        {statusBadge[campaign.status]?.label || campaign.status}
-                      </Badge>
-                    )}
-                  </div>
+  const stCfg = campaign ? statusPill[campaign.status] || statusPill.draft : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div className="relative w-full max-w-2xl h-full bg-white border-l border-slate-200 overflow-y-auto shadow-xl">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+          <div className="min-w-0">
+            {loading ? (
+              <Skeleton className="h-6 w-48" />
+            ) : (
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-[#020617] truncate">
+                  {campaign?.name}
+                </h2>
+                {campaign && stCfg && (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${stCfg.classes}`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {stCfg.label}
+                  </span>
                 )}
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors"
-              >
-                <X size={18} />
-              </button>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        ) : campaign && stats ? (
+          <div className="p-6 space-y-6">
+            {/* Meta info */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="text-xs text-slate-500 mb-1">Channel</p>
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#020617]">
+                  <span className="text-[#0369A1]">{channelIcon[campaign.channel]}</span>
+                  <span className="capitalize">{campaign.channel}</span>
+                </div>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="text-xs text-slate-500 mb-1">Created</p>
+                <p className="text-sm font-semibold text-[#020617]">
+                  {new Date(campaign.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="text-xs text-slate-500 mb-1">Recipients</p>
+                <p className="text-sm font-semibold text-[#020617] tabular-nums">
+                  {campaign.recipients_count}
+                </p>
+              </div>
             </div>
 
-            {loading ? (
-              <div className="p-6 space-y-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-48 w-full" />
+            {/* Message preview */}
+            {campaign.message_body && (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Message Preview
+                </h3>
+                {campaign.subject && (
+                  <p className="text-sm text-[#020617]"><span className="text-slate-500">Subject: </span>{campaign.subject}</p>
+                )}
+                <p className="text-sm text-[#020617] whitespace-pre-wrap leading-relaxed">
+                  {campaign.message_body}
+                </p>
               </div>
-            ) : campaign && stats ? (
-              <div className="p-6 space-y-6">
-                {/* Meta info */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-bg-primary/50 border border-border rounded-xl p-4">
-                    <p className="text-xs text-text-muted mb-1">Channel</p>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-                      {channelIcon[campaign.channel]}
-                      <span className="capitalize">{campaign.channel}</span>
-                    </div>
-                  </div>
-                  <div className="bg-bg-primary/50 border border-border rounded-xl p-4">
-                    <p className="text-xs text-text-muted mb-1">Created</p>
-                    <p className="text-sm font-semibold text-text-primary">
-                      {new Date(campaign.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="bg-bg-primary/50 border border-border rounded-xl p-4">
-                    <p className="text-xs text-text-muted mb-1">Recipients</p>
-                    <p className="text-sm font-semibold text-text-primary">
-                      {campaign.recipients_count}
-                    </p>
-                  </div>
-                </div>
+            )}
 
-                {/* Delivery Stats */}
-                <div className="bg-bg-primary/50 border border-border rounded-xl p-5 space-y-4">
-                  <h3 className="text-sm font-semibold text-text-primary">
-                    Delivery Breakdown
-                  </h3>
-                  <ProgressBar
-                    label="Sent"
-                    value={stats.sent}
-                    total={stats.total}
-                    color="#3B82F6"
-                  />
-                  <ProgressBar
-                    label="Delivered"
-                    value={stats.delivered}
-                    total={stats.total}
-                    color="#00D4AA"
-                  />
-                  <ProgressBar
-                    label="Opened"
-                    value={stats.opened}
-                    total={stats.total}
-                    color="#8B5CF6"
-                  />
-                  <ProgressBar
-                    label="Failed"
-                    value={stats.failed}
-                    total={stats.total}
-                    color="#EF4444"
-                  />
-                </div>
+            {/* Delivery Stats */}
+            <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-[#020617]">
+                Delivery Breakdown
+              </h3>
+              <ProgressBar label="Sent" value={stats.sent} total={stats.total} color="#0369A1" />
+              <ProgressBar label="Delivered" value={stats.delivered} total={stats.total} color="#10b981" />
+              <ProgressBar label="Opened" value={stats.opened} total={stats.total} color="#0369A1" />
+              <ProgressBar label="Failed" value={stats.failed} total={stats.total} color="#ef4444" />
+            </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                  {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      icon={<Send size={14} />}
-                      loading={actionLoading}
-                      onClick={handleSend}
-                    >
-                      Send Now
-                    </Button>
-                  )}
-                  {(campaign.status === 'active' || campaign.status === 'sending') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Pause size={14} />}
-                      loading={actionLoading}
-                      onClick={() => handleAction('pause')}
-                    >
-                      Pause
-                    </Button>
-                  )}
-                  {campaign.status === 'paused' && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      icon={<Play size={14} />}
-                      loading={actionLoading}
-                      onClick={() => handleAction('resume')}
-                    >
-                      Resume
-                    </Button>
-                  )}
-                  {!['completed', 'cancelled', 'failed'].includes(campaign.status) && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon={<Ban size={14} />}
-                      loading={actionLoading}
-                      onClick={() => handleAction('cancel')}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
+            {/* Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
+                <button
+                  onClick={handleSend}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-3 h-8 text-xs font-semibold cursor-pointer transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
+                >
+                  {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                  Send Now
+                </button>
+              )}
+              {(campaign.status === 'active' || campaign.status === 'sending') && (
+                <button
+                  onClick={() => handleAction('pause')}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 h-8 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors disabled:opacity-60"
+                >
+                  <Pause size={12} />
+                  Pause
+                </button>
+              )}
+              {campaign.status === 'paused' && (
+                <button
+                  onClick={() => handleAction('resume')}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-3 h-8 text-xs font-semibold cursor-pointer transition-colors disabled:opacity-60"
+                >
+                  <Play size={12} />
+                  Resume
+                </button>
+              )}
+              {!['completed', 'cancelled', 'failed'].includes(campaign.status) && (
+                <button
+                  onClick={() => handleAction('cancel')}
+                  disabled={actionLoading}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 h-8 text-xs font-semibold text-red-700 hover:bg-red-50 cursor-pointer transition-colors disabled:opacity-60"
+                >
+                  <Ban size={12} />
+                  Cancel
+                </button>
+              )}
+            </div>
 
-                {/* Recipients Table */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-text-primary">
-                    Recipients ({recipients.length})
-                  </h3>
-                  <div className="overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-bg-elevated/50 text-text-muted text-xs uppercase tracking-wider">
-                          <th className="text-left px-4 py-3 font-semibold">
-                            Name
-                          </th>
-                          <th className="text-left px-4 py-3 font-semibold">
-                            Contact
-                          </th>
-                          <th className="text-left px-4 py-3 font-semibold">
-                            Status
-                          </th>
-                          <th className="text-left px-4 py-3 font-semibold">
-                            Sent At
-                          </th>
+            {/* Recipients Table */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-[#020617]">
+                Recipients ({recipients.length})
+              </h3>
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                      <th className="text-left px-4 py-3 font-semibold">Name</th>
+                      <th className="text-left px-4 py-3 font-semibold">Contact</th>
+                      <th className="text-left px-4 py-3 font-semibold">Status</th>
+                      <th className="text-left px-4 py-3 font-semibold">Sent At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {recipients.map((r) => {
+                      const rCfg = recipientStatusPill[r.status] || recipientStatusPill.pending;
+                      return (
+                        <tr key={r.id} className="hover:bg-sky-50/50 transition-colors">
+                          <td className="px-4 py-3 text-[#020617] font-medium">
+                            {r.name}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 font-mono">
+                            {r.contact}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${rCfg.classes}`}>
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              {rCfg.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 text-xs tabular-nums">
+                            {r.sent_at
+                              ? new Date(r.sent_at).toLocaleString()
+                              : '--'}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {recipients.map((r) => {
-                          const badge = recipientStatusBadge[r.status] || {
-                            variant: 'muted',
-                            label: r.status,
-                          };
-                          return (
-                            <tr
-                              key={r.id}
-                              className="hover:bg-bg-elevated/30 transition-colors"
-                            >
-                              <td className="px-4 py-3 text-text-primary font-medium">
-                                {r.name}
-                              </td>
-                              <td className="px-4 py-3 text-text-secondary">
-                                {r.contact}
-                              </td>
-                              <td className="px-4 py-3">
-                                <Badge variant={badge.variant} size="sm">
-                                  {badge.label}
-                                </Badge>
-                              </td>
-                              <td className="px-4 py-3 text-text-muted text-xs">
-                                {r.sent_at
-                                  ? new Date(r.sent_at).toLocaleString()
-                                  : '--'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {recipients.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={4}
-                              className="px-4 py-8 text-center text-text-muted"
-                            >
-                              No recipients yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                      );
+                    })}
+                    {recipients.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                          No recipients yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : null}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }

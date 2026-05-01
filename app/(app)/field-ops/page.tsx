@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
+import { SelectField } from '@/components/ui/Input';
 import {
   MapPin,
   Camera,
@@ -12,16 +13,11 @@ import {
   CheckCircle2,
   Play,
   Package,
-  Clock,
   Wrench,
-  AlertTriangle,
-  X,
   Image as ImageIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-
-/* ─── Types ─── */
 
 interface WorkOrder {
   id: string;
@@ -53,14 +49,32 @@ interface KPIs {
   completed_today: number;
 }
 
-/* ─── Constants ─── */
-
-const priorityConfig: Record<string, { color: string; bg: string; label: string }> = {
-  emergency: { color: 'text-red-400', bg: 'bg-red-500/20 border-red-500/30', label: 'EMERGENCY' },
-  high: { color: 'text-orange-400', bg: 'bg-orange-500/20 border-orange-500/30', label: 'HIGH' },
-  medium: { color: 'text-yellow-400', bg: 'bg-yellow-500/20 border-yellow-500/30', label: 'MEDIUM' },
-  low: { color: 'text-emerald-400', bg: 'bg-emerald-500/20 border-emerald-500/30', label: 'LOW' },
+const PRIORITY_PILL: Record<string, { label: string; cls: string }> = {
+  emergency: { label: 'Emergency', cls: 'bg-red-50 text-red-700 border border-red-200 animate-pulse' },
+  high: { label: 'High', cls: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  medium: { label: 'Standard', cls: 'bg-slate-100 text-slate-600 border border-slate-200' },
+  low: { label: 'Low', cls: 'bg-slate-100 text-slate-500 border border-slate-200' },
 };
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  open: 'bg-red-50 text-red-700 border border-red-200',
+  pending: 'bg-red-50 text-red-700 border border-red-200',
+  assigned: 'bg-amber-50 text-amber-700 border border-amber-200',
+  scheduled: 'bg-amber-50 text-amber-700 border border-amber-200',
+  in_progress: 'bg-sky-50 text-sky-700 border border-sky-200',
+  completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  cancelled: 'bg-slate-100 text-slate-700 border border-slate-200',
+  parts_needed: 'bg-violet-50 text-violet-700 border border-violet-200',
+};
+
+function StatusBadgeOps({ status }: { status: string }) {
+  const cls = STATUS_BADGE_CLASS[status] || 'bg-slate-100 text-slate-700 border border-slate-200';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium capitalize whitespace-nowrap ${cls}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  );
+}
 
 const statusTabs = [
   { value: 'all', label: 'All' },
@@ -68,8 +82,6 @@ const statusTabs = [
   { value: 'in_progress', label: 'In Progress' },
   { value: 'parts_needed', label: 'Parts Needed' },
 ];
-
-/* ─── Component ─── */
 
 export default function FieldOpsPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
@@ -85,8 +97,6 @@ export default function FieldOpsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoTargetId, setPhotoTargetId] = useState<string | null>(null);
 
-  /* ─── Fetch ─── */
-
   const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams();
@@ -99,7 +109,7 @@ export default function FieldOpsPage() {
       setWorkOrders(json.work_orders || []);
       setVendors(json.vendors || []);
       setKpis(json.kpis || { assigned: 0, in_progress: 0, completed_today: 0 });
-    } catch (err) {
+    } catch {
       toast.error('Failed to load work orders');
     } finally {
       setLoading(false);
@@ -109,8 +119,6 @@ export default function FieldOpsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  /* ─── Actions ─── */
 
   async function updateStatus(woId: string, newStatus: string) {
     setUpdatingId(woId);
@@ -126,7 +134,7 @@ export default function FieldOpsPage() {
           ? 'Work order accepted'
           : newStatus === 'parts_needed'
           ? 'Parts requested'
-          : 'Marked complete'
+          : 'Marked complete',
       );
       await fetchData();
     } catch {
@@ -141,7 +149,6 @@ export default function FieldOpsPage() {
       toast.error('Geolocation not supported');
       return;
     }
-
     setUpdatingId(woId);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -172,7 +179,7 @@ export default function FieldOpsPage() {
         toast.error('Location access denied');
         setUpdatingId(null);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   }
 
@@ -210,21 +217,16 @@ export default function FieldOpsPage() {
       setPhotoUploading(null);
     }
 
-    // Reset input so same file can be re-selected
     e.target.value = '';
   }
-
-  /* ─── Filtered list ─── */
 
   const filtered = activeTab === 'all'
     ? workOrders
     : workOrders.filter((wo) => wo.status === activeTab);
 
-  /* ─── Loading state ─── */
-
   if (loading) {
     return (
-      <div className="min-h-screen p-4 space-y-4">
+      <div className="min-h-screen p-6 space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
@@ -239,8 +241,7 @@ export default function FieldOpsPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 pb-24 space-y-5">
-      {/* Hidden file input for photo upload */}
+    <div className="min-h-screen p-6 pb-24 space-y-6">
       <input
         ref={fileInputRef}
         type="file"
@@ -250,82 +251,58 @@ export default function FieldOpsPage() {
         onChange={handlePhotoSelected}
       />
 
-      {/* ─── Header ─── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Wrench size={20} className="text-accent" />
-          </div>
-          <div>
-            <h1 className="font-display text-xl font-bold text-text-primary">Field Ops</h1>
-            <p className="text-sm text-text-secondary">Mobile technician dashboard</p>
-          </div>
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Field Ops</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {kpis.assigned} assigned · {kpis.in_progress} in progress · {kpis.completed_today} completed today
+          </p>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ─── Vendor Selector (Admin View) ─── */}
-      <div className="glass-card p-3 rounded-xl">
-        <label className="text-xs font-medium text-text-muted mb-1 block">Technician / Vendor</label>
-        <select
-          value={selectedVendor}
-          onChange={(e) => setSelectedVendor(e.target.value)}
-          className="w-full h-12 rounded-lg bg-bg-primary border border-border px-3 text-base text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50 appearance-none"
-        >
-          <option value="">All Vendors</option>
-          {vendors.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}{v.company ? ` — ${v.company}` : ''}
-            </option>
+      {/* Filter Bar */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="w-full md:w-72">
+          <SelectField
+            value={selectedVendor}
+            onChange={(e) => setSelectedVendor(e.target.value)}
+            options={[
+              { value: '', label: 'All Technicians / Vendors' },
+              ...vendors.map((v) => ({ value: v.id, label: v.company ? `${v.name} — ${v.company}` : v.name })),
+            ]}
+          />
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`flex-shrink-0 h-9 px-3 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.value
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* ─── KPI Cards ─── */}
-      <motion.div
-        className="grid grid-cols-3 gap-3"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        <KPICard icon={<Clock size={18} />} label="Assigned" value={kpis.assigned} color="text-yellow-400" />
-        <KPICard icon={<Play size={18} />} label="In Progress" value={kpis.in_progress} color="text-blue-400" />
-        <KPICard icon={<CheckCircle2 size={18} />} label="Done Today" value={kpis.completed_today} color="text-emerald-400" />
-      </motion.div>
-
-      {/* ─── Status Tabs ─── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {statusTabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveTab(tab.value)}
-            className={`flex-shrink-0 h-10 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.value
-                ? 'bg-accent text-bg-primary'
-                : 'bg-bg-elevated text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ─── Work Order Cards ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Visit cards / activity log */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <AnimatePresence mode="popLayout">
           {filtered.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="glass-card p-8 text-center col-span-full"
+              className="bg-white rounded-2xl border border-slate-200 p-8 text-center col-span-full"
             >
-              <Wrench size={40} className="mx-auto text-text-muted mb-3" />
-              <h3 className="text-base font-semibold text-text-primary mb-1">No work orders</h3>
-              <p className="text-sm text-text-secondary">
+              <Wrench size={40} className="mx-auto text-slate-300 mb-3" />
+              <h3 className="text-base font-semibold text-[#020617] mb-1">No work orders</h3>
+              <p className="text-sm text-slate-500">
                 No work orders match the current filter.
               </p>
             </motion.div>
@@ -334,10 +311,10 @@ export default function FieldOpsPage() {
               <motion.div
                 key={wo.id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.25, delay: i * 0.04 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2, delay: i * 0.03 }}
               >
                 <WorkOrderCard
                   wo={wo}
@@ -358,30 +335,6 @@ export default function FieldOpsPage() {
     </div>
   );
 }
-
-/* ─── KPI Card ─── */
-
-function KPICard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="glass-card rounded-xl p-4 text-center">
-      <div className={`mx-auto mb-1 ${color}`}>{icon}</div>
-      <div className="text-2xl font-bold text-text-primary">{value}</div>
-      <div className="text-xs text-text-muted">{label}</div>
-    </div>
-  );
-}
-
-/* ─── Work Order Card ─── */
 
 function WorkOrderCard({
   wo,
@@ -404,155 +357,131 @@ function WorkOrderCard({
   updating: boolean;
   photoUploading: boolean;
 }) {
-  const p = priorityConfig[wo.priority] || priorityConfig.low;
+  const p = PRIORITY_PILL[wo.priority] || PRIORITY_PILL.medium;
   const photos = wo.photos || [];
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden">
-      {/* Card Header */}
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="p-5 space-y-3">
-        {/* Priority + Status Row */}
+        {/* Priority + Status */}
         <div className="flex items-center justify-between gap-2">
-          <span
-            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold tracking-wide border ${p.bg} ${p.color}`}
-          >
-            <AlertTriangle size={14} className="mr-1.5" />
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wide ${p.cls}`}>
             {p.label}
           </span>
-          <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-bg-elevated text-text-secondary capitalize">
-            {wo.status.replace('_', ' ')}
-          </span>
+          <StatusBadgeOps status={wo.status} />
         </div>
 
-        {/* Title + Category */}
         <div>
-          <h3 className="text-base font-semibold text-text-primary leading-tight">{wo.title}</h3>
-          <p className="text-sm text-text-muted capitalize mt-0.5">{wo.category?.replace('_', ' ')}</p>
+          <h3 className="text-base font-semibold text-[#020617] leading-tight">{wo.title}</h3>
+          <p className="text-sm text-slate-500 capitalize mt-0.5">{wo.category?.replace(/_/g, ' ')}</p>
         </div>
 
-        {/* Property + Unit */}
         {wo.properties && (
           <div className="flex items-start gap-2 text-sm">
-            <MapPin size={16} className="text-accent shrink-0 mt-0.5" />
+            <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5" />
             <div>
-              <p className="text-text-primary font-medium">
+              <p className="text-[#020617] font-medium">
                 {wo.properties.name}
                 {wo.units ? ` — Unit ${wo.units.unit_number}` : ''}
               </p>
               {wo.properties.address && (
-                <p className="text-text-muted text-xs">{wo.properties.address}</p>
+                <p className="text-slate-500 text-xs">{wo.properties.address}</p>
               )}
             </div>
           </div>
         )}
 
-        {/* Tenant */}
         {wo.tenants && (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm text-text-secondary">
+            <span className="text-sm text-slate-600">
               {wo.tenants.first_name} {wo.tenants.last_name}
             </span>
             {wo.tenants.phone && (
               <a
                 href={`tel:${wo.tenants.phone}`}
-                className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg bg-accent/10 text-accent text-sm font-medium active:scale-95 transition-transform"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 transition-colors"
               >
-                <Phone size={16} />
+                <Phone size={14} />
                 Call
               </a>
             )}
           </div>
         )}
 
-        {/* Description (truncated / expandable) */}
         {wo.description && (
           <div>
-            <p
-              className={`text-sm text-text-secondary leading-relaxed ${
-                !expanded ? 'line-clamp-2' : ''
-              }`}
-            >
+            <p className={`text-sm text-slate-600 leading-relaxed ${!expanded ? 'line-clamp-2' : ''}`}>
               {wo.description}
             </p>
             {wo.description.length > 100 && (
               <button
                 onClick={onToggleExpand}
-                className="flex items-center gap-1 text-xs text-accent mt-1 active:opacity-70"
+                className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#020617] mt-1"
               >
                 {expanded ? (
-                  <>
-                    Show less <ChevronUp size={14} />
-                  </>
+                  <>Show less <ChevronUp size={14} /></>
                 ) : (
-                  <>
-                    Read more <ChevronDown size={14} />
-                  </>
+                  <>Read more <ChevronDown size={14} /></>
                 )}
               </button>
             )}
           </div>
         )}
 
-        {/* Check-in Badge */}
+        {/* Activity log: check-in */}
         {checkinTime && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <CheckCircle2 size={16} className="text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">Checked in at {checkinTime}</span>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
+            <CheckCircle2 size={16} className="text-emerald-600" />
+            <span className="text-sm font-medium text-emerald-700">Checked in at {checkinTime}</span>
           </div>
         )}
 
-        {/* Photo Thumbnails */}
         {photos.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {photos.map((url, idx) => (
+            {photos.map((_, idx) => (
               <div
                 key={idx}
-                className="w-16 h-16 rounded-lg bg-bg-elevated border border-border flex items-center justify-center shrink-0 overflow-hidden"
+                className="w-16 h-16 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0"
               >
-                <ImageIcon size={20} className="text-text-muted" />
+                <ImageIcon size={20} className="text-slate-400" />
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Action Buttons */}
       <div className="px-5 pb-5 space-y-2">
-        {/* GPS Check-in + Photo buttons */}
         <div className="flex gap-2">
           <Button
             variant="outline"
-            size="lg"
+            size="md"
             fullWidth
-            icon={<MapPin size={18} />}
+            icon={<MapPin size={16} />}
             onClick={onCheckin}
             loading={updating && !checkinTime}
             disabled={!!checkinTime}
-            className="h-12 text-base"
           >
             {checkinTime ? 'Checked In' : 'GPS Check-In'}
           </Button>
           <Button
             variant="ghost"
-            size="lg"
-            icon={<Camera size={18} />}
+            size="md"
+            icon={<Camera size={16} />}
             onClick={onPhotoUpload}
             loading={photoUploading}
-            className="h-12 shrink-0 px-4"
+            className="shrink-0 px-3"
           />
         </div>
 
-        {/* Status Action Buttons */}
         <div className="flex gap-2">
           {wo.status === 'assigned' && (
             <Button
               variant="primary"
-              size="lg"
+              size="md"
               fullWidth
-              icon={<Play size={18} />}
+              icon={<Play size={16} />}
               onClick={() => onUpdateStatus('in_progress')}
               loading={updating}
-              className="h-12 text-base"
             >
               Accept
             </Button>
@@ -560,12 +489,11 @@ function WorkOrderCard({
           {(wo.status === 'assigned' || wo.status === 'in_progress') && (
             <Button
               variant="ghost"
-              size="lg"
+              size="md"
               fullWidth
-              icon={<Package size={18} />}
+              icon={<Package size={16} />}
               onClick={() => onUpdateStatus('parts_needed')}
               loading={updating}
-              className="h-12 text-base"
             >
               Request Parts
             </Button>
@@ -573,12 +501,11 @@ function WorkOrderCard({
           {(wo.status === 'in_progress' || wo.status === 'parts_needed') && (
             <Button
               variant="primary"
-              size="lg"
+              size="md"
               fullWidth
-              icon={<CheckCircle2 size={18} />}
+              icon={<CheckCircle2 size={16} />}
               onClick={() => onUpdateStatus('completed')}
               loading={updating}
-              className="h-12 text-base"
             >
               Complete
             </Button>

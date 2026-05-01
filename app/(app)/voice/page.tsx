@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Button } from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import { SelectField } from '@/components/ui/Input';
 import toast from 'react-hot-toast';
@@ -21,8 +18,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Loader2,
+  Mic,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -94,12 +91,20 @@ const campaignTypeLabels: Record<string, string> = {
   showing_confirmation: 'Showing Confirmation',
 };
 
-const campaignStatusConfig: Record<string, { variant: 'success' | 'info' | 'warning' | 'danger' | 'muted'; label: string }> = {
-  running: { variant: 'info', label: 'Running' },
-  scheduled: { variant: 'warning', label: 'Scheduled' },
-  completed: { variant: 'success', label: 'Completed' },
-  paused: { variant: 'muted', label: 'Paused' },
-  failed: { variant: 'danger', label: 'Failed' },
+const campaignStatusPill: Record<string, { label: string; classes: string }> = {
+  running: { label: 'Running', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  scheduled: { label: 'Scheduled', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  completed: { label: 'Completed', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  paused: { label: 'Paused', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
+  failed: { label: 'Failed', classes: 'bg-red-50 text-red-700 border-red-200' },
+};
+
+const callStatusPill: Record<string, { label: string; classes: string }> = {
+  active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  ai_handling: { label: 'AI Handling', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  human_handling: { label: 'Human', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  escalated: { label: 'Escalated', classes: 'bg-red-50 text-red-700 border-red-200' },
+  closed: { label: 'Closed', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 /* ------------------------------------------------------------------ */
@@ -227,11 +232,11 @@ export default function VoiceAIPage() {
     }
   };
 
-  /* ---------- Loading state ---------- */
+  /* ---------- Loading ---------- */
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -249,30 +254,10 @@ export default function VoiceAIPage() {
   /* ---------- KPI cards ---------- */
 
   const kpis = [
-    {
-      label: 'Total Calls',
-      value: stats?.totalCalls ?? 0,
-      icon: <Phone size={20} />,
-      color: '#00D4AA',
-    },
-    {
-      label: 'Calls Today',
-      value: stats?.callsToday ?? 0,
-      icon: <PhoneCall size={20} />,
-      color: '#3B82F6',
-    },
-    {
-      label: 'AI-Handled',
-      value: `${stats?.aiPercent ?? 0}%`,
-      icon: <Bot size={20} />,
-      color: '#8B5CF6',
-    },
-    {
-      label: 'Active Campaigns',
-      value: stats?.activeCampaigns ?? 0,
-      icon: <Megaphone size={20} />,
-      color: '#F59E0B',
-    },
+    { label: 'Calls Today', value: stats?.callsToday ?? 0, icon: <PhoneCall size={18} /> },
+    { label: 'Total Calls', value: stats?.totalCalls ?? 0, icon: <Phone size={18} /> },
+    { label: 'AI-Handled', value: `${stats?.aiPercent ?? 0}%`, icon: <Bot size={18} /> },
+    { label: 'Active Campaigns', value: stats?.activeCampaigns ?? 0, icon: <Megaphone size={18} /> },
   ];
 
   const tabs = [
@@ -281,101 +266,73 @@ export default function VoiceAIPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary flex items-center gap-2">
-            <Phone size={22} className="text-accent" />
+          <h1 className="text-xl font-bold text-[#020617] flex items-center gap-2">
+            <Phone size={20} className="text-[#0369A1]" />
             Voice AI
           </h1>
-          <p className="text-sm text-text-secondary mt-0.5">
+          <p className="text-sm text-slate-500 mt-0.5">
             Automated outbound calls, inbound handling, and campaign management
           </p>
         </div>
-        <Button
-          icon={<Plus size={16} />}
+        <button
           onClick={() => setNewCampaignOpen(true)}
+          className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-4 h-9 text-sm font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
         >
+          <Plus size={16} />
           New Campaign
-        </Button>
+        </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, i) => (
-          <motion.div
+        {kpis.map((kpi) => (
+          <div
             key={kpi.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07 }}
-            className="glass-card p-5"
+            className="bg-white border border-slate-200 rounded-lg p-5"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 {kpi.label}
               </span>
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ background: `${kpi.color}15`, color: kpi.color }}
-              >
+              <div className="h-9 w-9 rounded-md bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0369A1]">
                 {kpi.icon}
               </div>
             </div>
-            <p className="text-2xl font-bold text-text-primary">{kpi.value}</p>
-          </motion.div>
+            <p className="text-2xl font-bold text-[#020617] tabular-nums">{kpi.value}</p>
+          </div>
         ))}
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-border">
+      <div className="flex items-center gap-1 border-b border-slate-200">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`
-              relative px-4 py-2.5 text-sm font-medium transition-colors
-              ${activeTab === tab.key
-                ? 'text-accent'
-                : 'text-text-muted hover:text-text-secondary'
-              }
-            `}
+            className={`relative px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === tab.key
+                ? 'text-[#0369A1]'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
           >
             {tab.label}
             {activeTab === tab.key && (
-              <motion.div
-                layoutId="voice-tab-underline"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full"
-              />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0369A1] rounded-full" />
             )}
           </button>
         ))}
       </div>
 
       {/* Tab content */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'calls' ? (
-          <motion.div
-            key="calls"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CallLogTable calls={calls} onOpenTranscript={openTranscript} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="campaigns"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CampaignsList campaigns={campaigns} onToggle={toggleCampaign} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {activeTab === 'calls' ? (
+        <CallLogTable calls={calls} onOpenTranscript={openTranscript} />
+      ) : (
+        <CampaignsList campaigns={campaigns} onToggle={toggleCampaign} />
+      )}
 
       {/* Transcript Modal */}
       <Modal open={transcriptOpen} onOpenChange={setTranscriptOpen}>
@@ -384,53 +341,53 @@ export default function VoiceAIPage() {
             title="Call Transcript"
             description={
               selectedCall
-                ? `${selectedCall.participant_name || selectedCall.participant_phone || 'Unknown'} — ${formatDate(selectedCall.created_at)}`
+                ? `${selectedCall.participant_name || selectedCall.participant_phone || 'Unknown'} - ${formatDate(selectedCall.created_at)}`
                 : undefined
             }
           />
-          <div className="px-6 py-4 max-h-[400px] overflow-y-auto space-y-3">
+          <div className="px-6 py-4 max-h-[400px] overflow-y-auto space-y-3 bg-slate-50">
             {transcriptLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 size={24} className="animate-spin text-accent" />
+                <Loader2 size={24} className="animate-spin text-[#0369A1]" />
               </div>
             ) : transcriptMessages.length === 0 ? (
-              <p className="text-sm text-text-muted text-center py-8">
+              <p className="text-sm text-slate-500 text-center py-8">
                 No transcript available for this call.
               </p>
             ) : (
-              transcriptMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender_type === 'ai' ? 'justify-start' : 'justify-end'}`}
-                >
+              transcriptMessages.map((msg) => {
+                const isAi = msg.sender_type === 'ai';
+                return (
                   <div
-                    className={`
-                      max-w-[80%] rounded-xl px-4 py-2.5 text-sm
-                      ${msg.sender_type === 'ai'
-                        ? 'bg-accent/10 text-text-primary border border-accent/20'
-                        : 'bg-bg-elevated text-text-primary border border-border'
-                      }
-                    `}
+                    key={msg.id}
+                    className={`flex flex-col ${isAi ? 'items-end' : 'items-start'}`}
                   >
-                    <p className="text-[10px] font-semibold text-text-muted mb-1 uppercase">
-                      {msg.sender_type === 'ai' ? 'AI Agent' : 'Caller'}
-                    </p>
-                    <p>{msg.content}</p>
-                    <p className="text-[10px] text-text-muted mt-1">
+                    <div
+                      className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                        isAi ? 'bg-sky-100 text-[#020617]' : 'bg-slate-100 text-[#020617]'
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    </div>
+                    <p className="text-xs tabular-nums text-slate-400 mt-1 px-1">
+                      {isAi ? 'AI Agent' : 'Caller'} &middot;{' '}
                       {new Date(msg.created_at).toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',
                       })}
                     </p>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           <ModalFooter>
-            <Button variant="ghost" onClick={() => setTranscriptOpen(false)}>
+            <button
+              onClick={() => setTranscriptOpen(false)}
+              className="inline-flex items-center justify-center rounded-md px-4 h-9 text-sm font-medium text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+            >
               Close
-            </Button>
+            </button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -456,16 +413,20 @@ export default function VoiceAIPage() {
             />
           </div>
           <ModalFooter>
-            <Button variant="ghost" onClick={() => setNewCampaignOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={createCampaign}
-              loading={creating}
-              icon={<PhoneOutgoing size={16} />}
+            <button
+              onClick={() => setNewCampaignOpen(false)}
+              className="inline-flex items-center justify-center rounded-md px-4 h-9 text-sm font-medium text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
             >
+              Cancel
+            </button>
+            <button
+              onClick={createCampaign}
+              disabled={creating}
+              className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-4 h-9 text-sm font-semibold cursor-pointer transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
+            >
+              {creating ? <Loader2 size={14} className="animate-spin" /> : <PhoneOutgoing size={14} />}
               Launch Campaign
-            </Button>
+            </button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -486,10 +447,10 @@ function CallLogTable({
 }) {
   if (calls.length === 0) {
     return (
-      <div className="glass-card p-10 text-center">
-        <Phone size={48} className="mx-auto text-text-muted mb-4" />
-        <h3 className="text-lg font-semibold text-text-primary mb-2">No voice calls yet</h3>
-        <p className="text-sm text-text-secondary">
+      <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
+        <Phone size={48} className="mx-auto text-slate-400 mb-4" />
+        <h3 className="text-lg font-semibold text-[#020617] mb-2">No voice calls yet</h3>
+        <p className="text-sm text-slate-500">
           Voice call records will appear here when calls are made or received.
         </p>
       </div>
@@ -497,84 +458,81 @@ function CallLogTable({
   }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-border">
-              <th className="px-4 py-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
-                Participant
+            <tr className="border-b border-slate-200 bg-slate-50">
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Caller
               </th>
-              <th className="px-4 py-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Direction
               </th>
-              <th className="px-4 py-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Duration
               </th>
-              <th className="px-4 py-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-4 py-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Date
+              </th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Transcript
               </th>
             </tr>
           </thead>
-          <tbody>
-            {calls.map((call, i) => {
+          <tbody className="divide-y divide-slate-200">
+            {calls.map((call) => {
               const direction = call.direction || 'inbound';
-              const statusVariant: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'muted'> = {
-                active: 'success',
-                ai_handling: 'info',
-                human_handling: 'warning',
-                escalated: 'danger',
-                closed: 'muted',
-              };
+              const stCfg = callStatusPill[call.status] || callStatusPill.closed;
 
               return (
-                <motion.tr
+                <tr
                   key={call.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
                   onClick={() => onOpenTranscript(call)}
-                  className="border-b border-border/50 hover:bg-bg-elevated/40 transition-colors cursor-pointer"
+                  className="hover:bg-sky-50/50 transition-colors cursor-pointer"
                 >
                   <td className="px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium text-text-primary">
+                      <p className="text-sm font-medium text-[#020617]">
                         {call.participant_name || 'Unknown'}
                       </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="text-xs text-slate-500 font-mono">
                         {call.participant_phone || '--'}
                       </p>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-700">
                       {direction === 'outbound' ? (
-                        <PhoneOutgoing size={13} className="text-accent" />
+                        <PhoneOutgoing size={13} className="text-[#0369A1]" />
                       ) : (
-                        <PhoneIncoming size={13} className="text-blue" />
+                        <PhoneIncoming size={13} className="text-emerald-600" />
                       )}
                       {direction === 'outbound' ? 'Outbound' : 'Inbound'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-text-secondary font-mono">
+                  <td className="px-4 py-3 text-sm text-slate-700 tabular-nums">
                     {formatDuration(call.duration)}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge
-                      variant={statusVariant[call.status] || 'muted'}
-                      size="sm"
-                      dot
-                    >
-                      {call.status?.replace(/_/g, ' ') || 'unknown'}
-                    </Badge>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${stCfg.classes}`}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      {stCfg.label}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-text-muted whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
                     {formatDate(call.created_at)}
                   </td>
-                </motion.tr>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1 text-xs text-[#0369A1] hover:underline">
+                      <Mic size={12} />
+                      View
+                    </span>
+                  </td>
+                </tr>
               );
             })}
           </tbody>
@@ -597,10 +555,10 @@ function CampaignsList({
 }) {
   if (campaigns.length === 0) {
     return (
-      <div className="glass-card p-10 text-center">
-        <Megaphone size={48} className="mx-auto text-text-muted mb-4" />
-        <h3 className="text-lg font-semibold text-text-primary mb-2">No campaigns yet</h3>
-        <p className="text-sm text-text-secondary">
+      <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
+        <Megaphone size={48} className="mx-auto text-slate-400 mb-4" />
+        <h3 className="text-lg font-semibold text-[#020617] mb-2">No campaigns yet</h3>
+        <p className="text-sm text-slate-500">
           Create a voice campaign to start automated outbound calling.
         </p>
       </div>
@@ -609,46 +567,42 @@ function CampaignsList({
 
   return (
     <div className="space-y-3">
-      {campaigns.map((c, i) => {
-        const stCfg = campaignStatusConfig[c.status] || campaignStatusConfig.completed;
+      {campaigns.map((c) => {
+        const stCfg = campaignStatusPill[c.status] || campaignStatusPill.completed;
         const canToggle = c.status === 'running' || c.status === 'paused';
 
         return (
-          <motion.div
+          <div
             key={c.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass-card p-5"
+            className="bg-white border border-slate-200 rounded-lg p-5"
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              {/* Left info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <h3 className="text-sm font-semibold text-text-primary truncate">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <h3 className="text-sm font-semibold text-[#020617] truncate">
                     {c.name}
                   </h3>
-                  <Badge variant="accent" size="sm">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                     {campaignTypeLabels[c.type] || c.type}
-                  </Badge>
-                  <Badge variant={stCfg.variant} size="sm" dot>
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${stCfg.classes}`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
                     {stCfg.label}
-                  </Badge>
+                  </span>
                 </div>
 
-                {/* Stats row */}
-                <div className="flex items-center gap-4 text-xs text-text-muted">
+                <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
                   <span className="flex items-center gap-1">
                     <Phone size={12} />
-                    {c.total_calls} total
+                    <span className="tabular-nums">{c.total_calls}</span> total
                   </span>
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 size={12} className="text-success" />
-                    {c.successful_calls} successful
+                    <CheckCircle2 size={12} className="text-emerald-600" />
+                    <span className="tabular-nums">{c.successful_calls}</span> successful
                   </span>
                   <span className="flex items-center gap-1">
-                    <XCircle size={12} className="text-danger" />
-                    {c.failed_calls} failed
+                    <XCircle size={12} className="text-red-600" />
+                    <span className="tabular-nums">{c.failed_calls}</span> failed
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
@@ -657,25 +611,17 @@ function CampaignsList({
                 </div>
               </div>
 
-              {/* Action */}
               {canToggle && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => onToggle(c)}
-                  icon={
-                    c.status === 'running' ? (
-                      <Pause size={14} />
-                    ) : (
-                      <Play size={14} />
-                    )
-                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
+                  {c.status === 'running' ? <Pause size={14} /> : <Play size={14} />}
                   {c.status === 'running' ? 'Pause' : 'Resume'}
-                </Button>
+                </button>
               )}
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>

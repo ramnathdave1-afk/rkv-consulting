@@ -84,7 +84,7 @@ function ModalContent({ children, className, maxWidth = 'md', showClose = true }
             {showClose && (
               <Dialog.Close asChild>
                 <button
-                  className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-all duration-150"
+                  className="absolute right-4 top-4 p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-all duration-150 cursor-pointer"
                   aria-label="Close"
                 >
                   <X size={16} />

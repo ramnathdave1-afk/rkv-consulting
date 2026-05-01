@@ -16,7 +16,7 @@ export function Sparkline({
   data,
   width = 80,
   height = 24,
-  color = '#00D4AA',
+  color = '#0369A1',
   showGradient = true,
   className = '',
 }: SparklineProps) {

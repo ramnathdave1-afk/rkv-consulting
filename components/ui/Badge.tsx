@@ -3,7 +3,7 @@
 import React, { type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-export type BadgeVariant = 'default' | 'success' | 'danger' | 'warning' | 'info' | 'violet' | 'muted' | 'accent';
+export type BadgeVariant = 'default' | 'success' | 'danger' | 'warning' | 'info' | 'sky' | 'violet' | 'muted' | 'accent';
 export type BadgeSize = 'sm' | 'md';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -20,6 +20,7 @@ const variantFills: Record<BadgeVariant, { bg: string; text: string }> = {
   danger:  { bg: '#FDE8E8', text: '#B91C1C' },
   warning: { bg: '#FFF3D6', text: '#92610A' },
   info:    { bg: '#E8F0FE', text: '#1D4ED8' },
+  sky:     { bg: '#EFF6FF', text: '#0369A1' },
   violet:  { bg: '#F3E8FF', text: '#7C3AED' },
   muted:   { bg: 'var(--bg-hover)', text: 'var(--text-tertiary)' },
   accent:  { bg: '#E6F7F1', text: '#0D7353' },
@@ -32,6 +33,7 @@ const variantFillsDark: Record<BadgeVariant, { bg: string; text: string }> = {
   danger:  { bg: '#3D1515', text: '#F87171' },
   warning: { bg: '#3D2E0A', text: '#FBBF24' },
   info:    { bg: '#1A2744', text: '#60A5FA' },
+  sky:     { bg: '#1E3A5F', text: '#7DD3FC' },
   violet:  { bg: '#2D1A4E', text: '#A855F7' },
   muted:   { bg: 'var(--bg-hover)', text: 'var(--text-tertiary)' },
   accent:  { bg: '#0D3D2E', text: '#34D399' },
@@ -43,6 +45,7 @@ const dotColors: Record<BadgeVariant, string> = {
   danger: 'var(--danger)',
   warning: 'var(--warning)',
   info: 'var(--info)',
+  sky: '#0369A1',
   violet: 'var(--violet)',
   muted: 'var(--text-tertiary)',
   accent: 'var(--accent)',

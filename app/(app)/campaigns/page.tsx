@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Megaphone,
   Plus,
@@ -10,11 +9,11 @@ import {
   MessageSquare,
   Mail,
   Users,
-  Zap,
-  BarChart3,
+  CheckCircle2,
+  XCircle,
+  MailOpen,
+  MousePointerClick,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CampaignFormModal } from '@/components/campaigns/CampaignFormModal';
@@ -31,6 +30,8 @@ interface Campaign {
   recipients_count: number;
   sent_count: number;
   delivered_count: number;
+  opened_count?: number;
+  clicked_count?: number;
   failed_count: number;
   scheduled_at: string | null;
   completed_at: string | null;
@@ -41,25 +42,31 @@ interface KPIs {
   total: number;
   active: number;
   recipients_reached: number;
+  recipients?: number;
+  sent?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
+  failed?: number;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
 
-const statusBadge: Record<string, { variant: any; label: string }> = {
-  draft: { variant: 'muted', label: 'Draft' },
-  scheduled: { variant: 'info', label: 'Scheduled' },
-  active: { variant: 'accent', label: 'Active' },
-  sending: { variant: 'warning', label: 'Sending' },
-  paused: { variant: 'warning', label: 'Paused' },
-  completed: { variant: 'success', label: 'Completed' },
-  cancelled: { variant: 'danger', label: 'Cancelled' },
-  failed: { variant: 'danger', label: 'Failed' },
+const statusPill: Record<string, { label: string; classes: string }> = {
+  draft: { label: 'Draft', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
+  scheduled: { label: 'Scheduled', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  sending: { label: 'Sending', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  paused: { label: 'Paused', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  completed: { label: 'Sent', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  cancelled: { label: 'Cancelled', classes: 'bg-red-50 text-red-700 border-red-200' },
+  failed: { label: 'Failed', classes: 'bg-red-50 text-red-700 border-red-200' },
 };
 
-const channelBadge: Record<string, { variant: any; icon: React.ReactNode; label: string }> = {
-  sms: { variant: 'info', icon: <MessageSquare size={12} />, label: 'SMS' },
-  email: { variant: 'violet', icon: <Mail size={12} />, label: 'Email' },
-  both: { variant: 'accent', icon: <Send size={12} />, label: 'Both' },
+const channelMeta: Record<string, { icon: React.ReactNode; label: string }> = {
+  sms: { icon: <MessageSquare size={12} />, label: 'SMS' },
+  email: { icon: <Mail size={12} />, label: 'Email' },
+  both: { icon: <Send size={12} />, label: 'Both' },
 };
 
 const STATUS_FILTER_OPTIONS = [
@@ -69,7 +76,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'active', label: 'Active' },
   { value: 'sending', label: 'Sending' },
   { value: 'paused', label: 'Paused' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'completed', label: 'Sent' },
   { value: 'cancelled', label: 'Cancelled' },
   { value: 'failed', label: 'Failed' },
 ];
@@ -80,35 +87,23 @@ function KPICard({
   title,
   value,
   icon,
-  color,
-  delay,
 }: {
   title: string;
   value: number | string;
   icon: React.ReactNode;
-  color: string;
-  delay: number;
 }) {
   return (
-    <motion.div
-      className="bg-bg-secondary/60 backdrop-blur-md border border-border rounded-xl p-5 flex items-center gap-4"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.35 }}
-    >
-      <div
-        className="flex items-center justify-center w-10 h-10 rounded-lg"
-        style={{ background: `${color}15` }}
-      >
-        <span style={{ color }}>{icon}</span>
+    <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center gap-3">
+      <div className="flex items-center justify-center h-9 w-9 rounded-md bg-sky-50 border border-sky-200 text-[#0369A1]">
+        {icon}
       </div>
       <div>
-        <p className="text-2xl font-display font-bold text-text-primary">
+        <p className="text-2xl font-bold text-[#020617] tabular-nums leading-tight">
           {value}
         </p>
-        <p className="text-xs text-text-muted">{title}</p>
+        <p className="text-xs text-slate-500">{title}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -121,7 +116,6 @@ export default function CampaignsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Modals
   const [formOpen, setFormOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
@@ -149,65 +143,72 @@ export default function CampaignsPage() {
     fetchCampaigns();
   }, [fetchCampaigns]);
 
+  // Aggregate KPIs from campaigns when not provided directly
+  const totalRecipients = kpis.recipients ?? campaigns.reduce((s, c) => s + (c.recipients_count || 0), 0);
+  const totalSent = kpis.sent ?? campaigns.reduce((s, c) => s + (c.sent_count || 0), 0);
+  const totalDelivered = kpis.delivered ?? campaigns.reduce((s, c) => s + (c.delivered_count || 0), 0);
+  const totalOpened = kpis.opened ?? campaigns.reduce((s, c) => s + (c.opened_count || 0), 0);
+  const totalClicked = kpis.clicked ?? campaigns.reduce((s, c) => s + (c.clicked_count || 0), 0);
+  const totalFailed = kpis.failed ?? campaigns.reduce((s, c) => s + (c.failed_count || 0), 0);
+
   return (
-    <div className="min-h-screen p-6 md:p-8 space-y-6">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-6">
       {/* Header */}
-      <motion.div
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-2">
-            <Megaphone size={24} className="text-accent" />
+          <h1 className="text-xl font-bold text-[#020617] flex items-center gap-2">
+            <Megaphone size={20} className="text-[#0369A1]" />
             Campaigns
           </h1>
-          <p className="text-sm text-text-secondary mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Send bulk SMS and email campaigns to your tenants
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="md"
-          icon={<Plus size={16} />}
+        <button
           onClick={() => setFormOpen(true)}
+          className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-4 h-9 text-sm font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
         >
+          <Plus size={16} />
           New Campaign
-        </Button>
-      </motion.div>
+        </button>
+      </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Top KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <KPICard
-          title="Total Campaigns"
-          value={loading ? '--' : kpis.total}
-          icon={<Megaphone size={20} />}
-          color="#3B82F6"
-          delay={0}
+          title="Recipients"
+          value={loading ? '--' : totalRecipients.toLocaleString()}
+          icon={<Users size={16} />}
         />
         <KPICard
-          title="Active"
-          value={loading ? '--' : kpis.active}
-          icon={<Zap size={20} />}
-          color="#00D4AA"
-          delay={0.05}
+          title="Sent"
+          value={loading ? '--' : totalSent.toLocaleString()}
+          icon={<Send size={16} />}
         />
         <KPICard
-          title="Recipients Reached"
-          value={loading ? '--' : kpis.recipients_reached.toLocaleString()}
-          icon={<BarChart3 size={20} />}
-          color="#8B5CF6"
-          delay={0.1}
+          title="Delivered"
+          value={loading ? '--' : totalDelivered.toLocaleString()}
+          icon={<CheckCircle2 size={16} />}
+        />
+        <KPICard
+          title="Opened"
+          value={loading ? '--' : totalOpened.toLocaleString()}
+          icon={<MailOpen size={16} />}
+        />
+        <KPICard
+          title="Clicked"
+          value={loading ? '--' : totalClicked.toLocaleString()}
+          icon={<MousePointerClick size={16} />}
+        />
+        <KPICard
+          title="Failed"
+          value={loading ? '--' : totalFailed.toLocaleString()}
+          icon={<XCircle size={16} />}
         />
       </div>
 
       {/* Filters */}
-      <motion.div
-        className="flex flex-col sm:flex-row gap-3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-      >
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 max-w-sm">
           <Input
             placeholder="Search campaigns..."
@@ -223,15 +224,10 @@ export default function CampaignsPage() {
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Table */}
-      <motion.div
-        className="bg-bg-secondary/60 backdrop-blur-md border border-border rounded-xl overflow-hidden"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         {loading ? (
           <div className="p-6 space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -240,9 +236,9 @@ export default function CampaignsPage() {
           </div>
         ) : campaigns.length === 0 ? (
           <div className="py-20 text-center">
-            <Megaphone size={40} className="mx-auto text-text-muted mb-3 opacity-40" />
-            <p className="text-text-secondary text-sm">No campaigns found</p>
-            <p className="text-text-muted text-xs mt-1">
+            <Megaphone size={40} className="mx-auto text-slate-400 mb-3" />
+            <p className="text-[#020617] text-sm font-medium">No campaigns found</p>
+            <p className="text-slate-500 text-xs mt-1">
               Create your first campaign to start reaching tenants
             </p>
           </div>
@@ -250,87 +246,81 @@ export default function CampaignsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-bg-elevated/50 text-text-muted text-xs uppercase tracking-wider border-b border-border">
+                <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
                   <th className="text-left px-5 py-3 font-semibold">Name</th>
                   <th className="text-left px-5 py-3 font-semibold">Channel</th>
                   <th className="text-left px-5 py-3 font-semibold">Status</th>
-                  <th className="text-right px-5 py-3 font-semibold">Recipients</th>
+                  <th className="text-right px-5 py-3 font-semibold">Audience</th>
                   <th className="text-right px-5 py-3 font-semibold">Sent</th>
                   <th className="text-right px-5 py-3 font-semibold">Delivered</th>
                   <th className="text-right px-5 py-3 font-semibold">Failed</th>
                   <th className="text-left px-5 py-3 font-semibold">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {campaigns.map((c, idx) => {
-                  const sBadge = statusBadge[c.status] || { variant: 'muted', label: c.status };
-                  const cBadge = channelBadge[c.channel] || { variant: 'muted', icon: null, label: c.channel };
+              <tbody className="divide-y divide-slate-200">
+                {campaigns.map((c) => {
+                  const stCfg = statusPill[c.status] || { label: c.status, classes: 'bg-slate-100 text-slate-600 border-slate-200' };
+                  const chCfg = channelMeta[c.channel] || { icon: null, label: c.channel };
                   return (
-                    <motion.tr
+                    <tr
                       key={c.id}
-                      className="hover:bg-bg-elevated/30 transition-colors cursor-pointer"
+                      className="hover:bg-sky-50/50 transition-colors cursor-pointer"
                       onClick={() => setDetailId(c.id)}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * idx, duration: 0.2 }}
                     >
                       <td className="px-5 py-3.5">
-                        <p className="text-text-primary font-medium">{c.name}</p>
+                        <p className="text-[#020617] font-medium">{c.name}</p>
                         {c.subject && (
-                          <p className="text-text-muted text-xs mt-0.5 truncate max-w-[200px]">
+                          <p className="text-slate-500 text-xs mt-0.5 truncate max-w-[240px]">
                             {c.subject}
                           </p>
                         )}
                       </td>
                       <td className="px-5 py-3.5">
-                        <Badge variant={cBadge.variant} size="sm">
-                          <span className="flex items-center gap-1">
-                            {cBadge.icon}
-                            {cBadge.label}
-                          </span>
-                        </Badge>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          {chCfg.icon}
+                          {chCfg.label}
+                        </span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <Badge variant={sBadge.variant} size="sm" dot>
-                          {sBadge.label}
-                        </Badge>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${stCfg.classes}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full bg-current ${c.status === 'sending' ? 'animate-pulse' : ''}`} />
+                          {stCfg.label}
+                        </span>
                       </td>
-                      <td className="px-5 py-3.5 text-right text-text-secondary tabular-nums">
+                      <td className="px-5 py-3.5 text-right text-slate-700 tabular-nums">
                         {c.recipients_count}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-text-secondary tabular-nums">
+                      <td className="px-5 py-3.5 text-right text-slate-700 tabular-nums">
                         {c.sent_count}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-accent tabular-nums font-medium">
+                      <td className="px-5 py-3.5 text-right text-emerald-600 tabular-nums font-medium">
                         {c.delivered_count}
                       </td>
-                      <td className="px-5 py-3.5 text-right text-danger tabular-nums">
+                      <td className="px-5 py-3.5 text-right text-red-600 tabular-nums">
                         {c.failed_count}
                       </td>
-                      <td className="px-5 py-3.5 text-text-muted text-xs whitespace-nowrap">
+                      <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
                         {new Date(c.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
                         })}
                       </td>
-                    </motion.tr>
+                    </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
         )}
-      </motion.div>
+      </div>
 
-      {/* Campaign Form Modal */}
       <CampaignFormModal
         open={formOpen}
         onOpenChange={setFormOpen}
         onCreated={fetchCampaigns}
       />
 
-      {/* Campaign Detail Panel */}
       <CampaignDetailPanel
         campaignId={detailId}
         onClose={() => setDetailId(null)}

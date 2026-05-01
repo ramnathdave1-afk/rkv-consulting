@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { SelectField, Input } from '@/components/ui/Input';
@@ -10,20 +9,16 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import ShowingFormModal from '@/components/showings/ShowingFormModal';
 import toast from 'react-hot-toast';
 import { format, isAfter, isBefore, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   CalendarDays,
   Plus,
-  Clock,
-  MapPin,
   Pencil,
   Trash2,
+  Search,
   ChevronDown,
-  Phone,
-  Mail,
-  User,
-  Filter,
 } from 'lucide-react';
-import type { ShowingStatus, ShowingSource } from '@/lib/types';
+import type { ShowingStatus } from '@/lib/types';
 
 interface ShowingRow {
   id: string;
@@ -36,30 +31,15 @@ interface ShowingRow {
   status: ShowingStatus;
   scheduled_at: string;
   duration_minutes: number;
-  source: ShowingSource;
+  source: string;
   follow_up_status: string;
   notes: string | null;
   created_at: string;
+  reminder_sent_at?: string | null;
+  agent_name?: string | null;
   properties: { name: string; address_line1: string } | null;
   units: { unit_number: string } | null;
 }
-
-const statusColors: Record<string, string> = {
-  requested: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  scheduled: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
-  confirmed: 'bg-green-500/10 text-green-400 border border-green-500/20',
-  completed: 'bg-gray-500/10 text-gray-400 border border-gray-500/20',
-  no_show: 'bg-red-500/10 text-red-400 border border-red-500/20',
-  cancelled: 'bg-gray-400/10 text-gray-500 border border-gray-500/20',
-};
-
-const sourceLabels: Record<string, string> = {
-  manual: 'Manual',
-  ai_chat: 'AI Chat',
-  website: 'Website',
-  phone: 'Phone',
-  walk_in: 'Walk-in',
-};
 
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -71,14 +51,31 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-const QUICK_STATUS_OPTIONS: { value: ShowingStatus; label: string }[] = [
-  { value: 'requested', label: 'Requested' },
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'no_show', label: 'No Show' },
-  { value: 'cancelled', label: 'Cancelled' },
-];
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  requested: 'bg-amber-50 text-amber-700 border border-amber-200',
+  scheduled: 'bg-amber-50 text-amber-700 border border-amber-200',
+  confirmed: 'bg-sky-50 text-sky-700 border border-sky-200',
+  completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  no_show: 'bg-red-50 text-red-700 border border-red-200',
+  cancelled: 'bg-slate-100 text-slate-700 border border-slate-200',
+};
+
+function StatusBadgeOps({ status }: { status: string }) {
+  const cls = STATUS_BADGE_CLASS[status] || 'bg-slate-100 text-slate-700 border border-slate-200';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium capitalize whitespace-nowrap ${cls}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const hrs = Math.floor(ms / (1000 * 60 * 60));
+  if (hrs < 1) return 'just now';
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 export default function ShowingsPage() {
   const [showings, setShowings] = useState<ShowingRow[]>([]);
@@ -88,14 +85,16 @@ export default function ShowingsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Filters
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  // Pagination
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const fetchShowings = useCallback(async () => {
     try {
@@ -113,21 +112,6 @@ export default function ShowingsPage() {
   useEffect(() => {
     fetchShowings();
   }, [fetchShowings]);
-
-  const handleQuickStatus = async (id: string, newStatus: ShowingStatus) => {
-    try {
-      const res = await fetch(`/api/showings/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!res.ok) throw new Error('Failed to update');
-      toast.success(`Status updated to ${newStatus.replace('_', ' ')}`);
-      fetchShowings();
-    } catch {
-      toast.error('Failed to update status');
-    }
-  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -155,7 +139,6 @@ export default function ShowingsPage() {
     setModalOpen(true);
   };
 
-  // Apply filters
   const filtered = useMemo(() => showings.filter((s) => {
     if (statusFilter && s.status !== statusFilter) return false;
     if (dateFrom) {
@@ -166,161 +149,309 @@ export default function ShowingsPage() {
       const to = endOfDay(parseISO(dateTo));
       if (isAfter(parseISO(s.scheduled_at), to)) return false;
     }
+    if (search) {
+      const q = search.toLowerCase();
+      const m = (s.prospect_name || '').toLowerCase().includes(q) ||
+        (s.properties?.name || '').toLowerCase().includes(q) ||
+        (s.units?.unit_number || '').toLowerCase().includes(q);
+      if (!m) return false;
+    }
     return true;
-  }), [showings, statusFilter, dateFrom, dateTo]);
+  }), [showings, statusFilter, dateFrom, dateTo, search]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [statusFilter, dateFrom, dateTo]);
+  useEffect(() => { setPage(1); }, [statusFilter, dateFrom, dateTo, search]);
+  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, dateFrom, dateTo, search, page]);
 
-  // Split into upcoming vs past, then paginate
-  const now = new Date();
-  const { upcoming, past, sortedAll } = useMemo(() => {
-    const up = filtered
-      .filter((s) => ['requested', 'scheduled', 'confirmed'].includes(s.status) && isAfter(parseISO(s.scheduled_at), now))
-      .sort((a, b) => parseISO(a.scheduled_at).getTime() - parseISO(b.scheduled_at).getTime());
-    const p = filtered
-      .filter((s) => !up.includes(s))
-      .sort((a, b) => parseISO(b.scheduled_at).getTime() - parseISO(a.scheduled_at).getTime());
-    return { upcoming: up, past: p, sortedAll: [...up, ...p] };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered]);
+  const sorted = useMemo(() =>
+    [...filtered].sort((a, b) => parseISO(a.scheduled_at).getTime() - parseISO(b.scheduled_at).getTime()),
+    [filtered],
+  );
 
-  const paginatedAll = useMemo(() => {
+  const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return sortedAll.slice(start, start + pageSize);
-  }, [sortedAll, page, pageSize]);
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, page, pageSize]);
 
-  // Split paginated results back into upcoming/past for display
-  const upcomingIds = useMemo(() => new Set(upcoming.map((s) => s.id)), [upcoming]);
-  const paginatedUpcoming = useMemo(() => paginatedAll.filter((s) => upcomingIds.has(s.id)), [paginatedAll, upcomingIds]);
-  const paginatedPast = useMemo(() => paginatedAll.filter((s) => !upcomingIds.has(s.id)), [paginatedAll, upcomingIds]);
+  // KPIs
+  const upcoming = useMemo(() => {
+    const now = new Date();
+    return showings.filter((s) =>
+      ['requested', 'scheduled', 'confirmed'].includes(s.status) && isAfter(parseISO(s.scheduled_at), now),
+    ).length;
+  }, [showings]);
+  const completed = useMemo(() => showings.filter((s) => s.status === 'completed').length, [showings]);
+  const noShows = useMemo(() => showings.filter((s) => s.status === 'no_show').length, [showings]);
 
-  const hasFilters = statusFilter || dateFrom || dateTo;
-  const clearFilters = () => { setStatusFilter(''); setDateFrom(''); setDateTo(''); };
+  function toggleRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === paginated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginated.map((s) => s.id)));
+    }
+  }
+
+  async function bulkSendReminder() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        fetch(`/api/showings/${id}/reminder`, { method: 'POST' }),
+      ),
+    );
+    const ok = results.filter((r) => r.status === 'fulfilled').length;
+    toast.success(`Sent ${ok} of ${ids.length} reminders`);
+    setSelectedIds(new Set());
+    setBulkOpen(false);
+    fetchShowings();
+  }
+
+  async function bulkMarkNoShow() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        fetch(`/api/showings/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'no_show' }),
+        }),
+      ),
+    );
+    const ok = results.filter((r) => r.status === 'fulfilled').length;
+    toast.success(`Marked ${ok} as no-show`);
+    setSelectedIds(new Set());
+    setBulkOpen(false);
+    fetchShowings();
+  }
 
   if (loading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
-        </div>
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
       </div>
     );
   }
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Showings</h1>
-          <p className="text-sm text-text-secondary">
-            {upcoming.length} upcoming, {past.length} past
-            {hasFilters && (
-              <button onClick={clearFilters} className="ml-2 text-accent hover:underline text-xs">
-                Clear filters
-              </button>
-            )}
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Showings</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {upcoming} upcoming · {completed} completed · {noShows} no-shows
           </p>
         </div>
-        <Button icon={<Plus size={16} />} onClick={openAdd}>
-          Schedule Showing
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setBulkOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors"
+              >
+                Bulk Actions ({selectedIds.size}) <ChevronDown size={14} />
+              </button>
+              {bulkOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setBulkOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[180px]">
+                    <button
+                      onClick={bulkSendReminder}
+                      className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Send Reminder
+                    </button>
+                    <button
+                      onClick={bulkMarkNoShow}
+                      className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      Mark No-Show
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <Button icon={<Plus size={16} />} onClick={openAdd}>
+            Schedule Showing
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter size={14} className="text-text-muted" />
-          <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">Filters</span>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex-1 md:max-w-sm">
+          <Input
+            placeholder="Search prospect, property, or unit..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            icon={<Search size={14} />}
+          />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="w-full md:w-44">
           <SelectField
-            label="Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             options={STATUS_FILTER_OPTIONS}
           />
-          <Input
-            label="From Date"
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-          <Input
-            label="To Date"
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+        </div>
+        <div className="w-full md:w-40">
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        </div>
+        <div className="w-full md:w-40">
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
       </div>
 
-      {/* Content */}
+      {/* Table */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <CalendarDays size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
-            {hasFilters ? 'No showings match your filters' : 'No showings yet'}
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+          <CalendarDays size={48} className="mx-auto text-slate-300 mb-4" />
+          <h3 className="text-lg font-semibold text-[#020617] mb-2">
+            {showings.length === 0 ? 'No showings yet' : 'No showings match your filters'}
           </h3>
-          <p className="text-sm text-text-secondary">
-            {hasFilters
-              ? 'Try adjusting your filters or clear them to see all showings.'
-              : 'Showings will appear here when prospects schedule tours via SMS or when you create them manually.'}
+          <p className="text-sm text-slate-500">
+            {showings.length === 0
+              ? 'Showings appear here when prospects schedule tours via SMS or you create them manually.'
+              : 'Try adjusting your filters.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {paginatedUpcoming.length > 0 && (
-            <section>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
-                Upcoming ({upcoming.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {paginatedUpcoming.map((s) => (
-                  <ShowingCard
-                    key={s.id}
-                    showing={s}
-                    onEdit={() => openEdit(s)}
-                    onDelete={() => setDeleteId(s.id)}
-                    onStatusChange={(newStatus) => handleQuickStatus(s.id, newStatus)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-          {paginatedPast.length > 0 && (
-            <section>
-              <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
-                Past ({past.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {paginatedPast.map((s) => (
-                  <ShowingCard
-                    key={s.id}
-                    showing={s}
-                    onEdit={() => openEdit(s)}
-                    onDelete={() => setDeleteId(s.id)}
-                    onStatusChange={(newStatus) => handleQuickStatus(s.id, newStatus)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-          <div className="glass-card overflow-hidden">
-            <Pagination
-              total={filtered.length}
-              page={page}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-            />
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/60">
+                  <th className="px-4 py-3 w-10 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === paginated.length && paginated.length > 0}
+                      onChange={toggleAll}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                  </th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Prospect</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Property / Unit</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Agent</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reminder</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paginated.map((s, i) => {
+                  const dt = parseISO(s.scheduled_at);
+                  const now = new Date();
+                  const isPast = isBefore(dt, now);
+                  const isNoShowCandidate = isPast && ['scheduled', 'confirmed', 'requested'].includes(s.status);
+                  return (
+                    <motion.tr
+                      key={s.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.02 }}
+                      className="hover:bg-slate-50 transition-colors group"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(s.id)}
+                          onChange={() => toggleRow(s.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-lg bg-slate-50 border border-slate-200 flex flex-col items-center justify-center shrink-0">
+                            <span className="text-[9px] font-bold text-slate-500 leading-none uppercase">{format(dt, 'MMM')}</span>
+                            <span className="text-base font-bold text-[#020617] leading-none mt-0.5">{format(dt, 'd')}</span>
+                          </div>
+                          <div className="text-xs text-slate-500 tabular-nums">
+                            {format(dt, 'h:mm a')}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="font-medium text-[#020617] truncate max-w-[160px]">
+                          {s.prospect_name || s.prospect_phone || 'Unknown'}
+                        </div>
+                        {s.prospect_phone && s.prospect_name && (
+                          <div className="text-xs text-slate-500 truncate">{s.prospect_phone}</div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-slate-600">
+                        <div className="truncate max-w-[180px]">
+                          {s.properties?.name || '—'}
+                          {s.units ? <span className="text-slate-400"> / {s.units.unit_number}</span> : ''}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-slate-600 text-xs">
+                        {s.agent_name || <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <StatusBadgeOps status={s.status} />
+                          {isNoShowCandidate && s.status !== 'no_show' && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
+                              past
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-slate-500">
+                        {s.reminder_sent_at ? (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Sent {timeAgo(s.reminder_sent_at)}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEdit(s)}
+                            className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(s.id)}
+                            className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+          <Pagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
         </div>
       )}
 
-      {/* Modal */}
       <ShowingFormModal
         open={modalOpen}
         onOpenChange={(open) => {
@@ -331,7 +462,6 @@ export default function ShowingsPage() {
         onSaved={fetchShowings}
       />
 
-      {/* Delete confirm */}
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(open) => { if (!open) setDeleteId(null); }}
@@ -342,128 +472,6 @@ export default function ShowingsPage() {
         onConfirm={handleDelete}
         loading={deleting}
       />
-    </div>
-  );
-}
-
-// ─── Showing Card ──────────────────────────────────────────────────
-
-interface ShowingCardProps {
-  showing: ShowingRow;
-  onEdit: () => void;
-  onDelete: () => void;
-  onStatusChange: (status: ShowingStatus) => void;
-}
-
-function ShowingCard({ showing, onEdit, onDelete, onStatusChange }: ShowingCardProps) {
-  const [statusOpen, setStatusOpen] = useState(false);
-  const date = parseISO(showing.scheduled_at);
-
-  return (
-    <div className="glass-card p-4 flex flex-col justify-between gap-3 group hover:border-accent/30 transition-colors">
-      {/* Top: date badge + status */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg bg-accent/10 flex flex-col items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-accent leading-none">{format(date, 'MMM')}</span>
-            <span className="text-lg font-bold text-text-primary leading-none">{format(date, 'd')}</span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary truncate">
-              {showing.prospect_name || showing.prospect_phone || 'Unknown prospect'}
-            </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <MapPin size={10} className="text-text-muted shrink-0" />
-              <span className="text-[11px] text-text-muted truncate">
-                {showing.properties?.name || 'Unknown property'}
-                {showing.units ? ` / ${showing.units.unit_number}` : ''}
-              </span>
-            </div>
-          </div>
-        </div>
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize shrink-0 ${statusColors[showing.status] || ''}`}>
-          {showing.status.replace('_', ' ')}
-        </span>
-      </div>
-
-      {/* Middle: details */}
-      <div className="space-y-1.5 text-[11px] text-text-secondary">
-        <div className="flex items-center gap-1.5">
-          <Clock size={10} className="text-text-muted shrink-0" />
-          <span>{format(date, 'h:mm a')} ({showing.duration_minutes} min)</span>
-        </div>
-        {showing.prospect_phone && (
-          <div className="flex items-center gap-1.5">
-            <Phone size={10} className="text-text-muted shrink-0" />
-            <span>{showing.prospect_phone}</span>
-          </div>
-        )}
-        {showing.prospect_email && (
-          <div className="flex items-center gap-1.5">
-            <Mail size={10} className="text-text-muted shrink-0" />
-            <span className="truncate">{showing.prospect_email}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5">
-          <User size={10} className="text-text-muted shrink-0" />
-          <span>Source: {sourceLabels[showing.source] || showing.source}</span>
-        </div>
-      </div>
-
-      {showing.notes && (
-        <p className="text-[11px] text-text-muted italic line-clamp-2">{showing.notes}</p>
-      )}
-
-      {/* Bottom: actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-border">
-        {/* Quick status dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setStatusOpen(!statusOpen)}
-            className="flex items-center gap-1 text-[11px] text-text-secondary hover:text-text-primary transition-colors"
-          >
-            Update Status <ChevronDown size={12} />
-          </button>
-          {statusOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setStatusOpen(false)} />
-              <div className="absolute left-0 bottom-full mb-1 z-20 bg-bg-secondary border border-border rounded-lg shadow-xl py-1 min-w-[140px]">
-                {QUICK_STATUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      onStatusChange(opt.value);
-                      setStatusOpen(false);
-                    }}
-                    className={`block w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-bg-elevated ${
-                      showing.status === opt.value ? 'text-accent font-semibold' : 'text-text-secondary'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={onEdit}
-            className="p-1.5 rounded-md text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-            title="Edit"
-          >
-            <Pencil size={13} />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-1.5 rounded-md text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

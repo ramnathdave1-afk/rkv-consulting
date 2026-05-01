@@ -3,12 +3,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { ChartTooltip } from '@/components/dashboard/ChartTooltip';
 import {
   AlertTriangle,
   CheckCircle2,
   Clock,
   Settings,
   TrendingUp,
+  Timer,
 } from 'lucide-react';
 import {
   BarChart,
@@ -139,13 +141,10 @@ export default function SlaDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-4 gap-4">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
         </div>
         <Skeleton className="h-64 w-full" />
       </div>
@@ -153,30 +152,52 @@ export default function SlaDashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">SLA Performance</h1>
-          <p className="text-sm text-text-secondary">
-            {summary?.total ?? 0} tracked resources · {summary?.open ?? 0} open · {breachedOpen.length} currently breached
+          <h1 className="font-display text-2xl font-bold text-[#020617] tracking-tight">SLA Performance</h1>
+          <p className="text-sm text-slate-500 mt-1 tabular-nums">
+            {summary?.total ?? 0} tracked · {summary?.open ?? 0} open · {breachedOpen.length} currently breached
           </p>
         </div>
         <Link
           href="/settings/sla"
-          className="flex items-center gap-2 rounded-lg border border-border bg-bg-secondary px-4 py-2 text-sm font-medium text-text-primary hover:bg-bg-tertiary transition-colors"
+          className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#020617] hover:bg-slate-50 transition-colors shadow-sm"
         >
           <Settings size={14} /> Manage policies
         </Link>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={CheckCircle2} label="Acknowledge rate" value={stats.ackRate} sub={`avg ${stats.avgAck}`} tone="ok" />
-        <KpiCard icon={Clock} label="First response rate" value={stats.respRate} sub={`avg ${stats.avgResp}`} tone="ok" />
-        <KpiCard icon={TrendingUp} label="Resolution rate" value={stats.resolveRate} sub={`avg ${stats.avgResolve}`} tone="ok" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <KpiCard
+          icon={CheckCircle2}
+          label="Acknowledge Rate"
+          value={stats.ackRate}
+          sub={`avg ${stats.avgAck}`}
+        />
+        <KpiCard
+          icon={Clock}
+          label="First Response"
+          value={stats.respRate}
+          sub={`avg ${stats.avgResp}`}
+        />
+        <KpiCard
+          icon={TrendingUp}
+          label="Resolution Rate"
+          value={stats.resolveRate}
+          sub={`avg ${stats.avgResolve}`}
+        />
+        <KpiCard
+          icon={Timer}
+          label="Avg Resolve Time"
+          value={stats.avgResolve}
+          sub="across all priorities"
+        />
         <KpiCard
           icon={AlertTriangle}
-          label="Open breaches"
+          label="Open Breaches"
           value={String(breachedOpen.length)}
           sub={`${summary?.acknowledge_breaches ?? 0} ack · ${summary?.first_response_breaches ?? 0} resp · ${summary?.resolve_breaches ?? 0} resolve`}
           tone={breachedOpen.length > 0 ? 'danger' : 'ok'}
@@ -184,66 +205,101 @@ export default function SlaDashboardPage() {
       </div>
 
       {/* Trend chart */}
-      <div className="glass-card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text-primary">Breaches per week</h2>
-          <span className="text-xs text-text-muted">last 8 weeks</span>
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-[#020617]">Breaches per Week</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Total tickets vs SLA breaches over the last 8 weeks</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#0F172A]" />
+              <span className="text-xs text-slate-500">Total</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-[#0369A1]" />
+              <span className="text-xs text-slate-500">Breaches</span>
+            </div>
+          </div>
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="total" fill="#3B82F6" name="Total" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="breaches" fill="#EF4444" name="Breaches" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="week" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip cursor={{ fill: '#f1f5f9' }} content={<ChartTooltip />} />
+              <Bar dataKey="total" fill="#0F172A" name="Total" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="breaches" fill="#0369A1" name="Breaches" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Breached table */}
-      <div className="glass-card p-4">
-        <h2 className="text-sm font-semibold text-text-primary mb-3">
-          Open & breached ({breachedOpen.length})
-        </h2>
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#020617]">
+            Open & Breached <span className="ml-1 text-slate-500 font-medium tabular-nums">({breachedOpen.length})</span>
+          </h2>
+        </div>
         {breachedOpen.length === 0 ? (
-          <p className="text-sm text-text-muted">Nothing breached. Nice work.</p>
+          <div className="p-8 text-center">
+            <CheckCircle2 size={28} className="mx-auto text-emerald-600 mb-2" />
+            <p className="text-sm text-slate-500">Nothing breached. Nice work.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase text-text-muted border-b border-border">
-                  <th className="py-2 pr-4">Type</th>
-                  <th className="py-2 pr-4">Priority</th>
-                  <th className="py-2 pr-4">Opened</th>
-                  <th className="py-2 pr-4">Ack</th>
-                  <th className="py-2 pr-4">First resp.</th>
-                  <th className="py-2 pr-4">Resolve</th>
-                  <th className="py-2 pr-4">Policy</th>
+              <thead className="bg-slate-50">
+                <tr className="text-left text-xs uppercase text-slate-500 tracking-wider">
+                  <th className="px-5 py-3 font-medium">Type</th>
+                  <th className="px-5 py-3 font-medium">Priority</th>
+                  <th className="px-5 py-3 font-medium">Opened</th>
+                  <th className="px-5 py-3 font-medium">Ack</th>
+                  <th className="px-5 py-3 font-medium">First Resp.</th>
+                  <th className="px-5 py-3 font-medium">Resolve</th>
+                  <th className="px-5 py-3 font-medium">Policy</th>
                 </tr>
               </thead>
               <tbody>
-                {breachedOpen.slice(0, 50).map((e) => (
-                  <tr key={e.id} className="border-b border-border/40">
-                    <td className="py-2 pr-4 font-mono text-xs">{e.resource_type}</td>
-                    <td className="py-2 pr-4">{e.priority ?? '—'}</td>
-                    <td className="py-2 pr-4">{new Date(e.created_at).toLocaleString()}</td>
-                    <td className="py-2 pr-4">
-                      <BreachCell breached={e.acknowledge_breached} stamped={!!e.acknowledged_at} />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <BreachCell breached={e.first_response_breached} stamped={!!e.first_response_at} />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <BreachCell breached={e.resolve_breached} stamped={!!e.resolved_at} />
-                    </td>
-                    <td className="py-2 pr-4 text-xs text-text-muted">
-                      {e.sla_policies?.name ?? 'No policy'}
-                    </td>
-                  </tr>
-                ))}
+                {breachedOpen.slice(0, 50).map((e) => {
+                  // Past-SLA = acknowledge breach + still open. At-risk = first-response breach but not ack breach.
+                  const pastSla = e.acknowledge_breached || e.resolve_breached;
+                  const atRisk = !pastSla && e.first_response_breached;
+                  const rowBg = pastSla
+                    ? 'bg-red-50 hover:bg-red-100'
+                    : atRisk
+                      ? 'bg-amber-50 hover:bg-amber-100'
+                      : 'hover:bg-slate-50';
+                  return (
+                    <tr key={e.id} className={`border-b border-slate-100 last:border-0 transition-colors ${rowBg}`}>
+                      <td className="px-5 py-3 font-mono text-xs text-[#020617]">{e.resource_type}</td>
+                      <td className="px-5 py-3">
+                        {e.priority ? (
+                          <PriorityBadge priority={e.priority} />
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-slate-600 tabular-nums text-xs">
+                        {new Date(e.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-5 py-3">
+                        <BreachCell breached={e.acknowledge_breached} stamped={!!e.acknowledged_at} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <BreachCell breached={e.first_response_breached} stamped={!!e.first_response_at} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <BreachCell breached={e.resolve_breached} stamped={!!e.resolved_at} />
+                      </td>
+                      <td className="px-5 py-3 text-xs text-slate-500">
+                        {e.sla_policies?.name ?? 'No policy'}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -258,30 +314,68 @@ function KpiCard({
   label,
   value,
   sub,
-  tone,
+  tone = 'ok',
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
   sub: string;
-  tone: 'ok' | 'danger';
+  tone?: 'ok' | 'danger';
 }) {
+  const iconBg = tone === 'danger' ? 'bg-red-50 text-red-600' : 'bg-sky-50 text-[#0369A1]';
   return (
-    <div className="glass-card p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon size={14} className={tone === 'danger' ? 'text-danger' : 'text-accent'} />
-        <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-          {label}
-        </span>
+    <div className="p-5 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider truncate">
+            {label}
+          </p>
+          <p className="mt-2 font-display text-3xl font-bold tabular-nums text-[#020617]">
+            {value}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">{sub}</p>
+        </div>
+        <div className={`p-2 rounded-md ${iconBg}`}>
+          <Icon size={20} />
+        </div>
       </div>
-      <div className="font-display text-2xl font-bold text-text-primary">{value}</div>
-      <div className="text-xs text-text-muted mt-1">{sub}</div>
     </div>
   );
 }
 
+function PriorityBadge({ priority }: { priority: string }) {
+  const lower = priority.toLowerCase();
+  const cls =
+    lower === 'critical' || lower === 'urgent' || lower === 'high'
+      ? 'bg-red-50 text-red-700 border-red-200'
+      : lower === 'medium' || lower === 'normal'
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-sky-50 text-[#0369A1] border-sky-200';
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border capitalize ${cls}`}>
+      {priority}
+    </span>
+  );
+}
+
 function BreachCell({ breached, stamped }: { breached: boolean; stamped: boolean }) {
-  if (breached) return <span className="text-danger font-semibold">Breached</span>;
-  if (stamped) return <span className="text-accent">On time</span>;
-  return <span className="text-text-muted">Pending</span>;
+  if (breached) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+        Breached
+      </span>
+    );
+  }
+  if (stamped) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        On time
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+      Pending
+    </span>
+  );
 }

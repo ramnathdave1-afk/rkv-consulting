@@ -28,8 +28,8 @@ export interface Brand {
 
 export const DEFAULT_BRAND: Brand = {
   name: 'RKV Consulting',
-  primary_color: '#00bfa6',
-  secondary_color: '#1a1a2e',
+  primary_color: '#0F172A',
+  secondary_color: '#0369A1',
   logo_url: null,
   favicon_url: null,
   email_sender_name: 'RKV Consulting',

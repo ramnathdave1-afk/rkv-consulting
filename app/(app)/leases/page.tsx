@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Input, SelectField } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import { AnimatedTable } from '@/components/ui/AnimatedTable';
 import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { toast } from '@/components/ui/Toast';
 import LeaseFormModal from '@/components/leases/LeaseFormModal';
@@ -29,12 +29,12 @@ interface LeaseRow {
   tenants: { first_name: string; last_name: string } | null;
 }
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/10 text-yellow-500',
-  active: 'bg-green-500/10 text-green-500',
-  expired: 'bg-gray-500/10 text-gray-400',
-  terminated: 'bg-red-500/10 text-red-500',
-  renewed: 'bg-blue-500/10 text-blue-500',
+const statusBadgeClass: Record<string, string> = {
+  pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+  active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  expired: 'bg-slate-100 text-slate-700 border border-slate-200',
+  terminated: 'bg-red-50 text-red-700 border border-red-200',
+  renewed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
 };
 
 const STATUS_FILTER_OPTIONS = [
@@ -56,6 +56,8 @@ export default function LeasesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const fetchLeases = useCallback(async () => {
     try {
       const res = await fetch('/api/leases/list');
@@ -136,6 +138,17 @@ export default function LeasesPage() {
     }
   };
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function clearSelection() { setSelectedIds(new Set()); }
+  function resetFilters() { setSearch(''); setStatusFilter(''); }
+
   const formatDate = (d: string) => {
     if (!d) return '--';
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -151,47 +164,56 @@ export default function LeasesPage() {
     }
   };
 
-  // Row # = 1 col, remaining columns must sum to 11
   const leaseColumns: TableColumn<LeaseRow>[] = useMemo(() => [
     {
-      key: 'tenant',
-      label: 'Tenant',
-      span: 2,
+      key: 'select',
+      label: '',
+      span: 1,
       render: (row) => (
-        <span className="text-[13px] font-medium text-white/90 truncate block">
-          {row.tenants ? `${row.tenants.first_name} ${row.tenants.last_name}` : '--'}
-        </span>
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedIds.has(row.id)}
+            onChange={() => toggleSelect(row.id)}
+            className="h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-700"
+          />
+        </div>
       ),
     },
     {
-      key: 'property_unit',
-      label: 'Property / Unit',
-      span: 3,
+      key: 'tenant_property',
+      label: 'Tenant / Property',
+      span: 4,
       render: (row) => (
-        <span className="text-[13px] text-white/50 truncate block">
-          <span className="text-white/70">{row.units?.properties?.name || '--'}</span>
-          <span className="text-white/20 mx-1">/</span>
-          <span>{row.units?.unit_number || '--'}</span>
-        </span>
+        <div className="min-w-0">
+          <div className="text-[13px] font-medium text-[#020617] truncate">
+            {row.tenants ? `${row.tenants.first_name} ${row.tenants.last_name}` : '—'}
+          </div>
+          <div className="text-xs text-slate-500 truncate">
+            {row.units?.properties?.name || '—'} · Unit {row.units?.unit_number || '—'}
+          </div>
+        </div>
       ),
     },
     {
       key: 'rent',
       label: 'Rent',
       span: 2,
+      align: 'right',
       render: (row) => (
-        <span className="text-[13px] font-mono text-white/50">
-          ${Number(row.monthly_rent).toLocaleString()}<span className="text-white/25">/mo</span>
+        <span className="tabular-nums font-display font-semibold text-[#020617] text-[13px]">
+          ${Number(row.monthly_rent).toLocaleString()}
+          <span className="text-slate-400 font-normal">/mo</span>
         </span>
       ),
     },
     {
       key: 'dates',
-      label: 'Start \u2013 End',
-      span: 2,
+      label: 'Term',
+      span: 3,
       render: (row) => (
-        <span className="text-[13px] text-white/40 truncate block">
-          {formatDate(row.lease_start)} \u2013 {formatDate(row.lease_end)}
+        <span className="text-xs text-slate-500 truncate block tabular-nums">
+          {formatDate(row.lease_start)} – {formatDate(row.lease_end)}
         </span>
       ),
     },
@@ -199,7 +221,11 @@ export default function LeasesPage() {
       key: 'status',
       label: 'Status',
       span: 1,
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusBadgeClass[row.status] || 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
+          {row.status}
+        </span>
+      ),
     },
     {
       key: 'actions',
@@ -211,7 +237,7 @@ export default function LeasesPage() {
         <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEdit(row)}
-            className="p-1.5 rounded-md text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-sky-700 hover:bg-sky-50 transition-colors"
             title="Edit lease"
           >
             <Pencil size={14} />
@@ -219,7 +245,7 @@ export default function LeasesPage() {
           <button
             onClick={() => handleDelete(row.id)}
             disabled={deletingId === row.id}
-            className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
             title="Delete lease"
           >
             <Trash2 size={14} />
@@ -227,7 +253,7 @@ export default function LeasesPage() {
         </div>
       ),
     },
-  ], [deletingId]);
+  ], [deletingId, selectedIds]);
 
   if (loading) {
     return (
@@ -239,21 +265,26 @@ export default function LeasesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Leases</h1>
-          <p className="text-sm text-text-secondary">{filtered.length} lease{filtered.length !== 1 ? 's' : ''}</p>
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Leases</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {leases.length} total &middot; {filtered.length} matching filters
+          </p>
         </div>
-        <Button icon={<Plus size={16} />} onClick={handleAdd}>
-          New Lease
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary">Import CSV</Button>
+          <Button icon={<Plus size={16} />} onClick={handleAdd}>
+            New Lease
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-        <div className="flex-1 sm:max-w-sm">
+      {/* Filter bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg mb-4">
+        <div className="flex-1">
           <Input
             placeholder="Search tenant, property, or unit..."
             value={search}
@@ -268,41 +299,45 @@ export default function LeasesPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           />
         </div>
-        <div className="w-full sm:w-auto">
-          <LocationFilter />
-        </div>
+        <LocationFilter />
+        <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
       </div>
+
+      {/* Bulk actions toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-0 z-10 bg-white border border-slate-200 rounded-lg p-3 mb-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-700">{selectedIds.size} selected</span>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm">Update Status</Button>
+            <Button variant="ghost" size="sm">Export</Button>
+            <Button variant="danger" size="sm">Delete</Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>Clear</Button>
+          </div>
+        </div>
+      )}
 
       {/* Table or empty */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <FileText size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <FileText size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="font-display text-lg font-semibold text-[#020617] mb-2">
             {leases.length === 0 ? 'No leases yet' : 'No matching leases'}
           </h3>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-slate-500">
             {leases.length === 0
               ? 'Create a lease after adding properties, units, and tenants.'
               : 'Try adjusting your search or filter.'}
           </p>
         </div>
       ) : (
-        <>
+        <div className="overflow-x-auto">
           <AnimatedTable<LeaseRow>
             columns={leaseColumns}
             data={paginated}
             getKey={(row) => row.id}
-            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
             getRowStatus={(row) => mapLeaseStatus(row.status)}
-            title="Leases"
-            subtitle={`${filtered.length} lease${filtered.length !== 1 ? 's' : ''}`}
-            headerRight={
-              <Button icon={<Plus size={16} />} onClick={handleAdd}>
-                New Lease
-              </Button>
-            }
             emptyState={
-              <p className="text-sm text-white/40">No leases found.</p>
+              <p className="text-sm text-slate-500">No leases found.</p>
             }
           />
           <Pagination
@@ -312,7 +347,7 @@ export default function LeasesPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </>
+        </div>
       )}
 
       {/* Modal */}

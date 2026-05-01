@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Pagination } from '@/components/ui/Pagination';
-import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import { AnimatedTable } from '@/components/ui/AnimatedTable';
 import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { PropertyFormModal } from '@/components/properties/PropertyFormModal';
 import { LocationFilter } from '@/components/settings/LocationFilter';
@@ -28,6 +28,9 @@ export default function PropertiesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingProperty, setDeletingProperty] = useState<Property | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -93,6 +96,23 @@ export default function PropertiesPage() {
     setDeleteOpen(true);
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  function resetFilters() {
+    setSearch('');
+  }
+
   async function handleDelete() {
     if (!deletingProperty) return;
     setDeleteLoading(true);
@@ -115,38 +135,61 @@ export default function PropertiesPage() {
   // Row # = 1 col, remaining columns must sum to 11
   const propertyColumns: TableColumn<Property>[] = useMemo(() => [
     {
-      key: 'name',
-      label: 'Name',
-      span: 3,
+      key: 'select',
+      label: '',
+      span: 1,
       render: (row) => (
-        <Link href={`/properties/${row.id}`} className="text-accent hover:underline font-medium text-[13px] truncate block">
-          {row.name}
-        </Link>
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedIds.has(row.id)}
+            onChange={() => toggleSelect(row.id)}
+            className="h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-700"
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'thumb',
+      label: '',
+      span: 1,
+      render: () => (
+        <div className="h-9 w-9 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+          <Building2 size={16} />
+        </div>
       ),
     },
     {
       key: 'address',
-      label: 'Address',
-      span: 3,
+      label: 'Property',
+      span: 4,
       render: (row) => (
-        <span className="text-[13px] text-white/50 truncate block">{row.address_line1}, {row.city}, {row.state} {row.zip}</span>
+        <Link href={`/properties/${row.id}`} className="block min-w-0">
+          <div className="font-medium text-[13px] text-[#020617] truncate">{row.address_line1}</div>
+          <div className="text-xs text-slate-500 truncate">{row.city}, {row.state} {row.zip} &middot; {row.name}</div>
+        </Link>
       ),
     },
     {
       key: 'type',
       label: 'Type',
       span: 2,
-      render: (row) => <StatusBadge status={row.property_type.replace('_', ' ')} />,
+      render: (row) => (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">
+          {row.property_type.replace('_', ' ')}
+        </span>
+      ),
     },
     {
       key: 'units',
       label: 'Units',
       span: 1,
-      render: (row) => <span className="text-[13px] text-white/50">{row.unit_count}</span>,
+      align: 'right',
+      render: (row) => <span className="text-[13px] tabular-nums text-[#020617] font-medium">{row.unit_count}</span>,
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: '',
       span: 2,
       align: 'right',
       isAction: true,
@@ -154,14 +197,14 @@ export default function PropertiesPage() {
         <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => openEdit(row)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-sky-700 hover:bg-sky-50 transition-colors"
             title="Edit property"
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={() => openDelete(row)}
-            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
             title="Delete property"
           >
             <Trash2 size={14} />
@@ -169,7 +212,7 @@ export default function PropertiesPage() {
         </div>
       ),
     },
-  ], []);
+  ], [selectedIds]);
 
   if (loading) {
     return (
@@ -181,63 +224,76 @@ export default function PropertiesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Properties</h1>
-          <p className="text-sm text-text-secondary">{properties.length} properties</p>
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Properties</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {properties.length} total &middot; {filtered.length} matching filters
+          </p>
         </div>
-        <Button icon={<Plus size={16} />} onClick={openAdd}>
-          Add Property
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary">Import CSV</Button>
+          <Button icon={<Plus size={16} />} onClick={openAdd}>
+            Add Property
+          </Button>
+        </div>
       </div>
 
-      {/* Search / Filter */}
+      {/* Filter bar */}
       {properties.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Input
-            placeholder="Search by name, address, city, state, ZIP, or type..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            icon={<Search size={14} />}
-            className="w-full sm:max-w-md"
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg mb-4">
+          <div className="flex-1">
+            <Input
+              placeholder="Search by name, address, city, state, ZIP, or type..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              icon={<Search size={14} />}
+            />
+          </div>
           <LocationFilter />
+          <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
+        </div>
+      )}
+
+      {/* Bulk actions toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-0 z-10 bg-white border border-slate-200 rounded-lg p-3 mb-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-700">{selectedIds.size} selected</span>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm">Update Status</Button>
+            <Button variant="ghost" size="sm">Export</Button>
+            <Button variant="danger" size="sm">Delete</Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>Clear</Button>
+          </div>
         </div>
       )}
 
       {properties.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Building2 size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">No properties yet</h3>
-          <p className="text-sm text-text-secondary mb-4">Add your first property or connect a PM platform to import.</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <Building2 size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="font-display text-lg font-semibold text-[#020617] mb-2">No properties yet</h3>
+          <p className="text-sm text-slate-500 mb-4">Add your first property or connect a PM platform to import.</p>
           <Button icon={<Plus size={16} />} onClick={openAdd}>
             Add Property
           </Button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Search size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">No results</h3>
-          <p className="text-sm text-text-secondary">No properties match &quot;{search}&quot;. Try a different search.</p>
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <Search size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="font-display text-lg font-semibold text-[#020617] mb-2">No results</h3>
+          <p className="text-sm text-slate-500">No properties match &quot;{search}&quot;. Try a different search.</p>
         </div>
       ) : (
-        <>
+        <div className="overflow-x-auto">
           <AnimatedTable<Property>
             columns={propertyColumns}
             data={paginated}
             getKey={(row) => row.id}
-            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
             getRowStatus={() => 'active' as RowStatus}
-            title="Properties"
-            subtitle={`${filtered.length} propert${filtered.length !== 1 ? 'ies' : 'y'}`}
-            headerRight={
-              <Button icon={<Plus size={16} />} onClick={openAdd}>
-                Add Property
-              </Button>
-            }
             emptyState={
-              <p className="text-sm text-white/40">No properties found.</p>
+              <p className="text-sm text-slate-500">No properties found.</p>
             }
           />
           <Pagination
@@ -247,7 +303,7 @@ export default function PropertiesPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </>
+        </div>
       )}
 
       {/* Add/Edit Modal */}

@@ -186,7 +186,7 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
         <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28" />)}
@@ -199,12 +199,12 @@ export default function ReportsPage() {
   if (!data) return null;
 
   const kpis = [
-    { title: 'Total Revenue', numericValue: data.kpis.total_revenue_mtd, value: `$${data.kpis.total_revenue_mtd.toLocaleString()}`, icon: DollarSign, color: '#22C55E', sparklineData: data.monthly_trend.map((m) => m.income) },
-    { title: 'Total Expenses', numericValue: data.kpis.total_expenses_mtd, value: `$${data.kpis.total_expenses_mtd.toLocaleString()}`, icon: TrendingDown, color: '#EF4444', sparklineData: data.monthly_trend.map((m) => m.expenses) },
-    { title: 'Net Operating Income', numericValue: data.kpis.noi_mtd, value: `$${data.kpis.noi_mtd.toLocaleString()}`, icon: BarChart3, color: '#00D4AA', sparklineData: data.monthly_trend.map((m) => m.income - m.expenses) },
-    { title: 'Occupancy Rate', numericValue: data.kpis.occupancy_rate, value: `${data.kpis.occupancy_rate}%`, icon: Percent, color: '#3B82F6', sparklineData: [] as number[] },
-    { title: 'Avg Rent / Unit', numericValue: data.kpis.avg_rent_per_unit, value: `$${data.kpis.avg_rent_per_unit.toLocaleString()}`, icon: Home, color: '#8A00FF', sparklineData: [] as number[] },
-    { title: 'Delinquency Rate', numericValue: data.kpis.delinquency_rate, value: `${data.kpis.delinquency_rate}%`, icon: AlertTriangle, color: data.kpis.delinquency_rate > 10 ? '#EF4444' : '#F59E0B', sparklineData: [] as number[] },
+    { title: 'Total Revenue', numericValue: data.kpis.total_revenue_mtd, value: `$${data.kpis.total_revenue_mtd.toLocaleString()}`, icon: DollarSign, format: 'currency' as const, sparklineData: data.monthly_trend.map((m) => m.income) },
+    { title: 'Total Expenses', numericValue: data.kpis.total_expenses_mtd, value: `$${data.kpis.total_expenses_mtd.toLocaleString()}`, icon: TrendingDown, format: 'currency' as const, sparklineData: data.monthly_trend.map((m) => m.expenses) },
+    { title: 'Net Operating Income', numericValue: data.kpis.noi_mtd, value: `$${data.kpis.noi_mtd.toLocaleString()}`, icon: BarChart3, format: 'currency' as const, sparklineData: data.monthly_trend.map((m) => m.income - m.expenses) },
+    { title: 'Occupancy Rate', numericValue: data.kpis.occupancy_rate, value: `${data.kpis.occupancy_rate}%`, icon: Percent, format: 'percentage' as const, sparklineData: [] as number[] },
+    { title: 'Avg Rent / Unit', numericValue: data.kpis.avg_rent_per_unit, value: `$${data.kpis.avg_rent_per_unit.toLocaleString()}`, icon: Home, format: 'currency' as const, sparklineData: [] as number[] },
+    { title: 'Delinquency Rate', numericValue: data.kpis.delinquency_rate, value: `${data.kpis.delinquency_rate}%`, icon: AlertTriangle, format: 'percentage' as const, sparklineData: [] as number[] },
   ];
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
@@ -226,66 +226,67 @@ export default function ReportsPage() {
 
   const totalMonthlyRent = data.rent_roll.reduce((s, r) => s + r.monthly_rent, 0);
 
+  const inputClass = 'pl-8 pr-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[#020617] focus:border-[#0369A1] focus:ring-1 focus:ring-[#0369A1] focus:outline-none appearance-none cursor-pointer shadow-sm';
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Financial Reports</h1>
-          <p className="text-sm text-text-secondary">
+          <h1 className="font-display text-2xl font-bold text-[#020617] tracking-tight">Financial Reports</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Portfolio financial overview
             {data.period && (
-              <span className="text-text-muted"> &mdash; {data.period.start} to {data.period.end}</span>
+              <span className="text-slate-400 tabular-nums"> &mdash; {data.period.start} to {data.period.end}</span>
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Period Selector */}
-          <div className="relative">
-            <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as Period)}
-              className="pl-8 pr-3 py-2 rounded-lg border border-border bg-bg-secondary text-sm text-text-primary focus:border-accent focus:outline-none appearance-none cursor-pointer"
-            >
-              {PERIOD_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+      </div>
 
-          {/* Location Filter */}
-          <LocationFilter />
+      {/* Filter bar */}
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-3 flex flex-wrap items-center gap-3">
+        <div className="relative">
+          <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as Period)}
+            className={inputClass}
+          >
+            {PERIOD_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
 
-          {/* Property Filter */}
-          <div className="relative">
-            <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-            <select
-              value={propertyFilter}
-              onChange={(e) => setPropertyFilter(e.target.value)}
-              className="pl-8 pr-3 py-2 rounded-lg border border-border bg-bg-secondary text-sm text-text-primary focus:border-accent focus:outline-none appearance-none cursor-pointer"
-            >
-              <option value="">All Properties</option>
-              {data.properties.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
+        <LocationFilter />
 
-          {/* Refresh */}
+        <div className="relative">
+          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <select
+            value={propertyFilter}
+            onChange={(e) => setPropertyFilter(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">All Properties</option>
+            {data.properties.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
-            className="p-2 rounded-lg border border-border bg-bg-secondary text-text-muted hover:text-text-primary hover:border-border-hover transition-colors disabled:opacity-50"
+            className="p-2 rounded-md border border-slate-200 bg-white text-slate-500 hover:text-[#020617] hover:border-slate-300 transition-colors disabled:opacity-50 shadow-sm"
             title="Refresh data"
           >
             <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
           </button>
 
-          {/* Generate Report */}
           <button
             onClick={() => setShowGenerateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#0369A1] text-white text-sm font-semibold hover:bg-[#075985] transition-colors shadow-sm"
           >
             <FileText size={16} />
             Generate Report
@@ -294,26 +295,28 @@ export default function ReportsPage() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((kpi, i) => (
           <KPICard key={kpi.title} {...kpi} index={i} />
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border overflow-x-auto">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
-              tab === t.key ? 'border-accent text-accent' : 'border-transparent text-text-muted hover:text-text-primary'
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+              tab === t.key
+                ? 'border-[#0369A1] text-[#0369A1]'
+                : 'border-transparent text-slate-500 hover:text-[#020617]'
             }`}
           >
             {t.label}
             {t.count !== undefined && t.count > 0 && (
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                tab === t.key ? 'bg-accent/20 text-accent' : 'bg-bg-elevated text-text-muted'
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold tabular-nums ${
+                tab === t.key ? 'bg-sky-100 text-[#0369A1]' : 'bg-slate-100 text-slate-500'
               }`}>
                 {t.count}
               </span>
@@ -335,66 +338,66 @@ export default function ReportsPage() {
 
       {tab === 'property_table' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="glass-card overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             {data.property_table.length === 0 ? (
-              <div className="p-8 text-center text-text-muted text-sm">No property data available for this period.</div>
+              <div className="p-8 text-center text-slate-500 text-sm">No property data available for this period.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-center">Units</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-center">Occupancy</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Avg Rent</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Revenue</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Expenses</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">NOI</th>
+                  <thead className="bg-slate-50">
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Property</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">Units</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">Occupancy</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Avg Rent</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Revenue</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Expenses</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">NOI</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.property_table.map((row) => (
-                      <tr key={row.property_id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                        <td className="px-4 py-3 text-text-primary font-medium">{row.property_name}</td>
-                        <td className="px-4 py-3 text-text-secondary text-center">
-                          <span className="text-text-primary font-medium">{row.occupied_units}</span>
-                          <span className="text-text-muted">/{row.total_units}</span>
+                      <tr key={row.property_id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-[#020617] font-medium">{row.property_name}</td>
+                        <td className="px-4 py-3 text-center tabular-nums">
+                          <span className="text-[#020617] font-semibold">{row.occupied_units}</span>
+                          <span className="text-slate-400">/{row.total_units}</span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            row.occupancy_rate >= 90 ? 'bg-green-500/10 text-green-400' :
-                            row.occupancy_rate >= 70 ? 'bg-yellow-500/10 text-yellow-400' :
-                            'bg-red-500/10 text-red-400'
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold tabular-nums border ${
+                            row.occupancy_rate >= 90 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            row.occupancy_rate >= 70 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-red-50 text-red-700 border-red-200'
                           }`}>
                             {row.occupancy_rate}%
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-text-secondary text-right">${row.avg_rent.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-green-400 text-right font-medium">${row.revenue.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-red-400 text-right">${row.expenses.toLocaleString()}</td>
-                        <td className={`px-4 py-3 text-right font-medium ${row.noi >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                        <td className="px-4 py-3 text-slate-600 text-right tabular-nums">${row.avg_rent.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-emerald-600 text-right font-semibold tabular-nums">${row.revenue.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-red-600 text-right tabular-nums">${row.expenses.toLocaleString()}</td>
+                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${row.noi >= 0 ? 'text-[#0369A1]' : 'text-red-600'}`}>
                           ${row.noi.toLocaleString()}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t-2 border-border bg-bg-elevated/30">
-                      <td className="px-4 py-3 text-text-primary font-semibold">Totals</td>
-                      <td className="px-4 py-3 text-text-primary text-center font-medium">
+                    <tr className="border-t-2 border-slate-200 bg-slate-50">
+                      <td className="px-4 py-3 text-[#020617] font-semibold">Totals</td>
+                      <td className="px-4 py-3 text-[#020617] text-center font-semibold tabular-nums">
                         {data.property_table.reduce((s, r) => s + r.occupied_units, 0)}/{data.property_table.reduce((s, r) => s + r.total_units, 0)}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="text-text-primary font-medium">{data.kpis.occupancy_rate}%</span>
+                        <span className="text-[#020617] font-semibold tabular-nums">{data.kpis.occupancy_rate}%</span>
                       </td>
-                      <td className="px-4 py-3 text-text-primary text-right font-medium">${data.kpis.avg_rent_per_unit.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-green-400 text-right font-semibold">
+                      <td className="px-4 py-3 text-[#020617] text-right font-semibold tabular-nums">${data.kpis.avg_rent_per_unit.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-emerald-600 text-right font-bold tabular-nums">
                         ${data.property_table.reduce((s, r) => s + r.revenue, 0).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-red-400 text-right font-semibold">
+                      <td className="px-4 py-3 text-red-600 text-right font-bold tabular-nums">
                         ${data.property_table.reduce((s, r) => s + r.expenses, 0).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-accent text-right font-semibold">
+                      <td className="px-4 py-3 text-[#0369A1] text-right font-bold tabular-nums">
                         ${data.property_table.reduce((s, r) => s + r.noi, 0).toLocaleString()}
                       </td>
                     </tr>
@@ -408,50 +411,50 @@ export default function ReportsPage() {
 
       {tab === 'per_location' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-          <div className="glass-card overflow-x-auto">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-x-auto">
             {perLocation.length === 0 ? (
-              <div className="p-8 text-center text-text-secondary">
-                <Building2 size={36} className="mx-auto mb-3 text-text-muted" />
-                No locations to compare yet. Add a location in <a href="/settings/locations" className="text-accent hover:underline">Settings → Locations</a>.
+              <div className="p-8 text-center text-slate-500">
+                <Building2 size={36} className="mx-auto mb-3 text-slate-300" />
+                No locations to compare yet. Add a location in <a href="/settings/locations" className="text-[#0369A1] hover:underline font-medium">Settings → Locations</a>.
               </div>
             ) : (
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs uppercase tracking-wide text-text-tertiary">
-                    <th className="text-left p-3">Location</th>
-                    <th className="text-right p-3">Properties</th>
-                    <th className="text-right p-3">Units</th>
-                    <th className="text-right p-3">Occupied</th>
-                    <th className="text-right p-3">Occupancy</th>
-                    <th className="text-right p-3">Active Leases</th>
-                    <th className="text-right p-3">Monthly Rent</th>
-                    <th className="text-right p-3">Open WOs</th>
+                <thead className="bg-slate-50">
+                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
+                    <th className="text-left p-3 font-medium">Location</th>
+                    <th className="text-right p-3 font-medium">Properties</th>
+                    <th className="text-right p-3 font-medium">Units</th>
+                    <th className="text-right p-3 font-medium">Occupied</th>
+                    <th className="text-right p-3 font-medium">Occupancy</th>
+                    <th className="text-right p-3 font-medium">Active Leases</th>
+                    <th className="text-right p-3 font-medium">Monthly Rent</th>
+                    <th className="text-right p-3 font-medium">Open WOs</th>
                   </tr>
                 </thead>
                 <tbody>
                   {perLocation.map((row) => (
-                    <tr key={row.location_id || 'unassigned'} className="border-b border-border last:border-0">
-                      <td className="p-3 font-medium text-text-primary">{row.location_name}</td>
-                      <td className="p-3 text-right text-text-secondary">{row.property_count}</td>
-                      <td className="p-3 text-right text-text-secondary">{row.unit_count}</td>
-                      <td className="p-3 text-right text-text-secondary">{row.occupied_units}</td>
-                      <td className="p-3 text-right text-text-secondary">{row.occupancy_rate}%</td>
-                      <td className="p-3 text-right text-text-secondary">{row.active_leases}</td>
-                      <td className="p-3 text-right text-accent font-semibold">${row.monthly_rent.toLocaleString()}</td>
-                      <td className="p-3 text-right text-text-secondary">{row.open_work_orders}</td>
+                    <tr key={row.location_id || 'unassigned'} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                      <td className="p-3 font-medium text-[#020617]">{row.location_name}</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.property_count}</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.unit_count}</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.occupied_units}</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.occupancy_rate}%</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.active_leases}</td>
+                      <td className="p-3 text-right text-[#0369A1] font-semibold tabular-nums">${row.monthly_rent.toLocaleString()}</td>
+                      <td className="p-3 text-right text-slate-600 tabular-nums">{row.open_work_orders}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-border bg-bg-elevated/50 font-semibold">
-                    <td className="p-3 text-text-primary">Total</td>
-                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.property_count, 0)}</td>
-                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.unit_count, 0)}</td>
-                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.occupied_units, 0)}</td>
+                  <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
+                    <td className="p-3 text-[#020617]">Total</td>
+                    <td className="p-3 text-right tabular-nums">{perLocation.reduce((s, r) => s + r.property_count, 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{perLocation.reduce((s, r) => s + r.unit_count, 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{perLocation.reduce((s, r) => s + r.occupied_units, 0)}</td>
                     <td className="p-3 text-right">—</td>
-                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.active_leases, 0)}</td>
-                    <td className="p-3 text-right text-accent">${perLocation.reduce((s, r) => s + r.monthly_rent, 0).toLocaleString()}</td>
-                    <td className="p-3 text-right">{perLocation.reduce((s, r) => s + r.open_work_orders, 0)}</td>
+                    <td className="p-3 text-right tabular-nums">{perLocation.reduce((s, r) => s + r.active_leases, 0)}</td>
+                    <td className="p-3 text-right text-[#0369A1] tabular-nums">${perLocation.reduce((s, r) => s + r.monthly_rent, 0).toLocaleString()}</td>
+                    <td className="p-3 text-right tabular-nums">{perLocation.reduce((s, r) => s + r.open_work_orders, 0)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -462,51 +465,51 @@ export default function ReportsPage() {
 
       {tab === 'rent_roll' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-          {/* Rent roll summary + search */}
+          {/* Summary mini-cards + search */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <div className="glass-card px-4 py-2">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider">Active Leases</p>
-                <p className="text-lg font-bold text-text-primary">{data.rent_roll.length}</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="bg-white border border-slate-200 rounded-md shadow-sm px-4 py-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Active Leases</p>
+                <p className="text-lg font-bold text-[#020617] tabular-nums">{data.rent_roll.length}</p>
               </div>
-              <div className="glass-card px-4 py-2">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider">Total Monthly Rent</p>
-                <p className="text-lg font-bold text-green-400">${totalMonthlyRent.toLocaleString()}</p>
+              <div className="bg-white border border-slate-200 rounded-md shadow-sm px-4 py-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Total Monthly Rent</p>
+                <p className="text-lg font-bold text-emerald-600 tabular-nums">${totalMonthlyRent.toLocaleString()}</p>
               </div>
-              <div className="glass-card px-4 py-2">
-                <p className="text-[10px] text-text-muted uppercase tracking-wider">Annualized</p>
-                <p className="text-lg font-bold text-accent">${(totalMonthlyRent * 12).toLocaleString()}</p>
+              <div className="bg-white border border-slate-200 rounded-md shadow-sm px-4 py-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Annualized</p>
+                <p className="text-lg font-bold text-[#0369A1] tabular-nums">${(totalMonthlyRent * 12).toLocaleString()}</p>
               </div>
             </div>
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search tenants, properties..."
                 value={rentRollSearch}
                 onChange={(e) => setRentRollSearch(e.target.value)}
-                className="pl-8 pr-3 py-2 w-64 rounded-lg border border-border bg-bg-secondary text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+                className="pl-8 pr-3 py-2 w-64 rounded-md border border-slate-200 bg-white text-sm text-[#020617] placeholder:text-slate-400 focus:border-[#0369A1] focus:ring-1 focus:ring-[#0369A1] focus:outline-none shadow-sm"
               />
             </div>
           </div>
 
-          <div className="glass-card overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             {filteredRentRoll.length === 0 ? (
-              <div className="p-8 text-center text-text-muted text-sm">
+              <div className="p-8 text-center text-slate-500 text-sm">
                 {rentRollSearch ? 'No matching leases found.' : 'No active leases found.'}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Tenant</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Monthly Rent</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Deposit</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Lease Start</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Lease End</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Contact</th>
+                  <thead className="bg-slate-50">
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Tenant</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Property / Unit</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Monthly Rent</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Deposit</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Lease Start</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Lease End</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Contact</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -514,35 +517,35 @@ export default function ReportsPage() {
                       const daysLeft = Math.ceil((new Date(entry.lease_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                       const expiringSoon = daysLeft <= 90 && daysLeft > 0;
                       return (
-                        <tr key={entry.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
+                        <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                           <td className="px-4 py-3">
-                            <p className="text-text-primary font-medium">{entry.tenant_name}</p>
+                            <p className="text-[#020617] font-medium">{entry.tenant_name}</p>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-text-secondary">{entry.property_name}</p>
-                            <p className="text-[10px] text-text-muted">Unit {entry.unit_number}</p>
+                            <p className="text-slate-600">{entry.property_name}</p>
+                            <p className="text-[10px] text-slate-400">Unit {entry.unit_number}</p>
                           </td>
-                          <td className="px-4 py-3 text-green-400 text-right font-medium">
+                          <td className="px-4 py-3 text-emerald-600 text-right font-semibold tabular-nums">
                             ${entry.monthly_rent.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-text-secondary text-right">
+                          <td className="px-4 py-3 text-slate-600 text-right tabular-nums">
                             ${entry.deposit_amount.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-text-secondary text-sm">{entry.lease_start}</td>
+                          <td className="px-4 py-3 text-slate-600 text-sm tabular-nums">{entry.lease_start}</td>
                           <td className="px-4 py-3">
-                            <span className={expiringSoon ? 'text-yellow-400' : 'text-text-secondary'}>
+                            <span className={`tabular-nums ${expiringSoon ? 'text-amber-600 font-semibold' : 'text-slate-600'}`}>
                               {entry.lease_end}
                             </span>
                             {expiringSoon && (
-                              <p className="text-[10px] text-yellow-400">{daysLeft}d remaining</p>
+                              <p className="text-[10px] text-amber-600 tabular-nums">{daysLeft}d remaining</p>
                             )}
                           </td>
                           <td className="px-4 py-3">
                             {entry.tenant_email && (
-                              <p className="text-[10px] text-text-muted truncate max-w-[140px]">{entry.tenant_email}</p>
+                              <p className="text-[10px] text-slate-500 truncate max-w-[140px]">{entry.tenant_email}</p>
                             )}
                             {entry.tenant_phone && (
-                              <p className="text-[10px] text-text-muted">{entry.tenant_phone}</p>
+                              <p className="text-[10px] text-slate-500 tabular-nums">{entry.tenant_phone}</p>
                             )}
                           </td>
                         </tr>
@@ -550,14 +553,14 @@ export default function ReportsPage() {
                     })}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t-2 border-border bg-bg-elevated/30">
-                      <td className="px-4 py-3 text-text-primary font-semibold" colSpan={2}>
+                    <tr className="border-t-2 border-slate-200 bg-slate-50">
+                      <td className="px-4 py-3 text-[#020617] font-semibold" colSpan={2}>
                         Total ({filteredRentRoll.length} leases)
                       </td>
-                      <td className="px-4 py-3 text-green-400 text-right font-semibold">
+                      <td className="px-4 py-3 text-emerald-600 text-right font-bold tabular-nums">
                         ${filteredRentRoll.reduce((s, r) => s + r.monthly_rent, 0).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-text-secondary text-right font-medium">
+                      <td className="px-4 py-3 text-slate-600 text-right font-semibold tabular-nums">
                         ${filteredRentRoll.reduce((s, r) => s + r.deposit_amount, 0).toLocaleString()}
                       </td>
                       <td colSpan={3} />
@@ -572,41 +575,49 @@ export default function ReportsPage() {
 
       {tab === 'expirations' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="glass-card overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             {data.expiring_leases.length === 0 ? (
-              <div className="p-8 text-center text-text-muted text-sm">No leases expiring in the next 90 days.</div>
+              <div className="p-8 text-center text-slate-500 text-sm">No leases expiring in the next 90 days.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Tenant</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property / Unit</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Rent</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Expires</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Days Left</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Risk</th>
+                  <thead className="bg-slate-50">
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Tenant</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Property / Unit</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Rent</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Expires</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Days Left</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Risk</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.expiring_leases.map((l) => {
                       const daysLeft = Math.ceil((new Date(l.lease_end).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                      const urgencyColor = daysLeft <= 14 ? 'text-red-400' : daysLeft <= 30 ? 'text-yellow-400' : 'text-text-secondary';
+                      const urgencyColor = daysLeft <= 14 ? 'text-red-600' : daysLeft <= 30 ? 'text-amber-600' : 'text-slate-600';
                       const riskLabel = daysLeft <= 14 ? 'Critical' : daysLeft <= 30 ? 'High' : daysLeft <= 60 ? 'Medium' : 'Low';
-                      const riskBg = daysLeft <= 14 ? 'bg-red-500/10 text-red-400' : daysLeft <= 30 ? 'bg-yellow-500/10 text-yellow-400' : daysLeft <= 60 ? 'bg-blue-500/10 text-blue-400' : 'bg-green-500/10 text-green-400';
+                      const riskBg =
+                        daysLeft <= 14
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : daysLeft <= 30
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : daysLeft <= 60
+                              ? 'bg-sky-50 text-[#0369A1] border-sky-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                      const rowBg = daysLeft <= 14 ? 'bg-red-50/40' : daysLeft <= 30 ? 'bg-amber-50/40' : '';
                       return (
-                        <tr key={l.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                          <td className="px-4 py-3 text-text-primary font-medium">
+                        <tr key={l.id} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${rowBg}`}>
+                          <td className="px-4 py-3 text-[#020617] font-medium">
                             {l.tenants ? `${l.tenants.first_name} ${l.tenants.last_name}` : '—'}
                           </td>
-                          <td className="px-4 py-3 text-text-secondary">
+                          <td className="px-4 py-3 text-slate-600">
                             {l.units?.properties?.name || '—'} / {l.units?.unit_number || '—'}
                           </td>
-                          <td className="px-4 py-3 text-text-secondary text-right">${Number(l.monthly_rent).toLocaleString()}/mo</td>
-                          <td className="px-4 py-3 text-text-secondary">{l.lease_end}</td>
-                          <td className={`px-4 py-3 font-medium ${urgencyColor}`}>{daysLeft}d</td>
+                          <td className="px-4 py-3 text-slate-600 text-right tabular-nums">${Number(l.monthly_rent).toLocaleString()}/mo</td>
+                          <td className="px-4 py-3 text-slate-600 tabular-nums">{l.lease_end}</td>
+                          <td className={`px-4 py-3 font-semibold tabular-nums ${urgencyColor}`}>{daysLeft}d</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${riskBg}`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${riskBg}`}>
                               {riskLabel}
                             </span>
                           </td>
@@ -624,26 +635,28 @@ export default function ReportsPage() {
       {tab === 'reports' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-slate-500">
               Previously generated owner reports and financial summaries.
             </p>
             <button
               onClick={() => setShowGenerateModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-sky-50 text-[#0369A1] text-xs font-semibold hover:bg-sky-100 transition-colors"
             >
               <FileText size={14} />
               New Report
             </button>
           </div>
 
-          <div className="glass-card overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             {reports.length === 0 ? (
               <div className="p-8 text-center">
-                <FileText size={32} className="mx-auto text-text-muted mb-3" />
-                <p className="text-sm text-text-muted">No reports generated yet.</p>
+                <div className="mx-auto w-12 h-12 rounded-md bg-sky-50 text-[#0369A1] flex items-center justify-center mb-3">
+                  <FileText size={24} />
+                </div>
+                <p className="text-sm text-slate-500">No reports generated yet.</p>
                 <button
                   onClick={() => setShowGenerateModal(true)}
-                  className="mt-3 text-sm text-accent hover:underline"
+                  className="mt-3 text-sm text-[#0369A1] hover:underline font-medium"
                 >
                   Generate your first report
                 </button>
@@ -651,48 +664,48 @@ export default function ReportsPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Property</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Type</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Period</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Income</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Expenses</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">NOI</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Generated</th>
-                      <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase text-right">Actions</th>
+                  <thead className="bg-slate-50">
+                    <tr className="border-b border-slate-200 text-left">
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Property</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Period</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Income</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Expenses</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">NOI</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">Generated</th>
+                      <th className="px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {reports.map((r) => (
-                      <tr key={r.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                        <td className="px-4 py-3 text-text-primary font-medium">{r.properties?.name || 'Portfolio'}</td>
+                      <tr key={r.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-[#020617] font-medium">{r.properties?.name || 'Portfolio'}</td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-accent/10 text-accent capitalize">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-sky-50 text-[#0369A1] border-sky-200 capitalize">
                             {r.report_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-text-secondary text-xs">{r.period_start} to {r.period_end}</td>
-                        <td className="px-4 py-3 text-green-400 text-right">
+                        <td className="px-4 py-3 text-slate-600 text-xs tabular-nums">{r.period_start} to {r.period_end}</td>
+                        <td className="px-4 py-3 text-emerald-600 text-right tabular-nums">
                           {r.total_income != null ? `$${r.total_income.toLocaleString()}` : '—'}
                         </td>
-                        <td className="px-4 py-3 text-red-400 text-right">
+                        <td className="px-4 py-3 text-red-600 text-right tabular-nums">
                           {r.total_expenses != null ? `$${r.total_expenses.toLocaleString()}` : '—'}
                         </td>
-                        <td className={`px-4 py-3 text-right font-medium ${(r.net_operating_income || 0) >= 0 ? 'text-accent' : 'text-red-400'}`}>
+                        <td className={`px-4 py-3 text-right font-semibold tabular-nums ${(r.net_operating_income || 0) >= 0 ? 'text-[#0369A1]' : 'text-red-600'}`}>
                           {r.net_operating_income != null ? `$${r.net_operating_income.toLocaleString()}` : '—'}
                         </td>
-                        <td className="px-4 py-3 text-text-muted text-xs">
+                        <td className="px-4 py-3 text-slate-500 text-xs tabular-nums">
                           {new Date(r.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5">
                             {r.pdf_url && (
                               <a
                                 href={r.pdf_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg hover:bg-bg-elevated text-accent transition-colors"
+                                className="p-1.5 rounded-md hover:bg-sky-50 text-[#0369A1] transition-colors"
                                 title="Download PDF"
                               >
                                 <Download size={14} />
@@ -701,7 +714,7 @@ export default function ReportsPage() {
                             <button
                               onClick={() => handleDeleteReport(r.id)}
                               disabled={deletingReportId === r.id}
-                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors disabled:opacity-50"
+                              className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                               title="Delete report"
                             >
                               <Trash2 size={14} />

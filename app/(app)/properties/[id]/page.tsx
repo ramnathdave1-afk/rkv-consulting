@@ -107,7 +107,7 @@ export default function PropertyDetailPage() {
   if (!property) {
     return (
       <div className="p-6">
-        <p className="text-text-secondary">Property not found.</p>
+        <p className="text-slate-500">Property not found.</p>
       </div>
     );
   }
@@ -128,28 +128,28 @@ export default function PropertyDetailPage() {
   const occupancy = units.length > 0 ? Math.round((occupied / units.length) * 100) : 0;
 
   const statusColors: Record<string, string> = {
-    occupied: 'bg-green-500/10 text-green-500',
-    vacant: 'bg-red-500/10 text-red-500',
-    notice: 'bg-yellow-500/10 text-yellow-500',
-    make_ready: 'bg-blue-500/10 text-blue-500',
-    down: 'bg-gray-500/10 text-gray-500',
-    model: 'bg-purple-500/10 text-purple-500',
+    occupied: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    vacant: 'bg-red-50 text-red-700 border border-red-200',
+    notice: 'bg-amber-50 text-amber-700 border border-amber-200',
+    make_ready: 'bg-sky-50 text-sky-700 border border-sky-200',
+    down: 'bg-slate-100 text-slate-700 border border-slate-200',
+    model: 'bg-slate-100 text-slate-700 border border-slate-200',
   };
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/properties" className="p-1.5 rounded-lg hover:bg-bg-elevated transition-colors">
-            <ArrowLeft size={18} className="text-text-muted" />
+          <Link href="/properties" className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <ArrowLeft size={18} className="text-slate-500" />
           </Link>
           <div>
-            <h1 className="font-display text-xl font-bold text-text-primary">{property.name}</h1>
-            <p className="text-sm text-text-secondary">{property.address_line1}, {property.city}, {property.state} {property.zip}</p>
+            <h1 className="font-display text-2xl font-bold text-[#020617]">{property.name}</h1>
+            <p className="text-sm text-slate-500 mt-1">{property.address_line1}, {property.city}, {property.state} {property.zip}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" icon={<Pencil size={14} />} onClick={() => setEditOpen(true)}>
+          <Button variant="secondary" size="sm" icon={<Pencil size={14} />} onClick={() => setEditOpen(true)}>
             Edit
           </Button>
           <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={() => setDeleteOpen(true)}>
@@ -166,64 +166,66 @@ export default function PropertyDetailPage() {
           { label: 'Occupancy', value: `${occupancy}%` },
           { label: 'Year Built', value: property.year_built || 'N/A' },
         ].map((item) => (
-          <div key={item.label} className="glass-card p-4">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted">{item.label}</p>
-            <p className="text-lg font-bold text-text-primary capitalize">{item.value}</p>
+          <div key={item.label} className="bg-white border border-slate-200 rounded-lg p-4">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">{item.label}</p>
+            <p className="font-display text-lg font-bold text-[#020617] capitalize tabular-nums mt-1">{item.value}</p>
           </div>
         ))}
       </div>
 
       {/* Units Table */}
-      <div className="glass-card overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h3 className="text-sm font-medium text-text-primary">Units ({units.length})</h3>
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <h3 className="font-display text-sm font-semibold text-[#020617]">Units ({units.length})</h3>
           <Button size="sm" icon={<Plus size={14} />} onClick={() => { setEditingUnit(null); setUnitFormOpen(true); }}>
             Add Unit
           </Button>
         </div>
         {units.length === 0 ? (
           <div className="p-8 text-center">
-            <Building2 size={36} className="mx-auto text-text-muted mb-3" />
-            <p className="text-sm text-text-muted">No units added yet. Add your first unit.</p>
+            <Building2 size={36} className="mx-auto text-slate-400 mb-3" />
+            <p className="text-sm text-slate-500">No units added yet. Add your first unit.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Unit</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Floor Plan</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Bed/Bath</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Rent</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase">Status</th>
-                <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase w-20">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {units.map((u) => (
-                <tr key={u.id} className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-text-primary">{u.unit_number}</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.floor_plan || '\u2014'}</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.bedrooms}bd / {u.bathrooms}ba</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.market_rent ? `$${Number(u.market_rent).toLocaleString()}` : '\u2014'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${statusColors[u.status] || ''}`}>
-                      {u.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => { setEditingUnit(u); setUnitFormOpen(true); }} className="p-1.5 rounded-md hover:bg-bg-elevated text-text-muted hover:text-text-primary transition-colors" title="Edit">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={() => setDeleteUnitId(u.id)} className="p-1.5 rounded-md hover:bg-danger-muted text-text-muted hover:text-danger transition-colors" title="Delete">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left bg-slate-50">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Unit</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Floor Plan</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Bed/Bath</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Rent</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-20">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {units.map((u) => (
+                  <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-[#020617]">{u.unit_number}</td>
+                    <td className="px-4 py-3 text-slate-500">{u.floor_plan || '\u2014'}</td>
+                    <td className="px-4 py-3 text-slate-500 tabular-nums">{u.bedrooms}bd / {u.bathrooms}ba</td>
+                    <td className="px-4 py-3 text-[#020617] tabular-nums font-medium">{u.market_rent ? `$${Number(u.market_rent).toLocaleString()}` : '\u2014'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[u.status] || 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
+                        {u.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => { setEditingUnit(u); setUnitFormOpen(true); }} className="p-1.5 rounded-md text-slate-400 hover:text-sky-700 hover:bg-sky-50 transition-colors" title="Edit">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => setDeleteUnitId(u.id)} className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -233,12 +235,12 @@ export default function PropertyDetailPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="glass-card p-4"
+          className="bg-white border border-slate-200 rounded-lg p-4"
         >
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={14} className="text-[#00D4AA]" />
-            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">Market Rent Comps</h3>
-            <span className="ml-auto text-[10px] text-text-muted">
+            <TrendingUp size={14} className="text-sky-700" />
+            <h3 className="font-display text-xs font-semibold text-[#020617] uppercase tracking-wider">Market Rent Comps</h3>
+            <span className="ml-auto text-xs text-slate-500">
               {property.city}, {property.state} {property.zip}
             </span>
           </div>
@@ -254,59 +256,59 @@ export default function PropertyDetailPage() {
             </div>
           ) : rentalError ? (
             <div className="text-center py-6">
-              <p className="text-xs text-red-400">{rentalError}</p>
+              <p className="text-xs text-red-600">{rentalError}</p>
             </div>
           ) : rentalData ? (
             <div className="space-y-4">
               {/* Rent summary cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Median Rent', value: rentalData.medianRent, color: '#00D4AA' },
-                  { label: 'Avg Rent', value: rentalData.avgRent, color: '#3B82F6' },
-                  { label: 'Low', value: rentalData.lowRent, color: '#F59E0B' },
-                  { label: 'High', value: rentalData.highRent, color: '#8B5CF6' },
+                  { label: 'Median Rent', value: rentalData.medianRent },
+                  { label: 'Avg Rent', value: rentalData.avgRent },
+                  { label: 'Low', value: rentalData.lowRent },
+                  { label: 'High', value: rentalData.highRent },
                 ].map((item) => (
-                  <div key={item.label} className="p-3 rounded-lg bg-bg-primary border border-border">
-                    <p className="text-[10px] uppercase tracking-wider text-text-muted">{item.label}</p>
-                    <p className="text-lg font-bold text-text-primary">
-                      {item.value !== null ? `$${item.value.toLocaleString()}` : '--'}
+                  <div key={item.label} className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{item.label}</p>
+                    <p className="font-display text-lg font-bold text-[#020617] tabular-nums mt-1">
+                      {item.value !== null ? `$${item.value.toLocaleString()}` : '—'}
                     </p>
-                    <p className="text-[10px] text-text-muted">/month</p>
+                    <p className="text-[10px] text-slate-500">/month</p>
                   </div>
                 ))}
               </div>
 
               {/* Rental comps list */}
               {rentalData.rentals.length > 0 && (
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-border bg-bg-primary">
-                    <h4 className="text-xs font-medium text-text-primary">Comparable Rentals ({rentalData.rentals.length})</h4>
+                <div className="rounded-lg border border-slate-200 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+                    <h4 className="font-display text-xs font-semibold text-[#020617]">Comparable Rentals ({rentalData.rentals.length})</h4>
                   </div>
-                  <div className="divide-y divide-border/50 max-h-72 overflow-y-auto">
+                  <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
                     {rentalData.rentals.map((rental, i) => (
-                      <div key={i} className="px-4 py-2.5 hover:bg-bg-elevated/50 transition-colors">
+                      <div key={i} className="px-4 py-2.5 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-text-primary truncate">{rental.address}</p>
+                            <p className="text-xs font-medium text-[#020617] truncate">{rental.address}</p>
                             <div className="flex items-center gap-3 mt-0.5">
                               {rental.bedrooms !== null && (
-                                <span className="text-[10px] text-text-muted">{rental.bedrooms} bd</span>
+                                <span className="text-[10px] text-slate-500">{rental.bedrooms} bd</span>
                               )}
                               {rental.bathrooms !== null && (
-                                <span className="text-[10px] text-text-muted">{rental.bathrooms} ba</span>
+                                <span className="text-[10px] text-slate-500">{rental.bathrooms} ba</span>
                               )}
                               {rental.sqft !== null && (
-                                <span className="text-[10px] text-text-muted">{rental.sqft.toLocaleString()} sqft</span>
+                                <span className="text-[10px] text-slate-500">{rental.sqft.toLocaleString()} sqft</span>
                               )}
-                              <span className="text-[10px] text-text-muted">{rental.source}</span>
+                              <span className="text-[10px] text-slate-500">{rental.source}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0 ml-3">
-                            <span className="text-sm font-bold text-[#00D4AA]">
-                              {rental.rent !== null ? `$${rental.rent.toLocaleString()}` : '--'}
+                            <span className="text-sm font-semibold tabular-nums text-[#020617]">
+                              {rental.rent !== null ? `$${rental.rent.toLocaleString()}` : '—'}
                             </span>
                             {rental.link && (
-                              <a href={rental.link} target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-text-primary transition-colors">
+                              <a href={rental.link} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-sky-700 transition-colors">
                                 <ExternalLink size={12} />
                               </a>
                             )}

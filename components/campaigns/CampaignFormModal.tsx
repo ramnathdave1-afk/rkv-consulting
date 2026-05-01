@@ -231,7 +231,7 @@ export function CampaignFormModal({
           onChange={(e) => updateForm({ name: e.target.value })}
         />
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-2">
+          <label className="block text-xs font-medium text-slate-600 mb-2">
             Channel
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -241,10 +241,10 @@ export function CampaignFormModal({
                 onClick={() =>
                   updateForm({ channel: opt.value as CampaignFormData['channel'] })
                 }
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                className={`flex flex-col items-center gap-2 p-4 rounded-md border transition-colors cursor-pointer ${
                   form.channel === opt.value
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-border bg-bg-primary text-text-secondary hover:border-border-hover'
+                    ? 'border-[#0369A1] bg-sky-50 text-[#0369A1]'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                 }`}
               >
                 {opt.icon}
@@ -272,7 +272,7 @@ export function CampaignFormModal({
         />
 
         <div>
-          <label className="block text-xs font-medium text-text-secondary mb-2">
+          <label className="block text-xs font-medium text-slate-600 mb-2">
             Tenant Status (select one or more)
           </label>
           <div className="flex flex-wrap gap-2">
@@ -284,10 +284,10 @@ export function CampaignFormModal({
                 <button
                   key={opt.value}
                   onClick={() => toggleStatus(opt.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
                     selected
-                      ? 'border-accent bg-accent/10 text-accent'
-                      : 'border-border bg-bg-primary text-text-secondary hover:border-border-hover'
+                      ? 'border-[#0369A1] bg-sky-50 text-[#0369A1]'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                   }`}
                 >
                   {opt.label}
@@ -305,9 +305,9 @@ export function CampaignFormModal({
               onChange={(e) => updateFilter({ lease_active: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-9 h-5 bg-bg-elevated border border-border rounded-full peer peer-checked:bg-accent/20 peer-checked:border-accent transition-all after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-text-muted after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-4 peer-checked:after:bg-accent" />
+            <div className="w-9 h-5 bg-slate-100 border border-slate-200 rounded-full peer peer-checked:bg-sky-50 peer-checked:border-[#0369A1] transition-all after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-slate-400 after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-4 peer-checked:after:bg-[#0369A1]" />
           </label>
-          <span className="text-xs text-text-secondary">
+          <span className="text-xs text-slate-600">
             Only tenants with active leases
           </span>
         </div>
@@ -335,16 +335,16 @@ export function CampaignFormModal({
             onChange={(e) => updateForm({ message_body: e.target.value })}
             className="min-h-[140px]"
           />
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">
+          <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 Merge Tags:
               </span>
               {MERGE_TAGS.map((mt) => (
                 <button
                   key={mt.tag}
                   onClick={() => insertMergeTag(mt.tag)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-bg-elevated border border-border text-[11px] text-text-secondary hover:text-accent hover:border-accent transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-700 hover:text-[#0369A1] hover:border-[#0369A1] transition-colors cursor-pointer"
                 >
                   <Tag size={10} />
                   {mt.label}
@@ -353,8 +353,8 @@ export function CampaignFormModal({
             </div>
             {form.channel !== 'email' && (
               <span
-                className={`text-xs font-mono ${
-                  smsOverLimit ? 'text-danger' : 'text-text-muted'
+                className={`text-xs tabular-nums ${
+                  smsOverLimit ? 'text-red-600' : 'text-slate-500'
                 }`}
               >
                 {smsCharCount}/160
@@ -371,30 +371,30 @@ export function CampaignFormModal({
     const statusLabels = (form.audience_filter.tenant_status || []).join(', ') || 'None';
     return (
       <div className="space-y-5">
-        <div className="bg-bg-primary/50 border border-border rounded-xl p-4 space-y-3">
-          <h4 className="text-xs uppercase tracking-wider text-text-muted font-semibold">
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-4 space-y-3">
+          <h4 className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
             Campaign Summary
           </h4>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-text-muted text-xs">Name</p>
-              <p className="text-text-primary font-medium">{form.name}</p>
+              <p className="text-slate-500 text-xs">Name</p>
+              <p className="text-[#020617] font-medium">{form.name}</p>
             </div>
             <div>
-              <p className="text-text-muted text-xs">Channel</p>
-              <p className="text-text-primary font-medium capitalize">
+              <p className="text-slate-500 text-xs">Channel</p>
+              <p className="text-[#020617] font-medium capitalize">
                 {form.channel}
               </p>
             </div>
             <div>
-              <p className="text-text-muted text-xs">Audience</p>
-              <p className="text-text-primary font-medium capitalize">
+              <p className="text-slate-500 text-xs">Audience</p>
+              <p className="text-[#020617] font-medium capitalize">
                 {statusLabels}
               </p>
             </div>
             <div>
-              <p className="text-text-muted text-xs">Active Leases Only</p>
-              <p className="text-text-primary font-medium">
+              <p className="text-slate-500 text-xs">Active Leases Only</p>
+              <p className="text-[#020617] font-medium">
                 {form.audience_filter.lease_active ? 'Yes' : 'No'}
               </p>
             </div>
@@ -402,31 +402,31 @@ export function CampaignFormModal({
         </div>
 
         {form.channel !== 'sms' && (
-          <div className="bg-bg-primary/50 border border-border rounded-xl p-4">
-            <p className="text-text-muted text-xs mb-1">Subject</p>
-            <p className="text-text-primary text-sm">{form.subject}</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-md p-4">
+            <p className="text-slate-500 text-xs mb-1">Subject</p>
+            <p className="text-[#020617] text-sm">{form.subject}</p>
           </div>
         )}
 
-        <div className="bg-bg-primary/50 border border-border rounded-xl p-4">
-          <p className="text-text-muted text-xs mb-2">Message Preview</p>
-          <p className="text-text-primary text-sm whitespace-pre-wrap leading-relaxed">
+        <div className="bg-slate-50 border border-slate-200 rounded-md p-4">
+          <p className="text-slate-500 text-xs mb-2">Message Preview</p>
+          <p className="text-[#020617] text-sm whitespace-pre-wrap leading-relaxed">
             {form.message_body}
           </p>
         </div>
 
         {/* Schedule */}
         <div className="space-y-3">
-          <label className="block text-xs font-medium text-text-secondary">
+          <label className="block text-xs font-medium text-slate-600">
             Schedule
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => updateForm({ send_now: true })}
-              className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 p-3 rounded-md border text-sm font-medium transition-colors cursor-pointer ${
                 form.send_now
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border bg-bg-primary text-text-secondary hover:border-border-hover'
+                  ? 'border-[#0369A1] bg-sky-50 text-[#0369A1]'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
               }`}
             >
               <Send size={14} />
@@ -434,10 +434,10 @@ export function CampaignFormModal({
             </button>
             <button
               onClick={() => updateForm({ send_now: false })}
-              className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 p-3 rounded-md border text-sm font-medium transition-colors cursor-pointer ${
                 !form.send_now
-                  ? 'border-accent bg-accent/10 text-accent'
-                  : 'border-border bg-bg-primary text-text-secondary hover:border-border-hover'
+                  ? 'border-[#0369A1] bg-sky-50 text-[#0369A1]'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
               }`}
             >
               <CalendarClock size={14} />
@@ -468,18 +468,18 @@ export function CampaignFormModal({
     <Modal open={open} onOpenChange={onOpenChange}>
       <ModalContent maxWidth="lg" showClose>
         {/* Stepper */}
-        <div className="px-6 pt-6 pb-4 border-b border-border">
+        <div className="px-6 pt-6 pb-4 border-b border-slate-200">
           <div className="flex items-center gap-1">
             {STEPS.map((s, i) => (
               <React.Fragment key={s.label}>
                 <button
                   onClick={() => i < step && setStep(i)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                     i === step
-                      ? 'bg-accent/10 text-accent'
+                      ? 'bg-sky-50 text-[#0369A1]'
                       : i < step
-                        ? 'text-accent/60 hover:text-accent cursor-pointer'
-                        : 'text-text-muted'
+                        ? 'text-[#0369A1]/70 hover:text-[#0369A1] cursor-pointer'
+                        : 'text-slate-500'
                   }`}
                 >
                   {s.icon}
@@ -488,7 +488,7 @@ export function CampaignFormModal({
                 {i < STEPS.length - 1 && (
                   <div
                     className={`flex-1 h-px ${
-                      i < step ? 'bg-accent/40' : 'bg-border'
+                      i < step ? 'bg-[#0369A1]/40' : 'bg-slate-200'
                     }`}
                   />
                 )}
@@ -513,7 +513,7 @@ export function CampaignFormModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"

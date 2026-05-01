@@ -2,6 +2,16 @@
 
 import React, { useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  SettingsCard,
+  SettingsCardHeader,
+  SettingsCardBody,
+  settingsInputClass,
+  settingsLabelClass,
+  settingsPrimaryButtonClass,
+  settingsSecondaryButtonClass,
+} from '@/components/settings/SettingsShell';
+import { CheckCircle2, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 interface IncidentUpdate {
   timestamp: string;
@@ -25,17 +35,17 @@ const COMPONENTS = ['database', 'auth', 'email', 'sms', 'payments', 'ai'] as con
 const STATUS_OPTIONS = ['investigating', 'identified', 'monitoring', 'resolved'] as const;
 const SEVERITY_OPTIONS = ['minor', 'major', 'critical'] as const;
 
-function severityColor(s: string) {
+function severityTone(s: string) {
   return s === 'critical'
-    ? 'bg-red-500/15 text-red-400 border-red-500/30'
+    ? 'border-red-200 bg-red-50 text-red-700'
     : s === 'major'
-      ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-      : 'bg-sky-500/15 text-sky-400 border-sky-500/30';
+      ? 'border-amber-200 bg-amber-50 text-amber-700'
+      : 'border-sky-200 bg-sky-50 text-[#0369A1]';
 }
 
-function statusColor(s: string) {
-  if (s === 'resolved') return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-  return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+function statusTone(s: string) {
+  if (s === 'resolved') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  return 'border-amber-200 bg-amber-50 text-amber-700';
 }
 
 export function IncidentsManager({ initialIncidents }: { initialIncidents: Incident[] }) {
@@ -43,6 +53,7 @@ export function IncidentsManager({ initialIncidents }: { initialIncidents: Incid
   const [creating, setCreating] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showPast, setShowPast] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -106,19 +117,18 @@ export function IncidentsManager({ initialIncidents }: { initialIncidents: Incid
     setIncidents((prev) => prev.map((i) => (i.id === id ? json.incident : i)));
   }
 
+  const active = incidents.filter((i) => i.status !== 'resolved');
+  const past = incidents.filter((i) => i.status === 'resolved');
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-text-muted">
-          {incidents.length} incident{incidents.length === 1 ? '' : 's'} total
+        <p className="text-sm text-slate-500">
+          {incidents.length} incident{incidents.length === 1 ? '' : 's'} total · {active.length} active
         </p>
         {!creating ? (
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:opacity-90 transition"
-          >
-            New incident
+          <button type="button" onClick={() => setCreating(true)} className={settingsPrimaryButtonClass}>
+            <Plus size={14} /> New incident
           </button>
         ) : (
           <button
@@ -127,115 +137,144 @@ export function IncidentsManager({ initialIncidents }: { initialIncidents: Incid
               setCreating(false);
               resetForm();
             }}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-bg-elevated transition"
+            className={settingsSecondaryButtonClass}
           >
-            Cancel
+            <X size={14} /> Cancel
           </button>
         )}
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {creating && (
-        <div className="rounded-2xl border border-border bg-bg-secondary/40 p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-text-muted mb-1">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-              placeholder="e.g., Email delivery degraded"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        <SettingsCard>
+          <SettingsCardHeader title="Create Incident" description="This will appear on the public status page." />
+          <SettingsCardBody className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1">Severity</label>
-              <select
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value as typeof severity)}
-                className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-              >
-                {SEVERITY_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <label className={settingsLabelClass}>Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className={settingsInputClass}
+                placeholder="e.g., Email delivery degraded"
+              />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as typeof status)}
-                className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-muted mb-1">
-              Affected components
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {COMPONENTS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggleComponent(c)}
-                  className={cn(
-                    'rounded-full px-3 py-1 text-xs border transition',
-                    components.includes(c)
-                      ? 'bg-accent/20 border-accent/40 text-accent'
-                      : 'bg-bg-primary border-border text-text-secondary hover:border-accent/40',
-                  )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={settingsLabelClass}>Severity</label>
+                <select
+                  value={severity}
+                  onChange={(e) => setSeverity(e.target.value as typeof severity)}
+                  className={settingsInputClass}
                 >
-                  {c}
-                </button>
-              ))}
+                  {SEVERITY_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={settingsLabelClass}>Initial Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as typeof status)}
+                  className={settingsInputClass}
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-muted mb-1">
-              Initial message
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-              placeholder="What are users seeing? What are you doing about it?"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={createIncident}
-            disabled={pending}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:opacity-90 transition disabled:opacity-50"
-          >
-            {pending ? 'Creating…' : 'Create incident'}
-          </button>
-        </div>
+            <div>
+              <label className={settingsLabelClass}>Affected components</label>
+              <div className="flex flex-wrap gap-2">
+                {COMPONENTS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleComponent(c)}
+                    className={cn(
+                      'rounded-full px-3 py-1 text-xs border transition-colors',
+                      components.includes(c)
+                        ? 'bg-sky-50 border-[#0369A1] text-[#0369A1]'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300',
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className={settingsLabelClass}>Initial message</label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                className={cn(settingsInputClass, 'h-auto py-2')}
+                placeholder="What are users seeing? What are you doing about it?"
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={createIncident}
+                disabled={pending}
+                className={settingsPrimaryButtonClass}
+              >
+                {pending ? 'Creating…' : 'Create incident'}
+              </button>
+            </div>
+          </SettingsCardBody>
+        </SettingsCard>
       )}
 
-      <div className="space-y-3">
-        {incidents.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-bg-secondary/40 px-6 py-12 text-center text-sm text-text-secondary">
-            No incidents yet.
-          </div>
-        ) : (
-          incidents.map((inc) => <IncidentCard key={inc.id} incident={inc} onPatch={patchIncident} />)
-        )}
+      <div>
+        <h2 className="font-display text-sm font-semibold text-[#020617] mb-3 uppercase tracking-wider">
+          Active Incidents
+        </h2>
+        <div className="space-y-3">
+          {active.length === 0 ? (
+            <SettingsCard>
+              <SettingsCardBody className="text-center py-8 text-sm text-slate-500">
+                <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2" />
+                All systems operational. No active incidents.
+              </SettingsCardBody>
+            </SettingsCard>
+          ) : (
+            active.map((inc) => <IncidentCard key={inc.id} incident={inc} onPatch={patchIncident} />)
+          )}
+        </div>
       </div>
+
+      {past.length > 0 && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowPast((v) => !v)}
+            className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-slate-500 hover:text-[#020617]"
+          >
+            Past Incidents ({past.length})
+            {showPast ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {showPast && (
+            <div className="space-y-3 mt-3">
+              {past.map((inc) => (
+                <IncidentCard key={inc.id} incident={inc} onPatch={patchIncident} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -254,105 +293,110 @@ function IncidentCard({
   const [busy, setBusy] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-border bg-bg-secondary/40 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span
-              className={cn(
-                'rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold',
-                severityColor(incident.severity),
-              )}
-            >
-              {incident.severity}
-            </span>
-            <span
-              className={cn(
-                'rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold',
-                statusColor(incident.status),
-              )}
-            >
-              {incident.status}
-            </span>
-            {incident.affected_components.map((c) => (
+    <SettingsCard>
+      <SettingsCardBody>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
               <span
-                key={c}
-                className="rounded-full border border-border px-2 py-0.5 text-[10px] text-text-secondary"
+                className={cn(
+                  'inline-flex items-center rounded-full border px-2 py-0.5 text-xs uppercase tracking-wider font-semibold',
+                  severityTone(incident.severity),
+                )}
               >
-                {c}
+                {incident.severity}
               </span>
-            ))}
-          </div>
-          <h3 className="text-base font-semibold text-text-primary">{incident.title}</h3>
-          <p className="mt-1 text-xs text-text-muted">
-            Opened {new Date(incident.created_at).toLocaleString()}
-            {incident.resolved_at &&
-              ` · Resolved ${new Date(incident.resolved_at).toLocaleString()}`}
-          </p>
-        </div>
-        {incident.status !== 'resolved' && (
-          <button
-            type="button"
-            onClick={async () => {
-              setBusy(true);
-              await onPatch(incident.id, { resolve: true });
-              setBusy(false);
-            }}
-            disabled={busy}
-            className="shrink-0 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/20 transition disabled:opacity-50"
-          >
-            {busy ? 'Resolving…' : 'Mark resolved'}
-          </button>
-        )}
-      </div>
-
-      {/* Updates timeline */}
-      <div className="mt-4 space-y-2">
-        {(incident.updates ?? []).map((u, i) => (
-          <div key={i} className="rounded-lg bg-bg-primary/60 px-3 py-2">
-            <p className="text-[11px] text-text-muted">
-              {new Date(u.timestamp).toLocaleString()} · <span className="uppercase">{u.status}</span>
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full border px-2 py-0.5 text-xs uppercase tracking-wider font-semibold',
+                  statusTone(incident.status),
+                )}
+              >
+                {incident.status}
+              </span>
+              {incident.affected_components.map((c) => (
+                <span
+                  key={c}
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+            <h3 className="font-display text-base font-semibold text-[#020617]">{incident.title}</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Opened {new Date(incident.created_at).toLocaleString()}
+              {incident.resolved_at &&
+                ` · Resolved ${new Date(incident.resolved_at).toLocaleString()}`}
             </p>
-            <p className="text-sm text-text-secondary mt-0.5">{u.message}</p>
           </div>
-        ))}
-      </div>
-
-      {incident.status !== 'resolved' && (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
-          <input
-            type="text"
-            value={updateMsg}
-            onChange={(e) => setUpdateMsg(e.target.value)}
-            placeholder="Add an update…"
-            className="rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          />
-          <select
-            value={updateStatus}
-            onChange={(e) => setUpdateStatus(e.target.value as typeof updateStatus)}
-            className="rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            disabled={!updateMsg || busy}
-            onClick={async () => {
-              setBusy(true);
-              await onPatch(incident.id, { status: updateStatus, message: updateMsg });
-              setUpdateMsg('');
-              setBusy(false);
-            }}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-bg-primary hover:opacity-90 transition disabled:opacity-50"
-          >
-            Post
-          </button>
+          {incident.status !== 'resolved' && (
+            <button
+              type="button"
+              onClick={async () => {
+                setBusy(true);
+                await onPatch(incident.id, { resolve: true });
+                setBusy(false);
+              }}
+              disabled={busy}
+              className="shrink-0 inline-flex items-center gap-2 h-9 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+            >
+              {busy ? 'Resolving…' : 'Mark resolved'}
+            </button>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Updates timeline */}
+        {incident.updates && incident.updates.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {incident.updates.map((u, i) => (
+              <div key={i} className="rounded-md bg-slate-50 border border-slate-100 px-3 py-2">
+                <p className="text-xs text-slate-500">
+                  {new Date(u.timestamp).toLocaleString()} ·{' '}
+                  <span className="uppercase font-semibold">{u.status}</span>
+                </p>
+                <p className="text-sm text-slate-700 mt-0.5">{u.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {incident.status !== 'resolved' && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+            <input
+              type="text"
+              value={updateMsg}
+              onChange={(e) => setUpdateMsg(e.target.value)}
+              placeholder="Add an update…"
+              className={settingsInputClass}
+            />
+            <select
+              value={updateStatus}
+              onChange={(e) => setUpdateStatus(e.target.value as typeof updateStatus)}
+              className={settingsInputClass}
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!updateMsg || busy}
+              onClick={async () => {
+                setBusy(true);
+                await onPatch(incident.id, { status: updateStatus, message: updateMsg });
+                setUpdateMsg('');
+                setBusy(false);
+              }}
+              className={settingsPrimaryButtonClass}
+            >
+              Post update
+            </button>
+          </div>
+        )}
+      </SettingsCardBody>
+    </SettingsCard>
   );
 }

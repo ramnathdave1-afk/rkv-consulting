@@ -100,27 +100,39 @@ const releases: Release[] = [
   },
 ];
 
-const categoryConfig: Record<Category, { icon: React.ElementType; color: string; bg: string }> = {
-  Feature: { icon: Sparkles, color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20' },
-  Improvement: { icon: Wrench, color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/20' },
-  Fix: { icon: Bug, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
+const categoryConfig: Record<Category, { icon: React.ElementType; pill: string; dot: string }> = {
+  Feature: {
+    icon: Sparkles,
+    pill: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    dot: 'bg-emerald-500',
+  },
+  Improvement: {
+    icon: Wrench,
+    pill: 'bg-sky-50 text-sky-700 border-sky-200',
+    dot: 'bg-sky-500',
+  },
+  Fix: {
+    icon: Bug,
+    pill: 'bg-amber-50 text-amber-700 border-amber-200',
+    dot: 'bg-amber-500',
+  },
 };
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Nav */}
-      <nav className="border-b border-border bg-bg-secondary/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
-              <span className="text-xs font-bold text-accent">M</span>
+      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0F172A]">
+              <span className="text-xs font-bold text-white">R</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
+            <span className="font-display text-sm font-bold text-[#0F172A]">RKV Consulting</span>
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer"
           >
             Back to site
             <ArrowRight size={12} />
@@ -128,22 +140,26 @@ export default function ChangelogPage() {
         </div>
       </nav>
 
-      {/* Header */}
-      <div className="mx-auto max-w-3xl px-6 py-20">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 mx-auto mb-4">
-            <Sparkles size={24} className="text-accent" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-text-primary mb-2">Changelog</h1>
-          <p className="text-sm text-text-secondary max-w-md mx-auto">
-            What&apos;s new in RKV Consulting
-          </p>
-        </motion.div>
+      {/* Hero */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="mx-auto max-w-3xl px-6 py-20 md:py-24 text-center">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[#0369A1]/10 mx-auto mb-5">
+              <Sparkles size={24} className="text-[#0369A1]" />
+            </div>
+            <h1 className="font-display font-bold text-5xl md:text-6xl tracking-tight text-[#020617]">Changelog</h1>
+            <p className="mt-5 text-xl md:text-2xl text-[#475569] max-w-md mx-auto">
+              What&apos;s new in RKV Consulting
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Timeline */}
+      {/* Timeline */}
+      <section className="mx-auto max-w-3xl px-6 py-20 md:py-32">
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border" />
+          <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200" />
 
           <div className="space-y-10">
             {releases.map((release, i) => {
@@ -162,39 +178,34 @@ export default function ChangelogPage() {
                   {/* Timeline dot */}
                   <div
                     className={cn(
-                      'absolute left-0 top-1 h-[15px] w-[15px] rounded-full border-2 border-bg-primary',
-                      release.category === 'Feature'
-                        ? 'bg-emerald-400'
-                        : release.category === 'Improvement'
-                          ? 'bg-blue-400'
-                          : 'bg-amber-400'
+                      'absolute left-0 top-2 h-[15px] w-[15px] rounded-full border-2 border-[#F8FAFC]',
+                      config.dot
                     )}
                   />
 
-                  <div className="glass-card p-5">
+                  <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     {/* Meta row */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-mono font-semibold text-accent">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="rounded-md bg-slate-200 px-2 py-0.5 text-xs font-mono font-semibold text-[#0F172A]">
                         {release.version}
                       </span>
-                      <span className="text-[11px] text-text-muted">{release.date}</span>
+                      <span className="text-xs text-[#475569]">{release.date}</span>
                       <span
                         className={cn(
-                          'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium',
-                          config.bg,
-                          config.color
+                          'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium',
+                          config.pill
                         )}
                       >
-                        <Icon size={10} />
+                        <Icon size={11} />
                         {release.category}
                       </span>
                     </div>
 
                     {/* Title & description */}
-                    <h3 className="font-display text-sm font-bold text-text-primary mb-1">
+                    <h3 className="font-display text-lg font-bold text-[#0F172A] mb-1.5">
                       {release.title}
                     </h3>
-                    <p className="text-xs text-text-secondary leading-relaxed">
+                    <p className="text-sm text-[#475569]" style={{ lineHeight: 1.7 }}>
                       {release.description}
                     </p>
                   </div>
@@ -203,16 +214,16 @@ export default function ChangelogPage() {
             })}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-5xl flex items-center justify-between flex-wrap gap-3">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
+      <footer className="border-t border-slate-200 bg-white px-6 py-8">
+        <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
+          <p className="text-xs text-[#475569]">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex items-center gap-4">
             <StatusBadge />
-            <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
-            <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">Terms</Link>
+            <Link href="/privacy" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">Privacy</Link>
           </div>
         </div>
       </footer>

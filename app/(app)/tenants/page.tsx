@@ -3,23 +3,25 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Pagination } from '@/components/ui/Pagination';
-import { AnimatedTable, StatusBadge } from '@/components/ui/AnimatedTable';
+import { AnimatedTable } from '@/components/ui/AnimatedTable';
 import type { TableColumn, RowStatus } from '@/components/ui/AnimatedTable';
 import { Users, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { TenantFormModal } from '@/components/tenants/TenantFormModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input, SelectField } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
-import type { Tenant, TenantStatus } from '@/lib/types';
+import type { Tenant } from '@/lib/types';
 
-const statusColors: Record<string, string> = {
-  prospect: 'bg-blue-500/10 text-blue-500',
-  applicant: 'bg-yellow-500/10 text-yellow-500',
-  approved: 'bg-emerald-500/10 text-emerald-500',
-  active: 'bg-green-500/10 text-green-500',
-  notice: 'bg-orange-500/10 text-orange-500',
-  past: 'bg-gray-500/10 text-gray-500',
-  denied: 'bg-red-500/10 text-red-500',
+const statusBadgeClass: Record<string, string> = {
+  prospect: 'bg-sky-50 text-sky-700 border border-sky-200',
+  applicant: 'bg-amber-50 text-amber-700 border border-amber-200',
+  approved: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  notice: 'bg-slate-100 text-slate-700 border border-slate-200',
+  past: 'bg-slate-100 text-slate-700 border border-slate-200',
+  denied: 'bg-red-50 text-red-700 border border-red-200',
+  terminated: 'bg-red-50 text-red-700 border border-red-200',
 };
 
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
@@ -32,6 +34,15 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'past', label: 'Past' },
   { value: 'denied', label: 'Denied' },
 ];
+
+function formatMoveDate(d?: string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getInitials(first: string, last: string) {
+  return `${(first || '').charAt(0)}${(last || '').charAt(0)}`.toUpperCase() || '?';
+}
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -47,6 +58,9 @@ export default function TenantsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingTenant, setDeletingTenant] = useState<Tenant | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -136,6 +150,17 @@ export default function TenantsPage() {
     fetchTenants();
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function clearSelection() { setSelectedIds(new Set()); }
+  function resetFilters() { setSearch(''); setStatusFilter(''); }
+
   const mapTenantStatus = (status: string): RowStatus => {
     switch (status) {
       case 'active': case 'approved': return 'active';
@@ -147,41 +172,67 @@ export default function TenantsPage() {
     }
   };
 
-  // Row # = 1 col, remaining columns must sum to 11
   const tenantColumns: TableColumn<Tenant>[] = useMemo(() => [
     {
+      key: 'select',
+      label: '',
+      span: 1,
+      render: (row) => (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedIds.has(row.id)}
+            onChange={() => toggleSelect(row.id)}
+            className="h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-700"
+          />
+        </div>
+      ),
+    },
+    {
       key: 'name',
-      label: 'Name',
+      label: 'Tenant',
       span: 3,
       render: (row) => (
-        <span className="text-[13px] font-medium text-white/90 truncate block">{row.first_name} {row.last_name}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-semibold">
+            {getInitials(row.first_name, row.last_name)}
+          </div>
+          <span className="text-[13px] font-medium text-[#020617] truncate">{row.first_name} {row.last_name}</span>
+        </div>
       ),
     },
     {
-      key: 'email',
-      label: 'Email',
+      key: 'contact',
+      label: 'Contact',
       span: 3,
       render: (row) => (
-        <span className="text-[13px] text-white/50 truncate block">{row.email || '\u2014'}</span>
-      ),
-    },
-    {
-      key: 'phone',
-      label: 'Phone',
-      span: 2,
-      render: (row) => (
-        <span className="text-[13px] text-white/50 truncate block">{row.phone || '\u2014'}</span>
+        <div className="min-w-0">
+          <div className="text-[13px] text-[#020617] truncate">{row.email || '—'}</div>
+          <div className="text-xs text-slate-500 truncate">{row.phone || '—'}</div>
+        </div>
       ),
     },
     {
       key: 'status',
       label: 'Status',
       span: 1,
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusBadgeClass[row.status] || 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      key: 'move_in',
+      label: 'Move-in',
+      span: 1,
+      render: (row) => (
+        <span className="text-xs text-slate-500 whitespace-nowrap">{formatMoveDate(row.move_in_date)}</span>
+      ),
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: '',
       span: 2,
       align: 'right',
       isAction: true,
@@ -189,14 +240,14 @@ export default function TenantsPage() {
         <div className="flex items-center justify-end gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => handleEdit(row)}
-            className="p-1.5 rounded-md text-white/30 hover:text-accent hover:bg-accent/10 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-sky-700 hover:bg-sky-50 transition-colors"
             title="Edit tenant"
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={() => handleDeleteClick(row)}
-            className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
             title="Delete tenant"
           >
             <Trash2 size={14} />
@@ -204,7 +255,7 @@ export default function TenantsPage() {
         </div>
       ),
     },
-  ], []);
+  ], [selectedIds]);
 
   if (loading) {
     return (
@@ -216,25 +267,26 @@ export default function TenantsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Tenants</h1>
-          <p className="text-sm text-text-secondary">{tenants.length} tenants & prospects</p>
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Tenants</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {tenants.length} total &middot; {filteredTenants.length} matching filters
+          </p>
         </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
-        >
-          <Plus size={16} />
-          Add Tenant
-        </button>
+        <div className="flex gap-2">
+          <Button variant="secondary">Import CSV</Button>
+          <Button icon={<Plus size={16} />} onClick={handleAdd}>
+            Add Tenant
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-        <div className="flex-1 sm:max-w-sm">
+      {/* Filter bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg mb-4">
+        <div className="flex-1">
           <Input
             placeholder="Search by name, email, or phone..."
             value={search}
@@ -249,42 +301,44 @@ export default function TenantsPage() {
             options={STATUS_FILTER_OPTIONS}
           />
         </div>
+        <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
       </div>
+
+      {/* Bulk actions toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="sticky top-0 z-10 bg-white border border-slate-200 rounded-lg p-3 mb-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-700">{selectedIds.size} selected</span>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm">Update Status</Button>
+            <Button variant="ghost" size="sm">Export</Button>
+            <Button variant="danger" size="sm">Delete</Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>Clear</Button>
+          </div>
+        </div>
+      )}
 
       {/* Table / Empty state */}
       {filteredTenants.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <Users size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <Users size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="font-display text-lg font-semibold text-[#020617] mb-2">
             {tenants.length === 0 ? 'No tenants yet' : 'No matching tenants'}
           </h3>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-slate-500">
             {tenants.length === 0
               ? 'Add tenants manually or sync from your PM platform.'
               : 'Try adjusting your search or filter criteria.'}
           </p>
         </div>
       ) : (
-        <>
+        <div className="overflow-x-auto">
           <AnimatedTable<Tenant>
             columns={tenantColumns}
             data={paginated}
             getKey={(row) => row.id}
-            getRowNumber={(_, i) => String((page - 1) * pageSize + i + 1).padStart(2, '0')}
             getRowStatus={(row) => mapTenantStatus(row.status)}
-            title="Tenants"
-            subtitle={`${filteredTenants.length} tenant${filteredTenants.length !== 1 ? 's' : ''}`}
-            headerRight={
-              <button
-                onClick={handleAdd}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
-              >
-                <Plus size={16} />
-                Add Tenant
-              </button>
-            }
             emptyState={
-              <p className="text-sm text-white/40">No tenants found.</p>
+              <p className="text-sm text-slate-500">No tenants found.</p>
             }
           />
           <Pagination
@@ -294,7 +348,7 @@ export default function TenantsPage() {
             onPageChange={setPage}
             onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
           />
-        </>
+        </div>
       )}
 
       {/* Add/Edit Modal */}

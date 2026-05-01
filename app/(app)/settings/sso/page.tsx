@@ -4,6 +4,18 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ShieldCheck, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  SettingsShell,
+  SettingsCard,
+  SettingsCardHeader,
+  SettingsCardBody,
+  settingsInputClass,
+  settingsLabelClass,
+  settingsPrimaryButtonClass,
+  settingsSecondaryButtonClass,
+  settingsDangerButtonClass,
+} from '@/components/settings/SettingsShell';
 
 type Provider = 'okta' | 'azure_ad' | 'google_workspace' | 'onelogin' | 'generic_saml';
 
@@ -36,7 +48,9 @@ export default function SSOSettingsPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
@@ -147,227 +161,222 @@ export default function SSOSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-3xl mx-auto space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
+      <SettingsShell title="SSO / SAML" subtitle="Configure single sign-on for your organization.">
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </SettingsShell>
     );
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">SSO / SAML</h1>
-        <p className="text-sm text-white/40 mt-1">
-          Configure single sign-on for your organization. Requires Supabase Pro plan.
-        </p>
-      </div>
+    <SettingsShell
+      title="SSO / SAML"
+      subtitle="Configure single sign-on for your organization. Requires Supabase Pro plan."
+    >
+      <div className="space-y-6">
+        {/* Status banner */}
+        <SettingsCard
+          className={cn(
+            enabled
+              ? 'border-emerald-200 bg-emerald-50/50'
+              : 'border-slate-200',
+          )}
+        >
+          <SettingsCardBody className="flex items-center gap-3">
+            {enabled ? (
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
+            ) : (
+              <ShieldCheck className="h-6 w-6 text-slate-400 shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className="font-display font-semibold text-[#020617]">
+                SSO is {enabled ? 'Enabled' : 'Disabled'}
+              </p>
+              <p className="text-xs text-slate-500">
+                {enabled
+                  ? 'Users with allowlisted email domains will be auto-routed to your IDP.'
+                  : 'Configure your IDP and save to enable.'}
+              </p>
+            </div>
+            {enabled && (
+              <button
+                type="button"
+                onClick={handleDisable}
+                disabled={saving}
+                className={settingsDangerButtonClass}
+              >
+                Disable
+              </button>
+            )}
+          </SettingsCardBody>
+        </SettingsCard>
 
-      {/* Status banner */}
-      <div
-        className={
-          'mb-6 rounded-xl border px-4 py-3 flex items-center gap-3 ' +
-          (enabled
-            ? 'bg-emerald-500/[0.06] border-emerald-500/20'
-            : 'bg-white/[0.02] border-white/[0.06]')
-        }
-      >
-        {enabled ? (
-          <CheckCircle2 className="size-5 text-emerald-400" />
-        ) : (
-          <ShieldCheck className="size-5 text-white/40" />
+        {error && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 flex items-center gap-3 text-sm text-red-700">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <p>{error}</p>
+          </div>
         )}
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">
-            SSO is {enabled ? 'Enabled' : 'Disabled'}
-          </p>
-          <p className="text-xs text-white/40">
-            {enabled
-              ? 'Users with allowlisted email domains will be auto-routed to your IDP.'
-              : 'Configure your IDP and save to enable.'}
-          </p>
-        </div>
-        {enabled && (
-          <button
-            onClick={handleDisable}
-            disabled={saving}
-            className="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/[0.06] transition"
-          >
-            Disable
-          </button>
+
+        {saved && (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-3 text-sm text-emerald-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <p>SSO configuration saved.</p>
+          </div>
         )}
-      </div>
 
-      {error && (
-        <div className="mb-6 rounded-xl bg-red-500/[0.06] border border-red-500/20 px-4 py-3 flex items-center gap-3">
-          <AlertCircle className="size-4 text-red-400" />
-          <p className="text-sm text-red-300">{error}</p>
-        </div>
-      )}
+        {/* Provider selection */}
+        <SettingsCard>
+          <SettingsCardHeader title="Identity Provider" description="Pick the IDP your team uses." />
+          <SettingsCardBody>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {PROVIDERS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setProvider(p.value)}
+                  className={cn(
+                    'h-12 rounded-md border text-sm font-medium transition-colors',
+                    provider === p.value
+                      ? 'bg-sky-50 border-[#0369A1] text-[#0369A1]'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300',
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </SettingsCardBody>
+        </SettingsCard>
 
-      {saved && (
-        <div className="mb-6 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 px-4 py-3 flex items-center gap-3">
-          <CheckCircle2 className="size-4 text-emerald-400" />
-          <p className="text-sm text-emerald-300">SSO configuration saved.</p>
-        </div>
-      )}
+        {/* Metadata */}
+        <SettingsCard>
+          <SettingsCardHeader title="IDP Metadata" description="Either point to your IDP metadata URL or paste the XML directly." />
+          <SettingsCardBody className="space-y-3">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMetadataMode('url')}
+                className={cn(
+                  'h-9 px-3 rounded-md text-xs font-medium border transition-colors',
+                  metadataMode === 'url'
+                    ? 'bg-sky-50 border-[#0369A1] text-[#0369A1]'
+                    : 'bg-white border-slate-200 text-slate-600',
+                )}
+              >
+                URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setMetadataMode('xml')}
+                className={cn(
+                  'h-9 px-3 rounded-md text-xs font-medium border transition-colors',
+                  metadataMode === 'xml'
+                    ? 'bg-sky-50 border-[#0369A1] text-[#0369A1]'
+                    : 'bg-white border-slate-200 text-slate-600',
+                )}
+              >
+                Paste XML
+              </button>
+            </div>
 
-      {/* Provider selection */}
-      <section className="mb-6">
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">
-          Identity Provider
-        </label>
-        <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-          {PROVIDERS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => setProvider(p.value)}
-              className={
-                'h-12 rounded-xl border text-sm transition ' +
-                (provider === p.value
-                  ? 'bg-[#00D4AA]/[0.08] border-[#00D4AA]/40 text-white'
-                  : 'bg-white/[0.02] border-white/[0.06] text-white/60 hover:border-white/[0.12]')
-              }
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </section>
+            {metadataMode === 'url' ? (
+              <input
+                type="url"
+                value={metadataUrl}
+                onChange={(e) => setMetadataUrl(e.target.value)}
+                placeholder="https://your-idp.com/app/metadata"
+                className={settingsInputClass}
+              />
+            ) : (
+              <textarea
+                value={metadataXml}
+                onChange={(e) => setMetadataXml(e.target.value)}
+                placeholder="<md:EntityDescriptor ...>...</md:EntityDescriptor>"
+                rows={8}
+                className={cn(settingsInputClass, 'h-auto py-2 font-mono')}
+              />
+            )}
+          </SettingsCardBody>
+        </SettingsCard>
 
-      {/* Metadata */}
-      <section className="mb-6">
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">
-          IDP Metadata
-        </label>
-        <div className="mt-2 flex gap-2 mb-3">
+        {/* Domain allowlist */}
+        <SettingsCard>
+          <SettingsCardHeader
+            title="Domain Allowlist"
+            description="Users signing in with these email domains are auto-routed to your IDP."
+          />
+          <SettingsCardBody>
+            <input
+              type="text"
+              value={domainList}
+              onChange={(e) => setDomainList(e.target.value)}
+              placeholder="acmepm.com, acme-realty.com"
+              className={settingsInputClass}
+            />
+            <p className="text-xs text-slate-500 mt-2">Comma-separated.</p>
+          </SettingsCardBody>
+        </SettingsCard>
+
+        {/* Attribute mapping */}
+        <SettingsCard>
+          <SettingsCardHeader title="Attribute Mapping" description="Map IDP attributes to user fields." />
+          <SettingsCardBody className="space-y-3">
+            <div>
+              <label className={settingsLabelClass}>Email <span className="text-slate-400 font-normal">(default: NameID)</span></label>
+              <input
+                type="text"
+                value={attrEmail}
+                onChange={(e) => setAttrEmail(e.target.value)}
+                className={settingsInputClass}
+              />
+            </div>
+            <div>
+              <label className={settingsLabelClass}>Name <span className="text-slate-400 font-normal">(default: displayName)</span></label>
+              <input
+                type="text"
+                value={attrName}
+                onChange={(e) => setAttrName(e.target.value)}
+                className={settingsInputClass}
+              />
+            </div>
+            <div>
+              <label className={settingsLabelClass}>Role <span className="text-slate-400 font-normal">(optional)</span></label>
+              <input
+                type="text"
+                value={attrRole}
+                onChange={(e) => setAttrRole(e.target.value)}
+                placeholder="e.g. groups"
+                className={settingsInputClass}
+              />
+            </div>
+          </SettingsCardBody>
+        </SettingsCard>
+
+        {/* Actions / sticky save */}
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 -mx-6 px-6 py-4 flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setMetadataMode('url')}
-            className={
-              'px-3 py-1.5 rounded-lg text-xs ' +
-              (metadataMode === 'url'
-                ? 'bg-white/[0.08] text-white'
-                : 'bg-white/[0.02] text-white/40 hover:text-white/70')
-            }
+            onClick={handleSave}
+            disabled={saving || !orgId}
+            className={settingsPrimaryButtonClass}
           >
-            URL
+            {saving ? 'Saving...' : enabled ? 'Save Changes' : 'Save & Enable'}
           </button>
-          <button
-            type="button"
-            onClick={() => setMetadataMode('xml')}
-            className={
-              'px-3 py-1.5 rounded-lg text-xs ' +
-              (metadataMode === 'xml'
-                ? 'bg-white/[0.08] text-white'
-                : 'bg-white/[0.02] text-white/40 hover:text-white/70')
-            }
-          >
-            Paste XML
+          <button type="button" onClick={handleTestSso} className={settingsSecondaryButtonClass}>
+            <ExternalLink size={14} /> Test SSO
           </button>
         </div>
 
-        {metadataMode === 'url' ? (
-          <input
-            type="url"
-            value={metadataUrl}
-            onChange={(e) => setMetadataUrl(e.target.value)}
-            placeholder="https://your-idp.com/app/metadata"
-            className="w-full h-11 rounded-xl bg-white/[0.02] border border-white/[0.06] px-4 text-sm text-white focus:outline-none focus:border-[#00D4AA]/30"
-          />
-        ) : (
-          <textarea
-            value={metadataXml}
-            onChange={(e) => setMetadataXml(e.target.value)}
-            placeholder="<md:EntityDescriptor ...>...</md:EntityDescriptor>"
-            rows={8}
-            className="w-full rounded-xl bg-white/[0.02] border border-white/[0.06] px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-[#00D4AA]/30"
-          />
-        )}
-      </section>
-
-      {/* Domain allowlist */}
-      <section className="mb-6">
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">
-          Domain Allowlist
-        </label>
-        <input
-          type="text"
-          value={domainList}
-          onChange={(e) => setDomainList(e.target.value)}
-          placeholder="acmepm.com, acme-realty.com"
-          className="mt-2 w-full h-11 rounded-xl bg-white/[0.02] border border-white/[0.06] px-4 text-sm text-white focus:outline-none focus:border-[#00D4AA]/30"
-        />
-        <p className="text-xs text-white/30 mt-2">
-          Comma-separated. Users signing in with these email domains are auto-routed to your IDP.
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Need help? After enabling SSO in Supabase Pro, your IDP will need:{' '}
+          <span className="font-mono text-slate-700">
+            ACS URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || '<supabase-url>'}/auth/v1/sso/saml/acs
+          </span>
         </p>
-      </section>
-
-      {/* Attribute mapping */}
-      <section className="mb-6">
-        <label className="text-xs font-medium text-white/60 uppercase tracking-wide">
-          Attribute Mapping
-        </label>
-        <div className="mt-2 space-y-3">
-          <div>
-            <label className="text-xs text-white/40">Email (default: NameID)</label>
-            <input
-              type="text"
-              value={attrEmail}
-              onChange={(e) => setAttrEmail(e.target.value)}
-              className="mt-1 w-full h-10 rounded-lg bg-white/[0.02] border border-white/[0.06] px-3 text-sm text-white focus:outline-none focus:border-[#00D4AA]/30"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-white/40">Name (default: displayName)</label>
-            <input
-              type="text"
-              value={attrName}
-              onChange={(e) => setAttrName(e.target.value)}
-              className="mt-1 w-full h-10 rounded-lg bg-white/[0.02] border border-white/[0.06] px-3 text-sm text-white focus:outline-none focus:border-[#00D4AA]/30"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-white/40">Role (optional)</label>
-            <input
-              type="text"
-              value={attrRole}
-              onChange={(e) => setAttrRole(e.target.value)}
-              placeholder="e.g. groups"
-              className="mt-1 w-full h-10 rounded-lg bg-white/[0.02] border border-white/[0.06] px-3 text-sm text-white focus:outline-none focus:border-[#00D4AA]/30"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-        <button
-          onClick={handleSave}
-          disabled={saving || !orgId}
-          className="h-11 px-5 rounded-xl bg-[#00D4AA] text-[#06080C] text-sm font-semibold hover:bg-[#00eabb] disabled:opacity-50 transition"
-        >
-          {saving ? 'Saving...' : enabled ? 'Save Changes' : 'Save & Enable'}
-        </button>
-
-        <button
-          onClick={handleTestSso}
-          type="button"
-          className="h-11 px-4 rounded-xl border border-white/[0.06] text-sm text-white/70 hover:bg-white/[0.04] hover:text-white transition flex items-center gap-2"
-        >
-          <ExternalLink className="size-4" />
-          Test SSO
-        </button>
       </div>
-
-      <p className="text-xs text-white/30 mt-6 leading-relaxed">
-        Need help? After enabling SSO in Supabase Pro, your IDP will need:{' '}
-        <span className="text-white/50 font-mono">
-          ACS URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || '<supabase-url>'}/auth/v1/sso/saml/acs
-        </span>
-      </p>
-    </div>
+    </SettingsShell>
   );
 }

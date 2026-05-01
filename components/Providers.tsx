@@ -23,8 +23,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="data-theme"
-      defaultTheme="dark"
-      enableSystem
+      defaultTheme="light"
+      enableSystem={false}
       storageKey="rkv-theme"
     >
       <QueryClientProvider client={queryClient}>

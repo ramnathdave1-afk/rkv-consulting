@@ -69,9 +69,9 @@ export function AnimatedNumber({
       className={`tabular-nums ${className}`}
       animate={
         flash === 'up'
-          ? { color: ['#00D4AA', 'inherit'] }
+          ? { color: ['#0369A1', 'inherit'] }
           : flash === 'down'
-            ? { color: ['#EF4444', 'inherit'] }
+            ? { color: ['#dc2626', 'inherit'] }
             : {}
       }
       transition={{ duration: 0.6 }}

@@ -48,6 +48,21 @@ function formatTime(iso: string | null): string {
   return d.toLocaleString();
 }
 
+function StatusBadge({ status }: { status: 'success' | 'partial' | 'failed' }) {
+  const map: Record<typeof status, string> = {
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    partial: 'bg-amber-50 text-amber-700 border-amber-100',
+    failed: 'bg-rose-50 text-rose-700 border-rose-100',
+  };
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${map[status]}`}
+    >
+      {status}
+    </span>
+  );
+}
+
 export default function BuildiumIntegrationPage() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,36 +168,40 @@ export default function BuildiumIntegrationPage() {
       <div>
         <Link
           href="/integrations"
-          className="inline-flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-[#020617] transition-colors"
         >
           <ArrowLeft size={12} />
           Back to integrations
         </Link>
         <div className="mt-2 flex items-start justify-between gap-3">
           <div>
-            <h1 className="font-display text-xl font-bold text-text-primary">Buildium</h1>
-            <p className="text-sm text-text-secondary">
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-xl font-bold text-[#020617]">Buildium Integration</h1>
+              {connected ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  <CheckCircle2 size={10} />
+                  Connected
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+                  <XCircle size={10} />
+                  Not connected
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-slate-500 mt-1">
               Sync properties, units, tenants, leases, and work orders from Buildium via their REST API.
             </p>
           </div>
-          {connected ? (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold bg-emerald-400/10 text-emerald-400">
-              <CheckCircle2 size={11} />
-              Connected
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold bg-amber-400/10 text-amber-400">
-              <XCircle size={11} />
-              Not connected
-            </span>
-          )}
         </div>
       </div>
 
       {message && (
         <div
-          className={`glass-card p-3 text-xs ${
-            message.kind === 'ok' ? 'text-emerald-400' : 'text-rose-400'
+          className={`rounded-lg border p-3 text-xs ${
+            message.kind === 'ok'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border-rose-200 bg-rose-50 text-rose-700'
           }`}
         >
           {message.text}
@@ -191,44 +210,45 @@ export default function BuildiumIntegrationPage() {
 
       {/* CONNECT */}
       {!connected && (
-        <form onSubmit={handleConnect} className="glass-card p-5 space-y-4">
+        <form
+          onSubmit={handleConnect}
+          className="bg-white border border-slate-200 rounded-lg shadow-sm p-6 space-y-4"
+        >
           <div>
-            <h2 className="text-sm font-semibold text-text-primary mb-1 flex items-center gap-2">
-              <Plug size={14} className="text-accent" />
+            <h2 className="font-display text-sm font-semibold text-[#020617] mb-1 flex items-center gap-2">
+              <Plug size={14} className="text-[#0369A1]" />
               Connect your Buildium account
             </h2>
-            <p className="text-xs text-text-secondary">
+            <p className="text-xs text-slate-500">
               Generate an API key + secret in Buildium under{' '}
-              <span className="text-text-primary">Settings &rarr; Application Settings &rarr; API keys</span>.
-              Both values are encrypted at rest before being stored.
+              <span className="text-[#020617] font-medium">
+                Settings &rarr; Application Settings &rarr; API keys
+              </span>
+              . Both values are encrypted at rest before being stored.
             </p>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-text-secondary mb-1">
-              Client ID
-            </label>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Client ID</label>
             <input
               type="text"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
               required
               autoComplete="off"
-              className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+              className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm text-[#020617] focus:outline-none focus:ring-2 focus:ring-[#0369A1] focus:border-transparent transition-all"
               placeholder="bldm_..."
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-text-secondary mb-1">
-              API Secret
-            </label>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">API Secret</label>
             <input
               type="password"
               value={clientSecret}
               onChange={(e) => setClientSecret(e.target.value)}
               required
               autoComplete="off"
-              className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none"
+              className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm text-[#020617] focus:outline-none focus:ring-2 focus:ring-[#0369A1] focus:border-transparent transition-all"
               placeholder="••••••••••••••••"
             />
           </div>
@@ -236,7 +256,7 @@ export default function BuildiumIntegrationPage() {
           <button
             type="submit"
             disabled={connecting || !clientId || !clientSecret}
-            className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-bg-primary hover:bg-accent-hover disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] px-4 py-2 text-xs font-semibold text-white hover:bg-[#0284C7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {connecting && <Loader2 size={12} className="animate-spin" />}
             Test connection &amp; connect
@@ -247,24 +267,18 @@ export default function BuildiumIntegrationPage() {
       {/* SYNC + SETTINGS */}
       {connected && (
         <>
-          <div className="glass-card p-5">
-            <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
+            <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary mb-1">Sync</h2>
-                <p className="text-xs text-text-secondary">
+                <h2 className="font-display text-sm font-semibold text-[#020617] mb-1">Sync</h2>
+                <p className="text-xs text-slate-500">
                   Last sync:{' '}
-                  <span className="text-text-primary">{formatTime(status?.last_sync_at ?? null)}</span>
+                  <span className="text-[#020617] font-medium">
+                    {formatTime(status?.last_sync_at ?? null)}
+                  </span>
                   {status?.last_sync_status && (
-                    <span
-                      className={`ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                        status.last_sync_status === 'success'
-                          ? 'bg-emerald-400/10 text-emerald-400'
-                          : status.last_sync_status === 'partial'
-                            ? 'bg-amber-400/10 text-amber-400'
-                            : 'bg-rose-400/10 text-rose-400'
-                      }`}
-                    >
-                      {status.last_sync_status}
+                    <span className="ml-2 inline-flex">
+                      <StatusBadge status={status.last_sync_status} />
                     </span>
                   )}
                 </p>
@@ -273,7 +287,7 @@ export default function BuildiumIntegrationPage() {
                 type="button"
                 onClick={handleSync}
                 disabled={syncing}
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-bg-primary hover:bg-accent-hover disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0284C7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 {syncing ? (
                   <Loader2 size={12} className="animate-spin" />
@@ -284,37 +298,37 @@ export default function BuildiumIntegrationPage() {
               </button>
             </div>
 
-            <div className="rounded-lg border border-border bg-bg-elevated p-3">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={autoSync}
                   onChange={(e) => setAutoSync(e.target.checked)}
-                  className="mt-0.5 accent-accent"
+                  className="mt-0.5 accent-[#0369A1] cursor-pointer"
                 />
                 <div>
-                  <div className="text-xs font-semibold text-text-primary">
-                    Nightly auto-sync{' '}
-                    <span className="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-400/10 text-amber-400">
+                  <div className="text-xs font-semibold text-[#020617] flex items-center gap-2">
+                    Nightly auto-sync
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-700 border border-amber-100">
                       <AlertTriangle size={9} />
                       Roadmap
                     </span>
                   </div>
-                  <p className="text-[11px] text-text-secondary mt-0.5">
-                    Automatic nightly sync at 2:00 AM in your account&apos;s timezone. Requires a
-                    cron worker — when scheduled jobs ship in the platform this toggle will start
-                    enforcing it. For now, run sync manually.
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Automatic nightly sync at 2:00 AM in your account&apos;s timezone. Requires a cron
+                    worker — when scheduled jobs ship in the platform this toggle will start enforcing
+                    it. For now, run sync manually.
                   </p>
                 </div>
               </label>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between">
               <Link
                 href="https://developer.buildium.com/"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-text-secondary hover:text-text-primary transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-[#020617] transition-colors"
               >
                 Buildium API docs
                 <ExternalLink size={10} />
@@ -322,7 +336,7 @@ export default function BuildiumIntegrationPage() {
               <button
                 type="button"
                 onClick={handleDisconnect}
-                className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors"
+                className="text-[11px] text-rose-600 hover:text-rose-700 transition-colors cursor-pointer"
               >
                 Disconnect
               </button>
@@ -330,82 +344,94 @@ export default function BuildiumIntegrationPage() {
           </div>
 
           {/* SYNC HISTORY */}
-          <div className="glass-card p-5">
-            <h2 className="text-sm font-semibold text-text-primary mb-3">Recent sync history</h2>
+          <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
+            <h2 className="font-display text-sm font-semibold text-[#020617] mb-3">Recent sync history</h2>
             {loading && !status ? (
-              <p className="text-xs text-text-secondary">Loading…</p>
+              <p className="text-xs text-slate-500">Loading…</p>
             ) : status && status.logs.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-text-secondary border-b border-border">
-                      <th className="text-left py-2 font-medium">When</th>
-                      <th className="text-left py-2 font-medium">Entity</th>
-                      <th className="text-left py-2 font-medium">Status</th>
-                      <th className="text-right py-2 font-medium">Imported</th>
-                      <th className="text-right py-2 font-medium">Skipped</th>
-                      <th className="text-right py-2 font-medium">Errors</th>
-                      <th className="text-left py-2 font-medium">Trigger</th>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                      <th className="text-left px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        When
+                      </th>
+                      <th className="text-left px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Entity
+                      </th>
+                      <th className="text-left px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Status
+                      </th>
+                      <th className="text-right px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Imported
+                      </th>
+                      <th className="text-right px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Skipped
+                      </th>
+                      <th className="text-right px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Errors
+                      </th>
+                      <th className="text-left px-3 py-2 font-semibold uppercase tracking-wide text-[10px]">
+                        Trigger
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {status.logs.map((log) => (
-                      <tr key={log.id} className="border-b border-border/40">
-                        <td className="py-2 text-text-secondary">{formatTime(log.created_at)}</td>
-                        <td className="py-2 text-text-primary">
+                      <tr
+                        key={log.id}
+                        className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors"
+                      >
+                        <td className="px-3 py-2 text-slate-500">{formatTime(log.created_at)}</td>
+                        <td className="px-3 py-2 text-[#020617]">
                           {ENTITY_LABELS[log.entity_type] ?? log.entity_type}
                         </td>
-                        <td className="py-2">
-                          <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                              log.status === 'success'
-                                ? 'bg-emerald-400/10 text-emerald-400'
-                                : log.status === 'partial'
-                                  ? 'bg-amber-400/10 text-amber-400'
-                                  : 'bg-rose-400/10 text-rose-400'
-                            }`}
-                          >
-                            {log.status}
-                          </span>
+                        <td className="px-3 py-2">
+                          <StatusBadge status={log.status} />
                         </td>
-                        <td className="py-2 text-right text-text-primary">{log.imported}</td>
-                        <td className="py-2 text-right text-text-secondary">{log.skipped}</td>
-                        <td className="py-2 text-right text-text-secondary">
+                        <td className="px-3 py-2 text-right text-[#020617]">{log.imported}</td>
+                        <td className="px-3 py-2 text-right text-slate-500">{log.skipped}</td>
+                        <td className="px-3 py-2 text-right text-slate-500">
                           {log.errors?.length ?? 0}
                         </td>
-                        <td className="py-2 text-text-secondary">{log.triggered_by ?? '—'}</td>
+                        <td className="px-3 py-2 text-slate-500">{log.triggered_by ?? '—'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-text-secondary">No sync runs yet. Click &quot;Sync now&quot;.</p>
+              <p className="text-xs text-slate-500">No sync runs yet. Click &quot;Sync now&quot;.</p>
             )}
           </div>
         </>
       )}
 
       {/* HELP */}
-      <div className="glass-card p-5">
-        <h2 className="text-sm font-semibold text-text-primary mb-2">How it works</h2>
-        <ul className="space-y-1.5 text-xs text-text-secondary">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+        <h2 className="font-display text-sm font-semibold text-[#020617] mb-2">How it works</h2>
+        <ul className="space-y-1.5 text-xs text-slate-600">
           <li>
             We call the official Buildium REST API at{' '}
-            <code className="text-text-primary">https://api.buildium.com/v1</code> using your API
-            key + secret.
+            <code className="text-[#020617] bg-white border border-slate-200 rounded px-1 py-0.5">
+              https://api.buildium.com/v1
+            </code>{' '}
+            using your API key + secret.
           </li>
           <li>
-            Sync order is properties → units → tenants → leases → work orders. Records reference
-            their parent by external Buildium ID.
+            Sync order is properties → units → tenants → leases → work orders. Records reference their
+            parent by external Buildium ID.
           </li>
           <li>
             Re-running a sync is idempotent — records are upserted on{' '}
-            <code className="text-text-primary">(org_id, buildium_*_id)</code>.
+            <code className="text-[#020617] bg-white border border-slate-200 rounded px-1 py-0.5">
+              (org_id, buildium_*_id)
+            </code>
+            .
           </li>
           <li>
-            Buildium rate-limits at roughly 120 requests/minute. We pace requests at ~500ms apart
-            and retry on the next sync if a page fails.
+            Buildium rate-limits at roughly 120 requests/minute. We pace requests at ~500ms apart and
+            retry on the next sync if a page fails.
           </li>
           <li>
             Need help generating API credentials? See{' '}
@@ -413,7 +439,7 @@ export default function BuildiumIntegrationPage() {
               href="https://developer.buildium.com/"
               target="_blank"
               rel="noreferrer"
-              className="text-accent hover:underline inline-flex items-center gap-1"
+              className="text-[#0369A1] hover:text-[#0284C7] hover:underline inline-flex items-center gap-1"
             >
               the Buildium developer portal
               <ExternalLink size={9} />

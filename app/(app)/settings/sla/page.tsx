@@ -4,6 +4,17 @@ import React, { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
 import { Plus, Trash2, Pencil, X, Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  SettingsShell,
+  SettingsCard,
+  SettingsCardHeader,
+  SettingsCardBody,
+  settingsInputClass,
+  settingsLabelClass,
+  settingsPrimaryButtonClass,
+  settingsSecondaryButtonClass,
+} from '@/components/settings/SettingsShell';
 
 interface SlaPolicy {
   id: string;
@@ -151,162 +162,232 @@ export default function SlaSettingsPage() {
     load();
   }
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">SLA Policies</h1>
-          <p className="text-sm text-text-secondary">
-            Define response and resolution targets per resource type and priority.
-          </p>
-        </div>
+    <SettingsShell
+      title="SLA Policies"
+      subtitle="Define response and resolution targets per resource type and priority."
+      actions={
         <div className="flex items-center gap-2">
           {policies.length === 0 && (
-            <button
-              onClick={applyDefaults}
-              className="rounded-lg border border-border bg-bg-secondary px-3 py-2 text-sm font-medium text-text-primary hover:bg-bg-tertiary"
-            >
+            <button type="button" onClick={applyDefaults} className={settingsSecondaryButtonClass}>
               Apply defaults
             </button>
           )}
-          <button
-            onClick={openNew}
-            className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-bg-primary hover:bg-accent-hover transition-colors"
-          >
+          <button type="button" onClick={openNew} className={settingsPrimaryButtonClass}>
             <Plus size={14} /> New policy
           </button>
         </div>
-      </div>
-
-      {showForm && (
-        <form onSubmit={save} className="glass-card p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">{editingId ? 'Edit policy' : 'New policy'}</h2>
-            <button
-              type="button"
-              onClick={() => { setShowForm(false); setEditingId(null); }}
-              className="text-text-muted hover:text-text-primary"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Name">
-              <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
-            </Field>
-            <Field label="Resource type">
-              <select value={form.resource_type} onChange={(e) => setForm({ ...form, resource_type: e.target.value })} className="input">
-                {RESOURCE_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </Field>
-            <Field label="Priority">
-              <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="input">
-                {PRIORITIES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
-            </Field>
-            <Field label="Acknowledge within (min)">
-              <input type="number" min={0} value={form.acknowledge_within_min} onChange={(e) => setForm({ ...form, acknowledge_within_min: Number(e.target.value) })} className="input" />
-            </Field>
-            <Field label="First response within (min)">
-              <input type="number" min={0} value={form.first_response_within_min} onChange={(e) => setForm({ ...form, first_response_within_min: Number(e.target.value) })} className="input" />
-            </Field>
-            <Field label="Resolve within (min)">
-              <input type="number" min={0} value={form.resolve_within_min} onChange={(e) => setForm({ ...form, resolve_within_min: Number(e.target.value) })} className="input" />
-            </Field>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={form.business_hours_only} onChange={(e) => setForm({ ...form, business_hours_only: e.target.checked })} />
-              Business hours only
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
-              Enabled
-            </label>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-bg-primary hover:bg-accent-hover transition-colors disabled:opacity-50"
-            >
-              <Save size={14} /> {saving ? 'Saving…' : 'Save policy'}
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="glass-card p-0 overflow-hidden">
-        {policies.length === 0 ? (
-          <div className="p-6 text-sm text-text-muted">
-            No policies yet. Click <strong>Apply defaults</strong> to seed recommended targets, or create one manually.
-          </div>
+      }
+    >
+      <div className="space-y-6">
+        {loading ? (
+          <Skeleton className="h-48 w-full" />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase text-text-muted border-b border-border">
-                <th className="p-3">Name</th>
-                <th className="p-3">Resource</th>
-                <th className="p-3">Priority</th>
-                <th className="p-3">Acknowledge</th>
-                <th className="p-3">First response</th>
-                <th className="p-3">Resolve</th>
-                <th className="p-3">Status</th>
-                <th className="p-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {policies.map((p) => (
-                <tr key={p.id} className="border-b border-border/40">
-                  <td className="p-3 font-medium">{p.name}</td>
-                  <td className="p-3">{p.resource_type}</td>
-                  <td className="p-3">{p.priority ?? <span className="text-text-muted">any</span>}</td>
-                  <td className="p-3">{fmtMin(p.acknowledge_within_min)}</td>
-                  <td className="p-3">{fmtMin(p.first_response_within_min)}</td>
-                  <td className="p-3">{fmtMin(p.resolve_within_min)}</td>
-                  <td className="p-3">{p.enabled ? <span className="text-accent">Enabled</span> : <span className="text-text-muted">Disabled</span>}</td>
-                  <td className="p-3 flex gap-2 justify-end">
-                    <button onClick={() => openEdit(p)} className="text-text-muted hover:text-text-primary"><Pencil size={14} /></button>
-                    <button onClick={() => remove(p.id)} className="text-text-muted hover:text-danger"><Trash2 size={14} /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            {showForm && (
+              <SettingsCard>
+                <SettingsCardHeader
+                  title={editingId ? 'Edit policy' : 'New policy'}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditingId(null);
+                      }}
+                      className="text-slate-400 hover:text-[#020617]"
+                    >
+                      <X size={16} />
+                    </button>
+                  }
+                />
+                <SettingsCardBody>
+                  <form onSubmit={save} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Field label="Name">
+                        <input
+                          required
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          className={settingsInputClass}
+                        />
+                      </Field>
+                      <Field label="Resource type">
+                        <select
+                          value={form.resource_type}
+                          onChange={(e) => setForm({ ...form, resource_type: e.target.value })}
+                          className={settingsInputClass}
+                        >
+                          {RESOURCE_TYPES.map((r) => (
+                            <option key={r.value} value={r.value}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Priority">
+                        <select
+                          value={form.priority}
+                          onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                          className={settingsInputClass}
+                        >
+                          {PRIORITIES.map((p) => (
+                            <option key={p.value} value={p.value}>
+                              {p.label}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Acknowledge within (min)">
+                        <input
+                          type="number"
+                          min={0}
+                          value={form.acknowledge_within_min}
+                          onChange={(e) =>
+                            setForm({ ...form, acknowledge_within_min: Number(e.target.value) })
+                          }
+                          className={settingsInputClass}
+                        />
+                      </Field>
+                      <Field label="First response within (min)">
+                        <input
+                          type="number"
+                          min={0}
+                          value={form.first_response_within_min}
+                          onChange={(e) =>
+                            setForm({ ...form, first_response_within_min: Number(e.target.value) })
+                          }
+                          className={settingsInputClass}
+                        />
+                      </Field>
+                      <Field label="Resolve within (min)">
+                        <input
+                          type="number"
+                          min={0}
+                          value={form.resolve_within_min}
+                          onChange={(e) =>
+                            setForm({ ...form, resolve_within_min: Number(e.target.value) })
+                          }
+                          className={settingsInputClass}
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="flex items-center gap-6 text-sm text-slate-700">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={form.business_hours_only}
+                          onChange={(e) => setForm({ ...form, business_hours_only: e.target.checked })}
+                          className="h-4 w-4 rounded border-slate-300 text-[#0369A1] focus:ring-[#0369A1]"
+                        />
+                        Business hours only
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={form.enabled}
+                          onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+                          className="h-4 w-4 rounded border-slate-300 text-[#0369A1] focus:ring-[#0369A1]"
+                        />
+                        Enabled
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button type="submit" disabled={saving} className={settingsPrimaryButtonClass}>
+                        <Save size={14} /> {saving ? 'Saving…' : 'Save policy'}
+                      </button>
+                    </div>
+                  </form>
+                </SettingsCardBody>
+              </SettingsCard>
+            )}
+
+            <SettingsCard className="overflow-hidden">
+              {policies.length === 0 ? (
+                <div className="p-6 text-sm text-slate-500">
+                  No policies yet. Click <strong>Apply defaults</strong> to seed recommended targets, or
+                  create one manually.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                        <th className="px-4 py-3 font-medium">Name</th>
+                        <th className="px-4 py-3 font-medium">Resource</th>
+                        <th className="px-4 py-3 font-medium">Priority</th>
+                        <th className="px-4 py-3 font-medium">Acknowledge</th>
+                        <th className="px-4 py-3 font-medium">First response</th>
+                        <th className="px-4 py-3 font-medium">Resolve</th>
+                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {policies.map((p) => (
+                        <tr key={p.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 font-medium text-[#020617]">{p.name}</td>
+                          <td className="px-4 py-3 text-slate-600">{p.resource_type}</td>
+                          <td className="px-4 py-3 text-slate-600">
+                            {p.priority ?? <span className="text-slate-400">any</span>}
+                          </td>
+                          <td className="px-4 py-3 tabular-nums">{fmtMin(p.acknowledge_within_min)}</td>
+                          <td className="px-4 py-3 tabular-nums">
+                            {fmtMin(p.first_response_within_min)}
+                          </td>
+                          <td className="px-4 py-3 tabular-nums">{fmtMin(p.resolve_within_min)}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
+                                p.enabled
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  : 'border-slate-200 bg-slate-50 text-slate-500',
+                              )}
+                            >
+                              {p.enabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEdit(p)}
+                                className="p-2 rounded-md text-slate-500 hover:text-[#0369A1] hover:bg-sky-50"
+                                title="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => remove(p.id)}
+                                className="p-2 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                title="Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </SettingsCard>
+          </>
         )}
       </div>
-
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border-radius: 0.5rem;
-          border: 1px solid var(--border, #1f2937);
-          background: var(--bg-primary, #0a0a0a);
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: var(--text-primary, #f5f5f5);
-        }
-      `}</style>
-    </div>
+    </SettingsShell>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-text-muted mb-1">{label}</label>
+      <label className={settingsLabelClass}>{label}</label>
       {children}
     </div>
   );

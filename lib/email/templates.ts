@@ -9,13 +9,13 @@ export function layout(content: string) {
   return `
     <div style="font-family: 'Inter', -apple-system, sans-serif; max-width: 520px; margin: 0 auto; background: #06080C; color: #F0F2F5; padding: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
       <div style="text-align: center; margin-bottom: 24px;">
-        <span style="display: inline-block; background: rgba(0,212,170,0.1); padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; color: #00D4AA;">M</span>
+        <span style="display: inline-block; background: rgba(3,105,161,0.1); padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 700; color: #0369A1;">M</span>
         <span style="margin-left: 8px; font-size: 14px; font-weight: 700; color: #F0F2F5;">RKV Consulting</span>
       </div>
       ${content}
       <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 28px 0 16px;" />
       <p style="margin: 0; font-size: 11px; color: #4A5568; text-align: center;">
-        RKV Consulting by RKV Consulting LLC · <a href="${BASE_URL}" style="color: #00D4AA; text-decoration: none;">rkvconsulting.com</a>
+        RKV Consulting by RKV Consulting LLC · <a href="${BASE_URL}" style="color: #0369A1; text-decoration: none;">rkvconsulting.com</a>
       </p>
     </div>
   `;
@@ -24,7 +24,7 @@ export function layout(content: string) {
 export function button(text: string, url: string) {
   return `
     <div style="text-align: center; margin: 24px 0;">
-      <a href="${url}" style="display: inline-block; background: #00D4AA; color: #06080C; font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 8px; text-decoration: none;">
+      <a href="${url}" style="display: inline-block; background: #0369A1; color: #06080C; font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 8px; text-decoration: none;">
         ${text}
       </a>
     </div>
@@ -68,7 +68,7 @@ export function welcomeEmail(name: string) {
  */
 export function welcomeEmailTemplate(name: string, dashboardUrl: string) {
   return layout(`
-    <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Welcome to RKV Consulting, ${name}!</h2>
+    <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Welcome to RKV Consulting, ${name}!</h2>
     <p style="margin: 0 0 12px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
       Your <strong style="color: #F0F2F5;">14-day trial</strong> is active — full access, no credit card required.
       We'll be in touch in 3 days to make sure you're set up.
@@ -91,7 +91,7 @@ export function invitationEmail(inviterName: string, orgName: string, inviteUrl:
   return {
     subject: `${inviterName} invited you to ${orgName} on RKV Consulting`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">You've been invited</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">You've been invited</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         <strong style="color: #F0F2F5;">${inviterName}</strong> has invited you to join <strong style="color: #F0F2F5;">${orgName}</strong> on RKV Consulting — an AI-powered property management platform.
       </p>
@@ -105,7 +105,7 @@ export function passwordResetEmail(resetUrl: string) {
   return {
     subject: 'Reset your RKV Consulting password',
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Password Reset</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Password Reset</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         We received a request to reset your password. Click below to choose a new one.
       </p>
@@ -129,11 +129,11 @@ export function weeklyDigestEmail(stats: {
   return {
     subject: 'Your Weekly RKV Consulting Digest',
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Weekly Digest</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Weekly Digest</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5;">Here's your portfolio snapshot for the week:</p>
       <div style="display: flex; gap: 8px; margin: 16px 0;">
         ${statCard(String(stats.properties), 'Properties', '#3B82F6')}
-        ${statCard(`${stats.occupancyRate}%`, 'Occupancy', '#00D4AA')}
+        ${statCard(`${stats.occupancyRate}%`, 'Occupancy', '#0369A1')}
         ${statCard(fmtRevenue, 'Revenue', '#8B5CF6')}
       </div>
       <div style="display: flex; gap: 8px; margin: 0 0 16px;">
@@ -159,7 +159,7 @@ export function leaseRenewalEmail(
   return {
     subject: `Lease Renewal Notice - ${propertyName} Unit ${unitNumber}`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Lease Renewal Notice</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Lease Renewal Notice</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${tenantName},
       </p>
@@ -196,7 +196,7 @@ export function maintenanceStatusEmail(
     open: '#3B82F6',
     assigned: '#8B5CF6',
     in_progress: '#F59E0B',
-    completed: '#00D4AA',
+    completed: '#0369A1',
     closed: '#6B7280',
     cancelled: '#EF4444',
   };
@@ -206,7 +206,7 @@ export function maintenanceStatusEmail(
   return {
     subject: `Maintenance Update: ${workOrderTitle}`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Maintenance Update</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Maintenance Update</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${tenantName}, here's an update on your maintenance request:
       </p>
@@ -252,7 +252,7 @@ export function maintenanceCreatedEmail(
   return {
     subject: `New Work Order: ${workOrderTitle} [${priority.toUpperCase()}]`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">New Work Order</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">New Work Order</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${staffName}, a new maintenance request has been submitted:
       </p>
@@ -284,7 +284,7 @@ export function showingReminderEmail(
   return {
     subject: `Showing Reminder: ${propertyName} Unit ${unitNumber} - Tomorrow`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Showing Reminder</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Showing Reminder</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${prospectName}, just a friendly reminder about your upcoming showing tomorrow!
       </p>
@@ -313,7 +313,7 @@ export function showingFollowUpEmail(
   return {
     subject: `Thanks for Visiting ${propertyName} - Ready to Apply?`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Thanks for Visiting!</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Thanks for Visiting!</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${prospectName}, we hope you enjoyed your tour of <strong style="color: #F0F2F5;">${propertyName}, Unit ${unitNumber}</strong>!
       </p>
@@ -353,7 +353,7 @@ export function vendorDispatchEmail(
   return {
     subject: `Work Order Dispatch: ${workOrderTitle} at ${propertyName} [${priority.toUpperCase()}]`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Work Order Dispatch</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Work Order Dispatch</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${vendorName}, you've been assigned a new work order:
       </p>
@@ -393,17 +393,17 @@ export function ownerReportEmail(
   reportUrl: string
 ) {
   const fmtCurrency = (v: number) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-  const noiColor = noi >= 0 ? '#00D4AA' : '#EF4444';
+  const noiColor = noi >= 0 ? '#0369A1' : '#EF4444';
 
   return {
     subject: `Owner Report: ${propertyName} - ${period}`,
     html: layout(`
-      <h2 style="color: #00D4AA; margin: 0 0 12px; font-size: 20px;">Owner Report</h2>
+      <h2 style="color: #0369A1; margin: 0 0 12px; font-size: 20px;">Owner Report</h2>
       <p style="margin: 0 0 16px; font-size: 13px; color: #8B95A5; line-height: 1.6;">
         Hi ${ownerName}, here's your financial summary for <strong style="color: #F0F2F5;">${propertyName}</strong> for <strong style="color: #F0F2F5;">${period}</strong>.
       </p>
       <div style="display: flex; gap: 8px; margin: 16px 0;">
-        ${statCard(fmtCurrency(revenue), 'Revenue', '#00D4AA')}
+        ${statCard(fmtCurrency(revenue), 'Revenue', '#0369A1')}
         ${statCard(fmtCurrency(expenses), 'Expenses', '#F59E0B')}
       </div>
       <div style="display: flex; gap: 8px; margin: 0 0 16px;">

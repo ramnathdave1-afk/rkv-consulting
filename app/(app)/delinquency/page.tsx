@@ -3,34 +3,17 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  DollarSign,
-  Users,
-  Clock,
-  TrendingUp,
   Search,
   Send,
   Phone,
   MessageSquare,
   CreditCard,
-  AlertTriangle,
-  Filter,
+  ChevronDown,
+  DollarSign,
 } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
-import { KPICard } from '@/components/dashboard/KPICard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { SelectField } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
+import { Input, SelectField } from '@/components/ui/Input';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '@/components/ui/Modal';
 import {
   getRentCollectionTier,
@@ -38,10 +21,6 @@ import {
   RENT_REMINDER_FIRM,
   RENT_REMINDER_FINAL,
 } from '@/lib/ai/prompts/rent-collection';
-
-/* ------------------------------------------------------------------ */
-/* Types                                                               */
-/* ------------------------------------------------------------------ */
 
 interface DelinquentRow {
   id: string;
@@ -61,11 +40,6 @@ interface DelinquentRow {
   last_action_date: string | null;
 }
 
-interface AgingBucket {
-  name: string;
-  amount: number;
-}
-
 interface Stats {
   totalOutstanding: number;
   delinquentCount: number;
@@ -73,21 +47,27 @@ interface Stats {
   collectionRate: number;
 }
 
-/* ------------------------------------------------------------------ */
-/* Helpers                                                             */
-/* ------------------------------------------------------------------ */
+const RISK_BADGE_CLASS: Record<string, string> = {
+  low: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border border-amber-200',
+  high: 'bg-red-50 text-red-700 border border-red-200',
+};
 
-const BUCKET_COLORS = ['#00D4AA', '#F59E0B', '#EF4444', '#8A00FF'];
+function riskFromDays(daysLate: number): 'low' | 'medium' | 'high' {
+  if (daysLate <= 5) return 'low';
+  if (daysLate <= 15) return 'medium';
+  return 'high';
+}
 
-function tierBadge(daysLate: number) {
-  const tier = getRentCollectionTier(daysLate);
-  const map: Record<string, { variant: 'success' | 'warning' | 'danger'; label: string }> = {
-    friendly: { variant: 'success', label: 'Friendly' },
-    firm: { variant: 'warning', label: 'Firm' },
-    final: { variant: 'danger', label: 'Final' },
-  };
-  const { variant, label } = map[tier];
-  return <Badge variant={variant} dot size="sm">{label}</Badge>;
+function RiskBadge({ daysLate }: { daysLate: number }) {
+  const risk = riskFromDays(daysLate);
+  const cls = RISK_BADGE_CLASS[risk];
+  const label = risk.charAt(0).toUpperCase() + risk.slice(1);
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${cls}`}>
+      {label}
+    </span>
+  );
 }
 
 function formatCurrency(n: number) {
@@ -110,46 +90,25 @@ function generateMessagePreview(row: DelinquentRow): string {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Custom Tooltip for Recharts                                         */
-/* ------------------------------------------------------------------ */
-
-function AgingTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-bg-secondary border border-border rounded-lg px-3 py-2 shadow-xl">
-      <p className="text-xs text-text-muted">{label}</p>
-      <p className="text-sm font-semibold text-text-primary">{formatCurrency(payload[0].value)}</p>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page Component                                                      */
-/* ------------------------------------------------------------------ */
-
 export default function DelinquencyPage() {
   const [rows, setRows] = useState<DelinquentRow[]>([]);
-  const [buckets, setBuckets] = useState<AgingBucket[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Filters
   const [search, setSearch] = useState('');
   const [propertyFilter, setPropertyFilter] = useState('');
-  const [tierFilter, setTierFilter] = useState('');
+  const [riskFilter, setRiskFilter] = useState('');
 
-  // Collect modal
+  const [actionRow, setActionRow] = useState<DelinquentRow | null>(null);
+  const [actionOpen, setActionOpen] = useState(false);
+
   const [collectRow, setCollectRow] = useState<DelinquentRow | null>(null);
   const [collectChannels, setCollectChannels] = useState<('sms' | 'voice')[]>(['sms']);
   const [collectLoading, setCollectLoading] = useState(false);
 
-  // Record payment modal
   const [payRow, setPayRow] = useState<DelinquentRow | null>(null);
   const [payAmount, setPayAmount] = useState('');
   const [payLoading, setPayLoading] = useState(false);
-
-  /* ---- Data Fetching ---- */
 
   const fetchAll = useCallback(async () => {
     try {
@@ -161,9 +120,7 @@ export default function DelinquencyPage() {
       if (delinqRes.ok) {
         const d = await delinqRes.json();
         setRows(d.rows || []);
-        setBuckets(d.agingBuckets || []);
       }
-
       if (statsRes.ok) {
         const s = await statsRes.json();
         setStats(s);
@@ -179,8 +136,6 @@ export default function DelinquencyPage() {
     fetchAll();
   }, [fetchAll]);
 
-  /* ---- Derived Data ---- */
-
   const propertyOptions = useMemo(() => {
     const unique = Array.from(new Set(rows.map((r) => r.property_name))).sort();
     return [
@@ -189,11 +144,11 @@ export default function DelinquencyPage() {
     ];
   }, [rows]);
 
-  const tierOptions = [
-    { value: '', label: 'All Tiers' },
-    { value: 'friendly', label: 'Friendly (0-5d)' },
-    { value: 'firm', label: 'Firm (6-15d)' },
-    { value: 'final', label: 'Final (16+d)' },
+  const riskOptions = [
+    { value: '', label: 'All Risk Levels' },
+    { value: 'low', label: 'Low Risk (0-5d)' },
+    { value: 'medium', label: 'Medium Risk (6-15d)' },
+    { value: 'high', label: 'High Risk (16+d)' },
   ];
 
   const filteredRows = useMemo(() => {
@@ -207,15 +162,10 @@ export default function DelinquencyPage() {
         if (!match) return false;
       }
       if (propertyFilter && r.property_name !== propertyFilter) return false;
-      if (tierFilter) {
-        const tier = getRentCollectionTier(r.days_late);
-        if (tier !== tierFilter) return false;
-      }
+      if (riskFilter && riskFromDays(r.days_late) !== riskFilter) return false;
       return true;
     });
-  }, [rows, search, propertyFilter, tierFilter]);
-
-  /* ---- Actions ---- */
+  }, [rows, search, propertyFilter, riskFilter]);
 
   async function handleCollect() {
     if (!collectRow) return;
@@ -269,129 +219,38 @@ export default function DelinquencyPage() {
 
   function toggleChannel(ch: 'sms' | 'voice') {
     setCollectChannels((prev) =>
-      prev.includes(ch) ? prev.filter((c) => c !== ch) : [...prev, ch]
+      prev.includes(ch) ? prev.filter((c) => c !== ch) : [...prev, ch],
     );
   }
-
-  /* ---- Render ---- */
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
-        </div>
-        <Skeleton className="h-64" />
-        <Skeleton className="h-96" />
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-8 w-48" />
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
       </div>
     );
   }
 
+  const totalOutstanding = stats?.totalOutstanding || 0;
+  const delinquentCount = stats?.delinquentCount || 0;
+  const avgDaysLate = stats?.avgDaysLate || 0;
+
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Delinquency</h1>
-          <p className="text-sm text-text-secondary">Rent collection and delinquent account management</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <AlertTriangle size={14} className="text-[#F59E0B]" />
-          <span className="text-[10px] text-text-muted uppercase tracking-wider">
-            {filteredRows.length} Account{filteredRows.length !== 1 ? 's' : ''}
-          </span>
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Delinquency</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {delinquentCount} delinquent · ${totalOutstanding.toLocaleString()} outstanding · {avgDaysLate}d avg late
+          </p>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KPICard
-            title="Total Outstanding"
-            value={formatCurrency(stats.totalOutstanding)}
-            numericValue={stats.totalOutstanding}
-            format="currency"
-            prefix="$"
-            icon={DollarSign}
-            color="#EF4444"
-            index={0}
-          />
-          <KPICard
-            title="Delinquent Accounts"
-            value={stats.delinquentCount}
-            numericValue={stats.delinquentCount}
-            icon={Users}
-            color="#F59E0B"
-            index={1}
-          />
-          <KPICard
-            title="Avg Days Late"
-            value={stats.avgDaysLate}
-            numericValue={stats.avgDaysLate}
-            icon={Clock}
-            color="#8A00FF"
-            index={2}
-          />
-          <KPICard
-            title="Collection Rate"
-            value={`${stats.collectionRate}%`}
-            numericValue={stats.collectionRate}
-            format="percentage"
-            suffix="%"
-            icon={TrendingUp}
-            color="#00D4AA"
-            index={3}
-          />
-        </div>
-      )}
-
-      {/* Aging Buckets Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.24 }}
-        className="glass-card p-4"
-      >
-        <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">
-          Aging Buckets
-        </h3>
-        <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={buckets} barCategoryGap="20%">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: '#8B95A5', fontSize: 11 }}
-                axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: '#8B95A5', fontSize: 11 }}
-                axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                tickLine={false}
-                tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip content={<AgingTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                {buckets.map((_, i) => (
-                  <Cell key={i} fill={BUCKET_COLORS[i % BUCKET_COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
-
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="flex flex-wrap gap-3 items-end"
-      >
-        <div className="flex-1 min-w-[200px] max-w-xs">
+      {/* Filter Bar */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex-1 md:max-w-sm">
           <Input
             placeholder="Search tenant, property, unit..."
             value={search}
@@ -399,58 +258,41 @@ export default function DelinquencyPage() {
             icon={<Search size={14} />}
           />
         </div>
-        <div className="w-48">
+        <div className="w-full md:w-48">
           <SelectField
             options={propertyOptions}
             value={propertyFilter}
             onChange={(e) => setPropertyFilter(e.target.value)}
           />
         </div>
-        <div className="w-44">
+        <div className="w-full md:w-44">
           <SelectField
-            options={tierOptions}
-            value={tierFilter}
-            onChange={(e) => setTierFilter(e.target.value)}
+            options={riskOptions}
+            value={riskFilter}
+            onChange={(e) => setRiskFilter(e.target.value)}
           />
         </div>
-        {(search || propertyFilter || tierFilter) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Filter size={12} />}
-            onClick={() => { setSearch(''); setPropertyFilter(''); setTierFilter(''); }}
-          >
-            Clear
-          </Button>
-        )}
-      </motion.div>
+      </div>
 
-      {/* Delinquent Accounts Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.36 }}
-        className="glass-card overflow-hidden"
-      >
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Tenant</th>
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Property / Unit</th>
-                <th className="text-right px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Due</th>
-                <th className="text-right px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Paid</th>
-                <th className="text-right px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Balance</th>
-                <th className="text-center px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Days Late</th>
-                <th className="text-center px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Tier</th>
-                <th className="text-left px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Last Action</th>
-                <th className="text-right px-4 py-3 text-[10px] font-semibold text-text-muted uppercase tracking-wider">Actions</th>
+              <tr className="border-b border-slate-200 bg-slate-50/60">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tenant</th>
+                <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Property / Unit</th>
+                <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Balance</th>
+                <th className="px-3 py-3 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Days Late</th>
+                <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Risk</th>
+                <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Last Contact</th>
+                <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-text-muted text-sm">
+                  <td colSpan={7} className="text-center py-12 text-slate-500 text-sm">
                     {rows.length === 0 ? 'No delinquent accounts found.' : 'No accounts match your filters.'}
                   </td>
                 </tr>
@@ -461,40 +303,57 @@ export default function DelinquencyPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.02 }}
-                    className="border-b border-border/50 hover:bg-bg-elevated/50 transition-colors"
+                    className="hover:bg-slate-50 transition-colors group"
                   >
-                    <td className="px-4 py-3 font-medium text-text-primary">{row.tenant_name}</td>
-                    <td className="px-4 py-3 text-text-secondary">
-                      {row.property_name} <span className="text-text-muted">/ {row.unit_number}</span>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-[#020617] truncate max-w-[180px]">{row.tenant_name}</div>
+                      {row.tenant_phone && (
+                        <div className="text-xs text-slate-500 tabular-nums">{row.tenant_phone}</div>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(row.amount_due)}</td>
-                    <td className="px-4 py-3 text-right text-text-secondary">{formatCurrency(row.amount_paid)}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-danger">{formatCurrency(row.balance)}</td>
-                    <td className="px-4 py-3 text-center text-text-primary font-mono">{row.days_late}</td>
-                    <td className="px-4 py-3 text-center">{tierBadge(row.days_late)}</td>
-                    <td className="px-4 py-3 text-text-muted text-xs">
+                    <td className="px-3 py-3 text-slate-600">
+                      <div className="truncate max-w-[200px]">
+                        {row.property_name}
+                        <span className="text-slate-400"> / {row.unit_number}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums font-semibold text-red-700">
+                      {formatCurrency(row.balance)}
+                    </td>
+                    <td className="px-3 py-3 text-center tabular-nums text-[#020617] font-medium">{row.days_late}</td>
+                    <td className="px-3 py-3"><RiskBadge daysLate={row.days_late} /></td>
+                    <td className="px-3 py-3 text-xs text-slate-500 tabular-nums">
                       {row.last_action_date
                         ? new Date(row.last_action_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : '--'}
+                        : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          icon={<Send size={12} />}
-                          onClick={() => { setCollectRow(row); setCollectChannels(['sms']); }}
+                    <td className="px-3 py-3 text-right">
+                      <div className="relative inline-block">
+                        <button
+                          onClick={() => { setActionRow(row); setActionOpen(true); }}
+                          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium transition-colors"
                         >
-                          Collect
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<CreditCard size={12} />}
-                          onClick={() => { setPayRow(row); setPayAmount(''); }}
-                        >
-                          Pay
-                        </Button>
+                          Actions <ChevronDown size={12} />
+                        </button>
+                        {actionOpen && actionRow?.id === row.id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setActionOpen(false)} />
+                            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[180px]">
+                              <button
+                                onClick={() => { setActionOpen(false); setCollectRow(row); setCollectChannels(['sms']); }}
+                                className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                              >
+                                Send Collection
+                              </button>
+                              <button
+                                onClick={() => { setActionOpen(false); setPayRow(row); setPayAmount(''); }}
+                                className="block w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                              >
+                                Record Payment
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -503,7 +362,7 @@ export default function DelinquencyPage() {
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
 
       {/* Collection Modal */}
       <Modal open={!!collectRow} onOpenChange={(open) => { if (!open) setCollectRow(null); }}>
@@ -513,25 +372,23 @@ export default function DelinquencyPage() {
             description={collectRow ? `${collectRow.tenant_name} — ${collectRow.property_name} / ${collectRow.unit_number}` : ''}
           />
           <div className="px-6 py-4 space-y-4">
-            {/* Tier info */}
             {collectRow && (
               <div className="flex items-center gap-3">
-                <span className="text-xs text-text-muted">Escalation tier:</span>
-                {tierBadge(collectRow.days_late)}
-                <span className="text-xs text-text-secondary">{collectRow.days_late} days late</span>
+                <span className="text-xs text-slate-500">Risk level:</span>
+                <RiskBadge daysLate={collectRow.days_late} />
+                <span className="text-xs text-slate-600">{collectRow.days_late} days late</span>
               </div>
             )}
 
-            {/* Channel selector */}
             <div>
-              <p className="text-xs font-medium text-text-secondary mb-2">Channels</p>
+              <p className="text-xs font-medium text-slate-600 mb-2">Channels</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => toggleChannel('sms')}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
                     collectChannels.includes('sms')
-                      ? 'border-[#00D4AA] bg-[#00D4AA]/10 text-[#00D4AA]'
-                      : 'border-border text-text-muted hover:border-border-hover'
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   <MessageSquare size={14} />
@@ -541,8 +398,8 @@ export default function DelinquencyPage() {
                   onClick={() => toggleChannel('voice')}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
                     collectChannels.includes('voice')
-                      ? 'border-[#00D4AA] bg-[#00D4AA]/10 text-[#00D4AA]'
-                      : 'border-border text-text-muted hover:border-border-hover'
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   <Phone size={14} />
@@ -551,21 +408,19 @@ export default function DelinquencyPage() {
               </div>
             </div>
 
-            {/* Message preview */}
             {collectRow && (
               <div>
-                <p className="text-xs font-medium text-text-secondary mb-2">Message Preview</p>
-                <div className="bg-bg-primary border border-border rounded-lg p-3 text-xs text-text-secondary leading-relaxed max-h-40 overflow-y-auto">
+                <p className="text-xs font-medium text-slate-600 mb-2">Message Preview</p>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-700 leading-relaxed max-h-40 overflow-y-auto">
                   {generateMessagePreview(collectRow)}
                 </div>
               </div>
             )}
 
-            {/* Balance summary */}
             {collectRow && (
-              <div className="flex items-center justify-between bg-bg-primary border border-border rounded-lg px-3 py-2">
-                <span className="text-xs text-text-muted">Outstanding Balance</span>
-                <span className="text-sm font-semibold text-danger">{formatCurrency(collectRow.balance)}</span>
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                <span className="text-xs text-slate-500">Outstanding Balance</span>
+                <span className="text-sm font-semibold text-red-700 tabular-nums">{formatCurrency(collectRow.balance)}</span>
               </div>
             )}
           </div>
@@ -596,9 +451,9 @@ export default function DelinquencyPage() {
           />
           <div className="px-6 py-4 space-y-4">
             {payRow && (
-              <div className="flex items-center justify-between bg-bg-primary border border-border rounded-lg px-3 py-2">
-                <span className="text-xs text-text-muted">Balance Remaining</span>
-                <span className="text-sm font-semibold text-danger">{formatCurrency(payRow.balance)}</span>
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                <span className="text-xs text-slate-500">Balance Remaining</span>
+                <span className="text-sm font-semibold text-red-700 tabular-nums">{formatCurrency(payRow.balance)}</span>
               </div>
             )}
             <Input
@@ -612,7 +467,7 @@ export default function DelinquencyPage() {
               icon={<DollarSign size={14} />}
             />
             {payRow && payAmount && parseFloat(payAmount) >= payRow.balance && (
-              <p className="text-xs text-success">This will fully resolve the balance.</p>
+              <p className="text-xs text-emerald-700">This will fully resolve the balance.</p>
             )}
           </div>
           <ModalFooter>

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { IncidentsManager } from './IncidentsManager';
+import { SettingsShell } from '@/components/settings/SettingsShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,14 +42,11 @@ export default async function AdminIncidentsPage() {
     .limit(100);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-primary">Status Incidents</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Manage incidents shown on the public status page.
-        </p>
-      </div>
+    <SettingsShell
+      title="Status Incidents"
+      subtitle="Manage incidents shown on the public status page."
+    >
       <IncidentsManager initialIncidents={(incidents as Incident[]) ?? []} />
-    </div>
+    </SettingsShell>
   );
 }

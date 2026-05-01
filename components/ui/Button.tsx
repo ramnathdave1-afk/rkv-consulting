@@ -3,7 +3,7 @@
 import React, { forwardRef, useState, useEffect, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export type ButtonVariant = 'primary' | 'solid' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'icon';
+export type ButtonVariant = 'primary' | 'solid' | 'cta' | 'secondary' | 'ghost' | 'outline' | 'danger' | 'icon';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -43,6 +43,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   solid: [
     'text-white',
     'hover:scale-[1.01]',
+    'active:scale-[0.97]',
+  ].join(' '),
+
+  // CTA — explicit sky-blue accent button
+  cta: [
+    'bg-[#0369A1] text-white shadow-sm',
+    'hover:bg-[#0284C7] hover:shadow',
     'active:scale-[0.97]',
   ].join(' '),
 
@@ -131,8 +138,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         title={title}
         className={cn(
           'inline-flex items-center justify-center font-semibold select-none whitespace-nowrap',
-          'transition-all duration-[150ms] ease-out',
-          'focus-visible:outline-none',
+          'transition-colors duration-200 ease-out',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2',
+          !isDisabled && 'cursor-pointer',
           variantStyles[variant],
           isIcon ? iconSizeStyles[size] : sizeStyles[size],
           fullWidth && 'w-full',

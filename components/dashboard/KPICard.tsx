@@ -2,8 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUp, ArrowDown } from 'lucide-react';
-import { HoverIcon } from '@/components/ui/HoverIcon';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface KPICardProps {
@@ -21,8 +20,8 @@ interface KPICardProps {
   suffix?: string;
 }
 
-/* ── Premium count-up with easeOutQuart ── */
-function useCountUp(target: number, duration = 1800) {
+/* ── Count-up animation with subtle highlight on update ── */
+function useCountUp(target: number, duration = 1400) {
   const [display, setDisplay] = useState(0);
   const rafRef = useRef<number>(0);
   const startRef = useRef<number | null>(null);
@@ -89,8 +88,8 @@ function formatValue(value: number, format?: string, prefix = '', suffix = ''): 
   return `${prefix}${formatted}${suffix}`;
 }
 
-/* ── Premium Sparkline with gradient fill ── */
-function PremiumSparkline({ data, color, w = 88, h = 36 }: { data: number[]; color: string; w?: number; h?: number }) {
+/* ── Subtle sparkline in sky tones ── */
+function MiniSparkline({ data, w = 80, h = 28 }: { data: number[]; w?: number; h?: number }) {
   const gradientId = useMemo(() => `spark-${Math.random().toString(36).slice(2, 7)}`, []);
 
   if (data.length < 2) return null;
@@ -111,34 +110,36 @@ function PremiumSparkline({ data, color, w = 88, h = 36 }: { data: number[]; col
   }
 
   return (
-    <svg width={w} height={h} style={{ overflow: 'visible', opacity: 0.9 }}>
+    <svg width={w} height={h} style={{ overflow: 'visible' }}>
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+          <stop offset="0%" stopColor="#0369A1" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#0369A1" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={d + ` L ${w} ${h} L 0 ${h} Z`} fill={`url(#${gradientId})`} />
-      <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" opacity="0.8" />
-      <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3.5" fill={color} />
+      <path d={d} fill="none" stroke="#0369A1" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }
 
-/* ── Stagger variants ── */
 const cardVariants = {
-  hidden: { opacity: 0, y: 28 },
+  hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
-      delay: i * 0.07,
+      duration: 0.4,
+      delay: i * 0.05,
       ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   }),
 };
 
+/**
+ * Sales Intelligence Dashboard KPI card.
+ * White surface, slate borders, sky-blue accent icon, tabular-nums numerics.
+ */
 export function KPICard({
   title,
   value,
@@ -146,7 +147,6 @@ export function KPICard({
   subtitle,
   icon: Icon,
   trend,
-  color = '#00bfa6',
   index = 0,
   sparklineData,
   format,
@@ -154,8 +154,22 @@ export function KPICard({
   suffix,
 }: KPICardProps) {
   const useAnimated = numericValue !== undefined;
-  const animatedValue = useCountUp(useAnimated ? numericValue : 0, 1800);
-  const [hovered, setHovered] = useState(false);
+  const animatedValue = useCountUp(useAnimated ? numericValue : 0, 1400);
+  const [pulse, setPulse] = useState(false);
+  const prevValRef = useRef(numericValue);
+
+  // Subtle status-change pulse on metric update
+  useEffect(() => {
+    if (numericValue !== undefined && prevValRef.current !== numericValue && prevValRef.current !== undefined) {
+      setPulse(true);
+      const t = setTimeout(() => setPulse(false), 600);
+      return () => clearTimeout(t);
+    }
+    prevValRef.current = numericValue;
+  }, [numericValue]);
+
+  const trendValue = trend?.value ?? 0;
+  const trendUp = trendValue >= 0;
 
   return (
     <motion.div
@@ -163,88 +177,50 @@ export function KPICard({
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="glass-card-premium"
-      style={{ padding: 24, willChange: 'transform' }}
+      className="p-5 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      style={{ willChange: 'transform' }}
     >
-      {/* Glow line at top */}
-      <div
-        className="glow-line"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${color}${hovered ? '80' : '40'}, transparent)`,
-        }}
-      />
-
-      {/* Top row: HoverIcon + trend badge */}
-      <div className="flex items-start justify-between mb-[18px]">
-        <HoverIcon
-          icon={Icon}
-          size={21}
-          color={color}
-          bgSize={46}
-          bgRadius={13}
-          bgColor={`${color}12`}
-          borderColor={`${color}18`}
-          glowColor={color}
-        />
-        {trend && (
-          <div
-            className="flex items-center gap-1 badge"
-            style={{
-              backgroundColor: trend.value >= 0 ? 'var(--success-muted)' : 'var(--danger-muted)',
-              color: trend.value >= 0 ? 'var(--success)' : 'var(--danger)',
-            }}
-          >
-            {trend.value >= 0 ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
-            {Math.abs(trend.value)}%
-          </div>
-        )}
-      </div>
-
-      {/* Value + sparkline row */}
-      <div className="flex items-end justify-between">
-        <div>
-          <div
-            style={{
-              fontSize: 32,
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              lineHeight: 1,
-              fontVariantNumeric: 'tabular-nums',
-              letterSpacing: '-0.03em',
-            }}
+      <div className="flex items-start justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider truncate">
+            {title}
+          </p>
+          <motion.p
+            className="mt-2 font-display text-3xl font-bold tabular-nums text-[#020617]"
+            animate={pulse ? { backgroundColor: ['rgba(3,105,161,0)', 'rgba(3,105,161,0.12)', 'rgba(3,105,161,0)'] } : {}}
+            transition={{ duration: 0.6 }}
+            style={{ borderRadius: 4, padding: pulse ? '0 4px' : 0, marginLeft: pulse ? -4 : 0 }}
           >
             {useAnimated
               ? formatValue(animatedValue, format, prefix, suffix)
               : value}
-          </div>
-          <div
-            className="mt-1.5"
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: 'var(--text-tertiary)',
-            }}
-          >
-            {title}
-          </div>
+          </motion.p>
           {subtitle && (
-            <div
-              className="mt-1"
-              style={{
-                fontSize: 12,
-                color: 'var(--text-secondary)',
-              }}
-            >
-              {subtitle}
-            </div>
+            <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           )}
         </div>
-        {sparklineData && sparklineData.length > 1 && (
-          <PremiumSparkline data={sparklineData} color={color} />
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {sparklineData && sparklineData.length > 1 && (
+            <MiniSparkline data={sparklineData} />
+          )}
+          <div className="p-2 rounded-md bg-sky-50 text-[#0369A1]">
+            <Icon size={20} />
+          </div>
+        </div>
       </div>
+      {trend && (
+        <div className="mt-3 flex items-center gap-2 text-xs">
+          {trendUp ? (
+            <TrendingUp size={14} className="text-emerald-600" />
+          ) : (
+            <TrendingDown size={14} className="text-red-600" />
+          )}
+          <span className={trendUp ? 'text-emerald-600 font-semibold tabular-nums' : 'text-red-600 font-semibold tabular-nums'}>
+            {Math.abs(trendValue)}%
+          </span>
+          <span className="text-slate-500">{trend.label || 'vs last period'}</span>
+        </div>
+      )}
     </motion.div>
   );
 }

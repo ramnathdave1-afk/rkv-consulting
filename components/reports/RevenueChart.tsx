@@ -1,6 +1,7 @@
 'use client';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { ChartTooltip } from '@/components/dashboard/ChartTooltip';
 
 interface RevenueChartProps {
   data: { month: string; income: number; expenses: number }[];
@@ -13,31 +14,31 @@ export function RevenueChart({ data }: RevenueChartProps) {
   }));
 
   return (
-    <div className="glass-card p-4">
-      <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-4">Income vs Expenses (12 months)</h3>
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-4">
+        <h3 className="text-sm font-semibold text-[#020617]">Income vs Expenses</h3>
+        <span className="text-xs text-slate-500">12 months</span>
+      </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={formatted}>
             <defs>
               <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                <stop offset="0%" stopColor="#0369A1" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#0369A1" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                <stop offset="0%" stopColor="#0F172A" stopOpacity={0.18} />
+                <stop offset="100%" stopColor="#0F172A" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#6B7280' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#6B7280' }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1A1D23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
-              formatter={(value) => [`$${Number(value).toLocaleString()}`, '']}
-            />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Area type="monotone" dataKey="income" name="Income" stroke="#22C55E" fill="url(#incomeGrad)" strokeWidth={2} />
-            <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#EF4444" fill="url(#expenseGrad)" strokeWidth={2} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+            <Tooltip content={<ChartTooltip formatter={(v) => `$${Number(v).toLocaleString()}`} />} />
+            <Legend wrapperStyle={{ fontSize: 12, color: '#64748b' }} iconType="square" />
+            <Area type="monotone" dataKey="income" name="Income" stroke="#0369A1" fill="url(#incomeGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="expenses" name="Expenses" stroke="#0F172A" fill="url(#expenseGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

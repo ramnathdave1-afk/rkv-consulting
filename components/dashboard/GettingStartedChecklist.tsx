@@ -17,8 +17,8 @@ type ChecklistItem = {
 const HIDE_KEY = 'rkv.gettingStartedDismissed';
 
 /**
- * Collapsible checklist that surfaces during the user's first 30 days.
- * Auto-detects what's done by querying live tables — never lies about state.
+ * Sales Intelligence Dashboard styled checklist.
+ * White surface, sky-700 complete state, slate-300 pending borders.
  */
 export function GettingStartedChecklist() {
   const supabase = createClient();
@@ -54,8 +54,6 @@ export function GettingStartedChecklist() {
 
       const orgId = profile.org_id;
 
-      // Helper that swallows missing-table errors so the checklist still works
-      // before optional tables exist.
       const safeCount = async (table: string): Promise<number> => {
         try {
           const { count } = await supabase
@@ -145,7 +143,6 @@ export function GettingStartedChecklist() {
     ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  // Auto-hide after 30 days OR when everything is checked off.
   if (allDone || ageDays > 30) return null;
 
   function dismiss() {
@@ -155,16 +152,18 @@ export function GettingStartedChecklist() {
     setHidden(true);
   }
 
+  const pct = Math.round((completed / items.length) * 100);
+
   return (
-    <div className="glass-card p-4 mb-4">
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 mb-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center text-xs font-bold">
+          <div className="h-10 w-10 rounded-md bg-sky-50 text-[#0369A1] flex items-center justify-center text-xs font-bold tabular-nums">
             {completed}/{items.length}
           </div>
           <div>
-            <div className="text-sm font-semibold text-text-primary">Getting Started</div>
-            <div className="text-xs text-text-muted">
+            <div className="text-sm font-semibold text-[#020617]">Getting Started</div>
+            <div className="text-xs text-slate-500">
               {completed === items.length
                 ? "You're all set!"
                 : `${items.length - completed} steps to unlock the full platform`}
@@ -174,19 +173,29 @@ export function GettingStartedChecklist() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="p-1.5 text-text-muted hover:text-text-primary"
+            className="p-1.5 text-slate-500 hover:text-[#020617] transition-colors"
             aria-label={collapsed ? 'Expand' : 'Collapse'}
           >
             {collapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </button>
           <button
             onClick={dismiss}
-            className="p-1.5 text-text-muted hover:text-text-primary"
+            className="p-1.5 text-slate-500 hover:text-[#020617] transition-colors"
             aria-label="Dismiss"
           >
             <X size={16} />
           </button>
         </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mt-3 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+        <motion.div
+          className="h-full rounded-full bg-[#0369A1]"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        />
       </div>
 
       <AnimatePresence initial={false}>
@@ -195,6 +204,7 @@ export function GettingStartedChecklist() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
             className="mt-3 space-y-1 overflow-hidden"
           >
             {items.map((item) => (
@@ -202,17 +212,17 @@ export function GettingStartedChecklist() {
                 {item.href && !item.done ? (
                   <Link
                     href={item.href}
-                    className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-bg-elevated transition-colors text-sm text-text-primary"
+                    className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-slate-50 transition-colors text-sm text-[#020617]"
                   >
                     <Indicator done={item.done} />
-                    <span className={cn(item.done && 'line-through text-text-muted')}>
+                    <span className={cn(item.done && 'line-through text-slate-400')}>
                       {item.label}
                     </span>
                   </Link>
                 ) : (
-                  <div className="flex items-center gap-2.5 px-2 py-1.5 text-sm text-text-primary">
+                  <div className="flex items-center gap-2.5 px-2 py-1.5 text-sm text-[#020617]">
                     <Indicator done={item.done} />
-                    <span className={cn(item.done && 'line-through text-text-muted')}>
+                    <span className={cn(item.done && 'line-through text-slate-400')}>
                       {item.label}
                     </span>
                   </div>
@@ -230,8 +240,8 @@ function Indicator({ done }: { done: boolean }) {
   return (
     <div
       className={cn(
-        'h-4 w-4 rounded-full flex items-center justify-center text-bg-primary',
-        done ? 'bg-accent' : 'border border-border',
+        'h-4 w-4 rounded-full flex items-center justify-center transition-colors',
+        done ? 'bg-[#0369A1] text-white' : 'border border-slate-300 bg-white',
       )}
     >
       {done && <Check size={10} strokeWidth={3} />}

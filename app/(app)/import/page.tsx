@@ -224,123 +224,137 @@ export default function ImportPage() {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="font-display text-xl font-bold text-text-primary">Import Data</h1>
-        <p className="text-sm text-text-secondary">
+        <h1 className="font-display text-xl font-bold text-[#020617]">Import Data</h1>
+        <p className="text-sm text-slate-500">
           Bulk-load properties, units, tenants, and leases from any CSV.
         </p>
       </div>
 
-      <div className="glass-card p-3">
-        <div className="flex items-center gap-1 sm:gap-2 text-xs">
-          {STEP_LABELS.map((label, i) => {
-            const n = i + 1;
-            const active = step === n;
-            const done = step > n;
-            return (
-              <React.Fragment key={label}>
+      {/* Step indicator */}
+      <div className="flex items-center gap-3 mb-2">
+        {STEP_LABELS.map((label, i) => {
+          const n = i + 1;
+          const active = step === n;
+          const done = step > n;
+          return (
+            <React.Fragment key={label}>
+              <div className="flex items-center gap-2">
                 <div
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-colors ${
-                    active
-                      ? 'bg-accent/10 text-accent font-medium'
-                      : done
-                      ? 'text-text-primary'
-                      : 'text-text-muted'
+                  className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                    done
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : active
+                      ? 'bg-[#0369A1] text-white'
+                      : 'bg-slate-100 text-slate-400'
                   }`}
                 >
-                  <span
-                    className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] ${
-                      done
-                        ? 'bg-green-500 text-white'
-                        : active
-                        ? 'bg-accent text-white'
-                        : 'bg-bg-elevated text-text-muted border border-border'
-                    }`}
-                  >
-                    {done ? <Check size={10} /> : n}
-                  </span>
-                  <span>{label}</span>
+                  {done ? <Check size={16} /> : n}
                 </div>
-                {i < STEP_LABELS.length - 1 && (
-                  <ArrowRight size={12} className="text-text-muted" />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
+                <span
+                  className={`text-xs font-medium hidden sm:inline ${
+                    active
+                      ? 'text-[#020617]'
+                      : done
+                      ? 'text-slate-700'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < STEP_LABELS.length - 1 && (
+                <div
+                  className={`flex-1 h-0.5 transition-colors ${
+                    done ? 'bg-emerald-300' : 'bg-slate-200'
+                  }`}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
 
       {step === 1 && (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="glass-card p-4">
-            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
-              Recommended Import Order
-            </h3>
-            <div className="flex items-center gap-2 text-xs text-text-secondary flex-wrap">
-              {ENTITY_ORDER.map((e, i) => (
-                <React.Fragment key={e.value}>
-                  <span
-                    className={`px-2 py-1 rounded-lg ${
-                      entity === e.value ? 'bg-accent/10 text-accent font-medium' : ''
+          <div className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm space-y-5">
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                Recommended Import Order
+              </h3>
+              <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+                {ENTITY_ORDER.map((e, i) => (
+                  <React.Fragment key={e.value}>
+                    <span
+                      className={`px-2 py-1 rounded-md ${
+                        entity === e.value
+                          ? 'bg-sky-50 text-[#0369A1] font-semibold'
+                          : 'text-slate-500'
+                      }`}
+                    >
+                      {e.order}. {e.label}
+                    </span>
+                    {i < ENTITY_ORDER.length - 1 && (
+                      <ArrowRight size={12} className="text-slate-400" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                Choose entity to import
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {ENTITY_ORDER.map((e) => (
+                  <button
+                    key={e.value}
+                    onClick={() => setEntity(e.value)}
+                    className={`p-3 rounded-lg border text-left transition-colors cursor-pointer ${
+                      entity === e.value
+                        ? 'border-[#0369A1] bg-sky-50/50 ring-1 ring-[#0369A1]'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
-                    {e.order}. {e.label}
-                  </span>
-                  {i < ENTITY_ORDER.length - 1 && <ArrowRight size={12} className="text-text-muted" />}
-                </React.Fragment>
-              ))}
+                    <p className="text-sm font-semibold text-[#020617]">{e.label}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{e.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Schema for {ENTITY_LABELS[entity]}
+                </h3>
+                <button
+                  onClick={downloadTemplate}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0369A1] hover:text-[#0284C7] hover:underline cursor-pointer"
+                >
+                  <FileText size={12} /> Download template CSV
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                {schema.map((f) => (
+                  <div key={f.name} className="text-xs flex items-start gap-2">
+                    <code className="text-[#0369A1] bg-sky-50 rounded px-1.5 py-0.5 shrink-0 font-mono">
+                      {f.name}
+                    </code>
+                    <span className="text-slate-600">
+                      {f.label}
+                      {f.required && <span className="text-rose-500 ml-1">*</span>}
+                      {f.hint && (
+                        <span className="text-slate-400 block text-[10px]">{f.hint}</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {ENTITY_ORDER.map((e) => (
-              <button
-                key={e.value}
-                onClick={() => setEntity(e.value)}
-                className={`p-3 rounded-lg border text-left transition-colors ${
-                  entity === e.value
-                    ? 'border-accent bg-accent/5'
-                    : 'border-border hover:border-border-hover'
-                }`}
-              >
-                <p className="text-sm font-medium text-text-primary">{e.label}</p>
-                <p className="text-[10px] text-text-muted mt-0.5">{e.description}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="glass-card p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider">
-                Schema for {ENTITY_LABELS[entity]}
-              </h3>
-              <button
-                onClick={downloadTemplate}
-                className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
-              >
-                <FileText size={12} /> Download template CSV
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-              {schema.map((f) => (
-                <div key={f.name} className="text-xs flex items-start gap-2">
-                  <code className="text-accent bg-accent/5 rounded px-1.5 py-0.5 shrink-0">
-                    {f.name}
-                  </code>
-                  <span className="text-text-secondary">
-                    {f.label}
-                    {f.required && <span className="text-red-400 ml-1">*</span>}
-                    {f.hint && <span className="text-text-muted block text-[10px]">{f.hint}</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <NavButtons
-            onNext={() => setStep(2)}
-            canAdvance
-            nextLabel="Choose CSV"
-          />
+          <NavButtons onNext={() => setStep(2)} canAdvance nextLabel="Choose CSV" />
         </motion.div>
       )}
 
@@ -359,22 +373,24 @@ export default function ImportPage() {
               const f = e.dataTransfer.files?.[0];
               if (f) handleFile(f);
             }}
-            className={`glass-card p-8 border-2 border-dashed cursor-pointer transition-colors text-center ${
-              dragOver ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
+            className={`p-8 bg-white border-2 border-dashed rounded-lg shadow-sm cursor-pointer transition-colors text-center ${
+              dragOver
+                ? 'border-[#0369A1] bg-sky-50/50'
+                : 'border-slate-200 hover:border-[#0369A1] hover:bg-sky-50/30'
             }`}
           >
-            <Upload size={32} className="mx-auto text-text-muted mb-3" />
+            <Upload size={32} className="mx-auto text-slate-400 mb-3" />
             {file ? (
               <div>
-                <p className="text-sm font-medium text-text-primary">{file.name}</p>
-                <p className="text-xs text-text-muted mt-1">
+                <p className="text-sm font-semibold text-[#020617]">{file.name}</p>
+                <p className="text-xs text-slate-500 mt-1">
                   {(file.size / 1024).toFixed(1)} KB · {csvRows.length} rows · {csvHeaders.length} columns
                 </p>
               </div>
             ) : (
               <div>
-                <p className="text-sm text-text-secondary">Click to upload a CSV file</p>
-                <p className="text-xs text-text-muted mt-1">or drag and drop</p>
+                <p className="text-sm font-semibold text-[#020617]">Click to upload a CSV file</p>
+                <p className="text-xs text-slate-500 mt-1">or drag and drop</p>
               </div>
             )}
             <input
@@ -387,16 +403,19 @@ export default function ImportPage() {
           </div>
 
           {csvRows.length > 0 && (
-            <div className="glass-card p-4">
-              <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+            <div className="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 Preview (first 10 rows)
               </h3>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full">
                   <thead>
-                    <tr className="border-b border-border">
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-700">
                       {csvHeaders.map((h) => (
-                        <th key={h} className="text-left px-2 py-1.5 font-medium text-text-primary whitespace-nowrap">
+                        <th
+                          key={h}
+                          className="text-left px-2 py-2 font-semibold whitespace-nowrap uppercase tracking-wide text-[10px]"
+                        >
                           {h}
                         </th>
                       ))}
@@ -404,9 +423,12 @@ export default function ImportPage() {
                   </thead>
                   <tbody>
                     {csvRows.slice(0, 10).map((r, i) => (
-                      <tr key={i} className="border-b border-border/40">
+                      <tr key={i} className="border-b border-slate-100 hover:bg-sky-50/50 transition-colors">
                         {csvHeaders.map((h) => (
-                          <td key={h} className="px-2 py-1 text-text-secondary whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis">
+                          <td
+                            key={h}
+                            className="px-2 py-1 text-slate-600 whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis"
+                          >
                             {r[h]}
                           </td>
                         ))}
@@ -429,21 +451,21 @@ export default function ImportPage() {
 
       {step === 3 && (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="glass-card p-4">
-            <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">
+          <div className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
               Match CSV columns → {ENTITY_LABELS[entity]} fields
             </h3>
             <div className="space-y-2">
               {csvHeaders.map((h) => (
                 <div key={h} className="flex items-center gap-3 text-sm">
-                  <code className="flex-1 bg-bg-elevated rounded px-2 py-1.5 text-text-primary text-xs">
+                  <code className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-[#020617] text-xs font-mono">
                     {h}
                   </code>
-                  <ArrowRight size={14} className="text-text-muted" />
+                  <ArrowRight size={14} className="text-slate-400" />
                   <select
                     value={mapping[h] || ''}
                     onChange={(e) => setMapping((m) => ({ ...m, [h]: e.target.value }))}
-                    className="flex-1 bg-bg-elevated border border-border rounded px-2 py-1.5 text-xs text-text-primary"
+                    className="flex-1 h-10 bg-white border border-slate-200 rounded-md px-3 text-xs text-[#020617] focus:outline-none focus:ring-2 focus:ring-[#0369A1] focus:border-transparent transition-all cursor-pointer"
                   >
                     <option value="">— ignore —</option>
                     {schema.map((f) => (
@@ -475,14 +497,14 @@ export default function ImportPage() {
       {step === 4 && (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {previewing && (
-            <div className="glass-card p-6 text-center text-sm text-text-secondary">
+            <div className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm text-center text-sm text-slate-500">
               Validating rows...
             </div>
           )}
 
           {previewResult && (
             <>
-              <div className="glass-card p-5">
+              <div className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm">
                 <div className="grid grid-cols-3 gap-4">
                   <Stat label="Valid" value={previewResult.valid_count} color="green" />
                   <Stat label="Invalid" value={previewResult.invalid_count} color="yellow" />
@@ -491,24 +513,27 @@ export default function ImportPage() {
               </div>
 
               {previewResult.errors.length > 0 && (
-                <div className="glass-card p-4">
-                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                <div className="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     Validation Errors ({previewResult.errors.length})
                   </h3>
                   <div className="max-h-72 overflow-y-auto space-y-1">
                     {previewResult.errors.map((err, i) => (
-                      <div key={i} className="text-xs text-red-400 bg-red-500/5 rounded px-2 py-1">
+                      <div
+                        key={i}
+                        className="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded px-2 py-1"
+                      >
                         Row {err.row}
                         {err.field ? ` · ${err.field}` : ''}: {err.message}
                       </div>
                     ))}
                   </div>
-                  <label className="flex items-center gap-2 mt-3 text-xs text-text-secondary cursor-pointer">
+                  <label className="flex items-center gap-2 mt-3 text-xs text-slate-600 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={skipInvalid}
                       onChange={(e) => setSkipInvalid(e.target.checked)}
-                      className="rounded"
+                      className="rounded accent-[#0369A1] cursor-pointer"
                     />
                     Skip invalid rows on import
                   </label>
@@ -532,11 +557,11 @@ export default function ImportPage() {
       {step === 5 && (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {importing && (
-            <div className="glass-card p-6 text-center">
-              <div className="mb-3 text-sm text-text-secondary">Importing rows...</div>
-              <div className="h-1.5 bg-bg-elevated rounded overflow-hidden">
+            <div className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm text-center">
+              <div className="mb-3 text-sm text-slate-500">Importing rows...</div>
+              <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
                 <motion.div
-                  className="h-full bg-accent"
+                  className="h-full bg-[#0369A1]"
                   initial={{ width: '0%' }}
                   animate={{ width: '90%' }}
                   transition={{ duration: 2, ease: 'easeOut' }}
@@ -550,15 +575,15 @@ export default function ImportPage() {
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card p-5 space-y-4"
+                className="p-8 bg-white border border-slate-200 rounded-lg shadow-sm space-y-4"
               >
                 <div className="flex items-center gap-2">
                   {importResult.imported > 0 ? (
-                    <CheckCircle2 size={20} className="text-green-500" />
+                    <CheckCircle2 size={20} className="text-emerald-600" />
                   ) : (
-                    <AlertTriangle size={20} className="text-yellow-500" />
+                    <AlertTriangle size={20} className="text-amber-600" />
                   )}
-                  <h3 className="text-sm font-semibold text-text-primary">
+                  <h3 className="font-display text-sm font-semibold text-[#020617]">
                     {importResult.imported > 0 && importResult.skipped === 0
                       ? 'Import complete'
                       : importResult.imported > 0
@@ -576,7 +601,7 @@ export default function ImportPage() {
                 {importResult.imported > 0 && (
                   <a
                     href={`/${entity}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0369A1] hover:text-[#0284C7] hover:underline"
                   >
                     View imported {ENTITY_LABELS[entity].toLowerCase()} <ArrowRight size={12} />
                   </a>
@@ -584,13 +609,16 @@ export default function ImportPage() {
               </motion.div>
 
               {importResult.errors.length > 0 && (
-                <div className="glass-card p-4">
-                  <h3 className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
+                <div className="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     Errors ({importResult.errors.length})
                   </h3>
                   <div className="max-h-60 overflow-y-auto space-y-1">
                     {importResult.errors.map((err, i) => (
-                      <div key={i} className="text-xs text-red-400 bg-red-500/5 rounded px-2 py-1">
+                      <div
+                        key={i}
+                        className="text-xs text-rose-700 bg-rose-50 border border-rose-100 rounded px-2 py-1"
+                      >
                         Row {err.row}: {err.messages.join(', ')}
                       </div>
                     ))}
@@ -601,7 +629,7 @@ export default function ImportPage() {
               <div className="flex gap-2">
                 <button
                   onClick={reset}
-                  className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors"
+                  className="px-4 py-2 rounded-md border border-slate-200 bg-white text-sm font-semibold text-[#020617] hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Import another file
                 </button>
@@ -630,7 +658,7 @@ function NavButtons({
       {onBack && (
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border text-sm font-medium text-text-primary hover:bg-bg-elevated transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-slate-200 bg-white text-sm font-semibold text-[#020617] hover:bg-slate-50 transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} /> Back
         </button>
@@ -639,7 +667,7 @@ function NavButtons({
         <button
           onClick={onNext}
           disabled={!canAdvance}
-          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-md bg-[#0369A1] text-white text-sm font-semibold hover:bg-[#0284C7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           {nextLabel} <ArrowRight size={14} />
         </button>
@@ -650,11 +678,15 @@ function NavButtons({
 
 function Stat({ label, value, color }: { label: string; value: number; color: 'green' | 'yellow' | 'muted' }) {
   const colorClass =
-    color === 'green' ? 'text-green-500' : color === 'yellow' ? 'text-yellow-500' : 'text-text-secondary';
+    color === 'green'
+      ? 'text-emerald-600'
+      : color === 'yellow'
+      ? 'text-amber-600'
+      : 'text-slate-600';
   return (
     <div className="text-center">
-      <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
-      <p className="text-[10px] text-text-muted uppercase tracking-wider">{label}</p>
+      <p className={`text-2xl font-display font-bold ${colorClass}`}>{value}</p>
+      <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">{label}</p>
     </div>
   );
 }
@@ -672,18 +704,18 @@ function RequiredFieldStatus({
 
   if (missing.length === 0) {
     return (
-      <div className="mt-4 flex items-center gap-2 text-xs text-green-500">
+      <div className="mt-4 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-md px-3 py-2">
         <Check size={14} /> All required fields are mapped
       </div>
     );
   }
 
   return (
-    <div className="mt-4 flex items-start gap-2 text-xs text-yellow-500">
+    <div className="mt-4 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
       <AlertTriangle size={14} className="mt-0.5 shrink-0" />
       <div>
         Missing required fields:{' '}
-        <span className="font-medium">{missing.map((f) => f.label).join(', ')}</span>
+        <span className="font-semibold">{missing.map((f) => f.label).join(', ')}</span>
       </div>
     </div>
   );

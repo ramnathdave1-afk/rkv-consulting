@@ -28,14 +28,11 @@ import {
   TrendingUp,
   Home,
   Layers,
-  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -59,23 +56,23 @@ interface DashboardData {
   workOrdersByStatus: Record<string, number>;
 }
 
-const WO_STATUS_COLORS: Record<string, string> = {
-  open: '#FF4757',
-  assigned: '#FFAA33',
-  in_progress: '#5B9FFF',
-  parts_needed: '#A78BFA',
-  completed: '#00E5A0',
-  closed: '#6B7280',
-  cancelled: '#9CA3AF',
-};
+// Sales Intelligence palette
+const SI_PRIMARY = '#0369A1';   // sky-700
+const SI_NAVY = '#0F172A';      // slate-900
+const SI_TEXT = '#020617';      // slate-950
 
-const WO_SLICES = [
-  { name: 'Open', color: '#FF4757' },
-  { name: 'Assigned', color: '#FFAA33' },
-  { name: 'In Progress', color: '#5B9FFF' },
-  { name: 'Completed', color: '#00E5A0' },
-  { name: 'Closed', color: '#6B7280' },
-];
+// Accessible palette for status / pie / bar
+const PIE_PALETTE = ['#0369A1', '#0F172A', '#059669', '#d97706', '#7c3aed', '#0284C7', '#dc2626', '#64748b'];
+
+const WO_STATUS_COLORS: Record<string, string> = {
+  open: '#dc2626',
+  assigned: '#d97706',
+  in_progress: '#0369A1',
+  parts_needed: '#7c3aed',
+  completed: '#059669',
+  closed: '#64748b',
+  cancelled: '#94a3b8',
+};
 
 function generateSparkline(current: number, variance = 0.15): number[] {
   const points: number[] = [];
@@ -87,7 +84,7 @@ function generateSparkline(current: number, variance = 0.15): number[] {
   return points;
 }
 
-// Static chart data (will be replaced by real API data in production)
+// Static chart data (replaced by real API data in production)
 const REVENUE_DATA = [
   { m: 'Sep', rev: 142000, exp: 89000, noi: 53000 },
   { m: 'Oct', rev: 155000, exp: 92000, noi: 63000 },
@@ -104,10 +101,10 @@ const OCCUPANCY_DATA = [
 ];
 
 const LEASE_EXPIRY = [
-  { range: '0–30 days', count: 4, pct: 4.7, color: '#FF4757' },
-  { range: '30–60 days', count: 7, pct: 8.1, color: '#FFAA33' },
-  { range: '60–90 days', count: 12, pct: 14, color: '#5B9FFF' },
-  { range: '90+ days', count: 63, pct: 73.2, color: '#00E5A0' },
+  { range: '0–30 days', count: 4, pct: 4.7, color: '#dc2626' },
+  { range: '30–60 days', count: 7, pct: 8.1, color: '#d97706' },
+  { range: '60–90 days', count: 12, pct: 14, color: '#0369A1' },
+  { range: '90+ days', count: 63, pct: 73.2, color: '#059669' },
 ];
 
 const DELINQUENCY = [
@@ -182,15 +179,15 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 lg:p-8 space-y-6">
+      <div className="p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-2xl" />
+            <Skeleton key={i} className="h-32 rounded-lg" />
           ))}
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
-          <Skeleton className="h-80 rounded-2xl" />
+          <Skeleton className="h-80 rounded-lg lg:col-span-2" />
+          <Skeleton className="h-80 rounded-lg" />
         </div>
       </div>
     );
@@ -199,82 +196,76 @@ export default function DashboardPage() {
   if (!data) return null;
 
   const kpis = [
-    { title: 'Total Properties', numericValue: data.totalProperties, value: data.totalProperties, icon: Building2, color: '#00bfa6', trend: { value: 8, label: 'vs last month' }, sparklineData: generateSparkline(data.totalProperties) },
-    { title: 'Total Units', numericValue: data.totalUnits, value: data.totalUnits, icon: DoorOpen, color: '#5B9FFF', trend: { value: 5, label: 'vs last month' }, sparklineData: generateSparkline(data.totalUnits) },
-    { title: 'Occupancy Rate', numericValue: data.occupancyRate, value: `${data.occupancyRate}%`, icon: Percent, color: '#A78BFA', suffix: '%', format: 'percentage' as const, trend: { value: 2.3, label: 'vs last month' }, sparklineData: generateSparkline(data.occupancyRate, 0.1) },
-    { title: 'Monthly Revenue', numericValue: data.monthlyRevenue, value: `$${data.monthlyRevenue.toLocaleString()}`, icon: DollarSign, color: '#FFAA33', format: 'currency' as const, trend: { value: 4.1, label: 'vs last month' }, sparklineData: generateSparkline(data.monthlyRevenue) },
-    { title: 'Open Requests', numericValue: data.openWorkOrders, value: data.openWorkOrders, icon: Wrench, color: '#FF4757', trend: { value: -12, label: 'vs last month' }, sparklineData: generateSparkline(data.openWorkOrders, 0.3) },
+    { title: 'Total Properties', numericValue: data.totalProperties, value: data.totalProperties, icon: Building2, trend: { value: 8, label: 'vs last period' }, sparklineData: generateSparkline(data.totalProperties) },
+    { title: 'Total Units', numericValue: data.totalUnits, value: data.totalUnits, icon: DoorOpen, trend: { value: 5, label: 'vs last period' }, sparklineData: generateSparkline(data.totalUnits) },
+    { title: 'Occupancy Rate', numericValue: data.occupancyRate, value: `${data.occupancyRate}%`, icon: Percent, suffix: '%', format: 'percentage' as const, trend: { value: 2.3, label: 'vs last period' }, sparklineData: generateSparkline(data.occupancyRate, 0.1) },
+    { title: 'Monthly Revenue', numericValue: data.monthlyRevenue, value: `$${data.monthlyRevenue.toLocaleString()}`, icon: DollarSign, format: 'currency' as const, trend: { value: 4.1, label: 'vs last period' }, sparklineData: generateSparkline(data.monthlyRevenue) },
+    { title: 'Open Requests', numericValue: data.openWorkOrders, value: data.openWorkOrders, icon: Wrench, trend: { value: -12, label: 'vs last period' }, sparklineData: generateSparkline(data.openWorkOrders, 0.3) },
   ];
 
   const totalWO = Object.values(data.workOrdersByStatus).reduce((a, b) => a + b, 0);
   const woSliceData = Object.entries(data.workOrdersByStatus).map(([status, count]) => ({
     name: status.replace('_', ' '),
     value: count,
-    color: WO_STATUS_COLORS[status] || '#6B7280',
+    color: WO_STATUS_COLORS[status] || '#64748b',
   }));
 
   return (
-    <div className="p-6 lg:p-8 space-y-7">
+    <div className="p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen">
       <GettingStartedChecklist />
+
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1
-              className="font-display font-extrabold"
-              style={{ fontSize: 26, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}
-            >
+            <h1 className="font-display text-2xl font-bold tracking-tight text-[#020617]">
               Dashboard
             </h1>
-            <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-              style={{
-                background: 'var(--success-muted)',
-                border: '1px solid var(--border-accent)',
-              }}
-            >
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200">
               <div className="relative">
-                <div className="w-[7px] h-[7px] rounded-full bg-accent" />
+                <div className="w-[7px] h-[7px] rounded-full bg-emerald-500" />
                 <div
-                  className="absolute inset-0 rounded-full bg-accent"
+                  className="absolute inset-0 rounded-full bg-emerald-500"
                   style={{ animation: 'ping 2s cubic-bezier(0,0,0.2,1) infinite' }}
                 />
               </div>
-              <span className="text-[11px] font-bold text-accent uppercase tracking-widest">Live</span>
+              <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Live</span>
             </div>
           </div>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm text-slate-500">
             {activeLocationId
               ? `Live data for ${activeLocation?.name || 'this location'}`
               : 'Real-time overview across your portfolio'}
           </p>
         </div>
-        <div className="hidden sm:flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <LocationFilter />
-          <button className="flex items-center gap-2 px-3 py-2 rounded-xl border text-[13px] font-semibold transition-all hover:-translate-y-px"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'transparent' }}>
+          <button className="flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:text-[#020617] hover:border-slate-300 transition-colors shadow-sm">
             <Filter size={14} /> Filter
           </button>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-xl border text-[13px] font-semibold transition-all hover:-translate-y-px"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'transparent' }}>
+          <button className="flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:text-[#020617] hover:border-slate-300 transition-colors shadow-sm">
             <Download size={14} /> Export
           </button>
           <button
             onClick={fetchDashboard}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border text-[13px] font-semibold transition-all hover:-translate-y-px"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)', background: 'transparent' }}>
+            className="flex items-center gap-2 px-3 py-2 rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:text-[#020617] hover:border-slate-300 transition-colors shadow-sm"
+          >
             <RefreshCw size={14} /> Refresh
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="tab-bar">
+      <div className="flex gap-1 border-b border-slate-200 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`tab-btn ${tab === t ? 'active' : ''}`}
+            className={`px-4 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 -mb-px whitespace-nowrap ${
+              tab === t
+                ? 'border-[#0369A1] text-[#0369A1]'
+                : 'border-transparent text-slate-500 hover:text-[#020617]'
+            }`}
           >
             {t}
           </button>
@@ -284,85 +275,128 @@ export default function DashboardPage() {
       <AnimatePresence mode="wait">
         <motion.div
           key={tab}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* ════════════ OVERVIEW TAB ════════════ */}
           {tab === 'overview' && (
             <div className="space-y-6">
-              {/* KPI Grid — 5 across */}
+              {/* KPI Grid */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {kpis.map((kpi, i) => (
                   <KPICard key={kpi.title} {...kpi} index={i} />
                 ))}
               </div>
 
-              {/* Revenue Chart + Work Orders Pie */}
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[5fr_2fr]">
-                {/* Revenue & Expenses Chart */}
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card-premium p-6"
-                >
-                  <div className="flex justify-between items-center mb-5">
-                    <div>
-                      <h3 className="text-[16px] font-bold" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                        Revenue & Expenses
-                      </h3>
-                      <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>7-month trend with NOI</p>
+              {/* Quick Actions */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Add Property', icon: Building2, href: '/properties' },
+                  { label: 'New Lease', icon: DoorOpen, href: '/leases' },
+                  { label: 'Generate Report', icon: Download, href: '/reports' },
+                  { label: 'View Activity', icon: Activity, href: '#', onClick: () => window.dispatchEvent(new CustomEvent('open-activity-panel')) },
+                ].map((q) => {
+                  const QIcon = q.icon;
+                  const inner = (
+                    <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer flex items-center gap-3">
+                      <div className="p-2 rounded-md bg-sky-50 text-[#0369A1]">
+                        <QIcon size={18} />
+                      </div>
+                      <span className="text-sm font-semibold text-[#020617]">{q.label}</span>
                     </div>
-                    <div className="flex gap-4">
-                      {[
-                        { l: 'Revenue', col: '#00bfa6' },
-                        { l: 'Expenses', col: '#A78BFA' },
-                        { l: 'NOI', col: '#5B9FFF' },
-                      ].map((x) => (
-                        <div key={x.l} className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-sm" style={{ background: x.col }} />
-                          <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>{x.l}</span>
-                        </div>
-                      ))}
-                    </div>
+                  );
+                  return q.onClick ? (
+                    <button key={q.label} onClick={q.onClick} className="text-left">{inner}</button>
+                  ) : (
+                    <a key={q.label} href={q.href}>{inner}</a>
+                  );
+                })}
+              </div>
+
+              {/* Revenue Chart full-width below KPIs */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
+              >
+                <div className="flex justify-between items-baseline mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#020617]">Revenue & Expenses</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">7-month trend with NOI</p>
                   </div>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={REVENUE_DATA}>
-                      <defs>
-                        <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#00bfa6" stopOpacity={0.15} />
-                          <stop offset="100%" stopColor="#00bfa6" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#A78BFA" stopOpacity={0.1} />
-                          <stop offset="100%" stopColor="#A78BFA" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                      <XAxis dataKey="m" tick={{ fontSize: 11, fill: 'var(--text-tertiary)', fontWeight: 600 }} axisLine={false} tickLine={false} dy={8} />
-                      <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v / 1000}K`} dx={-4} />
-                      <Tooltip content={<ChartTooltip formatter={(v: number) => `$${(v / 1000).toFixed(0)}K`} />} />
-                      <Area type="monotone" dataKey="rev" stroke="#00bfa6" strokeWidth={2.5} fill="url(#gRev)" dot={false} />
-                      <Area type="monotone" dataKey="exp" stroke="#A78BFA" strokeWidth={2} fill="url(#gExp)" dot={false} strokeDasharray="6 4" />
-                      <Line type="monotone" dataKey="noi" stroke="#5B9FFF" strokeWidth={2} dot={false} strokeDasharray="3 3" />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <div className="flex gap-4">
+                    {[
+                      { l: 'Revenue', col: SI_PRIMARY },
+                      { l: 'Expenses', col: SI_NAVY },
+                      { l: 'NOI', col: '#059669' },
+                    ].map((x) => (
+                      <div key={x.l} className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: x.col }} />
+                        <span className="text-xs font-medium text-slate-500">{x.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={REVENUE_DATA}>
+                    <defs>
+                      <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={SI_PRIMARY} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={SI_PRIMARY} stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={SI_NAVY} stopOpacity={0.15} />
+                        <stop offset="100%" stopColor={SI_NAVY} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="m" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v / 1000}K`} />
+                    <Tooltip content={<ChartTooltip formatter={(v: number) => `$${(v / 1000).toFixed(0)}K`} />} />
+                    <Area type="monotone" dataKey="rev" name="Revenue" stroke={SI_PRIMARY} strokeWidth={2.5} fill="url(#gRev)" dot={false} />
+                    <Area type="monotone" dataKey="exp" name="Expenses" stroke={SI_NAVY} strokeWidth={2} fill="url(#gExp)" dot={false} />
+                    <Line type="monotone" dataKey="noi" name="NOI" stroke="#059669" strokeWidth={2} dot={false} strokeDasharray="3 3" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              {/* Work Orders Pie + Status Bar */}
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[5fr_2fr]">
+                {/* Activity Feed */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Activity size={14} className="text-[#0369A1]" />
+                      <h3 className="text-sm font-semibold text-[#020617]">Recent Activity</h3>
+                    </div>
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('open-activity-panel'))}
+                      className="flex items-center gap-1 text-xs text-[#0369A1] hover:text-[#075985] transition-colors font-semibold"
+                    >
+                      View All <ArrowRight size={12} />
+                    </button>
+                  </div>
+                  <ActivityFeed maxItems={10} compact />
                 </motion.div>
 
                 {/* Work Orders Pie */}
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card-premium p-6"
+                  transition={{ delay: 0.25, duration: 0.4 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
                 >
-                  <h3 className="text-[16px] font-bold mb-0.5" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                    Work Orders
-                  </h3>
-                  <p className="text-[12px] mb-2" style={{ color: 'var(--text-tertiary)' }}>Active distribution</p>
-                  {totalWO > 0 && (
+                  <h3 className="text-sm font-semibold text-[#020617]">Work Orders</h3>
+                  <p className="text-xs text-slate-500 mb-3">Active distribution</p>
+                  {totalWO > 0 ? (
                     <>
                       <div className="flex justify-center">
                         <ResponsiveContainer width={180} height={180}>
@@ -374,32 +408,36 @@ export default function DashboardPage() {
                               innerRadius={50}
                               outerRadius={80}
                               dataKey="value"
-                              stroke="none"
-                              paddingAngle={3}
+                              stroke="#fff"
+                              strokeWidth={2}
+                              paddingAngle={2}
                             >
                               {woSliceData.map((entry, i) => (
-                                <Cell key={i} fill={entry.color} />
+                                <Cell key={i} fill={entry.color || PIE_PALETTE[i % PIE_PALETTE.length]} />
                               ))}
                             </Pie>
+                            <Tooltip content={<ChartTooltip />} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
                       <div className="text-center -mt-2 mb-3">
-                        <div className="text-[28px] font-extrabold" style={{ color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>{totalWO}</div>
-                        <div className="text-[12px]" style={{ color: 'var(--text-tertiary)' }}>Total Orders</div>
+                        <div className="font-display text-2xl font-bold tabular-nums text-[#020617]">{totalWO}</div>
+                        <div className="text-xs text-slate-500">Total Orders</div>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {woSliceData.map((s) => (
                           <div key={s.name} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-sm" style={{ background: s.color }} />
-                              <span className="text-[12px] font-medium capitalize" style={{ color: 'var(--text-secondary)' }}>{s.name}</span>
+                              <span className="text-xs font-medium capitalize text-slate-600">{s.name}</span>
                             </div>
-                            <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</span>
+                            <span className="text-xs font-semibold tabular-nums text-[#020617]">{s.value}</span>
                           </div>
                         ))}
                       </div>
                     </>
+                  ) : (
+                    <p className="text-xs text-slate-400 text-center py-8">No active work orders</p>
                   )}
                 </motion.div>
               </div>
@@ -407,13 +445,13 @@ export default function DashboardPage() {
               {/* Work Order Status Bar */}
               {totalWO > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.45 }}
-                  className="glass-card-premium p-5"
+                  transition={{ duration: 0.3, delay: 0.35 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
                 >
-                  <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>Work Order Pipeline</h3>
-                  <div className="flex gap-2 h-9 rounded-lg overflow-hidden">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Work Order Pipeline</h3>
+                  <div className="flex gap-2 h-9 rounded-md overflow-hidden">
                     {Object.entries(data.workOrdersByStatus).map(([status, count]) => {
                       const pct = (count / totalWO) * 100;
                       return (
@@ -421,9 +459,9 @@ export default function DashboardPage() {
                           key={status}
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.max(pct, 6)}%` }}
-                          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                          className="rounded-md flex items-center justify-center text-[11px] font-bold text-white"
-                          style={{ backgroundColor: WO_STATUS_COLORS[status] || '#6B7280' }}
+                          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                          className="rounded-sm flex items-center justify-center text-xs font-semibold text-white tabular-nums"
+                          style={{ backgroundColor: WO_STATUS_COLORS[status] || '#64748b' }}
                           title={`${status}: ${count}`}
                         >
                           {pct > 10 ? count : ''}
@@ -431,100 +469,76 @@ export default function DashboardPage() {
                       );
                     })}
                   </div>
-                  <div className="flex gap-3 mt-2.5 flex-wrap">
+                  <div className="flex gap-3 mt-3 flex-wrap">
                     {Object.entries(WO_STATUS_COLORS).map(([status, color]) => (
                       <div key={status} className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                        <span className="text-[10px] capitalize" style={{ color: 'var(--text-tertiary)' }}>{status.replace('_', ' ')}</span>
+                        <span className="text-[11px] capitalize text-slate-500">{status.replace('_', ' ')}</span>
                       </div>
                     ))}
                   </div>
                 </motion.div>
               )}
-
-              {/* Activity Feed */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
-                className="glass-card-premium p-5"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Activity size={14} className="text-accent" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Recent Activity</h3>
-                  </div>
-                  <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('open-activity-panel'))}
-                    className="flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 transition-colors font-semibold"
-                  >
-                    View All <ArrowRight size={12} />
-                  </button>
-                </div>
-                <ActivityFeed maxItems={10} compact />
-              </motion.div>
             </div>
           )}
 
           {/* ════════════ FINANCIALS TAB ════════════ */}
           {tab === 'financials' && (
             <div className="space-y-6">
-              {/* Revenue Chart Full Width */}
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-card-premium p-6"
+                transition={{ duration: 0.4 }}
+                className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
               >
-                <div className="flex justify-between items-center mb-5">
+                <div className="flex justify-between items-baseline mb-4">
                   <div>
-                    <h3 className="text-[16px] font-bold" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                      Revenue & NOI Trend
-                    </h3>
-                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>Monthly breakdown across all properties</p>
+                    <h3 className="text-sm font-semibold text-[#020617]">Revenue & NOI Trend</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Monthly breakdown across all properties</p>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={340}>
                   <AreaChart data={REVENUE_DATA}>
                     <defs>
                       <linearGradient id="gRevF" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#00bfa6" stopOpacity={0.2} />
-                        <stop offset="100%" stopColor="#00bfa6" stopOpacity={0} />
+                        <stop offset="0%" stopColor={SI_PRIMARY} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={SI_PRIMARY} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                    <XAxis dataKey="m" tick={{ fontSize: 11, fill: 'var(--text-tertiary)', fontWeight: 600 }} axisLine={false} tickLine={false} dy={8} />
-                    <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v / 1000}K`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="m" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v / 1000}K`} />
                     <Tooltip content={<ChartTooltip formatter={(v: number) => `$${(v / 1000).toFixed(0)}K`} />} />
-                    <Area type="monotone" dataKey="rev" stroke="#00bfa6" strokeWidth={2.5} fill="url(#gRevF)" dot={false} />
-                    <Area type="monotone" dataKey="exp" stroke="#A78BFA" strokeWidth={2} fill="none" dot={false} strokeDasharray="6 4" />
-                    <Line type="monotone" dataKey="noi" stroke="#5B9FFF" strokeWidth={2.5} dot={{ r: 4, fill: '#5B9FFF', strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="rev" name="Revenue" stroke={SI_PRIMARY} strokeWidth={2.5} fill="url(#gRevF)" dot={false} />
+                    <Area type="monotone" dataKey="exp" name="Expenses" stroke={SI_NAVY} strokeWidth={2} fill="none" dot={false} strokeDasharray="6 4" />
+                    <Line type="monotone" dataKey="noi" name="NOI" stroke="#059669" strokeWidth={2.5} dot={{ r: 4, fill: '#059669', strokeWidth: 0 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </motion.div>
 
-              {/* Lease Expiration + Delinquency */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card-premium p-6"
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
                 >
-                  <h3 className="text-[16px] font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Lease Expirations</h3>
-                  <p className="text-[12px] mb-5" style={{ color: 'var(--text-tertiary)' }}>Upcoming renewal timeline</p>
+                  <h3 className="text-sm font-semibold text-[#020617]">Lease Expirations</h3>
+                  <p className="text-xs text-slate-500 mb-4">Upcoming renewal timeline</p>
                   <div className="space-y-4">
                     {LEASE_EXPIRY.map((le) => (
                       <div key={le.range}>
                         <div className="flex justify-between mb-1.5">
-                          <span className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>{le.range}</span>
-                          <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>{le.count} leases ({le.pct}%)</span>
+                          <span className="text-sm font-medium text-slate-600">{le.range}</span>
+                          <span className="text-sm font-semibold tabular-nums text-[#020617]">
+                            {le.count} leases <span className="text-slate-500 font-normal">({le.pct}%)</span>
+                          </span>
                         </div>
-                        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-hover)' }}>
+                        <div className="h-2 rounded-full overflow-hidden bg-slate-100">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${le.pct}%` }}
-                            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                             className="h-full rounded-full"
                             style={{ background: le.color }}
                           />
@@ -535,30 +549,30 @@ export default function DashboardPage() {
                 </motion.div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card-premium p-6"
+                  transition={{ delay: 0.15, duration: 0.4 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
                 >
-                  <h3 className="text-[16px] font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Delinquency</h3>
-                  <p className="text-[12px] mb-5" style={{ color: 'var(--text-tertiary)' }}>Outstanding balances by aging bucket</p>
-                  <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-[#020617]">Delinquency</h3>
+                  <p className="text-xs text-slate-500 mb-4">Outstanding balances by aging bucket</p>
+                  <div className="space-y-2">
                     {DELINQUENCY.map((d) => (
-                      <div key={d.range} className="flex items-center justify-between p-3 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
+                      <div key={d.range} className="flex items-center justify-between p-3 rounded-md bg-slate-50 border border-slate-100">
                         <div>
-                          <div className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{d.range} days</div>
-                          <div className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{d.tenants} tenant{d.tenants > 1 ? 's' : ''}</div>
+                          <div className="text-sm font-semibold text-[#020617]">{d.range} days</div>
+                          <div className="text-xs text-slate-500">{d.tenants} tenant{d.tenants > 1 ? 's' : ''}</div>
                         </div>
-                        <div className="text-[18px] font-extrabold" style={{ color: '#FF4757', letterSpacing: '-0.02em' }}>
+                        <div className="font-display text-lg font-bold tabular-nums text-red-600">
                           ${d.amt.toLocaleString()}
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[13px] font-semibold" style={{ color: 'var(--text-secondary)' }}>Total Outstanding</span>
-                      <span className="text-[20px] font-extrabold" style={{ color: '#FF4757', letterSpacing: '-0.02em' }}>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-sm font-semibold text-slate-600">Total Outstanding</span>
+                      <span className="font-display text-xl font-bold tabular-nums text-red-600">
                         ${DELINQUENCY.reduce((a, d) => a + d.amt, 0).toLocaleString()}
                       </span>
                     </div>
@@ -571,43 +585,39 @@ export default function DashboardPage() {
           {/* ════════════ OPERATIONS TAB ════════════ */}
           {tab === 'operations' && (
             <div className="space-y-6">
-              {/* Occupancy Trend */}
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="glass-card-premium p-6"
+                transition={{ duration: 0.4 }}
+                className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
               >
-                <div className="flex justify-between items-center mb-5">
+                <div className="flex justify-between items-baseline mb-4">
                   <div>
-                    <h3 className="text-[16px] font-bold" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-                      Occupancy Trend
-                    </h3>
-                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>Portfolio-wide occupancy over time</p>
+                    <h3 className="text-sm font-semibold text-[#020617]">Occupancy Trend</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Portfolio-wide occupancy over time</p>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={OCCUPANCY_DATA}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-                    <XAxis dataKey="m" tick={{ fontSize: 11, fill: 'var(--text-tertiary)', fontWeight: 600 }} axisLine={false} tickLine={false} dy={8} />
-                    <YAxis domain={[80, 100]} tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="m" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[80, 100]} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
                     <Tooltip content={<ChartTooltip formatter={(v: number) => `${v}%`} />} />
-                    <Line type="monotone" dataKey="v" stroke="#A78BFA" strokeWidth={3} dot={{ r: 5, fill: '#A78BFA', strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="v" name="Occupancy" stroke={SI_PRIMARY} strokeWidth={2.5} dot={{ r: 4, fill: SI_PRIMARY, strokeWidth: 0 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </motion.div>
 
-              {/* Work Order Pipeline */}
               {totalWO > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="glass-card-premium p-6"
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
                 >
-                  <h3 className="text-[16px] font-bold mb-1" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Work Order Pipeline</h3>
-                  <p className="text-[12px] mb-5" style={{ color: 'var(--text-tertiary)' }}>Status distribution across all properties</p>
-                  <div className="flex gap-2.5 h-10 rounded-xl overflow-hidden mb-4">
+                  <h3 className="text-sm font-semibold text-[#020617]">Work Order Pipeline</h3>
+                  <p className="text-xs text-slate-500 mb-4">Status distribution across all properties</p>
+                  <div className="flex gap-2 h-10 rounded-md overflow-hidden mb-4">
                     {Object.entries(data.workOrdersByStatus).map(([status, count]) => {
                       const pct = (count / totalWO) * 100;
                       return (
@@ -615,9 +625,9 @@ export default function DashboardPage() {
                           key={status}
                           initial={{ width: 0 }}
                           animate={{ width: `${Math.max(pct, 6)}%` }}
-                          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                          className="rounded-lg flex items-center justify-center text-[12px] font-bold text-white"
-                          style={{ backgroundColor: WO_STATUS_COLORS[status] || '#6B7280' }}
+                          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                          className="rounded-sm flex items-center justify-center text-xs font-semibold text-white tabular-nums"
+                          style={{ backgroundColor: WO_STATUS_COLORS[status] || '#64748b' }}
                         >
                           {pct > 10 ? count : ''}
                         </motion.div>
@@ -626,11 +636,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {Object.entries(data.workOrdersByStatus).map(([status, count]) => (
-                      <div key={status} className="flex items-center gap-2 p-2.5 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
-                        <div className="w-3 h-3 rounded-sm" style={{ background: WO_STATUS_COLORS[status] || '#6B7280' }} />
+                      <div key={status} className="flex items-center gap-2 p-3 rounded-md bg-slate-50 border border-slate-100">
+                        <div className="w-3 h-3 rounded-sm" style={{ background: WO_STATUS_COLORS[status] || '#64748b' }} />
                         <div>
-                          <div className="text-[15px] font-bold" style={{ color: 'var(--text-primary)' }}>{count}</div>
-                          <div className="text-[10px] capitalize" style={{ color: 'var(--text-tertiary)' }}>{status.replace('_', ' ')}</div>
+                          <div className="text-base font-bold tabular-nums text-[#020617]">{count}</div>
+                          <div className="text-[10px] capitalize text-slate-500">{status.replace('_', ' ')}</div>
                         </div>
                       </div>
                     ))}
@@ -638,21 +648,20 @@ export default function DashboardPage() {
                 </motion.div>
               )}
 
-              {/* Activity Feed */}
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.25 }}
-                className="glass-card-premium p-5"
+                transition={{ duration: 0.3, delay: 0.2 }}
+                className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Activity size={14} className="text-accent" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Activity Feed</h3>
+                    <Activity size={14} className="text-[#0369A1]" />
+                    <h3 className="text-sm font-semibold text-[#020617]">Activity Feed</h3>
                   </div>
                   <button
                     onClick={() => window.dispatchEvent(new CustomEvent('open-activity-panel'))}
-                    className="flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 transition-colors font-semibold"
+                    className="flex items-center gap-1 text-xs text-[#0369A1] hover:text-[#075985] transition-colors font-semibold"
                   >
                     View All <ArrowRight size={12} />
                   </button>
@@ -665,11 +674,10 @@ export default function DashboardPage() {
           {/* ════════════ MARKET TAB ════════════ */}
           {tab === 'market' && (
             <div className="space-y-6">
-              {/* Market Stats Grid */}
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4 }}
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {MARKET_STATS.map((stat, i) => {
@@ -677,22 +685,24 @@ export default function DashboardPage() {
                     return (
                       <motion.div
                         key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="glass-card-premium p-5"
+                        transition={{ delay: i * 0.06, duration: 0.4 }}
+                        className="p-5 bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                       >
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-muted)' }}>
-                            <StatIcon size={16} className="text-accent" />
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                            <p className="mt-2 font-display text-2xl font-bold tabular-nums text-[#020617]">{stat.val}</p>
+                            <div className="mt-2 flex items-center gap-1 text-xs">
+                              {stat.up ? <ArrowUp size={12} className="text-emerald-600" /> : <ArrowDown size={12} className="text-red-600" />}
+                              <span className={`font-semibold tabular-nums ${stat.up ? 'text-emerald-600' : 'text-red-600'}`}>{stat.change}</span>
+                              <span className="text-slate-500">vs last year</span>
+                            </div>
                           </div>
-                          <span className="text-[12px] font-medium" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</span>
-                        </div>
-                        <div className="text-[22px] font-extrabold" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{stat.val}</div>
-                        <div className="flex items-center gap-1 mt-1">
-                          {stat.up ? <ArrowUp size={12} className="text-green-500" /> : <ArrowDown size={12} className="text-red-500" />}
-                          <span className="text-[12px] font-bold" style={{ color: stat.up ? 'var(--success)' : 'var(--danger)' }}>{stat.change}</span>
-                          <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>vs last year</span>
+                          <div className="p-2 rounded-md bg-sky-50 text-[#0369A1]">
+                            <StatIcon size={20} />
+                          </div>
                         </div>
                       </motion.div>
                     );
@@ -700,41 +710,36 @@ export default function DashboardPage() {
                 </div>
               </motion.div>
 
-              {/* Market Intelligence Panel */}
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.35 }}
-                className="glass-card-premium p-5"
+                transition={{ duration: 0.3, delay: 0.25 }}
+                className="bg-white border border-slate-200 rounded-lg shadow-sm p-5"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Globe size={14} className="text-accent" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Market Intelligence</h3>
+                    <Globe size={14} className="text-[#0369A1]" />
+                    <h3 className="text-sm font-semibold text-[#020617]">Market Intelligence</h3>
                   </div>
                   <div className="relative">
                     <button
                       onClick={() => setMarketDropdownOpen(!marketDropdownOpen)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors hover:border-accent/40"
-                      style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', background: 'var(--bg-hover)' }}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-medium text-[#020617] hover:border-slate-300 transition-colors shadow-sm"
                     >
                       {selectedMarket.city}, {selectedMarket.state}
-                      <ChevronDown size={12} className={`transition-transform ${marketDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-tertiary)' }} />
+                      <ChevronDown size={12} className={`text-slate-400 transition-transform ${marketDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {marketDropdownOpen && (
-                      <div
-                        className="absolute right-0 top-full mt-1 z-20 w-48 py-1 rounded-xl border shadow-xl"
-                        style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border)' }}
-                      >
+                      <div className="absolute right-0 top-full mt-1 z-20 w-48 py-1 rounded-md border border-slate-200 bg-white shadow-lg">
                         {MARKET_OPTIONS.map((market) => (
                           <button
                             key={`${market.city}-${market.state}`}
                             onClick={() => { setSelectedMarket(market); setMarketDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 text-xs transition-colors"
-                            style={{
-                              color: selectedMarket.city === market.city ? 'var(--accent)' : 'var(--text-secondary)',
-                              background: selectedMarket.city === market.city ? 'var(--accent-muted)' : 'transparent',
-                            }}
+                            className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                              selectedMarket.city === market.city
+                                ? 'text-[#0369A1] bg-sky-50 font-semibold'
+                                : 'text-slate-600 hover:bg-slate-50'
+                            }`}
                           >
                             {market.city}, {market.state}
                           </button>
@@ -757,23 +762,23 @@ export default function DashboardPage() {
       {/* Empty state */}
       {data.totalProperties === 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="glass-card-premium p-8 text-center"
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="bg-white border border-slate-200 rounded-lg shadow-sm p-8 text-center"
         >
-          <Building2 size={48} className="mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
-          <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Welcome to RKV Consulting</h3>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+          <div className="mx-auto w-12 h-12 rounded-md bg-sky-50 text-[#0369A1] flex items-center justify-center mb-4">
+            <Building2 size={24} />
+          </div>
+          <h3 className="text-lg font-bold text-[#020617] mb-2">Welcome to RKV Consulting</h3>
+          <p className="text-sm text-slate-500 mb-4">
             Get started by adding your first property, or connect your PM platform to import data automatically.
           </p>
           <div className="flex justify-center gap-3">
-            <a href="/properties" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-px"
-              style={{ background: 'linear-gradient(135deg, #00bfa6, #00A8A0)' }}>
+            <a href="/properties" className="px-5 py-2.5 rounded-md text-sm font-semibold text-white bg-[#0369A1] hover:bg-[#075985] transition-colors shadow-sm">
               Add Property
             </a>
-            <a href="/integrations" className="px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all hover:-translate-y-px"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+            <a href="/integrations" className="px-5 py-2.5 rounded-md border border-slate-200 bg-white text-sm font-semibold text-[#020617] hover:bg-slate-50 transition-colors shadow-sm">
               Connect PM Platform
             </a>
           </div>

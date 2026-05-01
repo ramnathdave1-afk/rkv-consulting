@@ -17,31 +17,37 @@ const practices = [
 
 export default function SecurityPage() {
   return (
-    <div className="min-h-screen bg-bg-primary">
-      <nav className="border-b border-border bg-bg-secondary/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
-              <span className="text-xs font-bold text-accent">M</span>
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0F172A]">
+              <span className="text-xs font-bold text-white">R</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
+            <span className="font-display text-sm font-bold text-[#0F172A]">RKV Consulting</span>
           </Link>
-          <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
+          <Link href="/login" className="text-sm font-medium text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">Sign In</Link>
         </div>
       </nav>
 
-      <div className="mx-auto max-w-4xl px-6 py-20">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 mx-auto mb-4">
-            <Shield size={24} className="text-accent" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-text-primary mb-2">Security</h1>
-          <p className="text-sm text-text-secondary max-w-lg mx-auto">
-            Security is foundational to RKV Consulting. Here&apos;s how we protect your data and infrastructure intelligence.
-          </p>
-        </motion.div>
+      {/* Hero */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="mx-auto max-w-3xl px-6 py-20 md:py-24 text-center">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[#0369A1]/10 mx-auto mb-5">
+              <Shield size={24} className="text-[#0369A1]" />
+            </div>
+            <h1 className="font-display font-bold text-5xl md:text-6xl tracking-tight text-[#020617]">Security</h1>
+            <p className="mt-5 text-xl md:text-2xl text-[#475569] max-w-2xl mx-auto" style={{ lineHeight: 1.7 }}>
+              Security is foundational to RKV Consulting. Here&apos;s how we protect your data and infrastructure intelligence.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Practices grid */}
+      <section className="mx-auto max-w-6xl px-6 py-20 md:py-32">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {practices.map((p, i) => (
             <motion.div
               key={p.title}
@@ -49,45 +55,47 @@ export default function SecurityPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
-              className="glass-card p-5"
+              className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <p.icon size={16} className="text-accent" />
-                <h3 className="font-display text-sm font-bold text-text-primary">{p.title}</h3>
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#0369A1]/10 mb-4">
+                <p.icon size={18} className="text-[#0369A1]" />
               </div>
-              <p className="text-xs text-text-secondary leading-relaxed">{p.description}</p>
+              <h3 className="font-display text-lg font-semibold text-[#0F172A] mb-2">{p.title}</h3>
+              <p className="text-sm text-[#475569]" style={{ lineHeight: 1.7 }}>{p.description}</p>
             </motion.div>
           ))}
         </div>
+      </section>
 
+      {/* Vulnerability CTA */}
+      <section className="mx-auto max-w-3xl px-6 pb-24">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-12 glass-card p-6 text-center"
-          style={{ borderColor: 'rgba(0,212,170,0.15)' }}
+          className="rounded-xl border border-slate-200 bg-white p-8 md:p-10 text-center shadow-sm"
         >
-          <h3 className="font-display text-sm font-bold text-text-primary mb-2">Report a Vulnerability</h3>
-          <p className="text-xs text-text-secondary mb-3">
-            If you discover a security vulnerability, please report it responsibly to security@rkvconsulting.com
+          <h3 className="font-display text-2xl font-bold text-[#0F172A] mb-3">Report a Vulnerability</h3>
+          <p className="text-base text-[#475569] mb-5" style={{ lineHeight: 1.7 }}>
+            If you discover a security vulnerability, please report it responsibly to security@rkvconsulting.com.
           </p>
           <a
             href="mailto:security@rkvconsulting.com"
-            className="inline-flex items-center gap-2 rounded-lg border border-accent/30 px-4 py-2 text-xs font-semibold text-accent hover:bg-accent/5 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-200 hover:border-slate-300 text-[#0F172A] px-6 h-12 font-semibold cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
           >
-            <Lock size={12} />
+            <Lock size={14} />
             security@rkvconsulting.com
           </a>
         </motion.div>
-      </div>
+      </section>
 
-      <footer className="border-t border-border px-6 py-8">
-        <div className="mx-auto max-w-5xl flex items-center justify-between flex-wrap gap-3">
-          <p className="text-xs text-text-muted">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
+      <footer className="border-t border-slate-200 bg-white px-6 py-8">
+        <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
+          <p className="text-xs text-[#475569]">&copy; {new Date().getFullYear()} RKV Consulting by RKV</p>
           <div className="flex items-center gap-4">
             <StatusBadge />
-            <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Terms</Link>
-            <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">Terms</Link>
+            <Link href="/privacy" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">Privacy</Link>
           </div>
         </div>
       </footer>

@@ -120,11 +120,11 @@ export function stageTransitionEmail(
   return {
     subject: `[RKV Consulting] ${siteName} moved to ${toStage.replace('_', ' ')}`,
     html: `
-      <div style="font-family: Inter, sans-serif; max-width: 500px; margin: 0 auto; background: #06080C; color: #F0F2F5; padding: 32px; border-radius: 12px;">
-        <h2 style="color: #00D4AA; margin: 0 0 16px;">Pipeline Update</h2>
+      <div style="font-family: 'Plus Jakarta Sans', sans-serif; max-width: 500px; margin: 0 auto; background: #0F172A; color: #F8FAFC; padding: 32px; border-radius: 12px;">
+        <h2 style="color: #38bdf8; margin: 0 0 16px;">Pipeline Update</h2>
         <p style="margin: 0 0 8px;"><strong>${siteName}</strong> has been moved:</p>
-        <p style="margin: 0 0 24px; color: #8B95A5;">
-          ${fromStage?.replace('_', ' ') || 'New'} → <span style="color: #00D4AA;">${toStage.replace('_', ' ')}</span>
+        <p style="margin: 0 0 24px; color: #94a3b8;">
+          ${fromStage?.replace('_', ' ') || 'New'} → <span style="color: #38bdf8;">${toStage.replace('_', ' ')}</span>
         </p>
         <p style="margin: 0; font-size: 12px; color: #4A5568;">
           Moved by ${movedBy} · ${new Date().toLocaleDateString()}

@@ -10,37 +10,27 @@ interface ChartTooltipProps {
 }
 
 /**
- * Premium custom tooltip for Recharts with glass effect.
+ * Sales Intelligence Dashboard tooltip.
+ * White surface, slate border, navy text.
  */
 export function ChartTooltip({ active, payload, label, formatter }: ChartTooltipProps) {
   if (!active || !payload) return null;
 
   return (
-    <div
-      className="rounded-xl border backdrop-blur-xl"
-      style={{
-        background: 'var(--bg-elevated)',
-        borderColor: 'var(--border)',
-        padding: '12px 16px',
-        boxShadow: 'var(--shadow-lg)',
-      }}
-    >
-      <div
-        className="text-[11px] font-semibold mb-1.5"
-        style={{ color: 'var(--text-tertiary)' }}
-      >
+    <div className="bg-white border border-slate-200 rounded-md shadow-md px-3 py-2">
+      <div className="text-[11px] font-semibold mb-1 text-slate-500 uppercase tracking-wider">
         {label}
       </div>
       {payload.map((p, i) => (
-        <div key={i} className="flex items-center gap-2 mb-0.5">
+        <div key={i} className="flex items-center gap-2 mb-0.5 last:mb-0">
           <div
             className="w-2 h-2 rounded-sm"
             style={{ background: p.stroke || p.fill }}
           />
-          <span
-            className="text-[13px] font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          {p.name && (
+            <span className="text-[11px] text-slate-500">{p.name}:</span>
+          )}
+          <span className="text-[13px] font-semibold tabular-nums text-[#020617]">
             {formatter ? formatter(p.value) : p.value.toLocaleString()}
           </span>
         </div>

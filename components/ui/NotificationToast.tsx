@@ -76,7 +76,7 @@ export function NotificationToastContainer() {
               </div>
               <button
                 onClick={() => dismiss(toast.id)}
-                className="shrink-0 text-text-muted hover:text-text-primary transition-colors"
+                className="shrink-0 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
               >
                 <X size={12} />
               </button>

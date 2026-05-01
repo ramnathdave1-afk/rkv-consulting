@@ -4,16 +4,12 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
-import Badge from '@/components/ui/Badge';
 import {
   MessageSquare,
   Search,
-  Phone,
   Mail,
-  MessageCircle,
-  Bot,
-  UserCheck,
-  AlertTriangle,
+  Globe,
+  Phone,
   X,
 } from 'lucide-react';
 import type { ConversationChannel, ConversationStatus } from '@/lib/types';
@@ -31,21 +27,14 @@ interface ConversationRow {
   properties: { name: string } | null;
   last_message_preview: string | null;
   last_message_sender_type: string | null;
+  unread?: boolean;
 }
 
-const channelConfig: Record<ConversationChannel, { label: string; icon: React.ReactNode; variant: 'info' | 'accent' | 'violet' | 'muted' }> = {
-  sms: { label: 'SMS', icon: <Phone size={10} />, variant: 'info' },
-  email: { label: 'Email', icon: <Mail size={10} />, variant: 'accent' },
-  web_chat: { label: 'Web Chat', icon: <MessageCircle size={10} />, variant: 'violet' },
-  voice: { label: 'Voice', icon: <Phone size={10} />, variant: 'muted' },
-};
-
-const statusConfig: Record<ConversationStatus, { label: string; icon: React.ReactNode; variant: 'success' | 'info' | 'warning' | 'danger' | 'muted' }> = {
-  active: { label: 'Active', icon: <MessageSquare size={10} />, variant: 'success' },
-  ai_handling: { label: 'AI Handling', icon: <Bot size={10} />, variant: 'info' },
-  human_handling: { label: 'Human', icon: <UserCheck size={10} />, variant: 'warning' },
-  escalated: { label: 'Escalated', icon: <AlertTriangle size={10} />, variant: 'danger' },
-  closed: { label: 'Closed', icon: null, variant: 'muted' },
+const channelIcon: Record<ConversationChannel, React.ReactNode> = {
+  sms: <MessageSquare size={14} className="text-slate-500" />,
+  email: <Mail size={14} className="text-slate-500" />,
+  web_chat: <Globe size={14} className="text-slate-500" />,
+  voice: <Phone size={14} className="text-slate-500" />,
 };
 
 function formatRelativeTime(dateStr: string): string {
@@ -56,10 +45,10 @@ function formatRelativeTime(dateStr: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
@@ -117,11 +106,8 @@ export default function ConversationsPage() {
 
   const filtered = useMemo(() => {
     return conversations.filter((c) => {
-      // Channel filter
       if (channelFilter !== 'all' && c.channel !== channelFilter) return false;
-      // Status filter
       if (statusFilter !== 'all' && c.status !== statusFilter) return false;
-      // Search
       if (search.trim()) {
         const q = search.toLowerCase();
         const name = c.tenants
@@ -142,7 +128,7 @@ export default function ConversationsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 bg-slate-50 min-h-screen">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-full" />
         {Array.from({ length: 6 }).map((_, i) => (
@@ -153,12 +139,12 @@ export default function ConversationsPage() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Conversations</h1>
-          <p className="text-sm text-text-secondary">
+          <h1 className="text-xl font-bold text-[#020617]">Conversations</h1>
+          <p className="text-sm text-slate-500">
             {filtered.length} of {conversations.length} conversations
           </p>
         </div>
@@ -166,31 +152,29 @@ export default function ConversationsPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search by name, phone, or property..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-bg-primary text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none transition-colors"
+            className="w-full pl-9 pr-8 py-2 rounded-md border border-slate-200 bg-white text-sm text-[#020617] placeholder:text-slate-400 focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 transition-colors"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Channel filter */}
         <select
           value={channelFilter}
           onChange={(e) => setChannelFilter(e.target.value as ConversationChannel | 'all')}
-          className="rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none cursor-pointer"
+          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-[#020617] focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 cursor-pointer"
         >
           <option value="all">All Channels</option>
           <option value="sms">SMS</option>
@@ -199,11 +183,10 @@ export default function ConversationsPage() {
           <option value="voice">Voice</option>
         </select>
 
-        {/* Status filter */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ConversationStatus | 'all')}
-          className="rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none cursor-pointer"
+          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-[#020617] focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 cursor-pointer"
         >
           <option value="all">All Statuses</option>
           <option value="ai_handling">AI Handling</option>
@@ -213,7 +196,6 @@ export default function ConversationsPage() {
           <option value="closed">Closed</option>
         </select>
 
-        {/* Clear filters */}
         {activeFilters > 0 && (
           <button
             onClick={() => {
@@ -221,7 +203,7 @@ export default function ConversationsPage() {
               setChannelFilter('all');
               setStatusFilter('all');
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-text-muted hover:text-text-secondary hover:bg-bg-elevated transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors whitespace-nowrap cursor-pointer"
           >
             <X size={12} />
             Clear ({activeFilters})
@@ -229,82 +211,76 @@ export default function ConversationsPage() {
         )}
       </div>
 
-      {/* List */}
+      {/* Inbox-style two-panel preview list */}
       {filtered.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <MessageSquare size={48} className="mx-auto text-text-muted mb-4" />
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <MessageSquare size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="text-lg font-semibold text-[#020617] mb-2">
             {conversations.length === 0 ? 'No conversations yet' : 'No matching conversations'}
           </h3>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-slate-500">
             {conversations.length === 0
               ? 'Conversations will appear here when tenants or prospects message your Twilio numbers.'
               : 'Try adjusting your search or filters.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((c) => {
-            const name = c.tenants
-              ? `${c.tenants.first_name} ${c.tenants.last_name}`
-              : c.participant_name || c.participant_phone || 'Unknown';
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <ul className="divide-y divide-slate-200">
+            {filtered.map((c) => {
+              const name = c.tenants
+                ? `${c.tenants.first_name} ${c.tenants.last_name}`
+                : c.participant_name || c.participant_phone || 'Unknown';
 
-            const chCfg = channelConfig[c.channel] || channelConfig.sms;
-            const stCfg = statusConfig[c.status] || statusConfig.active;
+              const isUnread = !!c.unread;
 
-            return (
-              <div
-                key={c.id}
-                onClick={() => router.push(`/conversations/${c.id}`)}
-                className="glass-card p-4 flex items-start gap-3 hover:bg-bg-elevated/50 transition-colors cursor-pointer group"
-              >
-                {/* Avatar */}
-                <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <MessageSquare size={18} className="text-accent" />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-semibold text-text-primary truncate">{name}</p>
-                    <Badge variant={chCfg.variant} size="sm" className="flex-shrink-0">
-                      <span className="flex items-center gap-1">
-                        {chCfg.icon}
-                        {chCfg.label}
-                      </span>
-                    </Badge>
-                    <Badge variant={stCfg.variant} size="sm" dot className="flex-shrink-0">
-                      {stCfg.label}
-                    </Badge>
+              return (
+                <li
+                  key={c.id}
+                  onClick={() => router.push(`/conversations/${c.id}`)}
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-sky-50/50 transition-colors cursor-pointer"
+                >
+                  {/* Channel icon */}
+                  <div className="h-9 w-9 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {channelIcon[c.channel] || channelIcon.sms}
                   </div>
 
-                  {c.properties && (
-                    <p className="text-[11px] text-text-muted mb-1">{c.properties.name}</p>
-                  )}
-
-                  {c.last_message_preview && (
-                    <p className="text-xs text-text-secondary truncate">
-                      {c.last_message_sender_type && (
-                        <span className="text-text-muted capitalize">
-                          {c.last_message_sender_type}:{' '}
-                        </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      {isUnread && (
+                        <span className="h-2 w-2 rounded-full bg-sky-500 flex-shrink-0" />
                       )}
-                      {c.last_message_preview}
-                    </p>
-                  )}
-                </div>
+                      <p className={`text-sm truncate ${isUnread ? 'font-bold text-[#020617]' : 'font-medium text-[#020617]'}`}>
+                        {name}
+                      </p>
+                      {c.properties && (
+                        <span className="text-xs text-slate-400 truncate">&middot; {c.properties.name}</span>
+                      )}
+                    </div>
 
-                {/* Time */}
-                <div className="flex-shrink-0 text-right">
-                  {c.last_message_at && (
-                    <p className="text-[10px] text-text-muted">
-                      {formatRelativeTime(c.last_message_at)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                    {c.last_message_preview && (
+                      <p className="text-xs text-slate-500 truncate">
+                        {c.last_message_sender_type && (
+                          <span className="text-slate-400 capitalize">
+                            {c.last_message_sender_type}:{' '}
+                          </span>
+                        )}
+                        {c.last_message_preview}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0 text-right">
+                    {c.last_message_at && (
+                      <p className="text-xs tabular-nums text-slate-500">
+                        {formatRelativeTime(c.last_message_at)}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
     </div>

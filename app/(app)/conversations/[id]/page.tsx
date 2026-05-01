@@ -4,21 +4,20 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/Skeleton';
-import Badge from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   Send,
   Bot,
-  User,
   UserCheck,
   AlertTriangle,
   Phone,
   Mail,
-  MessageCircle,
+  Globe,
+  MessageSquare,
   Clock,
   Building2,
-  Hash,
+  Sparkles,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -29,43 +28,19 @@ interface ConversationWithRelations extends Conversation {
   properties?: { name: string } | null;
 }
 
-const channelConfig: Record<ConversationChannel, { label: string; icon: React.ReactNode; variant: 'info' | 'accent' | 'violet' | 'muted' }> = {
-  sms: { label: 'SMS', icon: <Phone size={12} />, variant: 'info' },
-  email: { label: 'Email', icon: <Mail size={12} />, variant: 'accent' },
-  web_chat: { label: 'Web Chat', icon: <MessageCircle size={12} />, variant: 'violet' },
-  voice: { label: 'Voice', icon: <Phone size={12} />, variant: 'muted' },
+const channelIcon: Record<ConversationChannel, React.ReactNode> = {
+  sms: <MessageSquare size={14} className="text-slate-500" />,
+  email: <Mail size={14} className="text-slate-500" />,
+  web_chat: <Globe size={14} className="text-slate-500" />,
+  voice: <Phone size={14} className="text-slate-500" />,
 };
 
-const statusConfig: Record<ConversationStatus, { label: string; variant: 'success' | 'info' | 'warning' | 'danger' | 'muted' }> = {
-  active: { label: 'Active', variant: 'success' },
-  ai_handling: { label: 'AI Handling', variant: 'info' },
-  human_handling: { label: 'Human Handling', variant: 'warning' },
-  escalated: { label: 'Escalated', variant: 'danger' },
-  closed: { label: 'Closed', variant: 'muted' },
-};
-
-// Message bubble colors by sender type
-const senderBubbleStyles: Record<string, { bg: string; accent: string; label: string }> = {
-  ai: {
-    bg: 'bg-blue-500/10 border border-blue-500/20',
-    accent: 'text-blue-400',
-    label: 'AI Agent',
-  },
-  staff: {
-    bg: 'bg-green-500/10 border border-green-500/20',
-    accent: 'text-green-400',
-    label: 'Staff',
-  },
-  tenant: {
-    bg: 'bg-bg-elevated border border-border',
-    accent: 'text-text-muted',
-    label: 'Tenant',
-  },
-  system: {
-    bg: 'bg-yellow-500/10 border border-yellow-500/20',
-    accent: 'text-yellow-400',
-    label: 'System',
-  },
+const statusPill: Record<ConversationStatus, { label: string; classes: string }> = {
+  active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  ai_handling: { label: 'AI Handling', classes: 'bg-sky-50 text-sky-700 border-sky-200' },
+  human_handling: { label: 'Human Handling', classes: 'bg-amber-50 text-amber-700 border-amber-200' },
+  escalated: { label: 'Escalated', classes: 'bg-red-50 text-red-700 border-red-200' },
+  closed: { label: 'Closed', classes: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 function formatMessageTime(dateStr: string): string {
@@ -83,19 +58,6 @@ function formatMessageTime(dateStr: string): string {
   return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${time}`;
 }
 
-function getSenderIcon(senderType: string) {
-  switch (senderType) {
-    case 'ai':
-      return <Bot size={12} className="text-blue-400" />;
-    case 'staff':
-      return <User size={12} className="text-green-400" />;
-    case 'system':
-      return <AlertTriangle size={12} className="text-yellow-400" />;
-    default:
-      return <User size={12} className="text-text-muted" />;
-  }
-}
-
 export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -107,7 +69,7 @@ export default function ConversationDetailPage() {
   const [togglingStatus, setTogglingStatus] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const supabase = createClient();
 
   const scrollToBottom = useCallback(() => {
@@ -138,7 +100,6 @@ export default function ConversationDetailPage() {
     }
   }, [id]);
 
-  // Initial data load
   useEffect(() => {
     async function loadData() {
       await Promise.all([fetchConversation(), fetchMessages()]);
@@ -147,12 +108,10 @@ export default function ConversationDetailPage() {
     loadData();
   }, [fetchConversation, fetchMessages]);
 
-  // Auto-scroll when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Real-time subscription for new messages
   useEffect(() => {
     const channel = supabase
       .channel(`conversation-detail-${id}`)
@@ -166,7 +125,6 @@ export default function ConversationDetailPage() {
         },
         (payload: any) => {
           setMessages((prev) => {
-            // Avoid duplicates
             if (prev.some((m) => m.id === payload.new.id)) return prev;
             return [...prev, payload.new as Message];
           });
@@ -239,7 +197,6 @@ export default function ConversationDetailPage() {
 
       if (res.ok) {
         const json = await res.json();
-        // Add message immediately (realtime will also fire but we de-dup)
         setMessages((prev) => {
           if (prev.some((m) => m.id === json.message.id)) return prev;
           return [...prev, json.message];
@@ -249,11 +206,11 @@ export default function ConversationDetailPage() {
           toast.error('Message saved but SMS delivery failed');
         }
 
-        inputRef.current?.focus();
+        textareaRef.current?.focus();
       } else {
         const errJson = await res.json().catch(() => null);
         toast.error(errJson?.error || 'Failed to send message');
-        setInput(content); // restore input
+        setInput(content);
       }
     } catch {
       toast.error('Failed to send message');
@@ -265,8 +222,8 @@ export default function ConversationDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-        <div className="border-b border-border px-4 py-3">
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-slate-50">
+        <div className="border-b border-slate-200 bg-white px-4 py-3">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-3 w-32 mt-1" />
         </div>
@@ -283,11 +240,11 @@ export default function ConversationDetailPage() {
 
   if (!conversation) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-text-secondary mb-4">Conversation not found.</p>
+      <div className="p-6 text-center bg-slate-50 min-h-screen">
+        <p className="text-slate-600 mb-4">Conversation not found.</p>
         <button
           onClick={() => router.push('/conversations')}
-          className="text-accent hover:underline text-sm"
+          className="text-[#0369A1] hover:underline text-sm cursor-pointer"
         >
           Back to conversations
         </button>
@@ -304,74 +261,64 @@ export default function ConversationDetailPage() {
     ? `${conversation.tenants.first_name} ${conversation.tenants.last_name}`
     : conversation.participant_name || conversation.participant_phone || 'Unknown';
 
-  const chCfg = channelConfig[conversation.channel] || channelConfig.sms;
-  const stCfg = statusConfig[conversation.status] || statusConfig.active;
+  const stCfg = statusPill[conversation.status] || statusPill.active;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* Header */}
-      <div className="flex-shrink-0 border-b border-border px-4 py-3">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-slate-50">
+      {/* Status header */}
+      <div className="flex-shrink-0 border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/conversations"
-              className="p-1.5 rounded-lg hover:bg-bg-elevated transition-colors"
+              className="p-1.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
             >
-              <ArrowLeft size={18} className="text-text-muted" />
+              <ArrowLeft size={18} className="text-slate-500" />
             </Link>
 
-            <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-              {chCfg.icon}
+            <div className="h-9 w-9 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
+              {channelIcon[conversation.channel] || channelIcon.sms}
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-text-primary">{participantName}</p>
-                <Badge variant={chCfg.variant} size="sm">
-                  <span className="flex items-center gap-1">
-                    {chCfg.icon}
-                    {chCfg.label}
-                  </span>
-                </Badge>
-                <Badge variant={stCfg.variant} size="sm" dot>
+                <p className="text-sm font-semibold text-[#020617]">{participantName}</p>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${stCfg.classes}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
                   {stCfg.label}
-                </Badge>
+                </span>
               </div>
               <div className="flex items-center gap-3 mt-0.5">
                 {conversation.participant_phone && (
-                  <span className="flex items-center gap-1 text-[10px] text-text-muted">
-                    <Phone size={9} />
+                  <span className="flex items-center gap-1 text-xs text-slate-500 font-mono">
+                    <Phone size={10} />
                     {conversation.participant_phone}
                   </span>
                 )}
                 {conversation.properties && (
-                  <span className="flex items-center gap-1 text-[10px] text-text-muted">
-                    <Building2 size={9} />
+                  <span className="flex items-center gap-1 text-xs text-slate-500">
+                    <Building2 size={10} />
                     {conversation.properties.name}
                   </span>
                 )}
-                <span className="flex items-center gap-1 text-[10px] text-text-muted">
-                  <Clock size={9} />
-                  Started {new Date(conversation.created_at).toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-1 text-[10px] text-text-muted">
-                  <Hash size={9} />
+                <span className="flex items-center gap-1 text-xs text-slate-500">
+                  <Clock size={10} />
                   {messages.length} messages
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Takeover toggle */}
+          {/* Take Over toggle */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {!isClosed && (
               <button
                 onClick={handleStatusToggle}
                 disabled={togglingStatus}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors disabled:opacity-50 ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer ${
                   isHumanHandling
-                    ? 'border-accent/30 text-accent hover:bg-accent/10'
-                    : 'border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10'
+                    ? 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    : 'bg-[#0369A1] text-white hover:bg-[#0284C7]'
                 }`}
               >
                 {togglingStatus ? (
@@ -395,16 +342,17 @@ export default function ConversationDetailPage() {
       >
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <MessageCircle size={36} className="mx-auto text-text-muted mb-3" />
-            <p className="text-sm text-text-secondary">No messages yet</p>
+            <MessageSquare size={36} className="mx-auto text-slate-400 mb-3" />
+            <p className="text-sm text-slate-500">No messages yet</p>
           </div>
         )}
 
         {messages.map((msg, index) => {
           const isInbound = msg.direction === 'inbound';
-          const style = senderBubbleStyles[msg.sender_type] || senderBubbleStyles.tenant;
+          const isAi = msg.sender_type === 'ai';
+          const isSystem = msg.sender_type === 'system';
+          const alignRight = !isInbound;
 
-          // Show date separator
           const prevMsg = index > 0 ? messages[index - 1] : null;
           const showDateSep =
             !prevMsg ||
@@ -414,60 +362,57 @@ export default function ConversationDetailPage() {
             <React.Fragment key={msg.id}>
               {showDateSep && (
                 <div className="flex items-center gap-3 py-2">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-[10px] text-text-muted font-medium">
+                  <div className="flex-1 h-px bg-slate-200" />
+                  <span className="text-xs text-slate-500 font-medium">
                     {new Date(msg.created_at).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
                     })}
                   </span>
-                  <div className="flex-1 h-px bg-border" />
+                  <div className="flex-1 h-px bg-slate-200" />
                 </div>
               )}
 
-              {/* System messages render as centered banners */}
-              {msg.sender_type === 'system' ? (
+              {isSystem ? (
                 <div className="flex justify-center">
-                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2 max-w-[85%]">
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2 max-w-[75%]">
                     <div className="flex items-center gap-1.5 justify-center">
-                      <AlertTriangle size={11} className="text-yellow-400" />
-                      <span className="text-[10px] text-yellow-400 font-medium">System</span>
+                      <AlertTriangle size={11} className="text-amber-600" />
+                      <span className="text-xs text-amber-700 font-medium">System</span>
                     </div>
-                    <p className="text-xs text-text-secondary text-center mt-0.5">{msg.content}</p>
-                    <p className="text-[9px] text-text-muted text-center mt-1">
+                    <p className="text-xs text-slate-700 text-center mt-0.5">{msg.content}</p>
+                    <p className="text-xs tabular-nums text-slate-400 text-center mt-1">
                       {formatMessageTime(msg.created_at)}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${style.bg}`}>
-                    {/* Sender label + direction */}
-                    <div className="flex items-center gap-1.5 mb-1">
-                      {getSenderIcon(msg.sender_type)}
-                      <span className={`text-[10px] font-medium ${style.accent}`}>
-                        {style.label}
-                      </span>
-                      <span className="text-[9px] text-text-muted">
-                        {isInbound ? 'inbound' : 'outbound'}
-                      </span>
-                      {msg.ai_classified_intent && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent ml-1">
-                          {msg.ai_classified_intent}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">
+                <div className={`flex flex-col ${alignRight ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`rounded-2xl px-4 py-2 max-w-[75%] ${
+                      alignRight ? 'bg-sky-100 text-[#020617]' : 'bg-slate-100 text-[#020617]'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
                       {msg.content}
                     </p>
-
-                    {/* Timestamp */}
-                    <p className="text-[9px] text-text-muted mt-1.5">
+                  </div>
+                  <div className={`flex items-center gap-1 mt-1 px-1 ${alignRight ? 'flex-row-reverse' : ''}`}>
+                    <p className="text-xs tabular-nums text-slate-400">
                       {formatMessageTime(msg.created_at)}
                     </p>
+                    {isAi && (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-slate-500">
+                        <Sparkles size={10} />
+                        AI
+                      </span>
+                    )}
+                    {msg.ai_classified_intent && (
+                      <span className="text-xs text-slate-500 capitalize">
+                        &middot; {msg.ai_classified_intent}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
@@ -477,51 +422,66 @@ export default function ConversationDetailPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input - shown when human is handling or escalated */}
+      {/* Composer */}
       {canSendMessage && (
         <form
           onSubmit={sendMessage}
-          className="flex-shrink-0 border-t border-border px-4 py-3 flex items-center gap-2"
+          className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3"
         >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              conversation.channel === 'sms'
-                ? 'Type a message (will be sent via SMS)...'
-                : 'Type a message...'
-            }
-            className="flex-1 rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none transition-colors"
-            disabled={sending}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || sending}
-            className="flex items-center justify-center h-9 w-9 rounded-lg bg-accent text-bg-primary disabled:opacity-50 hover:bg-accent-hover transition-colors"
-          >
-            {sending ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Send size={16} />
-            )}
-          </button>
+          <div className="flex items-end gap-2">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage(e as unknown as React.FormEvent);
+                }
+              }}
+              placeholder={
+                conversation.channel === 'sms'
+                  ? 'Type a message (will be sent via SMS)...'
+                  : 'Type a message...'
+              }
+              rows={3}
+              className="flex-1 min-h-[80px] resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-[#020617] placeholder:text-slate-400 focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 transition-colors"
+              disabled={sending}
+            />
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                <Sparkles size={12} />
+                AI Suggest
+              </button>
+              <button
+                type="submit"
+                disabled={!input.trim() || sending}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md bg-[#0369A1] text-white text-sm font-semibold hover:bg-[#0284C7] disabled:opacity-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
+              >
+                {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                Send
+              </button>
+            </div>
+          </div>
         </form>
       )}
 
       {/* AI handling indicator */}
       {!canSendMessage && !isClosed && (
-        <div className="flex-shrink-0 border-t border-border px-4 py-3 flex items-center gap-2 text-xs text-text-muted">
-          <Bot size={14} className="text-accent animate-pulse" />
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 flex items-center gap-2 text-xs text-slate-600">
+          <Bot size={14} className="text-[#0369A1]" />
+          <span className="dot-typing"><span /><span /><span /></span>
           AI is handling this conversation. Click &ldquo;Take Over&rdquo; to respond manually.
         </div>
       )}
 
       {/* Closed indicator */}
       {isClosed && (
-        <div className="flex-shrink-0 border-t border-border px-4 py-3 flex items-center gap-2 text-xs text-text-muted">
-          <span className="h-2 w-2 rounded-full bg-text-muted" />
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 flex items-center gap-2 text-xs text-slate-500">
+          <span className="h-2 w-2 rounded-full bg-slate-400" />
           This conversation is closed.
         </div>
       )}

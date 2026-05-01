@@ -102,25 +102,28 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Nav */}
-      <nav className="border-b border-border bg-bg-secondary/50 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
-              <span className="text-xs font-bold text-accent">M</span>
+          <Link href="/" className="flex items-center gap-2 cursor-pointer">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0F172A]">
+              <span className="text-xs font-bold text-white">R</span>
             </div>
-            <span className="font-display text-sm font-bold text-text-primary">RKV Consulting</span>
+            <span className="font-display text-sm font-bold text-[#0F172A]">RKV Consulting</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-xs font-medium text-text-secondary hover:text-text-primary transition-colors">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer"
+            >
               Sign In
             </Link>
             <a
               href={CAL_LINK}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-bg-primary hover:bg-accent-hover transition-colors"
+              className="rounded-md bg-[#0369A1] px-4 h-9 inline-flex items-center text-sm font-semibold text-white hover:bg-[#0284C7] transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
             >
               Book a Demo
             </a>
@@ -128,19 +131,18 @@ export default function PricingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,212,170,0.06)_0%,_transparent_50%)]" />
-        <div className="relative mx-auto max-w-3xl px-6 pt-20 pb-12 text-center">
+      {/* Hero — dark navy */}
+      <section className="bg-[#0F172A] text-white">
+        <div className="mx-auto max-w-6xl px-6 py-20 md:py-32 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="font-display text-4xl font-bold text-text-primary sm:text-5xl">
+            <h1 className="font-display font-bold text-5xl md:text-6xl tracking-tight text-white">
               Custom Pricing for Property Management Teams
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-text-secondary leading-relaxed">
+            <p className="mx-auto mt-6 max-w-2xl text-xl md:text-2xl text-slate-300 leading-relaxed">
               Every PM company is different. Tell us about your portfolio and we&rsquo;ll build a
               plan that fits &mdash; pricing typically scales with units managed.
             </p>
@@ -150,13 +152,13 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.4 }}
-            className="mt-8 flex flex-col sm:flex-row gap-3 justify-center items-center"
+            className="mt-10 flex flex-col sm:flex-row gap-3 justify-center items-center"
           >
             <a
               href={CAL_LINK}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-bg-primary hover:bg-accent-hover shadow-[0_0_20px_rgba(0,212,170,0.18)] transition-all"
+              className="inline-flex items-center gap-2 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-6 h-12 font-semibold cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
             >
               <Calendar size={16} />
               Book a Demo
@@ -164,18 +166,18 @@ export default function PricingPage() {
             </a>
             <a
               href="#talk-to-sales"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-elevated px-5 py-3 text-sm font-semibold text-text-primary hover:bg-bg-tertiary hover:border-border-hover transition-all"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700 hover:border-slate-500 bg-transparent px-6 h-12 font-semibold text-white cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
             >
               <MessageSquare size={16} />
               Talk to Sales
             </a>
           </motion.div>
         </div>
-      </div>
+      </section>
 
       {/* Tier overview cards (informational, no prices) */}
-      <div className="mx-auto max-w-6xl px-6 pb-12">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="mx-auto max-w-6xl px-6 py-20 md:py-32">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {PUBLIC_TIERS.map((tier, i) => (
             <motion.div
               key={tier.id}
@@ -183,50 +185,50 @@ export default function PricingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.05 * i }}
-              className="rounded-2xl border border-border bg-bg-secondary/40 backdrop-blur-sm p-6"
+              className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <h3 className="font-display text-lg font-bold text-text-primary">{tier.name}</h3>
-              <p className="mt-1 text-xs text-text-muted">{tier.blurb}</p>
-              <ul className="mt-4 space-y-2 text-sm text-text-secondary">
+              <h3 className="font-display text-xl font-bold text-[#0F172A]">{tier.name}</h3>
+              <p className="mt-1.5 text-sm text-[#475569]">{tier.blurb}</p>
+              <ul className="mt-5 space-y-2.5 text-sm text-[#020617]">
                 <li className="flex items-center gap-2">
-                  <Check size={13} className="text-accent shrink-0" />
+                  <Check size={14} className="text-[#0369A1] shrink-0" />
                   <span>{tier.unitsLabel}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={13} className="text-accent shrink-0" />
+                  <Check size={14} className="text-[#0369A1] shrink-0" />
                   <span>{tier.usersLabel}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={13} className="text-accent shrink-0" />
+                  <Check size={14} className="text-[#0369A1] shrink-0" />
                   <span>See full feature list below</span>
                 </li>
               </ul>
             </motion.div>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Comparison Table — what's included at each tier */}
-      <div className="mx-auto max-w-6xl px-6 pb-16">
+      <section className="mx-auto max-w-6xl px-6 pb-20 md:pb-32">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="glass-card overflow-hidden"
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
         >
-          <div className="p-5 border-b border-border">
-            <h2 className="font-display text-lg font-bold text-text-primary">What&rsquo;s Included</h2>
-            <p className="mt-1 text-xs text-text-muted">
+          <div className="p-6 border-b border-slate-200">
+            <h2 className="font-display text-2xl font-bold text-[#0F172A]">What&rsquo;s Included</h2>
+            <p className="mt-1.5 text-sm text-[#475569]">
               Capabilities by tier. Final pricing is set during your discovery call.
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-5 py-3 text-text-muted font-medium uppercase tracking-wider">Feature</th>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="text-left px-5 py-3 text-[#475569] font-medium uppercase tracking-wider text-xs">Feature</th>
                   {PLAN_TIER_ORDER.filter((t) => t !== 'trial').map((t) => (
-                    <th key={t} className="px-5 py-3 text-center font-semibold text-text-primary">
+                    <th key={t} className="px-5 py-3 text-center font-semibold text-[#0F172A] text-xs uppercase tracking-wider">
                       {PLANS[t].name}
                     </th>
                   ))}
@@ -236,15 +238,15 @@ export default function PricingPage() {
                 {COMPARISON_FEATURES.map((f, i) => (
                   <tr
                     key={f}
-                    className={cn('border-b border-border/50', i % 2 === 0 && 'bg-bg-elevated/20')}
+                    className={cn('border-b border-slate-100', i % 2 === 1 && 'bg-slate-50/50')}
                   >
-                    <td className="px-5 py-2.5 text-text-secondary">{FEATURE_LABELS[f]}</td>
+                    <td className="px-5 py-3 text-[#020617]">{FEATURE_LABELS[f]}</td>
                     {PLAN_TIER_ORDER.filter((t) => t !== 'trial').map((t) => (
-                      <td key={t} className="px-5 py-2.5 text-center">
+                      <td key={t} className="px-5 py-3 text-center">
                         {PLANS[t].features[f] ? (
-                          <Check size={14} className="mx-auto text-accent" />
+                          <Check size={16} className="mx-auto text-[#0369A1]" />
                         ) : (
-                          <X size={14} className="mx-auto text-text-muted/30" />
+                          <X size={16} className="mx-auto text-slate-300" />
                         )}
                       </td>
                     ))}
@@ -254,53 +256,53 @@ export default function PricingPage() {
             </table>
           </div>
         </motion.div>
-      </div>
+      </section>
 
       {/* Talk to Sales form */}
-      <div id="talk-to-sales" className="mx-auto max-w-2xl px-6 pb-24">
+      <section id="talk-to-sales" className="mx-auto max-w-2xl px-6 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="text-center mb-8">
-            <h2 className="font-display text-2xl font-bold text-text-primary">Talk to Sales</h2>
-            <p className="mt-2 text-sm text-text-secondary">
+          <div className="text-center mb-10">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-[#020617]">Talk to Sales</h2>
+            <p className="mt-3 text-base text-[#475569]">
               Tell us about your portfolio. We&rsquo;ll come back with a custom proposal within
               one business day.
             </p>
           </div>
 
           {submitted ? (
-            <div className="glass-card p-8 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/15">
-                <Check className="text-accent" size={20} />
+            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#0369A1]/10">
+                <Check className="text-[#0369A1]" size={20} />
               </div>
-              <h3 className="font-display text-lg font-bold text-text-primary">Thanks &mdash; we&rsquo;ll be in touch</h3>
-              <p className="mt-2 text-sm text-text-secondary">
+              <h3 className="font-display text-lg font-bold text-[#0F172A]">Thanks &mdash; we&rsquo;ll be in touch</h3>
+              <p className="mt-2 text-sm text-[#475569]">
                 A team member will reach out within one business day. In the meantime, you can{' '}
-                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-[#0369A1] hover:underline cursor-pointer">
                   grab time on the calendar
                 </a>{' '}
                 directly.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm space-y-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Field name="name" label="Name" required />
                 <Field name="email" label="Email" type="email" required />
               </div>
               <Field name="company" label="Company" />
 
               <div>
-                <label htmlFor="portfolio_size" className="block text-xs font-medium text-text-secondary mb-1.5">
+                <label htmlFor="portfolio_size" className="block text-sm font-medium text-[#0F172A] mb-1.5">
                   Portfolio size
                 </label>
                 <select
                   id="portfolio_size"
                   name="portfolio_size"
-                  className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-[#020617] focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 cursor-pointer"
                   defaultValue=""
                 >
                   <option value="" disabled>
@@ -321,21 +323,21 @@ export default function PricingPage() {
               />
 
               <div>
-                <label htmlFor="message" className="block text-xs font-medium text-text-secondary mb-1.5">
-                  What problem are you trying to solve? <span className="text-accent">*</span>
+                <label htmlFor="message" className="block text-sm font-medium text-[#0F172A] mb-1.5">
+                  What problem are you trying to solve? <span className="text-[#0369A1]">*</span>
                 </label>
                 <textarea
                   id="message"
                   name="message"
                   required
                   rows={4}
-                  className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent resize-none"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-[#020617] placeholder:text-slate-400 focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 resize-none"
                   placeholder="Leasing response time, maintenance dispatch, owner reporting, etc."
                 />
               </div>
 
               {error && (
-                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+                <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {error}
                 </div>
               )}
@@ -343,14 +345,14 @@ export default function PricingPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-bg-primary hover:bg-accent-hover disabled:opacity-60 transition-all"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-[#0369A1] hover:bg-[#0284C7] text-white px-6 h-12 font-semibold disabled:opacity-60 cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
               >
                 {submitting ? 'Sending…' : 'Talk to Sales'}
                 {!submitting && <ArrowRight size={14} />}
               </button>
-              <p className="text-[11px] text-text-muted text-center">
+              <p className="text-xs text-[#475569] text-center">
                 Or{' '}
-                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+                <a href={CAL_LINK} target="_blank" rel="noreferrer" className="text-[#0369A1] hover:underline cursor-pointer">
                   book a demo directly
                 </a>{' '}
                 if you&rsquo;d rather skip the form.
@@ -358,20 +360,20 @@ export default function PricingPage() {
             </form>
           )}
         </motion.div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-border px-6 py-8">
+      <footer className="border-t border-slate-200 bg-white px-6 py-8">
         <div className="mx-auto max-w-6xl flex items-center justify-between flex-wrap gap-3">
-          <p className="text-xs text-text-muted">
+          <p className="text-xs text-[#475569]">
             &copy; {new Date().getFullYear()} RKV Consulting by RKV. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <StatusBadge />
-            <Link href="/terms" className="text-xs text-text-muted hover:text-text-secondary transition-colors">
+            <Link href="/terms" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
               Terms
             </Link>
-            <Link href="/privacy" className="text-xs text-text-muted hover:text-text-secondary transition-colors">
+            <Link href="/privacy" className="text-xs text-[#475569] hover:text-[#0F172A] transition-colors cursor-pointer">
               Privacy
             </Link>
           </div>
@@ -396,8 +398,8 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-xs font-medium text-text-secondary mb-1.5">
-        {label} {required && <span className="text-accent">*</span>}
+      <label htmlFor={name} className="block text-sm font-medium text-[#0F172A] mb-1.5">
+        {label} {required && <span className="text-[#0369A1]">*</span>}
       </label>
       <input
         id={name}
@@ -405,7 +407,7 @@ function Field({
         type={type}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-bg-elevated px-3 py-2 text-sm text-text-primary placeholder-text-muted/60 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+        className="w-full h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-[#020617] placeholder:text-slate-400 focus:border-[#0369A1] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2"
       />
     </div>
   );

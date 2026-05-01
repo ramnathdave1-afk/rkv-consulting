@@ -2,7 +2,17 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Download, Search, Filter } from 'lucide-react';
+import { Download, Search, Filter, ChevronDown, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  SettingsShell,
+  SettingsCard,
+  SettingsCardBody,
+  settingsInputClass,
+  settingsLabelClass,
+  settingsPrimaryButtonClass,
+  settingsSecondaryButtonClass,
+} from '@/components/settings/SettingsShell';
 
 interface AuditLog {
   id: string;
@@ -19,14 +29,37 @@ interface AuditLog {
 }
 
 const ACTIONS = [
-  '', 'create', 'update', 'delete', 'login', 'logout',
-  'invite_user', 'change_role', 'integration_connect', 'integration_disconnect',
-  'export', 'view', 'sso_attempt', 'sso_success', 'sso_failure',
+  '',
+  'create',
+  'update',
+  'delete',
+  'login',
+  'logout',
+  'invite_user',
+  'change_role',
+  'integration_connect',
+  'integration_disconnect',
+  'export',
+  'view',
+  'sso_attempt',
+  'sso_success',
+  'sso_failure',
 ];
 
 const RESOURCE_TYPES = [
-  '', 'property', 'unit', 'lease', 'tenant', 'work_order', 'vendor',
-  'user', 'integration', 'sla_policy', 'subscription', 'location', 'branding',
+  '',
+  'property',
+  'unit',
+  'lease',
+  'tenant',
+  'work_order',
+  'vendor',
+  'user',
+  'integration',
+  'sla_policy',
+  'subscription',
+  'location',
+  'branding',
 ];
 
 function formatChanges(changes: Record<string, { from: unknown; to: unknown }>): string {
@@ -34,6 +67,14 @@ function formatChanges(changes: Record<string, { from: unknown; to: unknown }>):
   if (keys.length === 0) return '';
   return keys.slice(0, 3).map((k) => `${k}`).join(', ') + (keys.length > 3 ? ` +${keys.length - 3}` : '');
 }
+
+const ACTION_TONE: Record<string, string> = {
+  create: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  update: 'border-sky-200 bg-sky-50 text-[#0369A1]',
+  delete: 'border-red-200 bg-red-50 text-red-700',
+  login: 'border-slate-200 bg-slate-50 text-slate-700',
+  logout: 'border-slate-200 bg-slate-50 text-slate-700',
+};
 
 export default function AuditLogPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -102,169 +143,211 @@ export default function AuditLogPage() {
   }, [logs]);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-xl font-bold text-text-primary">Audit Log</h1>
-          <p className="text-sm text-text-secondary">{total} total events · showing {logs.length}</p>
-        </div>
-        <button
-          onClick={exportCsv}
-          className="flex items-center gap-2 rounded-lg border border-border bg-bg-secondary px-4 py-2 text-sm font-medium text-text-primary hover:bg-bg-tertiary"
-        >
+    <SettingsShell
+      title="Audit Log"
+      subtitle={`${total} total events · showing ${logs.length}`}
+      actions={
+        <button type="button" onClick={exportCsv} className={settingsSecondaryButtonClass}>
           <Download size={14} /> Export CSV
         </button>
-      </div>
+      }
+    >
+      <div className="space-y-6">
+        {/* Filters */}
+        <SettingsCard>
+          <SettingsCardBody>
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+              <div className="md:col-span-2">
+                <label className={settingsLabelClass}>Search</label>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={filters.q}
+                    onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+                    placeholder="action or resource…"
+                    className={cn(settingsInputClass, 'pl-9')}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={settingsLabelClass}>Action</label>
+                <select
+                  value={filters.action}
+                  onChange={(e) => setFilters({ ...filters, action: e.target.value })}
+                  className={settingsInputClass}
+                >
+                  {ACTIONS.map((a) => (
+                    <option key={a} value={a}>
+                      {a || 'All actions'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={settingsLabelClass}>Resource</label>
+                <select
+                  value={filters.resource_type}
+                  onChange={(e) => setFilters({ ...filters, resource_type: e.target.value })}
+                  className={settingsInputClass}
+                >
+                  {RESOURCE_TYPES.map((r) => (
+                    <option key={r} value={r}>
+                      {r || 'All resources'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={settingsLabelClass}>From</label>
+                <input
+                  type="date"
+                  value={filters.from}
+                  onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+                  className={settingsInputClass}
+                />
+              </div>
+              <div>
+                <label className={settingsLabelClass}>To</label>
+                <input
+                  type="date"
+                  value={filters.to}
+                  onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+                  className={settingsInputClass}
+                />
+              </div>
+              <div className="md:col-span-6 flex justify-end">
+                <button type="button" onClick={load} className={settingsPrimaryButtonClass}>
+                  <Filter size={14} /> Apply
+                </button>
+              </div>
+            </div>
+          </SettingsCardBody>
+        </SettingsCard>
 
-      {/* Filters */}
-      <div className="glass-card p-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
-        <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-text-muted mb-1">Search</label>
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input
-              type="text"
-              value={filters.q}
-              onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              placeholder="action or resource…"
-              className="w-full rounded-lg border border-border bg-bg-primary pl-9 pr-3 py-2 text-sm text-text-primary"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">Action</label>
-          <select
-            value={filters.action}
-            onChange={(e) => setFilters({ ...filters, action: e.target.value })}
-            className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          >
-            {ACTIONS.map((a) => <option key={a} value={a}>{a || 'All actions'}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">Resource</label>
-          <select
-            value={filters.resource_type}
-            onChange={(e) => setFilters({ ...filters, resource_type: e.target.value })}
-            className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          >
-            {RESOURCE_TYPES.map((r) => <option key={r} value={r}>{r || 'All resources'}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">From</label>
-          <input
-            type="date"
-            value={filters.from}
-            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
-            className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-text-muted mb-1">To</label>
-          <input
-            type="date"
-            value={filters.to}
-            onChange={(e) => setFilters({ ...filters, to: e.target.value })}
-            className="w-full rounded-lg border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary"
-          />
-        </div>
-        <div className="md:col-span-6 flex justify-end">
-          <button
-            onClick={load}
-            className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-bg-primary hover:bg-accent-hover"
-          >
-            <Filter size={14} /> Apply
-          </button>
-        </div>
-      </div>
-
-      {/* Action breakdown */}
-      {Object.keys(stats).length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(stats).map(([k, v]) => (
-            <span key={k} className="text-xs rounded-full bg-bg-secondary border border-border px-3 py-1 text-text-secondary">
-              {k}: <span className="font-mono text-text-primary">{v}</span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="glass-card p-0 overflow-hidden">
-        {loading ? (
-          <div className="p-4 space-y-2">
-            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-          </div>
-        ) : logs.length === 0 ? (
-          <div className="p-6 text-sm text-text-muted">No audit events match your filters.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase text-text-muted border-b border-border">
-                  <th className="p-3">Timestamp</th>
-                  <th className="p-3">User</th>
-                  <th className="p-3">Action</th>
-                  <th className="p-3">Resource</th>
-                  <th className="p-3">Details</th>
-                  <th className="p-3">IP</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((l) => (
-                  <React.Fragment key={l.id}>
-                    <tr
-                      onClick={() => setExpanded(expanded === l.id ? null : l.id)}
-                      className="border-b border-border/40 hover:bg-bg-secondary/30 cursor-pointer"
-                    >
-                      <td className="p-3 font-mono text-xs">{new Date(l.created_at).toLocaleString()}</td>
-                      <td className="p-3 font-mono text-xs text-text-muted">{l.user_id?.slice(0, 8) ?? '—'}</td>
-                      <td className="p-3">
-                        <span className="inline-block rounded bg-bg-secondary border border-border px-2 py-0.5 text-xs font-medium">{l.action}</span>
-                      </td>
-                      <td className="p-3">
-                        {l.resource_type ?? <span className="text-text-muted">—</span>}
-                        {l.resource_id && <div className="font-mono text-[10px] text-text-muted">{l.resource_id.slice(0, 8)}…</div>}
-                      </td>
-                      <td className="p-3 text-xs text-text-secondary">
-                        {formatChanges(l.changes ?? {}) || (Object.keys(l.metadata ?? {}).length > 0 ? `${Object.keys(l.metadata).length} fields` : '')}
-                      </td>
-                      <td className="p-3 font-mono text-xs text-text-muted">{l.ip_address ?? '—'}</td>
-                    </tr>
-                    {expanded === l.id && (
-                      <tr className="bg-bg-secondary/30">
-                        <td colSpan={6} className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                            <div>
-                              <div className="font-semibold text-text-primary mb-1">Changes</div>
-                              <pre className="bg-bg-primary border border-border rounded p-2 overflow-x-auto">
-                                {JSON.stringify(l.changes ?? {}, null, 2)}
-                              </pre>
-                            </div>
-                            <div>
-                              <div className="font-semibold text-text-primary mb-1">Metadata</div>
-                              <pre className="bg-bg-primary border border-border rounded p-2 overflow-x-auto">
-                                {JSON.stringify(l.metadata ?? {}, null, 2)}
-                              </pre>
-                            </div>
-                            {l.user_agent && (
-                              <div className="md:col-span-2">
-                                <div className="font-semibold text-text-primary mb-1">User Agent</div>
-                                <code className="text-text-muted">{l.user_agent}</code>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+        {/* Action breakdown */}
+        {Object.keys(stats).length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(stats).map(([k, v]) => (
+              <span
+                key={k}
+                className="text-xs rounded-full bg-white border border-slate-200 px-3 py-1 text-slate-600 shadow-sm"
+              >
+                {k}: <span className="font-mono text-[#020617] tabular-nums">{v}</span>
+              </span>
+            ))}
           </div>
         )}
+
+        {/* Table */}
+        <SettingsCard className="overflow-hidden">
+          {loading ? (
+            <div className="p-6 space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="p-6 text-sm text-slate-500">No audit events match your filters.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                    <th className="px-4 py-3 font-medium">Timestamp</th>
+                    <th className="px-4 py-3 font-medium">User</th>
+                    <th className="px-4 py-3 font-medium">Action</th>
+                    <th className="px-4 py-3 font-medium">Resource</th>
+                    <th className="px-4 py-3 font-medium">Details</th>
+                    <th className="px-4 py-3 font-medium">IP</th>
+                    <th className="px-4 py-3 font-medium" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {logs.map((l) => (
+                    <React.Fragment key={l.id}>
+                      <tr
+                        onClick={() => setExpanded(expanded === l.id ? null : l.id)}
+                        className="hover:bg-slate-50 cursor-pointer"
+                      >
+                        <td className="px-4 py-3 font-mono text-xs text-slate-700">
+                          {new Date(l.created_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-sky-50 text-[#0369A1] flex items-center justify-center text-[10px] font-semibold">
+                              {l.user_id ? l.user_id.slice(0, 2).toUpperCase() : '—'}
+                            </div>
+                            <span className="font-mono text-xs text-slate-500">
+                              {l.user_id?.slice(0, 8) ?? '—'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
+                              ACTION_TONE[l.action] ?? 'border-slate-200 bg-slate-50 text-slate-700',
+                            )}
+                          >
+                            {l.action}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {l.resource_type ?? <span className="text-slate-400">—</span>}
+                          {l.resource_id && (
+                            <div className="font-mono text-xs text-slate-400">
+                              {l.resource_id.slice(0, 8)}…
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-600">
+                          {formatChanges(l.changes ?? {}) ||
+                            (Object.keys(l.metadata ?? {}).length > 0
+                              ? `${Object.keys(l.metadata).length} fields`
+                              : '')}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                          {l.ip_address ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-400">
+                          {expanded === l.id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        </td>
+                      </tr>
+                      {expanded === l.id && (
+                        <tr className="bg-slate-50">
+                          <td colSpan={7} className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <div className="font-semibold text-[#020617] mb-1">Changes</div>
+                                <pre className="bg-white border border-slate-200 rounded-md p-2 overflow-x-auto text-slate-700">
+                                  {JSON.stringify(l.changes ?? {}, null, 2)}
+                                </pre>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-[#020617] mb-1">Metadata</div>
+                                <pre className="bg-white border border-slate-200 rounded-md p-2 overflow-x-auto text-slate-700">
+                                  {JSON.stringify(l.metadata ?? {}, null, 2)}
+                                </pre>
+                              </div>
+                              {l.user_agent && (
+                                <div className="md:col-span-2">
+                                  <div className="font-semibold text-[#020617] mb-1">User Agent</div>
+                                  <code className="text-slate-500">{l.user_agent}</code>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SettingsCard>
       </div>
-    </div>
+    </SettingsShell>
   );
 }

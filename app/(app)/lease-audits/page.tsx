@@ -4,27 +4,17 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { SelectField } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { KPICard } from '@/components/dashboard/KPICard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ShieldCheck,
   Play,
   ArrowLeft,
-  AlertTriangle,
-  DollarSign,
-  ClipboardList,
   CheckCircle2,
   XCircle,
   RotateCcw,
   ChevronRight,
   Search,
-  TrendingUp,
 } from 'lucide-react';
-
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
 
 interface Audit {
   id: string;
@@ -58,17 +48,6 @@ interface Finding {
   } | null;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
-
-const SEVERITY_STYLES: Record<string, { color: string; variant: 'danger' | 'warning' | 'info' | 'success' }> = {
-  critical: { color: '#EF4444', variant: 'danger' },
-  high: { color: '#F97316', variant: 'warning' },
-  medium: { color: '#EAB308', variant: 'warning' },
-  low: { color: '#22C55E', variant: 'success' },
-};
-
 const TYPE_LABELS: Record<string, string> = {
   below_market_rent: 'Below Market Rent',
   missing_late_fees: 'Missing Late Fees',
@@ -76,11 +55,39 @@ const TYPE_LABELS: Record<string, string> = {
   missing_security_deposit: 'Missing Deposit',
 };
 
-const STATUS_BADGE: Record<string, { variant: 'success' | 'danger' | 'warning' | 'info' | 'muted' | 'accent'; label: string }> = {
-  running: { variant: 'info', label: 'Running' },
-  completed: { variant: 'success', label: 'Completed' },
-  failed: { variant: 'danger', label: 'Failed' },
+const SEVERITY_BADGE_CLASS: Record<string, string> = {
+  critical: 'bg-red-50 text-red-700 border border-red-200 animate-pulse',
+  high: 'bg-red-50 text-red-700 border border-red-200',
+  medium: 'bg-amber-50 text-amber-700 border border-amber-200',
+  low: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
 };
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  running: 'bg-sky-50 text-sky-700 border border-sky-200',
+  completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  failed: 'bg-red-50 text-red-700 border border-red-200',
+  open: 'bg-red-50 text-red-700 border border-red-200',
+  resolved: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  dismissed: 'bg-slate-100 text-slate-700 border border-slate-200',
+};
+
+function StatusBadgeOps({ status }: { status: string; }) {
+  const cls = STATUS_BADGE_CLASS[status] || 'bg-slate-100 text-slate-700 border border-slate-200';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium capitalize whitespace-nowrap ${cls}`}>
+      {status.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+function SeverityBadge({ severity }: { severity: string; }) {
+  const cls = SEVERITY_BADGE_CLASS[severity] || 'bg-slate-100 text-slate-700 border border-slate-200';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize whitespace-nowrap ${cls}`}>
+      {severity}
+    </span>
+  );
+}
 
 const SEVERITY_OPTIONS = [
   { value: '', label: 'All Severities' },
@@ -105,27 +112,20 @@ const FINDING_STATUS_OPTIONS = [
   { value: 'dismissed', label: 'Dismissed' },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Page Component                                                     */
-/* ------------------------------------------------------------------ */
-
 export default function LeaseAuditsPage() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningAudit, setRunningAudit] = useState(false);
 
-  // Detail view
   const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [findingsLoading, setFindingsLoading] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState<Audit | null>(null);
 
-  // Filters
   const [severityFilter, setSeverityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  /* ---------- Fetch audits list ---------- */
   const fetchAudits = useCallback(async () => {
     try {
       const res = await fetch('/api/lease-audits');
@@ -143,7 +143,6 @@ export default function LeaseAuditsPage() {
     fetchAudits();
   }, [fetchAudits]);
 
-  /* ---------- Run new audit ---------- */
   const handleRunAudit = async () => {
     setRunningAudit(true);
     try {
@@ -157,7 +156,6 @@ export default function LeaseAuditsPage() {
     }
   };
 
-  /* ---------- Fetch audit detail ---------- */
   const openAudit = async (audit: Audit) => {
     setSelectedAuditId(audit.id);
     setSelectedAudit(audit);
@@ -177,7 +175,6 @@ export default function LeaseAuditsPage() {
     }
   };
 
-  /* ---------- Update finding status ---------- */
   const updateFinding = async (findingId: string, newStatus: 'resolved' | 'dismissed' | 'open') => {
     if (!selectedAuditId) return;
     try {
@@ -187,30 +184,26 @@ export default function LeaseAuditsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error('Failed to update finding');
-      // Update local state
       setFindings((prev) =>
         prev.map((f) =>
           f.id === findingId
             ? { ...f, status: newStatus, resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null }
-            : f
-        )
+            : f,
+        ),
       );
-      // Refresh audits list for updated counts
       fetchAudits();
     } catch (err) {
       console.error('Update finding error:', err);
     }
   };
 
-  /* ---------- Computed KPIs ---------- */
   const totalAudits = audits.length;
   const openIssues = audits.reduce((sum, a) => sum + (a.status === 'completed' ? a.issues_found : 0), 0);
   const potentialRecovery = audits.reduce(
     (sum, a) => sum + (a.status === 'completed' ? a.potential_monthly_recovery : 0),
-    0
+    0,
   );
 
-  /* ---------- Filtered findings ---------- */
   const filteredFindings = findings.filter((f) => {
     if (severityFilter && f.severity !== severityFilter) return false;
     if (typeFilter && f.finding_type !== typeFilter) return false;
@@ -218,181 +211,119 @@ export default function LeaseAuditsPage() {
     return true;
   });
 
-  /* ---------------------------------------------------------------- */
-  /*  RENDER: Detail view                                              */
-  /* ---------------------------------------------------------------- */
-
+  /* Detail view */
   if (selectedAuditId && selectedAudit) {
     return (
       <div className="min-h-screen p-6 space-y-6 max-w-7xl mx-auto">
-        {/* Back button + Header */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => { setSelectedAuditId(null); setSelectedAudit(null); setFindings([]); }}
-            className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to Audits
-          </button>
-        </div>
+        <button
+          onClick={() => { setSelectedAuditId(null); setSelectedAudit(null); setFindings([]); }}
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#020617] transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Audits
+        </button>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-display font-bold text-text-primary">
+            <h1 className="font-display text-2xl font-bold text-[#020617]">
               Audit — {new Date(selectedAudit.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </h1>
-            <p className="text-sm text-text-secondary mt-1">
-              {selectedAudit.leases_scanned} leases scanned &middot; {findings.length} finding(s)
+            <p className="text-sm text-slate-500 mt-1">
+              {selectedAudit.leases_scanned} leases scanned · {findings.length} finding{findings.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <Badge variant={STATUS_BADGE[selectedAudit.status]?.variant || 'muted'} dot>
-            {STATUS_BADGE[selectedAudit.status]?.label || selectedAudit.status}
-          </Badge>
-        </motion.div>
+          <StatusBadgeOps status={selectedAudit.status} />
+        </div>
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="glass-card p-4"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <SelectField
-              label="Severity"
-              value={severityFilter}
-              onChange={(e) => setSeverityFilter(e.target.value)}
-              options={SEVERITY_OPTIONS}
-            />
-            <SelectField
-              label="Type"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              options={TYPE_OPTIONS}
-            />
-            <SelectField
-              label="Status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              options={FINDING_STATUS_OPTIONS}
-            />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="w-full md:w-44">
+            <SelectField value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)} options={SEVERITY_OPTIONS} />
           </div>
-        </motion.div>
+          <div className="w-full md:w-52">
+            <SelectField value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} options={TYPE_OPTIONS} />
+          </div>
+          <div className="w-full md:w-44">
+            <SelectField value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={FINDING_STATUS_OPTIONS} />
+          </div>
+        </div>
 
         {/* Findings table */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="glass-card overflow-hidden"
-        >
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {findingsLoading ? (
             <div className="p-6 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
+              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : filteredFindings.length === 0 ? (
-            <div className="p-12 text-center text-text-muted">
-              <Search size={32} className="mx-auto mb-3 opacity-40" />
+            <div className="p-12 text-center text-slate-500">
+              <Search size={32} className="mx-auto mb-3 text-slate-300" />
               <p className="text-sm">No findings match your filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Severity</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Property</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Unit</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Tenant</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Description</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Current</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Recommended</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Monthly Impact</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-xs font-medium text-text-muted uppercase tracking-wider text-right">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/60">
+                    <th className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Property / Unit</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tenant</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+                    <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Monthly Impact</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-slate-100">
                   {filteredFindings.map((f) => {
                     const lease = f.leases;
                     const unit = lease?.units;
                     const tenant = lease?.tenants;
                     const property = unit?.properties;
-                    const sev = SEVERITY_STYLES[f.severity] || SEVERITY_STYLES.low;
-
                     return (
-                      <tr key={f.id} className="hover:bg-bg-elevated/50 transition-colors">
-                        <td className="px-4 py-3">
-                          <Badge variant="accent" size="sm">
-                            {TYPE_LABELS[f.finding_type] || f.finding_type}
-                          </Badge>
+                      <tr key={f.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-[#020617] font-medium text-xs whitespace-nowrap">
+                          {TYPE_LABELS[f.finding_type] || f.finding_type}
                         </td>
-                        <td className="px-4 py-3">
-                          <Badge color={sev.color} size="sm" dot>
-                            {f.severity}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
+                        <td className="px-3 py-3"><SeverityBadge severity={f.severity} /></td>
+                        <td className="px-3 py-3 text-slate-600 whitespace-nowrap">
                           {property?.name || '—'}
+                          {unit?.unit_number ? <span className="text-slate-400"> / {unit.unit_number}</span> : ''}
                         </td>
-                        <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
-                          {unit?.unit_number || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-text-primary whitespace-nowrap">
+                        <td className="px-3 py-3 text-[#020617] whitespace-nowrap">
                           {tenant ? `${tenant.first_name} ${tenant.last_name}` : '—'}
                         </td>
-                        <td className="px-4 py-3 text-text-secondary max-w-xs truncate">
-                          {f.description}
-                        </td>
-                        <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                          {f.current_value || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-accent whitespace-nowrap font-medium">
-                          {f.recommended_value || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap font-semibold">
+                        <td className="px-3 py-3 text-slate-600 max-w-xs truncate">{f.description}</td>
+                        <td className="px-3 py-3 text-right whitespace-nowrap font-semibold tabular-nums">
                           {f.monthly_impact > 0 ? (
-                            <span className="text-success">+${f.monthly_impact.toLocaleString()}/mo</span>
+                            <span className="text-emerald-700">+${f.monthly_impact.toLocaleString()}/mo</span>
                           ) : (
-                            <span className="text-text-muted">$0</span>
+                            <span className="text-slate-400">$0</span>
                           )}
                         </td>
-                        <td className="px-4 py-3">
-                          {f.status === 'open' && <Badge variant="warning" size="sm" dot>Open</Badge>}
-                          {f.status === 'resolved' && <Badge variant="success" size="sm" dot>Resolved</Badge>}
-                          {f.status === 'dismissed' && <Badge variant="muted" size="sm" dot>Dismissed</Badge>}
-                        </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-3"><StatusBadgeOps status={f.status} /></td>
+                        <td className="px-3 py-3 text-right">
                           {f.status === 'open' ? (
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => updateFinding(f.id, 'resolved')}
-                                className="flex items-center gap-1 text-xs font-medium text-success hover:text-green-400 transition-colors px-2 py-1 rounded-md hover:bg-success-muted"
-                                title="Resolve"
+                                className="flex items-center gap-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md hover:bg-emerald-50"
                               >
-                                <CheckCircle2 size={14} />
-                                Resolve
+                                <CheckCircle2 size={14} /> Resolve
                               </button>
                               <button
                                 onClick={() => updateFinding(f.id, 'dismissed')}
-                                className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text-secondary transition-colors px-2 py-1 rounded-md hover:bg-bg-elevated"
-                                title="Dismiss"
+                                className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 px-2 py-1 rounded-md hover:bg-slate-100"
                               >
-                                <XCircle size={14} />
-                                Dismiss
+                                <XCircle size={14} /> Dismiss
                               </button>
                             </div>
                           ) : (
                             <button
                               onClick={() => updateFinding(f.id, 'open')}
-                              className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-accent transition-colors px-2 py-1 rounded-md hover:bg-bg-elevated ml-auto"
-                              title="Reopen"
+                              className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-[#020617] px-2 py-1 rounded-md hover:bg-slate-100 ml-auto"
                             >
-                              <RotateCcw size={14} />
-                              Reopen
+                              <RotateCcw size={14} /> Reopen
                             </button>
                           )}
                         </td>
@@ -403,154 +334,94 @@ export default function LeaseAuditsPage() {
               </table>
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
     );
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  RENDER: Audits list view                                         */
-  /* ---------------------------------------------------------------- */
-
+  /* List view */
   return (
     <div className="min-h-screen p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-text-primary flex items-center gap-2">
-            <ShieldCheck size={24} className="text-accent" />
-            Lease Audits
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            Automated lease compliance scanning and revenue recovery
+          <h1 className="font-display text-2xl font-bold text-[#020617]">Lease Audits</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {totalAudits} audit{totalAudits !== 1 ? 's' : ''} run · {openIssues} open issue{openIssues !== 1 ? 's' : ''} · ${potentialRecovery.toLocaleString()}/mo potential recovery
           </p>
         </div>
-        <Button
-          onClick={handleRunAudit}
-          loading={runningAudit}
-          icon={<Play size={16} />}
-        >
+        <Button onClick={handleRunAudit} loading={runningAudit} icon={<Play size={16} />}>
           {runningAudit ? 'Running Audit...' : 'Run New Audit'}
         </Button>
-      </motion.div>
+      </div>
 
-      {/* KPI Cards */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <KPICard
-            title="Total Audits Run"
-            value={String(totalAudits)}
-            numericValue={totalAudits}
-            format="number"
-            icon={ClipboardList}
-            color="#3B82F6"
-            index={0}
-          />
-          <KPICard
-            title="Open Issues"
-            value={String(openIssues)}
-            numericValue={openIssues}
-            format="number"
-            icon={AlertTriangle}
-            color="#F59E0B"
-            index={1}
-          />
-          <KPICard
-            title="Potential Monthly Recovery"
-            value={`$${potentialRecovery.toLocaleString()}`}
-            numericValue={potentialRecovery}
-            format="currency"
-            icon={TrendingUp}
-            color="#00D4AA"
-            index={2}
-          />
-        </div>
-      )}
-
-      {/* Audits list */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-card overflow-hidden"
-      >
-        <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-text-primary">Audit History</h2>
+      {/* Audit history table */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-slate-200">
+          <h2 className="text-sm font-semibold text-[#020617]">Audit History</h2>
         </div>
 
         {loading ? (
           <div className="p-5 space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
-            ))}
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
           </div>
         ) : audits.length === 0 ? (
-          <div className="p-12 text-center text-text-muted">
-            <ShieldCheck size={40} className="mx-auto mb-3 opacity-30" />
+          <div className="p-12 text-center text-slate-500">
+            <ShieldCheck size={40} className="mx-auto mb-3 text-slate-300" />
             <p className="text-sm">No audits yet. Run your first audit to scan for issues.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {audits.map((audit, i) => {
-              const sb = STATUS_BADGE[audit.status] || { variant: 'muted' as const, label: audit.status };
-              return (
-                <motion.button
-                  key={audit.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  onClick={() => openAudit(audit)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-bg-elevated/50 transition-colors text-left group"
-                >
-                  <div className="flex items-center gap-6 flex-1 min-w-0">
-                    <div className="min-w-[120px]">
-                      <p className="text-sm font-medium text-text-primary">
-                        {new Date(audit.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        {new Date(audit.created_at).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm text-text-secondary">
-                      <span>{audit.leases_scanned} leases</span>
-                      <span className={audit.issues_found > 0 ? 'text-warning font-medium' : ''}>
-                        {audit.issues_found} issue{audit.issues_found !== 1 ? 's' : ''}
-                      </span>
-                      {audit.potential_monthly_recovery > 0 && (
-                        <span className="text-success font-medium">
-                          +${audit.potential_monthly_recovery.toLocaleString()}/mo
-                        </span>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/60">
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Leases Scanned</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Issues Found</th>
+                  <th className="px-3 py-3 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Recovery</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-3 py-3 w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {audits.map((audit, i) => (
+                  <motion.tr
+                    key={audit.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    onClick={() => openAudit(audit)}
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-[#020617]">
+                        {new Date(audit.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                      <div className="text-xs text-slate-500 tabular-nums">
+                        {new Date(audit.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-right text-slate-600 tabular-nums">{audit.leases_scanned}</td>
+                    <td className={`px-3 py-3 text-right tabular-nums font-medium ${audit.issues_found > 0 ? 'text-amber-700' : 'text-slate-400'}`}>
+                      {audit.issues_found}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums font-semibold">
+                      {audit.potential_monthly_recovery > 0 ? (
+                        <span className="text-emerald-700">+${audit.potential_monthly_recovery.toLocaleString()}/mo</span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
                       )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={sb.variant} size="sm" dot>
-                      {sb.label}
-                    </Badge>
-                    <ChevronRight
-                      size={16}
-                      className="text-text-muted group-hover:text-accent transition-colors"
-                    />
-                  </div>
-                </motion.button>
-              );
-            })}
+                    </td>
+                    <td className="px-3 py-3"><StatusBadgeOps status={audit.status} /></td>
+                    <td className="px-3 py-3">
+                      <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-600 transition-colors" />
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

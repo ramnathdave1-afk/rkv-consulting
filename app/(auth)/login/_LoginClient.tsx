@@ -1,24 +1,21 @@
 'use client';
 
 import React, { Suspense, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  AtSignIcon,
-  ChevronLeftIcon,
-  LockIcon,
   Building2,
-  ArrowRightIcon,
+  LogIn,
+  KeyRound,
   ShieldCheck,
-  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
  * Resolved brand props passed in from the server component.
- * `accent` is used wherever the page used to hard-code #00D4AA.
+ * `accent` is preserved on the type so server-side branding logic continues
+ * to work, but the visual restyle uses a fixed navy + sky-blue palette.
  */
 export interface LoginBrand {
   name: string;
@@ -39,7 +36,6 @@ function AuthPageLogin({ brand }: { brand: LoginBrand }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [ssoChecking, setSsoChecking] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,14 +73,6 @@ function AuthPageLogin({ brand }: { brand: LoginBrand }) {
     setLoading(true);
     setError('');
 
-    const domain = email.split('@')[1]?.toLowerCase();
-    if (domain && !showPassword) {
-      setSsoChecking(true);
-      const redirected = await initiateSsoForDomain(domain);
-      setSsoChecking(false);
-      if (redirected) return;
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
@@ -112,212 +100,158 @@ function AuthPageLogin({ brand }: { brand: LoginBrand }) {
     }
   }
 
-  // Inline style hooks so we can apply the org's accent color where the
-  // page previously used hard-coded #00D4AA.
-  const accent = brand.accent;
-  const accentStyle = { color: accent } as React.CSSProperties;
-  const accentBgStyle = { background: accent } as React.CSSProperties;
-
   return (
-    <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2 bg-[#06080C]">
-      {/* ─── Left panel ─── */}
-      <div className="relative hidden h-full flex-col border-r border-white/[0.06] p-10 lg:flex bg-[#06080C]">
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#06080C] to-transparent" />
-        <div className="z-10 flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.06]">
+    <main className="min-h-screen w-full bg-white font-sans md:grid md:grid-cols-5">
+      {/* Left rail — 40% on desktop, hidden on mobile */}
+      <aside className="relative hidden md:col-span-2 md:flex md:flex-col md:justify-between bg-[#0F172A] p-10 text-white overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.08] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute -top-32 -right-24 h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.18)_0%,transparent_70%)] pointer-events-none"
+        />
+
+        <div className="relative z-10 flex items-center gap-3">
+          {brand.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brand.logo_url} alt={brand.name} className="h-9 w-9 rounded-md object-contain bg-white/5 p-1" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-white/10 ring-1 ring-white/15">
+              <Building2 className="h-5 w-5 text-sky-300" />
+            </div>
+          )}
+          <span className="font-display text-lg font-semibold tracking-tight">
+            {brand.name}
+          </span>
+        </div>
+
+        <div className="relative z-10 max-w-md">
+          <p className="font-display text-3xl font-bold leading-tight text-white">
+            The AI co-pilot for property management.
+          </p>
+          <p className="mt-4 text-sm text-slate-300 leading-relaxed">
+            Automate leasing, maintenance, and reporting so your team can focus on the
+            decisions that actually move the needle.
+          </p>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-2 text-xs text-slate-400">
+          <ShieldCheck className="h-4 w-4 text-sky-400" />
+          <span>SOC 2 compliant. 256-bit encrypted at rest.</span>
+        </div>
+      </aside>
+
+      {/* Right side — 60% on desktop, full on mobile */}
+      <section className="relative flex min-h-screen flex-col justify-center px-6 py-12 sm:px-10 md:col-span-3 md:py-16 bg-white">
+        <div className="mx-auto w-full max-w-sm">
+          {/* Mobile-only brand */}
+          <div className="md:hidden mb-8 flex items-center gap-2.5">
             {brand.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={brand.logo_url} alt={brand.name} className="size-5 object-contain" />
+              <img src={brand.logo_url} alt={brand.name} className="h-8 w-8 rounded-md object-contain" />
             ) : (
-              <Building2 className="size-4" style={accentStyle} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0F172A]">
+                <Building2 className="h-4 w-4 text-sky-300" />
+              </div>
             )}
-          </div>
-          <p className="text-lg font-semibold text-white">{brand.name}</p>
-        </div>
-        <div className="z-10 mt-auto">
-          <blockquote className="space-y-3">
-            <p className="text-xl text-white/90 leading-relaxed">
-              &ldquo;{brand.name} cut our tenant communication time by 70%.
-              The AI handles leasing inquiries and maintenance requests
-              so my team can focus on what matters.&rdquo;
-            </p>
-            <footer className="text-sm font-medium text-white/40">
-              ~ Sarah Chen, Director of Operations
-            </footer>
-          </blockquote>
-        </div>
-        <div className="absolute inset-0">
-          <FloatingPaths position={1} />
-          <FloatingPaths position={-1} />
-        </div>
-      </div>
-
-      {/* ─── Right panel — login form ─── */}
-      <div className="relative flex min-h-screen flex-col justify-center p-6 sm:p-8 bg-[#06080C]">
-        <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-0 right-0 h-[600px] w-[500px] -translate-y-1/3 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(0,212,170,0.025)_0%,transparent_70%)]" />
-          <div className="absolute bottom-0 left-0 h-[400px] w-[400px] translate-y-1/4 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.01)_0%,transparent_70%)]" />
-        </div>
-
-        <Link
-          href="/"
-          className="absolute top-6 left-6 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-all"
-        >
-          <ChevronLeftIcon className="size-3.5" />
-          Home
-        </Link>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mx-auto w-full max-w-[380px]"
-        >
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 lg:hidden mb-8">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] border border-white/[0.06]">
-              {brand.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brand.logo_url} alt={brand.name} className="size-5 object-contain" />
-              ) : (
-                <Building2 className="size-4" style={accentStyle} />
-              )}
-            </div>
-            <p className="text-lg font-semibold text-white">{brand.name}</p>
+            <span className="font-display text-base font-semibold text-[#0F172A]">
+              {brand.name}
+            </span>
           </div>
 
-          <div className="mb-8">
-            <h1 className="text-[28px] font-bold tracking-tight text-white leading-none">
+          <header className="mb-8">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-[#0F172A]">
               Welcome back
             </h1>
-            <p className="mt-2 text-[14px] text-white/35">
-              Sign in to your property management dashboard
+            <p className="mt-2 text-sm text-slate-600">
+              Sign in to your property management dashboard.
             </p>
-          </div>
+          </header>
 
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -4, height: 0, marginBottom: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto', marginBottom: 20 }}
-                exit={{ opacity: 0, y: -4, height: 0, marginBottom: 0 }}
-                className="rounded-xl bg-red-500/[0.06] border border-red-500/[0.12] px-4 py-3 text-[13px] text-red-400/90 flex items-center gap-2.5 overflow-hidden"
-              >
-                <div className="shrink-0 size-5 rounded-full bg-red-500/15 flex items-center justify-center">
-                  <span className="text-[10px] font-bold">!</span>
-                </div>
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {error && (
+            <div
+              role="alert"
+              className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
+              {error}
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-[12px] font-medium text-white/40 tracking-wide uppercase">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
                 Email
               </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  className={cn(
-                    'peer h-12 w-full rounded-xl border bg-white/[0.02] px-4 ps-11 text-[14px] text-white',
-                    'placeholder:text-white/20 transition-all duration-200',
-                    'border-white/[0.06] hover:border-white/[0.12]',
-                    'focus:outline-none focus:bg-white/[0.03]',
-                  )}
-                />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-4 text-white/20">
-                  <AtSignIcon className="size-4" />
-                </div>
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="you@company.com"
+                className={cn(
+                  'h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#0F172A] placeholder:text-slate-400',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 focus-visible:border-[#0369A1]',
+                  'transition',
+                )}
+              />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-[12px] font-medium text-white/40 tracking-wide uppercase">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-[11px] hover:opacity-100 transition-opacity font-medium opacity-60"
-                  style={accentStyle}
+                  className="text-xs font-medium text-[#0369A1] hover:text-[#075985] transition-colors cursor-pointer"
                 >
-                  Forgot?
+                  Forgot password?
                 </Link>
               </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  className={cn(
-                    'peer h-12 w-full rounded-xl border bg-white/[0.02] px-4 ps-11 pe-16 text-[14px] text-white',
-                    'placeholder:text-white/20 transition-all duration-200',
-                    'border-white/[0.06] hover:border-white/[0.12]',
-                    'focus:outline-none focus:bg-white/[0.03]',
-                  )}
-                />
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-4 text-white/20">
-                  <LockIcon className="size-4" />
-                </div>
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 end-0 flex items-center pe-4 text-white/20 hover:text-white/45 transition-colors"
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-widest select-none">
-                    {showPassword ? 'Hide' : 'Show'}
-                  </span>
-                </button>
-              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className={cn(
+                  'h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-[#0F172A] placeholder:text-slate-400',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2 focus-visible:border-[#0369A1]',
+                  'transition',
+                )}
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              style={accentBgStyle}
               className={cn(
-                'group relative h-12 w-full rounded-xl text-[14px] font-semibold transition-all duration-200 overflow-hidden',
-                'text-[#06080C]',
-                'hover:brightness-110 active:scale-[0.985]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06080C]',
-                'disabled:pointer-events-none disabled:opacity-50',
+                'inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#0369A1] px-4 text-sm font-semibold text-white cursor-pointer',
+                'hover:bg-[#075985] active:bg-[#0C4A6E] transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2',
+                'disabled:opacity-60 disabled:cursor-not-allowed',
               )}
             >
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="relative flex items-center justify-center gap-2">
-                {loading || ssoChecking ? (
-                  <>
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                      className="inline-block size-4 border-2 border-[#06080C]/20 border-t-[#06080C] rounded-full"
-                    />
-                    {ssoChecking ? 'Checking SSO...' : 'Signing in...'}
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRightIcon className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </>
-                )}
-              </span>
+              <LogIn className="h-4 w-4" />
+              {loading || ssoChecking ? (ssoChecking ? 'Checking SSO…' : 'Signing in…') : 'Sign in'}
             </button>
           </form>
 
-          <div className="my-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/[0.06]" />
-            <span className="text-[10px] uppercase tracking-widest text-white/30">Or</span>
-            <div className="h-px flex-1 bg-white/[0.06]" />
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs uppercase tracking-wider text-slate-400">or</span>
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
           <button
@@ -325,98 +259,39 @@ function AuthPageLogin({ brand }: { brand: LoginBrand }) {
             onClick={handleSsoButton}
             disabled={ssoChecking}
             className={cn(
-              'h-11 w-full rounded-xl border border-white/[0.08] bg-white/[0.02] text-[13px] font-medium text-white/80',
-              'hover:bg-white/[0.04] hover:border-white/[0.14] transition flex items-center justify-center gap-2',
-              'disabled:opacity-50',
+              'inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 cursor-pointer',
+              'hover:bg-slate-50 hover:border-[#0369A1] hover:text-[#0369A1] transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0369A1] focus-visible:ring-offset-2',
+              'disabled:opacity-60 disabled:cursor-not-allowed',
             )}
           >
-            <ShieldCheck className="size-4" style={accentStyle} />
+            <KeyRound className="h-4 w-4" />
             Sign in with SSO
           </button>
 
-          <div className="my-7 flex items-center">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-          </div>
-
-          <div className="text-center">
-            <p className="text-[13px] text-white/30">
-              Don&apos;t have an account?{' '}
-              <Link
-                href="/signup"
-                className="font-semibold transition-colors hover:opacity-80"
-                style={accentStyle}
-              >
-                Get started free
-              </Link>
-            </p>
-          </div>
-
-          <div className="mt-8 flex items-center justify-center gap-6">
-            {[
-              { icon: ShieldCheck, text: '256-bit encrypted' },
-              { icon: CheckCircle2, text: 'SOC 2 compliant' },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-1.5 text-white/[0.12]">
-                <Icon className="size-3" />
-                <span className="text-[10px] tracking-wide">{text}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-5 text-[10px] text-white/[0.12] text-center leading-relaxed">
-            By signing in you agree to our{' '}
-            <Link href="/terms" className="hover:text-white/25 underline underline-offset-[3px] transition-colors">
-              Terms
-            </Link>
-            {' '}&{' '}
-            <Link href="/privacy" className="hover:text-white/25 underline underline-offset-[3px] transition-colors">
-              Privacy Policy
+          <p className="mt-8 text-center text-sm text-slate-600">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/signup"
+              className="font-semibold text-[#0369A1] hover:text-[#075985] transition-colors cursor-pointer"
+            >
+              Get started free
             </Link>
           </p>
-        </motion.div>
-      </div>
+
+          <p className="mt-6 text-center text-xs text-slate-400 leading-relaxed">
+            By signing in you agree to our{' '}
+            <Link href="/terms" className="underline underline-offset-2 hover:text-slate-600 transition-colors">
+              Terms
+            </Link>{' '}
+            &amp;{' '}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-slate-600 transition-colors">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
     </main>
-  );
-}
-
-function FloatingPaths({ position }: { position: number }) {
-  const paths = Array.from({ length: 36 }, (_, i) => ({
-    id: i,
-    d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
-      380 - i * 5 * position
-    } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
-      152 - i * 5 * position
-    } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
-      684 - i * 5 * position
-    } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-    width: 0.5 + i * 0.03,
-  }));
-
-  return (
-    <div className="pointer-events-none absolute inset-0">
-      <svg className="h-full w-full text-white" viewBox="0 0 696 316" fill="none">
-        <title>Background Paths</title>
-        {paths.map((path) => (
-          <motion.path
-            key={path.id}
-            d={path.d}
-            stroke="currentColor"
-            strokeWidth={path.width}
-            strokeOpacity={0.04 + path.id * 0.015}
-            initial={{ pathLength: 0.3, opacity: 0.6 }}
-            animate={{
-              pathLength: 1,
-              opacity: [0.3, 0.6, 0.3],
-              pathOffset: [0, 1, 0],
-            }}
-            transition={{
-              duration: 20 + Math.random() * 10,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: 'linear',
-            }}
-          />
-        ))}
-      </svg>
-    </div>
   );
 }

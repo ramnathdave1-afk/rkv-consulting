@@ -16,7 +16,7 @@ export interface OrgBranding {
 
 const DEFAULT_BRANDING: OrgBranding = {
   brand_name: 'RKV Consulting',
-  brand_color: '#00D4AA',
+  brand_color: '#0369A1',
   logo_url: null,
   email_from_name: 'RKV Consulting',
   email_from_address: 'noreply@rkvconsulting.com',
